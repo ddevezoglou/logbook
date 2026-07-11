@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171813">
+  <title>Logbook — Ημερολόγιο Προπόνησης</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <header class="topbar">
+    <a class="brand" href="#">LOG<span>/</span>BOOK <small>training journal</small></a>
+    <nav aria-label="Κύρια πλοήγηση">
+      <button class="nav-button active" data-view="log">Καταγραφή</button>
+      <button class="nav-button" data-view="plan">Πρόγραμμα</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="log-view">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ</p>
+          <h1>Κατέγραψε.<br><em>Προχώρησε.</em></h1>
+        </div>
+        <p class="hero-note">Κάθε σετ είναι ένα μικρό αποτύπωμα προόδου. Κράτησέ το καθαρό, συγκεκριμένο και χρήσιμο.</p>
+      </div>
+
+      <div class="workspace">
+        <form id="log-form" class="sheet">
+          <div class="sheet-heading"><span>01</span><h2>Νέα καταγραφή</h2></div>
+          <div class="field-grid">
+            <label>Ημερομηνία<input id="log-date" type="date" required></label>
+            <label>Άσκηση<input id="exercise" type="text" placeholder="π.χ. Back Squat" required></label>
+            <label>Εργάσιμα σετ<input id="set-count" type="number" min="1" max="20" value="3" required></label>
+          </div>
+          <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΒΑΡΟΣ (KG)</span></div>
+          <div id="sets-container"></div>
+          <label class="full-field">Σχόλια άσκησης<textarea id="comments" rows="3" placeholder="Τεχνική, αίσθηση, RPE ή οτιδήποτε θέλεις να θυμάσαι..."></textarea></label>
+          <button class="primary-button" type="submit">Αποθήκευση καταγραφής <span>↗</span></button>
+        </form>
+
+        <aside class="history-panel">
+          <div class="panel-title"><div><span>02</span><h2>Πρόσφατα</h2></div><strong id="log-count">0 εγγραφές</strong></div>
+          <div id="history-list" class="history-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="plan-view">
+      <div class="hero compact">
+        <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟΣ ΣΧΕΔΙΑΣΜΟΣ</p><h1>Χτίσε το<br><em>πρόγραμμά σου.</em></h1></div>
+        <p class="hero-note">Οργάνωσε τις ασκήσεις ανά ημέρα και κράτησε δίπλα τους τα cues που κάνουν την τεχνική σου συνεπή.</p>
+      </div>
+      <div class="workspace">
+        <form id="plan-form" class="sheet">
+          <div class="sheet-heading"><span>01</span><h2>Νέα άσκηση προγράμματος</h2></div>
+          <div class="field-grid two">
+            <label>Ημέρα<select id="plan-day" required><option>Δευτέρα</option><option>Τρίτη</option><option>Τετάρτη</option><option>Πέμπτη</option><option>Παρασκευή</option><option>Σάββατο</option><option>Κυριακή</option></select></label>
+            <label>Άσκηση<input id="plan-exercise" type="text" placeholder="π.χ. Bench Press" required></label>
+            <label>Εργάσιμα σετ<input id="plan-sets" type="number" min="1" max="20" value="3" required></label>
+            <label>Cues άσκησης<input id="plan-cues" type="text" placeholder="π.χ. ώμοι πίσω, πόδια σταθερά"></label>
+          </div>
+          <button class="primary-button" type="submit">Προσθήκη στο πρόγραμμα <span>↗</span></button>
+        </form>
+        <aside class="history-panel">
+          <div class="panel-title"><div><span>02</span><h2>Η εβδομάδα</h2></div></div>
+          <div id="plan-list" class="history-list"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
+

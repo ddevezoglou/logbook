@@ -1,0 +1,33 @@
+:root { --ink:#171813; --paper:#eee9dc; --paper-dark:#ded8c9; --orange:#f05a28; --muted:#756f63; --line:#bcb5a6; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans", sans-serif; min-height:100vh; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+.topbar { min-height:76px; display:flex; align-items:center; justify-content:space-between; padding:0 5vw; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; background:rgba(238,233,220,.94); backdrop-filter:blur(12px); }
+.brand { color:var(--ink); text-decoration:none; font-weight:800; letter-spacing:.08em; font-size:1.2rem; }
+.brand span { color:var(--orange); }.brand small { font-size:.62rem; display:block; letter-spacing:.19em; color:var(--muted); font-weight:500; }
+nav { display:flex; gap:8px; }.nav-button { border:0; background:transparent; padding:12px 18px; font:700 .9rem inherit; cursor:pointer; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+.nav-button.active { color:var(--paper); background:var(--ink); }.view { display:none; }.view.active { display:block; animation:reveal .5s ease both; }
+.hero { min-height:350px; padding:70px 5vw 45px; display:flex; align-items:flex-end; justify-content:space-between; border-bottom:1px solid var(--line); position:relative; overflow:hidden; }
+.hero::after { content:"45°"; position:absolute; right:4vw; top:15px; font:700 12rem/1 "Roboto Slab"; color:rgba(23,24,19,.035); }
+.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 18px; }
+h1 { font:700 clamp(3.2rem,7.5vw,7.2rem)/.78 "Roboto Slab",serif; margin:0; letter-spacing:-.065em; text-transform:uppercase; }
+h1 em { color:var(--orange); font-style:normal; }.hero-note { max-width:330px; font-size:1.15rem; line-height:1.45; border-left:3px solid var(--orange); padding-left:18px; margin:0 0 8px; position:relative; z-index:1; }
+.workspace { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(330px,.8fr); }.sheet,.history-panel { padding:52px 5vw; }.sheet { border-right:1px solid var(--line); }
+.sheet-heading,.panel-title>div { display:flex; align-items:center; gap:14px; margin-bottom:38px; }.sheet-heading span,.panel-title span { color:var(--orange); font-weight:800; font-size:.75rem; }
+h2 { font:700 1.45rem "Roboto Slab"; text-transform:uppercase; margin:0; }.field-grid { display:grid; grid-template-columns:1fr 2fr .8fr; gap:18px; }.field-grid.two { grid-template-columns:1fr 1fr; }
+label { display:flex; flex-direction:column; gap:8px; font-size:.76rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+input,textarea,select { width:100%; border:0; border-bottom:1px solid var(--ink); background:rgba(255,255,255,.2); border-radius:0; padding:13px 10px; font:500 1rem "Alegreya Sans"; color:var(--ink); outline:none; transition:.2s; }
+input:focus,textarea:focus,select:focus { background:#fff9ec; border-color:var(--orange); box-shadow:0 2px 0 var(--orange); }.sets-header,.set-row { display:grid; grid-template-columns:65px 1fr 1fr; gap:12px; align-items:center; }
+.sets-header { margin-top:36px; border-bottom:1px solid var(--line); padding:0 10px 9px; font-size:.66rem; letter-spacing:.12em; font-weight:800; color:var(--muted); }.set-row { border-bottom:1px solid var(--line); padding:9px 10px; animation:slide .25s ease both; }
+.set-number { font:700 1.3rem "Roboto Slab"; }.set-row input { border:0; background:transparent; padding:9px 0; font-size:1.15rem; }.full-field { margin-top:30px; }
+.primary-button { width:100%; margin-top:25px; padding:18px 20px; border:0; background:var(--ink); color:var(--paper); display:flex; justify-content:space-between; font:800 .82rem inherit; text-transform:uppercase; letter-spacing:.12em; cursor:pointer; transition:.25s; }
+.primary-button:hover { background:var(--orange); transform:translateY(-2px); }.primary-button span { font-size:1.3rem; }.panel-title { display:flex; justify-content:space-between; align-items:center; }.panel-title>div { margin:0; }.panel-title strong { color:var(--muted); font-size:.78rem; }
+.history-list { display:flex; flex-direction:column; gap:12px; }.empty { padding:50px 20px; text-align:center; color:var(--muted); border:1px dashed var(--line); }.entry { background:rgba(255,255,255,.25); border-left:3px solid var(--ink); padding:17px 18px; position:relative; }
+.entry:hover { border-left-color:var(--orange); }.entry-top { display:flex; justify-content:space-between; gap:15px; }.entry h3 { margin:0; font:700 1.1rem "Roboto Slab"; }.entry time,.entry .day { font-size:.72rem; font-weight:800; color:var(--orange); text-transform:uppercase; letter-spacing:.08em; }
+.entry p { color:var(--muted); margin:8px 25px 0 0; line-height:1.35; }.delete { position:absolute; right:8px; bottom:8px; border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:1rem; }.delete:hover { color:var(--orange); }
+.set-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }.set-summary span { background:var(--ink); color:var(--paper); padding:4px 7px; font-size:.72rem; }.toast { position:fixed; right:25px; bottom:25px; background:var(--orange); color:white; padding:14px 20px; z-index:20; transform:translateY(100px); opacity:0; transition:.3s; font-weight:700; }.toast.show { transform:none; opacity:1; }
+@keyframes reveal { from{opacity:0}to{opacity:1} } @keyframes slide { from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none} }
+@media(max-width:850px){.hero{padding-top:45px;display:block;min-height:auto}.hero-note{margin-top:35px}.workspace{grid-template-columns:1fr}.sheet{border-right:0;border-bottom:1px solid var(--line)}.field-grid,.field-grid.two{grid-template-columns:1fr 1fr}.field-grid label:nth-child(2){grid-column:span 2}}
+@media(max-width:520px){.topbar{padding:0 18px}.nav-button{padding:10px}.brand small{display:none}.hero,.sheet,.history-panel{padding-left:22px;padding-right:22px}h1{font-size:3.15rem}.field-grid,.field-grid.two{grid-template-columns:1fr}.field-grid label:nth-child(2){grid-column:auto}.sets-header,.set-row{grid-template-columns:45px 1fr 1fr}}
+
