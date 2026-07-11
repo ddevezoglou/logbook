@@ -17,44 +17,39 @@
     <nav aria-label="Κύρια πλοήγηση">
       <button class="nav-button active" data-view="log">Καταγραφή</button>
       <button class="nav-button" data-view="plan">Πρόγραμμα</button>
+      <button class="nav-button" data-view="overview">Επίβλεψη</button>
     </nav>
   </header>
 
   <main>
     <section class="view active" id="log-view">
       <div class="hero">
-        <div>
-          <p class="eyebrow">ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ</p>
-          <h1>Κατέγραψε.<br><em>Προχώρησε.</em></h1>
-        </div>
-        <p class="hero-note">Κάθε σετ είναι ένα μικρό αποτύπωμα προόδου. Κράτησέ το καθαρό, συγκεκριμένο και χρήσιμο.</p>
+        <div><p class="eyebrow">ΕΚΤΕΛΕΣΗ ΠΡΟΠΟΝΗΣΗΣ</p><h1>Σήμερα<br><em>μετράει.</em></h1></div>
+        <p class="hero-note">Διάλεξε ημερομηνία και εκτέλεσε το πρόγραμμα της ημέρας ή ξεκίνα μια ελεύθερη προπόνηση.</p>
       </div>
-
-      <div class="workspace">
-        <form id="log-form" class="sheet">
-          <div class="sheet-heading"><span>01</span><h2>Νέα καταγραφή</h2></div>
-          <div class="field-grid">
-            <label>Ημερομηνία<input id="log-date" type="date" required></label>
-            <label>Άσκηση<input id="exercise" type="text" placeholder="π.χ. Back Squat" required></label>
-            <label>Εργάσιμα σετ<input id="set-count" type="number" min="1" max="20" value="3" required></label>
+      <div class="session-shell">
+        <div class="session-toolbar">
+          <label>Ημερομηνία<input id="log-date" type="date" required></label>
+          <div class="mode-toggle" aria-label="Τύπος προπόνησης">
+            <button class="mode-button active" data-mode="scheduled">Από το πρόγραμμα</button>
+            <button class="mode-button" data-mode="free">Ελεύθερη</button>
           </div>
-          <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΒΑΡΟΣ (KG)</span></div>
-          <div id="sets-container"></div>
-          <label class="full-field">Σχόλια άσκησης<textarea id="comments" rows="3" placeholder="Τεχνική, αίσθηση, RPE ή οτιδήποτε θέλεις να θυμάσαι..."></textarea></label>
-          <button class="primary-button" type="submit">Αποθήκευση καταγραφής <span>↗</span></button>
-        </form>
-
-        <aside class="history-panel">
-          <div class="panel-title"><div><span>02</span><h2>Πρόσφατα</h2></div><strong id="log-count">0 εγγραφές</strong></div>
-          <div id="history-list" class="history-list"></div>
-        </aside>
+          <div id="day-badge" class="day-badge"></div>
+        </div>
+        <div id="scheduled-session" class="session-area"></div>
+        <div id="free-session" class="session-area hidden">
+          <div id="free-exercises"></div>
+          <button id="add-free-exercise" class="secondary-button" type="button">＋ Προσθήκη άσκησης</button>
+        </div>
+        <label class="full-field session-comment">Σχόλια προπόνησης<textarea id="session-comments" rows="3" placeholder="Πώς πήγε συνολικά η σημερινή προπόνηση;"></textarea></label>
+        <button id="save-session" class="primary-button save-session" type="button">Ολοκλήρωση προπόνησης <span>✓</span></button>
       </div>
     </section>
 
     <section class="view" id="plan-view">
       <div class="hero compact">
-        <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟΣ ΣΧΕΔΙΑΣΜΟΣ</p><h1>Χτίσε το<br><em>πρόγραμμά σου.</em></h1></div>
-        <p class="hero-note">Οργάνωσε τις ασκήσεις ανά ημέρα και κράτησε δίπλα τους τα cues που κάνουν την τεχνική σου συνεπή.</p>
+        <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟΣ ΣΧΕΔΙΑΣΜΟΣ</p><h1>Χτίσε τη<br><em>ρουτίνα σου.</em></h1></div>
+        <p class="hero-note">Πρόσθεσε όσες ασκήσεις θέλεις σε κάθε ημέρα. Οι στόχοι και τα cues θα σε περιμένουν στην Καταγραφή.</p>
       </div>
       <div class="workspace">
         <form id="plan-form" class="sheet">
@@ -62,15 +57,39 @@
           <div class="field-grid two">
             <label>Ημέρα<select id="plan-day" required><option>Δευτέρα</option><option>Τρίτη</option><option>Τετάρτη</option><option>Πέμπτη</option><option>Παρασκευή</option><option>Σάββατο</option><option>Κυριακή</option></select></label>
             <label>Άσκηση<input id="plan-exercise" type="text" placeholder="π.χ. Bench Press" required></label>
-            <label>Εργάσιμα σετ<input id="plan-sets" type="number" min="1" max="20" value="3" required></label>
+            <label>Εργάσιμα σετ<input id="plan-set-count" type="number" min="1" max="20" value="3" required></label>
             <label>Cues άσκησης<input id="plan-cues" type="text" placeholder="π.χ. ώμοι πίσω, πόδια σταθερά"></label>
           </div>
+          <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΒΑΡΟΣ (KG)</span></div>
+          <div id="plan-sets-container"></div>
+          <label class="full-field">Σχόλια άσκησης<textarea id="plan-comments" rows="3" placeholder="Παραλλαγή, tempo, διάλειμμα ή άλλη οδηγία..."></textarea></label>
           <button class="primary-button" type="submit">Προσθήκη στο πρόγραμμα <span>↗</span></button>
         </form>
         <aside class="history-panel">
-          <div class="panel-title"><div><span>02</span><h2>Η εβδομάδα</h2></div></div>
-          <div id="plan-list" class="history-list"></div>
+          <div class="panel-title"><div><span>02</span><h2>Η εβδομάδα</h2></div><strong id="plan-count"></strong></div>
+          <div id="plan-list" class="week-plan"></div>
         </aside>
+      </div>
+    </section>
+
+    <section class="view" id="overview-view">
+      <div class="overview-hero">
+        <div><p class="eyebrow">ΕΠΙΒΛΕΨΗ ΠΡΟΟΔΟΥ</p><h1>Η δουλειά<br><em>φαίνεται.</em></h1></div>
+        <div id="metrics" class="metrics"></div>
+      </div>
+      <div class="overview-content">
+        <div class="section-heading"><div><span>01</span><h2>Ρυθμός 7 ημερών</h2></div><p>Οι ημέρες που προπονήθηκες φωτίζονται.</p></div>
+        <div id="week-strip" class="week-strip"></div>
+        <div class="overview-grid">
+          <section>
+            <div class="section-heading"><div><span>02</span><h2>Ιστορικό προπονήσεων</h2></div></div>
+            <div id="session-cards" class="session-cards"></div>
+          </section>
+          <aside>
+            <div class="section-heading"><div><span>03</span><h2>Προσωπικά καλύτερα</h2></div></div>
+            <div id="personal-bests" class="personal-bests"></div>
+          </aside>
+        </div>
       </div>
     </section>
   </main>
