@@ -53,20 +53,18 @@
       </div>
       <div class="workspace">
         <form id="plan-form" class="sheet">
-          <div class="sheet-heading"><span>01</span><h2>Νέα άσκηση προγράμματος</h2></div>
+          <div class="sheet-heading"><span>01</span><h2>Νέα προπόνηση ημέρας</h2></div>
           <div class="field-grid two">
             <label>Ημέρα<select id="plan-day" required><option>Δευτέρα</option><option>Τρίτη</option><option>Τετάρτη</option><option>Πέμπτη</option><option>Παρασκευή</option><option>Σάββατο</option><option>Κυριακή</option></select></label>
-            <label>Άσκηση<input id="plan-exercise" type="text" placeholder="π.χ. Bench Press" required></label>
-            <label>Εργάσιμα σετ<input id="plan-set-count" type="number" min="1" max="20" value="3" required></label>
-            <label>Cues άσκησης<input id="plan-cues" type="text" placeholder="π.χ. ώμοι πίσω, πόδια σταθερά"></label>
+            <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
+            <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>
-          <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΒΑΡΟΣ (KG)</span></div>
-          <div id="plan-sets-container"></div>
-          <label class="full-field">Σχόλια άσκησης<textarea id="plan-comments" rows="3" placeholder="Παραλλαγή, tempo, διάλειμμα ή άλλη οδηγία..."></textarea></label>
-          <button class="primary-button" type="submit">Προσθήκη στο πρόγραμμα <span>↗</span></button>
+          <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span><small>Συμπλήρωσε τα βασικά. Τα κιλά και οι επαναλήψεις καταγράφονται μόνο όταν την εκτελείς.</small></div>
+          <div id="plan-exercises-container" class="plan-exercise-builder"></div>
+          <button class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button>
         </form>
         <aside class="history-panel">
-          <div class="panel-title"><div><span>02</span><h2>Η εβδομάδα</h2></div><strong id="plan-count"></strong></div>
+          <div class="panel-title"><div><span>02</span><h2>Οι ημέρες σου</h2></div><strong id="plan-count"></strong></div>
           <div id="plan-list" class="week-plan"></div>
         </aside>
       </div>
