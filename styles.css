@@ -30,4 +30,3 @@ input:focus,textarea:focus,select:focus { background:#fff9ec; border-color:var(-
 @keyframes reveal { from{opacity:0}to{opacity:1} } @keyframes slide { from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none} }
 @media(max-width:850px){.hero{padding-top:45px;display:block;min-height:auto}.hero-note{margin-top:35px}.workspace{grid-template-columns:1fr}.sheet{border-right:0;border-bottom:1px solid var(--line)}.field-grid,.field-grid.two{grid-template-columns:1fr 1fr}.field-grid label:nth-child(2){grid-column:span 2}}
 @media(max-width:520px){.topbar{padding:0 18px}.nav-button{padding:10px}.brand small{display:none}.hero,.sheet,.history-panel{padding-left:22px;padding-right:22px}h1{font-size:3.15rem}.field-grid,.field-grid.two{grid-template-columns:1fr}.field-grid label:nth-child(2){grid-column:auto}.sets-header,.set-row{grid-template-columns:45px 1fr 1fr}}
-
