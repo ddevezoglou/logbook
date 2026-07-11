@@ -53,15 +53,15 @@
       </div>
       <div class="workspace">
         <form id="plan-form" class="sheet">
-          <div class="sheet-heading"><span>01</span><h2>Νέα προπόνηση ημέρας</h2></div>
+          <div class="sheet-heading"><span>01</span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div>
           <div class="field-grid two">
-            <label>Ημέρα<select id="plan-day" required><option>Δευτέρα</option><option>Τρίτη</option><option>Τετάρτη</option><option>Πέμπτη</option><option>Παρασκευή</option><option>Σάββατο</option><option>Κυριακή</option></select></label>
+            <label>Ημέρα<select id="plan-day" required></select></label>
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
             <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>
           <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span><small>Συμπλήρωσε τα βασικά. Τα κιλά και οι επαναλήψεις καταγράφονται μόνο όταν την εκτελείς.</small></div>
           <div id="plan-exercises-container" class="plan-exercise-builder"></div>
-          <button class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button>
+          <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button></div>
         </form>
         <aside class="history-panel">
           <div class="panel-title"><div><span>02</span><h2>Οι ημέρες σου</h2></div><strong id="plan-count"></strong></div>
