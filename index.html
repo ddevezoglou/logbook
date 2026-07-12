@@ -13,16 +13,16 @@
 <body>
   <div class="grain"></div>
   <header class="topbar">
-    <a class="brand" href="#">LOG<span>/</span>BOOK <small>training journal</small></a>
+    <a class="brand" href="#overview" aria-label="Μετάβαση στην Επίβλεψη">LOG<span>/</span>BOOK <small>training journal</small></a>
     <nav aria-label="Κύρια πλοήγηση">
-      <button class="nav-button active" data-view="log">Καταγραφή</button>
+      <button class="nav-button" data-view="log">Καταγραφή</button>
       <button class="nav-button" data-view="plan">Πρόγραμμα</button>
-      <button class="nav-button" data-view="overview">Επίβλεψη</button>
+      <button class="nav-button active" data-view="overview">Επίβλεψη</button>
     </nav>
   </header>
 
   <main>
-    <section class="view active" id="log-view">
+    <section class="view" id="log-view">
       <div class="hero">
         <div><p class="eyebrow">ΕΚΤΕΛΕΣΗ ΠΡΟΠΟΝΗΣΗΣ</p><h1>Σήμερα<br><em>μετράει.</em></h1></div>
         <p class="hero-note">Διάλεξε ημερομηνία και εκτέλεσε το πρόγραμμα της ημέρας ή ξεκίνα μια ελεύθερη προπόνηση.</p>
@@ -42,14 +42,17 @@
           <button id="add-free-exercise" class="secondary-button" type="button">＋ Προσθήκη άσκησης</button>
         </div>
         <label class="full-field session-comment">Σχόλια προπόνησης<textarea id="session-comments" rows="3" placeholder="Πώς πήγε συνολικά η σημερινή προπόνηση;"></textarea></label>
-        <button id="save-session" class="primary-button save-session" type="button">Ολοκλήρωση προπόνησης <span>✓</span></button>
+        <div class="session-save-actions">
+          <button id="cancel-session-edit" class="secondary-button hidden" type="button">Ακύρωση διορθώσεων</button>
+          <button id="save-session" class="primary-button save-session" type="button">Ολοκλήρωση προπόνησης <span>✓</span></button>
+        </div>
       </div>
     </section>
 
     <section class="view" id="plan-view">
       <div class="hero compact">
         <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟΣ ΣΧΕΔΙΑΣΜΟΣ</p><h1>Χτίσε τη<br><em>ρουτίνα σου.</em></h1></div>
-        <p class="hero-note">Πρόσθεσε όσες ασκήσεις θέλεις σε κάθε ημέρα. Οι στόχοι και τα cues θα σε περιμένουν στην Καταγραφή.</p>
+        <p class="hero-note">Πρόσθεσε όσες ασκήσεις θες. Τα κιλά και τα σχόλια συμπληρώνονται στην Καταγραφή.</p>
       </div>
       <div class="workspace">
         <form id="plan-form" class="sheet">
@@ -70,7 +73,7 @@
       </div>
     </section>
 
-    <section class="view" id="overview-view">
+    <section class="view active" id="overview-view">
       <div class="overview-hero">
         <div><p class="eyebrow">ΕΠΙΒΛΕΨΗ ΠΡΟΟΔΟΥ</p><h1>Η δουλειά<br><em>φαίνεται.</em></h1></div>
         <div id="metrics" class="metrics"></div>
