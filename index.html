@@ -8,24 +8,34 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="grain"></div>
+  <div id="view-transition" class="view-transition" aria-hidden="true"><span></span></div>
   <header class="topbar">
-    <a class="brand" href="#overview" aria-label="Μετάβαση στην Επίβλεψη">LOG<span>/</span>BOOK <small>training journal</small></a>
+    <a class="brand" href="#overview" aria-label="Μετάβαση στο Ιστορικό"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="brand-name">LOGBOOK<small>training journal</small></span></a>
+    <div class="menu-trigger-wrap"><span id="current-view-label">Ιστορικό</span><button id="open-menu" class="menu-trigger" type="button" aria-expanded="false" aria-controls="side-menu">Μενού <span aria-hidden="true"><i></i><i></i><i></i></span></button></div>
+  </header>
+  <div id="menu-backdrop" class="menu-backdrop"></div>
+  <aside id="side-menu" class="side-menu" aria-hidden="true">
+    <div class="side-menu-head"><span class="brand-mark inverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><button id="close-menu" type="button" aria-label="Κλείσιμο μενού">×</button></div>
+    <p>ΠΛΟΗΓΗΣΗ</p>
     <nav aria-label="Κύρια πλοήγηση">
       <button class="nav-button" data-view="log">Καταγραφή</button>
       <button class="nav-button" data-view="plan">Πρόγραμμα</button>
-      <button class="nav-button active" data-view="overview">Επίβλεψη</button>
+      <button class="nav-button active" data-view="overview">Ιστορικό</button>
+      <button class="nav-button" data-view="progress">Επίβλεψη</button>
     </nav>
-  </header>
+    <small>LOGBOOK — TRAINING JOURNAL</small>
+  </aside>
 
   <main>
     <section class="view" id="log-view">
       <div class="hero">
         <div><p class="eyebrow">ΕΚΤΕΛΕΣΗ ΠΡΟΠΟΝΗΣΗΣ</p><h1>Σήμερα<br><em>μετράει.</em></h1></div>
-        <p class="hero-note">Διάλεξε ημερομηνία και εκτέλεσε το πρόγραμμα της ημέρας ή ξεκίνα μια ελεύθερη προπόνηση.</p>
+        <p class="hero-note">Το πρόγραμμα είναι έτοιμο. Κατάγραψε το πραγματικό — εκεί χτίζεται η πρόοδος.</p>
       </div>
       <div class="session-shell">
         <div class="session-toolbar">
@@ -34,6 +44,7 @@
             <button class="mode-button active" data-mode="scheduled">Από το πρόγραμμα</button>
             <button class="mode-button" data-mode="free">Ελεύθερη</button>
           </div>
+          <label id="workout-day-field">Προπόνηση ημέρας<select id="workout-day-select"></select></label>
           <div id="day-badge" class="day-badge"></div>
         </div>
         <div id="scheduled-session" class="session-area"></div>
@@ -52,11 +63,11 @@
     <section class="view" id="plan-view">
       <div class="hero compact">
         <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟΣ ΣΧΕΔΙΑΣΜΟΣ</p><h1>Χτίσε τη<br><em>ρουτίνα σου.</em></h1></div>
-        <p class="hero-note">Πρόσθεσε όσες ασκήσεις θες. Τα κιλά και τα σχόλια συμπληρώνονται στην Καταγραφή.</p>
+        <p class="hero-note">Χτίσε ένα πρόγραμμα που μπορείς να επαναλάβεις. Η συνέπεια κάνει τη διαφορά.</p>
       </div>
       <div class="workspace">
         <form id="plan-form" class="sheet">
-          <div class="sheet-heading"><span>01</span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div>
+          <div class="sheet-heading"><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div>
           <div class="field-grid two">
             <label>Ημέρα<select id="plan-day" required></select></label>
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
@@ -67,7 +78,7 @@
           <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button></div>
         </form>
         <aside class="history-panel">
-          <div class="panel-title"><div><span>02</span><h2>Οι ημέρες σου</h2></div><strong id="plan-count"></strong></div>
+          <div class="panel-title"><div><h2>Οι ημέρες σου</h2></div><strong id="plan-count"></strong></div>
           <div id="plan-list" class="week-plan"></div>
         </aside>
       </div>
@@ -75,25 +86,51 @@
 
     <section class="view active" id="overview-view">
       <div class="overview-hero">
-        <div><p class="eyebrow">ΕΠΙΒΛΕΨΗ ΠΡΟΟΔΟΥ</p><h1>Η δουλειά<br><em>φαίνεται.</em></h1></div>
+        <div><p class="eyebrow">ΙΣΤΟΡΙΚΟ ΠΡΟΠΟΝΗΣΕΩΝ</p><h1>Η δουλειά<br><em>γράφεται.</em></h1></div>
         <div id="metrics" class="metrics"></div>
       </div>
       <div class="overview-content">
-        <div class="section-heading"><div><span>01</span><h2>Ρυθμός 7 ημερών</h2></div><p>Οι ημέρες που προπονήθηκες φωτίζονται.</p></div>
+        <div class="section-heading"><div><h2>Ρυθμός 7 ημερών</h2></div><p id="rhythm-message">Κάθε καταγραφή αφήνει το σημάδι της.</p></div>
         <div id="week-strip" class="week-strip"></div>
         <div class="overview-grid">
           <section>
-            <div class="section-heading"><div><span>02</span><h2>Ιστορικό προπονήσεων</h2></div></div>
+            <div class="section-heading"><div><h2>Ιστορικό προπονήσεων</h2></div></div>
             <div id="session-cards" class="session-cards"></div>
           </section>
           <aside>
-            <div class="section-heading"><div><span>03</span><h2>Προσωπικά καλύτερα</h2></div></div>
+            <div class="section-heading bests-heading"><div><h2>Καλύτερες επιδόσεις σε σετ</h2><span class="best-sets-badge" aria-hidden="true">BEST SETS</span></div></div>
             <div id="personal-bests" class="personal-bests"></div>
           </aside>
         </div>
       </div>
     </section>
+
+    <section class="view" id="progress-view">
+      <div class="progress-hero">
+        <div><p class="eyebrow">ΕΠΙΒΛΕΨΗ ΠΡΟΟΔΟΥ</p><h1>Δες την<br><em>τροχιά.</em></h1></div>
+        <p>Μία μέτρηση δεν ορίζει την πορεία. Δες τη συνολική δουλειά και χτίσε πάνω της.</p>
+      </div>
+      <div class="progress-content">
+        <div class="progress-controls">
+          <label>Προπόνηση<select id="progress-workout"></select></label>
+          <label>Άσκηση<select id="progress-exercise"></select></label>
+          <label>Σετ<select id="progress-set"></select></label>
+        </div>
+        <section id="progress-panel" class="progress-panel" aria-live="polite"></section>
+      </div>
+    </section>
   </main>
+  <dialog id="exercise-delete-dialog" class="confirm-dialog" aria-labelledby="exercise-delete-title">
+    <div class="confirm-dialog-mark">!</div>
+    <p class="eyebrow">ΕΠΙΒΕΒΑΙΩΣΗ</p>
+    <h2 id="exercise-delete-title">Διαγραφή άσκησης</h2>
+    <p id="exercise-delete-message" class="confirm-dialog-message"></p>
+    <div class="confirm-dialog-actions">
+      <button id="confirm-delete-cancel" class="secondary-button" type="button">Ακύρωση</button>
+      <button id="confirm-delete-secondary" class="secondary-button hidden" type="button"></button>
+      <button id="confirm-delete-accept" class="confirm-delete-button" type="button">Διαγραφή</button>
+    </div>
+  </dialog>
   <div id="toast" class="toast" role="status"></div>
   <script src="app.js"></script>
 </body>
