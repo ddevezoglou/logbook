@@ -29,6 +29,52 @@ function setRows(count, values = [], prefix = '', options = {}) {
   }).join('');
 }
 
+function configureWeightMode(row, mode) {
+  row.dataset.weightMode = mode;
+  const weightInput = row.querySelector('.set-weight');
+  weightInput.required = ['kg','mixed','bodyweight_extra'].includes(mode);
+  weightInput.placeholder = mode === 'bodyweight_extra' ? 'extra kg' : 'kg';
+  row.querySelector('.set-plates').required = ['plates','mixed'].includes(mode);
+}
+
+function completedFirstSet(card) {
+  const rows = [...card.querySelectorAll('.exercise-sets [data-set]')];
+  if (rows.length < 2) return null;
+  const first = rows[0], mode = first.querySelector('.weight-mode').value;
+  const values = {
+    reps:first.querySelector('.set-reps').value,
+    weightMode:mode,
+    weight:['kg','mixed','bodyweight_extra'].includes(mode) ? first.querySelector('.set-weight').value : '',
+    plates:['plates','mixed'].includes(mode) ? first.querySelector('.set-plates').value : ''
+  };
+  if (values.reps === '') return null;
+  if (['kg','bodyweight_extra'].includes(mode) && values.weight === '') return null;
+  if (mode === 'plates' && values.plates === '') return null;
+  if (mode === 'mixed' && (values.plates === '' || values.weight === '')) return null;
+  return values;
+}
+
+function refreshCopySetButton(card) {
+  const button = card?.querySelector('.copy-first-set');
+  if (button) button.classList.toggle('hidden', !completedFirstSet(card));
+}
+
+function refreshCopySetButtons(scope = document) {
+  scope.querySelectorAll('[data-exercise]').forEach(refreshCopySetButton);
+}
+
+function copyFirstSetToRemaining(card) {
+  const values = completedFirstSet(card);
+  if (!values) return;
+  [...card.querySelectorAll('.exercise-sets [data-set]')].slice(1).forEach(row => {
+    row.querySelector('.set-reps').value = values.reps;
+    row.querySelector('.weight-mode').value = values.weightMode;
+    row.querySelector('.set-weight').value = values.weight;
+    row.querySelector('.set-plates').value = values.plates;
+    configureWeightMode(row, values.weightMode);
+  });
+}
+
 function refreshDayOptions(preferred = null) {
   const used = new Set(state.plan.map(item => item.day));
   const available = planOrder.filter(day => !used.has(day) || day === preferred);
@@ -66,7 +112,7 @@ function exerciseCard(exercise, free = false, exerciseIndex = 0) {
     ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${exercise.sets?.length || 3}"></label>` : ''}
     <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΜΕΤΡΗΣΗ ΒΑΡΟΥΣ</span><span>ΒΑΡΟΣ</span></div>
     <div class="exercise-sets">${setRows(exercise.sets?.length || 3, exercise.sets || [])}</div>
-    ${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}
+    <div class="set-actions"><button class="mini-button copy-first-set hidden" type="button" aria-label="Αντιγραφή του πρώτου σετ στα υπόλοιπα">ΑΝΤΙΓΡΑΦΗ</button>${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}</div>
     <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
     <input class="exercise-source-name" type="hidden" value="${esc(exercise.exercise || '')}">
   </article>`;
@@ -93,9 +139,10 @@ function renderScheduledSession(preferredDay = null) {
   const planned = state.plan.filter(item => item.day === planDay).map(item => ({ ...item, sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
   const workoutName = planned[0]?.workoutName || 'Η προπόνηση της ημέρας';
   $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><h2>${esc(workoutName)}</h2><p>Πρόγραμμα ${planDay} · Συμπλήρωσε όσα πραγματικά εκτέλεσες.</p></div></div>${planned.map((item, index) => exerciseCard(item, false, index)).join('')}` : `<div class="no-workout"><span>REST / FREE</span><h2>Δεν υπάρχει ορισμένη προπόνηση για ${planDay}.</h2><p>Επίλεξε το πρόγραμμα άλλης ημέρας ή ξεκίνα μια «Ελεύθερη» καταγραφή.</p><button class="secondary-button switch-free" type="button">Έναρξη ελεύθερης προπόνησης</button></div>`;
+  refreshCopySetButtons($('#scheduled-session'));
 }
 
-function addFreeExercise() { $('#free-exercises').insertAdjacentHTML('beforeend', exerciseCard({ sets:[{},{},{}] }, true)); }
+function addFreeExercise() { $('#free-exercises').insertAdjacentHTML('beforeend', exerciseCard({ sets:[{},{},{}] }, true)); refreshCopySetButtons($('#free-exercises')); }
 
 function loadDayForEdit(day) {
   const items = state.plan.filter(item => item.day === day);
@@ -174,12 +221,12 @@ function renderOverview() {
   const uniqueDates = new Set(state.sessions.map(s => s.date));
   const recentDays = Array.from({length:7}, (_, i) => { const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate() - (6-i)); return d; });
   const completedRecent = recentDays.filter(d => uniqueDates.has(d.toISOString().slice(0,10))).length;
-  const exerciseTotal = state.sessions.reduce((sum, session) => sum + session.exercises.length, 0);
-  $('#metrics').innerHTML = `<article><strong>${state.sessions.length}</strong><span>Προπονήσεις</span></article><article><strong>${exerciseTotal}</strong><span>Ασκήσεις που έγιναν</span></article><article><strong>${completedRecent}<small>/7</small></strong><span>Ρυθμός εβδομάδας</span></article>`;
+  const workingSetTotal = state.sessions.reduce((total, session) => total + session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0), 0);
+  $('#metrics').innerHTML = `<article><strong>${state.sessions.length}</strong><span>ΠΡΟΠΟΝΗΣΕΙΣ</span></article><article><strong>${workingSetTotal}</strong><span>WORKING SETS</span></article><article><strong>${completedRecent}<small>/7</small></strong><span>ΣΥΧΝΟΤΗΤΑ ΕΒΔΟΜΑΔΑΣ</span></article>`;
   const rhythmMessage = completedRecent === 0 ? 'Η πρώτη καταγραφή είναι η γραμμή εκκίνησης.' : completedRecent === 1 ? 'Ο ρυθμός ξεκίνησε. Η επόμενη καταγραφή τον χτίζει.' : completedRecent < 4 ? `${completedRecent} προπονήσεις σε 7 ημέρες. Ο ρυθμός χτίζεται.` : `${completedRecent} προπονήσεις σε 7 ημέρες. Κράτησε τη γραμμή.`;
   $('#rhythm-message').textContent = rhythmMessage;
-  $('#week-strip').innerHTML = recentDays.map(d => { const key = d.toISOString().slice(0,10); const done = uniqueDates.has(key); return `<div class="day-tile ${done ? 'done' : ''}"><span>${days[d.getDay()].slice(0,3)}</span><strong>${d.getDate()}</strong><small>${done ? '✓ έγινε' : '—'}</small></div>`; }).join('');
-  $('#session-cards').innerHTML = state.sessions.length ? state.sessions.map(session => `<article class="session-card"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>WORK LOG</small></div><div class="card-body"><div class="card-stats"><span>${session.exercises.length} ασκήσεις</span><span>${session.type === 'scheduled' ? 'Προπόνηση προγράμματος' : 'Ελεύθερη προπόνηση'}</span></div><h3>${esc(sessionWorkoutName(session))}</h3><p class="card-exercises">${session.exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment">${esc(session.comments)}</p>` : ''}</div><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${session.id}"><span>Επιλογή</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${session.id}" type="button">Επεξεργασία</button><button class="card-delete" data-delete-session="${session.id}" type="button">Διαγραφή</button></div></div></article>`).join('') : '<div class="empty"><strong>Η γραμμή εκκίνησης είναι εδώ.</strong><span>Ολοκλήρωσε την πρώτη προπόνηση και άρχισε να χτίζεις το αρχείο σου.</span></div>';
+  $('#week-strip').innerHTML = recentDays.map(d => { const key = d.toISOString().slice(0,10); const done = uniqueDates.has(key); return `<div class="day-tile ${done ? 'done' : ''}"><span>${days[d.getDay()].slice(0,3)}</span><strong>${d.getDate()}</strong><small>${done ? '✓ logged' : '—'}</small></div>`; }).join('');
+  $('#session-cards').innerHTML = state.sessions.length ? state.sessions.map((session, index) => { const setCount = session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0); return `<article class="session-card"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${state.sessions.length - index}</small></div><div class="card-body"><div class="card-stats"><span>${session.exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><h3>${esc(sessionWorkoutName(session))}</h3><p class="card-exercises">${session.exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment">${esc(session.comments)}</p>` : ''}</div><span class="card-stamp" aria-hidden="true">ΚΑΤΑΓΡΑΦΗΚΕ</span><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${session.id}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${session.id}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-delete" data-delete-session="${session.id}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></article>`; }).join('') : '<div class="empty"><strong>Η γραμμή εκκίνησης είναι εδώ.</strong><span>Ολοκλήρωσε την πρώτη προπόνηση και άρχισε να χτίζεις το αρχείο σου.</span></div>';
   const bests = new Map();
   const performanceScore = set => set.weightMode === 'bodyweight' ? [Number(set.reps)||0] : set.weightMode === 'mixed' ? [Number(set.plates)||0,Number(set.weight)||0,Number(set.reps)||0] : set.weightMode === 'plates' ? [Number(set.plates)||0,Number(set.reps)||0] : [Number(set.weight)||0,Number(set.reps)||0];
   const isBetter = (candidate, current) => !current || performanceScore(candidate).some((value,index) => value !== performanceScore(current)[index] && performanceScore(candidate).slice(0,index).every((prior,i) => prior === performanceScore(current)[i]) && value > performanceScore(current)[index]);
@@ -211,7 +258,7 @@ function progressWorkouts() {
 
 function renderProgressSelectors() {
   const workouts = progressWorkouts(), workoutSelect = $('#progress-workout'), previousWorkout = workoutSelect.value;
-  workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option value="${esc(item.key)}">${esc(item.name)} · ${item.sessions.length}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
+  workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option value="${esc(item.key)}">${esc(item.name)}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
   if (workouts.some(item => item.key === previousWorkout)) workoutSelect.value = previousWorkout;
   const selected = workouts.find(item => item.key === workoutSelect.value), exercises = new Map();
   selected?.sessions.forEach(session => session.exercises.forEach(exercise => { const key = normalizedName(exercise.exercise); if (!exercises.has(key)) exercises.set(key, exercise.exercise); }));
@@ -261,7 +308,7 @@ function renderProgressChart() {
   const pointLabel = item => comparableMode === 'bodyweight' ? `${item.reps} επαν.` : comparableMode === 'mixed' ? `${item.value} πλάκες + ${item.extraWeight} kg · ${item.reps} επαν.` : `${item.value} ${primaryUnit} · ${item.reps} επαν.`;
   const weightLegend = primaryUnit ? `<span class="weight-key">${primaryUnit}</span>` : '';
   const weightSeries = primaryUnit ? `<polyline points="${line}" class="chart-line"/>` : '';
-  panel.innerHTML = `<div class="chart-summary"><div><span>ΣΕΤ ${setIndex + 1} ΑΝΑ ΠΡΟΠΟΝΗΣΗ</span><h2>${esc(exerciseName)}</h2></div>${progressItems ? `<div class="progress-verdict ${decline?'is-alert':''}">${progressItems}</div>` : ''}</div><div class="chart-legend">${weightLegend}${comparableMode==='mixed'?'<span class="extra-weight-key">Επιπλέον kg</span>':''}<span class="reps-key">Επαναλήψεις</span></div><div class="chart-wrap"><svg class="progress-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Γράφημα προόδου βάρους και επαναλήψεων"><line x1="${left}" y1="${height-bottom}" x2="${width-right}" y2="${height-bottom}" class="chart-axis"/>${weightSeries}${extraLine?`<polyline points="${extraLine}" class="chart-extra-line"/>`:''}<polyline points="${repLine}" class="chart-reps-line"/>${points.map((item,i) => { const anchor=i===0?'start':i===points.length-1?'end':'middle', weightY=primaryUnit?y(item.value):height, labelY=Math.min(weightY,repY(item.reps),comparableMode==='mixed'?extraY(item.extraWeight):height)-17; return `<g><line x1="${x(i)}" y1="${repY(item.reps)}" x2="${x(i)}" y2="${height-bottom}" class="chart-guide"/>${primaryUnit?`<circle cx="${x(i)}" cy="${y(item.value)}" r="7" class="chart-dot"/>`:''}${comparableMode==='mixed'?`<circle cx="${x(i)}" cy="${extraY(item.extraWeight)}" r="5" class="chart-extra-dot"/>`:''}<circle cx="${x(i)}" cy="${repY(item.reps)}" r="5" class="chart-reps-dot"/><text x="${x(i)}" y="${labelY}" text-anchor="${anchor}" class="chart-value">${pointLabel(item)}</text><text x="${x(i)}" y="${height-bottom+24}" text-anchor="${anchor}" class="chart-date">${formatDate(item.session.date)}</text></g>`; }).join('')}</svg></div>${excluded.length ? `<div class="recording-warning"><strong>Έλεγχος καταγραφής: ${excluded.length} ${excluded.length===1?'προπόνηση εξαιρέθηκε':'προπονήσεις εξαιρέθηκαν'}.</strong><p>Το γράφημα χρησιμοποιεί μόνο «${modeLabel(comparableMode)}». ${excluded.map(item => `${formatDate(item.session.date)} — ${item.reason || `καταγράφηκε σε ${modeLabel(item.mode)}`}`).join(' · ')}</p></div>` : `<div class="recording-ok">✓ Όλες οι καταγραφές του σετ χρησιμοποιούν κοινή μέτρηση: ${modeLabel(comparableMode)}.</div>`}`;
+  panel.innerHTML = `<div class="chart-summary"><div><h2>${esc(exerciseName)}</h2></div>${progressItems ? `<div class="progress-verdict ${decline?'is-alert':''}">${progressItems}</div>` : ''}</div><div class="chart-legend">${weightLegend}${comparableMode==='mixed'?'<span class="extra-weight-key">Επιπλέον kg</span>':''}<span class="reps-key">Επαναλήψεις</span></div><div class="chart-wrap"><svg class="progress-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Γράφημα προόδου βάρους και επαναλήψεων"><line x1="${left}" y1="${height-bottom}" x2="${width-right}" y2="${height-bottom}" class="chart-axis"/>${weightSeries}${extraLine?`<polyline points="${extraLine}" class="chart-extra-line"/>`:''}<polyline points="${repLine}" class="chart-reps-line"/>${points.map((item,i) => { const anchor=i===0?'start':i===points.length-1?'end':'middle', weightY=primaryUnit?y(item.value):height, labelY=Math.min(weightY,repY(item.reps),comparableMode==='mixed'?extraY(item.extraWeight):height)-17; return `<g><line x1="${x(i)}" y1="${repY(item.reps)}" x2="${x(i)}" y2="${height-bottom}" class="chart-guide"/>${primaryUnit?`<circle cx="${x(i)}" cy="${y(item.value)}" r="7" class="chart-dot"/>`:''}${comparableMode==='mixed'?`<circle cx="${x(i)}" cy="${extraY(item.extraWeight)}" r="5" class="chart-extra-dot"/>`:''}<circle cx="${x(i)}" cy="${repY(item.reps)}" r="5" class="chart-reps-dot"/><text x="${x(i)}" y="${labelY}" text-anchor="${anchor}" class="chart-value">${pointLabel(item)}</text><text x="${x(i)}" y="${height-bottom+24}" text-anchor="${anchor}" class="chart-date">${formatDate(item.session.date)}</text></g>`; }).join('')}</svg></div>${excluded.length ? `<div class="recording-warning"><strong>Έλεγχος καταγραφής: ${excluded.length} ${excluded.length===1?'προπόνηση εξαιρέθηκε':'προπονήσεις εξαιρέθηκαν'}.</strong><p>Το γράφημα χρησιμοποιεί μόνο «${modeLabel(comparableMode)}». ${excluded.map(item => `${formatDate(item.session.date)} — ${item.reason || `καταγράφηκε σε ${modeLabel(item.mode)}`}`).join(' · ')}</p></div>` : `<div class="recording-ok">✓ Όλες οι καταγραφές του σετ χρησιμοποιούν κοινή μέτρηση: ${modeLabel(comparableMode)}.</div>`}`;
 }
 
 function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
@@ -324,6 +371,7 @@ function loadSessionForEdit(sessionId) {
   } else {
     $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard(item, true)).join('');
   }
+  refreshCopySetButtons();
   $$('.mode-button').forEach(button => { button.disabled = true; });
   $('#cancel-session-edit').classList.remove('hidden');
   $('#save-session').innerHTML = 'Αποθήκευση διορθώσεων <span>✓</span>';
@@ -398,23 +446,22 @@ $('#confirm-delete-accept').addEventListener('click', () => {
 });
 $('#exercise-delete-dialog').addEventListener('cancel', () => { pendingConfirmation = null; pendingSecondaryConfirmation = null; });
 document.addEventListener('input', event => {
+  if (event.target.closest('[data-set]')) refreshCopySetButton(event.target.closest('[data-exercise]'));
   if (!event.target.matches('.free-set-count')) return;
   const card = event.target.closest('[data-exercise]');
   const rows = card.querySelector('.exercise-sets');
   const values = [...rows.querySelectorAll('[data-set]')].map(row => ({ reps:row.querySelector('.set-reps').value, weightMode:row.querySelector('.weight-mode').value, weight:row.querySelector('.set-weight').value, plates:row.querySelector('.set-plates').value }));
   const count = Math.max(1, Math.min(20, Number(event.target.value) || 1));
   rows.innerHTML = setRows(count, values);
+  refreshCopySetButton(card);
 });
 
 document.addEventListener('change', event => {
   if (event.target.matches('.weight-mode')) {
     const row = event.target.closest('[data-set]');
     const mode = event.target.value;
-    row.dataset.weightMode = mode;
-    const weightInput = row.querySelector('.set-weight');
-    weightInput.required = ['kg','mixed','bodyweight_extra'].includes(mode);
-    weightInput.placeholder = mode === 'bodyweight_extra' ? 'extra kg' : 'kg';
-    row.querySelector('.set-plates').required = ['plates','mixed'].includes(mode);
+    configureWeightMode(row, mode);
+    refreshCopySetButton(event.target.closest('[data-exercise]'));
     return;
   }
   if (!event.target.matches('[data-select-session]')) return;
@@ -461,6 +508,10 @@ $('#save-session').addEventListener('click', () => {
 
 document.addEventListener('click', event => {
   if (event.target.matches('.switch-free')) setMode('free');
+  if (event.target.matches('.copy-first-set')) {
+    copyFirstSetToRemaining(event.target.closest('[data-exercise]'));
+    toast('Το 1ο σετ αντιγράφηκε στα υπόλοιπα.');
+  }
   if (event.target.matches('.remove-exercise')) event.target.closest('[data-exercise]').remove();
   if (event.target.matches('.remove-plan-exercise')) {
     const card = event.target.closest('.plan-exercise-fields');
@@ -482,8 +533,8 @@ document.addEventListener('click', event => {
       toast('Η άσκηση αφαιρέθηκε από τη δήλωση');
     });
   }
-  if (event.target.matches('.add-extra-set')) { const rows = event.target.closest('[data-exercise]').querySelector('.exercise-sets'); rows.insertAdjacentHTML('beforeend', setRows(1, [{}], '', { extra:true, startIndex:rows.children.length })); }
-  if (event.target.matches('.remove-extra-set')) { const rows = event.target.closest('.exercise-sets'); event.target.closest('[data-set]').remove(); [...rows.children].forEach((row, index) => row.querySelector('.set-number').textContent = String(index + 1).padStart(2,'0')); }
+  if (event.target.matches('.add-extra-set')) { const card = event.target.closest('[data-exercise]'), rows = card.querySelector('.exercise-sets'); rows.insertAdjacentHTML('beforeend', setRows(1, [{}], '', { extra:true, startIndex:rows.children.length })); refreshCopySetButton(card); }
+  if (event.target.matches('.remove-extra-set')) { const card = event.target.closest('[data-exercise]'), rows = event.target.closest('.exercise-sets'); event.target.closest('[data-set]').remove(); [...rows.children].forEach((row, index) => row.querySelector('.set-number').textContent = String(index + 1).padStart(2,'0')); refreshCopySetButton(card); }
   if (event.target.dataset.editDay) loadDayForEdit(event.target.dataset.editDay);
   if (event.target.dataset.editSession) loadSessionForEdit(event.target.dataset.editSession);
   if (event.target.dataset.deleteDay) {

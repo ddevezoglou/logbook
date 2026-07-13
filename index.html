@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#171813">
+  <meta name="theme-color" content="#15130d">
   <title>Logbook — Ημερολόγιο Προπόνησης</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,8 +34,8 @@
   <main>
     <section class="view" id="log-view">
       <div class="hero">
-        <div><p class="eyebrow">ΕΚΤΕΛΕΣΗ ΠΡΟΠΟΝΗΣΗΣ</p><h1>Σήμερα<br><em>μετράει.</em></h1></div>
-        <p class="hero-note">Το πρόγραμμα είναι έτοιμο. Κατάγραψε το πραγματικό — εκεί χτίζεται η πρόοδος.</p>
+        <div><p class="eyebrow">ΕΚΤΕΛΕΣΗ ΠΡΟΠΟΝΗΣΗΣ</p><h1>ΣΗΜΕΡΑ<br><em>ΜΕΤΡΑΕΙ.</em></h1></div>
+        <p class="hero-note">Το πλάνο είναι έτοιμο. Κατάγραψε working sets, κιλά και επαναλήψεις — εκεί φαίνεται η προοδευτική επιβάρυνση.</p>
       </div>
       <div class="session-shell">
         <div class="session-toolbar">
@@ -55,15 +55,15 @@
         <label class="full-field session-comment">Σχόλια προπόνησης<textarea id="session-comments" rows="3" placeholder="Πώς πήγε συνολικά η σημερινή προπόνηση;"></textarea></label>
         <div class="session-save-actions">
           <button id="cancel-session-edit" class="secondary-button hidden" type="button">Ακύρωση διορθώσεων</button>
-          <button id="save-session" class="primary-button save-session" type="button">Ολοκλήρωση προπόνησης <span>✓</span></button>
+          <button id="save-session" class="primary-button save-session" type="button">ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ <span>✓</span></button>
         </div>
       </div>
     </section>
 
     <section class="view" id="plan-view">
       <div class="hero compact">
-        <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟΣ ΣΧΕΔΙΑΣΜΟΣ</p><h1>Χτίσε τη<br><em>ρουτίνα σου.</em></h1></div>
-        <p class="hero-note">Χτίσε ένα πρόγραμμα που μπορείς να επαναλάβεις. Η συνέπεια κάνει τη διαφορά.</p>
+        <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟ SPLIT</p><h1>ΧΤΙΣΕ ΤΟ<br><em>SPLIT ΣΟΥ.</em></h1></div>
+        <p class="hero-note">Σταθερό εβδομαδιαίο split. Η συχνότητα και ο όγκος ανά μυϊκή ομάδα προγραμματίζονται — δεν αυτοσχεδιάζονται.</p>
       </div>
       <div class="workspace">
         <form id="plan-form" class="sheet">
@@ -73,12 +73,12 @@
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
             <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>
-          <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span><small>Συμπλήρωσε τα βασικά. Τα κιλά και οι επαναλήψεις καταγράφονται μόνο όταν την εκτελείς.</small></div>
+          <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span><small>Ορίζεις άσκηση, working sets και τεχνικό cue. Κιλά και επαναλήψεις καταγράφονται στην εκτέλεση.</small></div>
           <div id="plan-exercises-container" class="plan-exercise-builder"></div>
           <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button></div>
         </form>
         <aside class="history-panel">
-          <div class="panel-title"><div><h2>Οι ημέρες σου</h2></div><strong id="plan-count"></strong></div>
+          <div class="panel-title"><div><h2>ΤΟ SPLIT ΣΟΥ</h2></div><strong id="plan-count"></strong></div>
           <div id="plan-list" class="week-plan"></div>
         </aside>
       </div>
@@ -86,11 +86,11 @@
 
     <section class="view active" id="overview-view">
       <div class="overview-hero">
-        <div><p class="eyebrow">ΙΣΤΟΡΙΚΟ ΠΡΟΠΟΝΗΣΕΩΝ</p><h1>Η δουλειά<br><em>γράφεται.</em></h1></div>
+        <div><p class="eyebrow">TRAINING LOG</p><h1>Ο ΟΓΚΟΣ<br><em>ΓΡΑΦΕΤΑΙ.</em></h1></div>
         <div id="metrics" class="metrics"></div>
       </div>
       <div class="overview-content">
-        <div class="section-heading"><div><h2>Ρυθμός 7 ημερών</h2></div><p id="rhythm-message">Κάθε καταγραφή αφήνει το σημάδι της.</p></div>
+        <div class="section-heading"><div><h2>ΣΥΧΝΟΤΗΤΑ 7 ΗΜΕΡΩΝ</h2></div><p id="rhythm-message">Κάθε καταγραφή αφήνει το σημάδι της.</p></div>
         <div id="week-strip" class="week-strip"></div>
         <div class="overview-grid">
           <section>
@@ -98,7 +98,7 @@
             <div id="session-cards" class="session-cards"></div>
           </section>
           <aside>
-            <div class="section-heading bests-heading"><div><h2>Καλύτερες επιδόσεις σε σετ</h2><span class="best-sets-badge" aria-hidden="true">BEST SETS</span></div></div>
+            <div class="section-heading bests-heading"><div><h2>ΚΑΛΥΤΕΡΑ ΣΕΤ</h2><span class="best-sets-badge" aria-hidden="true">PR ✻</span></div></div>
             <div id="personal-bests" class="personal-bests"></div>
           </aside>
         </div>
@@ -107,8 +107,8 @@
 
     <section class="view" id="progress-view">
       <div class="progress-hero">
-        <div><p class="eyebrow">ΕΠΙΒΛΕΨΗ ΠΡΟΟΔΟΥ</p><h1>Δες την<br><em>τροχιά.</em></h1></div>
-        <p>Μία μέτρηση δεν ορίζει την πορεία. Δες τη συνολική δουλειά και χτίσε πάνω της.</p>
+        <div><p class="eyebrow">PROGRESSIVE OVERLOAD</p><h1>Η ΤΡΟΧΙΑ<br><em>ΑΝΕΒΑΙΝΕΙ.</em></h1></div>
+        <p>Μία μέτρηση δεν ορίζει την πορεία. Το γράφημα δείχνει βάρος και επαναλήψεις ανά σετ, προπόνηση με προπόνηση.</p>
       </div>
       <div class="progress-content">
         <div class="progress-controls">
