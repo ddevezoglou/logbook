@@ -17,7 +17,7 @@ const routines = Array.isArray(savedRoutines) && savedRoutines.length
 if (!routines.some(routine => routine.isActive)) routines[0].isActive = true;
 let foundActiveRoutine = false;
 routines.forEach(routine => { if (routine.isActive && !foundActiveRoutine) foundActiveRoutine = true; else if (routine.isActive) routine.isActive = false; });
-const state = { routines, selectedRoutineId:routines.find(routine => routine.isActive).id, editingRoutineId:null, sessions: savedSessions.length ? savedSessions : oldLogs.map(log => ({ id:log.id, date:log.date, type:'free', comments:'', exercises:[{ exercise:log.exercise, comments:log.comments || '', sets:log.sets || [] }] })), profile:(!Array.isArray(savedProfile) && savedProfile) ? savedProfile : null, mode: 'scheduled', editingDay:null, editingSessionId:null, selectedPlanDay:null };
+const state = { routines, selectedRoutineId:routines.find(routine => routine.isActive)?.id ?? routines[0]?.id ?? null, editingRoutineId:null, sessions: savedSessions.length ? savedSessions : oldLogs.map(log => ({ id:log.id, date:log.date, type:'free', comments:'', exercises:[{ exercise:log.exercise, comments:log.comments || '', sets:log.sets || [] }] })), profile:(!Array.isArray(savedProfile) && savedProfile) ? savedProfile : null, mode: 'scheduled', editingDay:null, editingSessionId:null, selectedPlanDay:null };
 let customAvatarData = state.profile?.customImage || '';
 if (!savedSessions.length && oldLogs.length) store.write('trainingSessions', state.sessions);
 if (!(Array.isArray(savedRoutines) && savedRoutines.length)) store.write('trainingRoutines', state.routines);
@@ -320,9 +320,9 @@ function renderProgressChart() {
   const workout = progressWorkouts().find(item => item.key === $('#progress-workout').value), exerciseKey = $('#progress-exercise').value, setIndex = Number($('#progress-set').value);
   if (!workout || !exerciseKey || !Number.isInteger(setIndex)) { panel.innerHTML = '<div class="empty">Κατάγραψε τουλάχιστον δύο ίδια σετ για να δεις πρόοδο.</div>'; return; }
   const records = workout.sessions.map(session => {
-    const exercise = session.exercises.find(item => normalizedName(item.exercise) === exerciseKey);
+    const exercise = session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey);
     if (!exercise) return { session, reason:'Η άσκηση δεν καταγράφηκε' };
-    const set = exercise.sets[setIndex];
+    const set = exercise.sets?.[setIndex];
     if (!set) return { session, reason:`Δεν καταγράφηκε το σετ ${setIndex + 1}` };
     const mode = set.weightMode || 'kg';
     const value = Number(['kg','bodyweight_extra'].includes(mode) ? set.weight : mode === 'bodyweight' ? 0 : set.plates), extraWeight = mode === 'mixed' ? Number(set.weight) : null, reps = Number(set.reps);
@@ -338,10 +338,11 @@ function renderProgressChart() {
   const floor=min===max ? Math.max(0,min-1) : min-(max-min)*.15, ceiling=min===max ? max+1 : max+(max-min)*.15;
   const repValues=points.map(item => item.reps), repMin=Math.min(...repValues), repMax=Math.max(...repValues), repFloor=repMin===repMax?Math.max(0,repMin-1):repMin-.5, repCeiling=repMin===repMax?repMax+1:repMax+.5;
   const extraValues=comparableMode==='mixed'?points.map(item=>item.extraWeight):[], extraMin=extraValues.length?Math.min(...extraValues):0, extraMax=extraValues.length?Math.max(...extraValues):0, extraFloor=extraMin===extraMax?Math.max(0,extraMin-1):extraMin-(extraMax-extraMin)*.15, extraCeiling=extraMin===extraMax?extraMax+1:extraMax+(extraMax-extraMin)*.15;
-  const x=i => left+i*(width-left-right)/(points.length-1), y=value => top+(ceiling-value)/(ceiling-floor)*(height-top-bottom), repY=value => top+(repCeiling-value)/(repCeiling-repFloor)*(height-top-bottom), extraY=value => top+(extraCeiling-value)/(extraCeiling-extraFloor)*(height-top-bottom);
+  const xStep = (width-left-right) / Math.max(points.length-1, 1);
+  const x=i => left+i*xStep, y=value => top+(ceiling-value)/(ceiling-floor)*(height-top-bottom), repY=value => top+(repCeiling-value)/(repCeiling-repFloor)*(height-top-bottom), extraY=value => top+(extraCeiling-value)/(extraCeiling-extraFloor)*(height-top-bottom);
   const line=points.map((item,i) => `${x(i)},${y(item.value)}`).join(' '), repLine=points.map((item,i) => `${x(i)},${repY(item.reps)}`).join(' '), extraLine=comparableMode==='mixed'?points.map((item,i)=>`${x(i)},${extraY(item.extraWeight)}`).join(' '):'';
   const weightDelta=points.at(-1).value-points[0].value, extraDelta=comparableMode==='mixed'?points.at(-1).extraWeight-points[0].extraWeight:0, repsDelta=points.at(-1).reps-points[0].reps;
-  const exerciseName = points[0].session.exercises.find(item => normalizedName(item.exercise) === exerciseKey)?.exercise || '';
+  const exerciseName = points[0]?.session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey)?.exercise || '';
   const weightChanged = weightDelta !== 0 || extraDelta !== 0, decline = weightDelta < 0 || extraDelta < 0 || (!weightChanged && repsDelta < 0);
   const primaryUnit = comparableMode === 'bodyweight' ? null : comparableMode === 'kg' ? 'kg' : comparableMode === 'bodyweight_extra' ? 'extra kg' : 'πλάκες';
   const progressItems = decline ? '<div class="progress-alert"><strong>Δες όλη την εικόνα.</strong><span>Η τελευταία επίδοση είναι χαμηλότερη. Έλεγξε τεχνική, ύπνο και αποκατάσταση πριν βγάλεις συμπέρασμα.</span></div>' : [primaryUnit && weightDelta > 0 ? `<span><b>+${weightDelta.toFixed(1)}</b> ${primaryUnit}</span>` : '', extraDelta > 0 ? `<span><b>+${extraDelta.toFixed(1)}</b> kg</span>` : '', repsDelta > 0 ? `<span><b>+${repsDelta}</b> επαναλήψεις</span>` : ''].filter(Boolean).join('');
@@ -414,6 +415,7 @@ function prepareProfileImage(file) {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = size;
         const context = canvas.getContext('2d');
+        if (!context) return reject(new Error('Δεν ήταν δυνατή η επεξεργασία της εικόνας.'));
         context.fillStyle = '#efe8d8';
         context.fillRect(0, 0, size, size);
         context.drawImage(image, sourceX, sourceY, crop, crop, 0, 0, size, size);
@@ -480,6 +482,7 @@ function resetSessionForm() {
   $('#cancel-session-edit').classList.add('hidden');
   $('#save-session').innerHTML = 'Ολοκλήρωση προπόνησης <span>✓</span>';
   $$('.mode-button').forEach(button => { button.disabled = false; });
+  $('#workout-day-select').disabled = false;
   setMode('scheduled');
   renderScheduledSession();
 }
@@ -501,6 +504,7 @@ function loadSessionForEdit(sessionId) {
   }
   refreshCopySetButtons();
   $$('.mode-button').forEach(button => { button.disabled = true; });
+  $('#workout-day-select').disabled = true;
   $('#cancel-session-edit').classList.remove('hidden');
   $('#save-session').innerHTML = 'Αποθήκευση διορθώσεων <span>✓</span>';
   showView('log');
@@ -557,7 +561,7 @@ $('#log-date').addEventListener('change', () => {
   const date = $('#log-date').value;
   $('#day-badge').innerHTML = `<span>${dayForDate(date)}</span><small>${formatDate(date)}</small>`;
 });
-$('#workout-day-select').addEventListener('change', event => renderScheduledSession(event.target.value));
+$('#workout-day-select').addEventListener('change', event => { if (state.editingSessionId) return; renderScheduledSession(event.target.value); });
 $('#exercise-count').addEventListener('input', renderPlanExercises);
 $('#routine-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -640,7 +644,7 @@ $('#profile-form').addEventListener('submit', event => {
     birthdate:$('#profile-birthdate').value,
     weight:Number($('#profile-weight').value),
     weightUnit:$('#profile-weight-unit').value,
-    avatar:$('[name="profile-avatar"]:checked').value,
+    avatar:$('[name="profile-avatar"]:checked')?.value || 'male',
     customImage:customAvatarData
   };
   try {

@@ -1,0 +1,41 @@
+import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const html = readFileSync(join(root, 'index.html'), 'utf8');
+const appSource = readFileSync(join(root, 'app.js'), 'utf8');
+
+// Loads the app inside a fresh jsdom window. `seed` pre-populates localStorage
+// (values are JSON-stringified). Returns { window, document, localStorage }.
+export function loadApp(seed = {}) {
+  const dom = new JSDOM(html, {
+    url: 'http://localhost/',
+    runScripts: 'outside-only',
+    pretendToBeVisual: true,
+  });
+  const { window } = dom;
+  window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {} });
+  window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  window.HTMLDialogElement.prototype.close = function () { this.open = false; };
+  window.HTMLElement.prototype.scrollIntoView = function () {}; // not implemented in jsdom
+  for (const [key, value] of Object.entries(seed)) {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }
+  window.eval(appSource);
+  return { window, document: window.document, localStorage: window.localStorage };
+}
+
+export function click(document, target) {
+  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  el.dispatchEvent(new el.ownerDocument.defaultView.Event('click', { bubbles: true }));
+  return el;
+}
+
+export function setValue(document, selector, value, eventType = 'change') {
+  const el = document.querySelector(selector);
+  el.value = value;
+  el.dispatchEvent(new el.ownerDocument.defaultView.Event(eventType, { bubbles: true }));
+  return el;
+}
