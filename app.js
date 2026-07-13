@@ -3,6 +3,21 @@ const store = {
   write(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 };
 
+function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.') {
+  try {
+    store.write(key, value);
+    return true;
+  } catch {
+    const notification = document.querySelector('#toast');
+    if (notification) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => notification.classList.remove('show'), 2200);
+    }
+    return false;
+  }
+}
+
 const days = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
 const planOrder = ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 const oldLogs = store.read('trainingLogs');
@@ -19,30 +34,59 @@ let foundActiveRoutine = false;
 routines.forEach(routine => { if (routine.isActive && !foundActiveRoutine) foundActiveRoutine = true; else if (routine.isActive) routine.isActive = false; });
 const state = { routines, selectedRoutineId:routines.find(routine => routine.isActive)?.id ?? routines[0]?.id ?? null, editingRoutineId:null, sessions: savedSessions.length ? savedSessions : oldLogs.map(log => ({ id:log.id, date:log.date, type:'free', comments:'', exercises:[{ exercise:log.exercise, comments:log.comments || '', sets:log.sets || [] }] })), profile:(!Array.isArray(savedProfile) && savedProfile) ? savedProfile : null, mode: 'scheduled', editingDay:null, editingSessionId:null, selectedPlanDay:null };
 let customAvatarData = state.profile?.customImage || '';
-if (!savedSessions.length && oldLogs.length) store.write('trainingSessions', state.sessions);
-if (!(Array.isArray(savedRoutines) && savedRoutines.length)) store.write('trainingRoutines', state.routines);
+if (!savedSessions.length && oldLogs.length) safeStoreWrite('trainingSessions', state.sessions);
+if (!(Array.isArray(savedRoutines) && savedRoutines.length) || JSON.stringify(savedRoutines) !== JSON.stringify(state.routines)) safeStoreWrite('trainingRoutines', state.routines);
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
+
+const dailyQuotes = Array.isArray(window.LogbookQuotes)
+  ? window.LogbookQuotes.filter(quote => quote?.active !== false && typeof quote?.text === 'string' && quote.text.trim())
+  : [];
+
+function renderHome() {
+  const now = new Date();
+  const language = window.LogbookI18n?.getLanguage?.() || 'el';
+  const locale = window.LogbookI18n?.getLocale?.() || 'el-GR';
+  const hour = now.getHours();
+  const greetings = {
+    el: hour < 5 ? 'ΚΑΛΗ ΝΥΧΤΑ' : hour < 12 ? 'ΚΑΛΗΜΕΡΑ' : hour < 18 ? 'ΚΑΛΟ ΑΠΟΓΕΥΜΑ' : 'ΚΑΛΗΣΠΕΡΑ',
+    en: hour < 5 ? 'GOOD NIGHT' : hour < 12 ? 'GOOD MORNING' : hour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING',
+    fr: hour < 5 ? 'BONNE NUIT' : hour < 12 ? 'BONJOUR' : hour < 18 ? 'BON APRÈS-MIDI' : 'BONSOIR',
+    de: hour < 5 ? 'GUTE NACHT' : hour < 12 ? 'GUTEN MORGEN' : hour < 18 ? 'GUTEN TAG' : 'GUTEN ABEND'
+  };
+  const name = state.profile?.name?.trim();
+  $('#home-greeting').textContent = `${greetings[language]}${name ? `, ${name.toLocaleUpperCase(locale)}` : ''}.`;
+  $('#home-date').textContent = new Intl.DateTimeFormat(locale, { weekday:'long', day:'numeric', month:'long' }).format(now);
+  const dayNumber = Math.floor(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 86400000);
+  const quoteIndex = dailyQuotes.length ? ((dayNumber % dailyQuotes.length) + dailyQuotes.length) % dailyQuotes.length : 0;
+  const quote = dailyQuotes[quoteIndex];
+  $('#daily-quote-text').textContent = quote?.text || '—';
+  $('#daily-quote-author').textContent = quote?.author || 'Logbook';
+  $('#quote-index').textContent = dailyQuotes.length ? `${String(quoteIndex + 1).padStart(2, '0')} / ${String(dailyQuotes.length).padStart(2, '0')}` : '00 / 00';
+}
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const id = () => crypto.randomUUID();
+const localDateInputValue = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 const localDate = date => date ? new Date(`${date}T12:00:00`) : null;
 const dayForDate = date => date ? days[localDate(date).getDay()] : 'Χωρίς ημέρα';
-const formatDate = date => date ? localDate(date).toLocaleDateString('el-GR', { day:'numeric', month:'short', year:'numeric' }) : 'Χωρίς ημερομηνία';
+const formatDate = date => date ? localDate(date).toLocaleDateString(window.LogbookI18n?.getLocale() || 'el-GR', { day:'numeric', month:'short', year:'numeric' }) : 'Χωρίς ημερομηνία';
 const selectedRoutine = () => state.routines.find(routine => routine.id === state.selectedRoutineId) || state.routines[0];
 const activeRoutine = () => state.routines.find(routine => routine.isActive) || state.routines[0];
 const selectedPlan = () => selectedRoutine()?.plan || [];
 const activePlan = () => activeRoutine()?.plan || [];
-const persistRoutines = () => store.write('trainingRoutines', state.routines);
+const persistRoutines = () => safeStoreWrite('trainingRoutines', state.routines);
+const persistSessions = sessions => safeStoreWrite('trainingSessions', sessions);
 
 function setRows(count, values = [], prefix = '', options = {}) {
   const { extra = false, startIndex = 0 } = options;
   return Array.from({ length: count }, (_, i) => {
     const value = values[i] || {};
     const mode = value.weightMode || (value.plates !== undefined && value.plates !== '' ? (value.weight !== undefined && value.weight !== '' ? 'mixed' : 'plates') : 'kg');
-    return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(startIndex + i + 1).padStart(2,'0')}</span>
-      <input class="${prefix}reps set-reps" type="number" min="0" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${i + 1}" required>
-      <select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${i + 1}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες + Κιλά</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + Extra Βάρος</option></select>
-      <div class="weight-entry"><input class="${prefix}plates set-plates" type="number" min="0" step="1" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${i + 1}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" placeholder="${mode === 'bodyweight_extra' ? 'extra kg' : 'kg'}" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${i + 1}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></div>${extra ? '<button class="remove-extra-set" type="button" aria-label="Διαγραφή extra σετ">×</button>' : ''}</div>`;
+    const setPosition = startIndex + i + 1;
+    return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(setPosition).padStart(2,'0')}</span>
+      <input class="${prefix}reps set-reps" type="number" min="0" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${setPosition}" required>
+      <select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες + Κιλά</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + Extra Βάρος</option></select>
+      <div class="weight-entry"><input class="${prefix}plates set-plates" type="number" min="0" step="1" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" placeholder="${mode === 'bodyweight_extra' ? 'extra kg' : 'kg'}" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></div>${extra ? '<button class="remove-extra-set" type="button" aria-label="Διαγραφή extra σετ">×</button>' : ''}</div>`;
   }).join('');
 }
 
@@ -114,14 +158,16 @@ function renderPlan() {
   const routine = selectedRoutine();
   const plan = selectedPlan();
   const activeDays = new Set(plan.map(item => item.day)).size;
+  $('#selected-routine-label').toggleAttribute('data-i18n-user', Boolean(routine?.name));
+  $('#plan-board-title').toggleAttribute('data-i18n-user', Boolean(routine?.name));
   $('#selected-routine-label').textContent = routine?.name || '';
-  $('#plan-board-title').textContent = routine?.name || 'ΤΟ SPLIT ΣΟΥ';
+  $('#plan-board-title').textContent = routine?.name || 'ΤΟ ΠΛΑΝΟ ΣΟΥ';
   $('#plan-count').textContent = `${activeDays}/7 ημέρες`;
   $('#plan-list').innerHTML = planOrder.map((day, dayIndex) => {
     const items = plan.filter(item => item.day === day);
     const workoutName = items[0]?.workoutName || (items.length ? 'Προπόνηση' : 'Ημέρα ξεκούρασης');
-    return `<section class="day-card ${items.length ? 'active-day' : ''}"><div class="day-card-head"><span>${String(dayIndex + 1).padStart(2,'0')}</span><div><h3>${day}</h3><p>${esc(workoutName)}</p></div>${items.length ? `<div class="day-card-actions"><button class="edit-day" data-edit-day="${day}" type="button">Επεξεργασία</button><button class="delete-day" data-delete-day="${day}" aria-label="Διαγραφή ημέρας">×</button></div>` : ''}</div>
-      <div class="day-exercises">${items.length ? items.map(item => `<article><div><strong>${esc(item.exercise)}</strong><small>${item.sets?.length || item.workSets || 3} εργάσιμα σετ</small></div>${item.cues ? `<p>→ ${esc(item.cues)}</p>` : ''}</article>`).join('') : '<small>Δεν έχει οριστεί προπόνηση</small>'}</div></section>`;
+    return `<section class="day-card ${items.length ? 'active-day' : ''}"><div class="day-card-head"><span>${String(dayIndex + 1).padStart(2,'0')}</span><div><h3>${day}</h3><p ${items.length ? 'data-i18n-user' : ''}>${esc(workoutName)}</p></div>${items.length ? `<div class="day-card-actions"><button class="edit-day" data-edit-day="${day}" type="button">Επεξεργασία</button><button class="delete-day" data-delete-day="${day}" aria-label="Διαγραφή ημέρας">×</button></div>` : ''}</div>
+      <div class="day-exercises">${items.length ? items.map(item => `<article><div><strong data-i18n-user>${esc(item.exercise)}</strong><small>${item.sets?.length || item.workSets || 3} εργάσιμα σετ</small></div>${item.cues ? `<p data-i18n-user>→ ${esc(item.cues)}</p>` : ''}</article>`).join('') : '<small>Δεν έχει οριστεί προπόνηση</small>'}</div></section>`;
   }).join('');
 }
 
@@ -134,7 +180,7 @@ function renderRoutines() {
       ${routine.isActive ? '<em>ΣΤΗΝ ΚΑΤΑΓΡΑΦΗ</em>' : ''}
     </article>`;
     return `<article class="routine-card ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><span>${String(index + 1).padStart(2,'0')}</span><strong>${esc(routine.name)}</strong><small>${dayCount}/7 ημέρες</small></button>
+      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><span>${String(index + 1).padStart(2,'0')}</span><strong data-i18n-user>${esc(routine.name)}</strong><small>${dayCount}/7 ημέρες</small></button>
       <div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div>
       ${routine.isActive ? '<em>ΣΤΗΝ ΚΑΤΑΓΡΑΦΗ</em>' : ''}
     </article>`;
@@ -143,14 +189,14 @@ function renderRoutines() {
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
   return `<article class="workout-exercise" data-exercise data-id="${exercise.id || id()}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}">
-    <div class="exercise-title">${free ? `<input class="exercise-name" type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}η</span><h3>${esc(exercise.exercise)}</h3></div>`}
+    <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}η</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${exercise.sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
-    ${exercise.cues ? `<div class="cue-banner"><span>CUE</span>${esc(exercise.cues)}</div>` : ''}
+    ${exercise.cues ? `<div class="cue-banner"><span>CUE</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
     ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${exercise.sets?.length || 3}"></label>` : ''}
     <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΜΕΤΡΗΣΗ ΒΑΡΟΥΣ</span><span>ΒΑΡΟΣ</span></div>
     <div class="exercise-sets">${setRows(exercise.sets?.length || 3, exercise.sets || [])}</div>
     <div class="set-actions"><button class="mini-button copy-first-set hidden" type="button" aria-label="Αντιγραφή του πρώτου σετ στα υπόλοιπα">ΑΝΤΙΓΡΑΦΗ</button>${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}</div>
-    <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
+    <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" data-i18n-user rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
     <input class="exercise-source-name" type="hidden" value="${esc(exercise.exercise || '')}">
   </article>`;
 }
@@ -163,7 +209,7 @@ function refreshWorkoutDayOptions(preferredDay) {
     return preferredDay;
   }
   const selectedDay = workouts.some(item => item.day === preferredDay) ? preferredDay : workouts[0].day;
-  $('#workout-day-select').innerHTML = workouts.map(item => `<option value="${item.day}" ${item.day === selectedDay ? 'selected' : ''}>${esc(item.workoutName)}</option>`).join('');
+  $('#workout-day-select').innerHTML = workouts.map(item => `<option data-i18n-user value="${item.day}" ${item.day === selectedDay ? 'selected' : ''}>${esc(item.workoutName)}</option>`).join('');
   return selectedDay;
 }
 
@@ -177,7 +223,7 @@ function renderScheduledSession(preferredDay = null) {
   const routine = activeRoutine();
   const planned = activePlan().filter(item => item.day === planDay).map(item => ({ ...item, sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
   const workoutName = planned[0]?.workoutName || 'Η προπόνηση της ημέρας';
-  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label">★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2>${esc(workoutName)}</h2><p>Πρόγραμμα ${planDay} · Συμπλήρωσε όσα πραγματικά εκτέλεσες.</p></div></div>${planned.map((item, index) => exerciseCard(item, false, index)).join('')}` : `<div class="no-workout"><span>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')} / REST</span><h2>Δεν υπάρχει ορισμένη προπόνηση για ${planDay}.</h2><p>Επίλεξε το πρόγραμμα άλλης ημέρας ή ξεκίνα μια «Ελεύθερη» καταγραφή.</p><button class="secondary-button switch-free" type="button">Έναρξη ελεύθερης προπόνησης</button></div>`;
+  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2><p>Πρόγραμμα ${planDay} · Συμπλήρωσε όσα πραγματικά εκτέλεσες.</p></div></div>${planned.map((item, index) => exerciseCard(item, false, index)).join('')}` : `<div class="no-workout"><span data-i18n-user>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')} / REST</span><h2>Δεν υπάρχει ορισμένη προπόνηση για ${planDay}.</h2><p>Επίλεξε το πρόγραμμα άλλης ημέρας ή ξεκίνα μια «Ελεύθερη» καταγραφή.</p><button class="secondary-button switch-free" type="button">Έναρξη ελεύθερης προπόνησης</button></div>`;
   refreshCopySetButtons($('#scheduled-session'));
 }
 
@@ -240,10 +286,10 @@ function sessionWorkoutName(session) {
 }
 
 function syncPlanChangesToHistory(routineId, sourceDay, targetDay, previousItems, nextItems) {
-  if (!sourceDay || !previousItems.length) return;
+  if (!sourceDay || !previousItems.length) return true;
   const previousWorkoutName = previousItems[0].workoutName;
   const renameByOldName = new Map(previousItems.map(item => [normalizedName(item.exercise), nextItems.find(next => next.id === item.id) || null]));
-  state.sessions = state.sessions.map(session => {
+  const nextSessions = state.sessions.map(session => {
     if (session.type !== 'scheduled') return session;
     const belongsToPlan = (session.routineId ? session.routineId === routineId : true) && (session.workoutDay === sourceDay || (!session.workoutDay && normalizedName(session.workoutName) === normalizedName(previousWorkoutName)));
     if (!belongsToPlan) return session;
@@ -253,20 +299,22 @@ function syncPlanChangesToHistory(routineId, sourceDay, targetDay, previousItems
     });
     return { ...session, routineId, workoutDay:targetDay, workoutName:nextItems[0]?.workoutName || session.workoutName, exercises:syncedExercises };
   });
-  store.write('trainingSessions', state.sessions);
+  if (!persistSessions(nextSessions)) return false;
+  state.sessions = nextSessions;
+  return true;
 }
 
 function renderOverview() {
   state.sessions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const uniqueDates = new Set(state.sessions.map(s => s.date));
   const recentDays = Array.from({length:7}, (_, i) => { const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate() - (6-i)); return d; });
-  const completedRecent = recentDays.filter(d => uniqueDates.has(d.toISOString().slice(0,10))).length;
+  const completedRecent = recentDays.filter(d => uniqueDates.has(localDateInputValue(d))).length;
   const workingSetTotal = state.sessions.reduce((total, session) => total + session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0), 0);
   $('#metrics').innerHTML = `<article><strong>${state.sessions.length}</strong><span>ΠΡΟΠΟΝΗΣΕΙΣ</span></article><article><strong>${workingSetTotal}</strong><span>WORKING SETS</span></article><article><strong>${completedRecent}<small>/7</small></strong><span>ΣΥΧΝΟΤΗΤΑ ΕΒΔΟΜΑΔΑΣ</span></article>`;
   const rhythmMessage = completedRecent === 0 ? 'Η πρώτη καταγραφή είναι η γραμμή εκκίνησης.' : completedRecent === 1 ? 'Ο ρυθμός ξεκίνησε. Η επόμενη καταγραφή τον χτίζει.' : completedRecent < 4 ? `${completedRecent} προπονήσεις σε 7 ημέρες. Ο ρυθμός χτίζεται.` : `${completedRecent} προπονήσεις σε 7 ημέρες. Κράτησε τη γραμμή.`;
   $('#rhythm-message').textContent = rhythmMessage;
-  $('#week-strip').innerHTML = recentDays.map(d => { const key = d.toISOString().slice(0,10); const done = uniqueDates.has(key); return `<div class="day-tile ${done ? 'done' : ''}"><span>${days[d.getDay()].slice(0,3)}</span><strong>${d.getDate()}</strong><small>${done ? '✓ logged' : '—'}</small></div>`; }).join('');
-  $('#session-cards').innerHTML = state.sessions.length ? state.sessions.map((session, index) => { const setCount = session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0); return `<article class="session-card"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${state.sessions.length - index}</small></div><div class="card-body"><div class="card-stats"><span>${session.exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><h3>${esc(sessionWorkoutName(session))}</h3><p class="card-exercises">${session.exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment">${esc(session.comments)}</p>` : ''}</div><span class="card-stamp" aria-hidden="true">ΚΑΤΑΓΡΑΦΗΚΕ</span><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${session.id}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${session.id}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-delete" data-delete-session="${session.id}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></article>`; }).join('') : '<div class="empty"><strong>Η γραμμή εκκίνησης είναι εδώ.</strong><span>Ολοκλήρωσε την πρώτη προπόνηση και άρχισε να χτίζεις το αρχείο σου.</span></div>';
+  $('#week-strip').innerHTML = recentDays.map(d => { const key = localDateInputValue(d); const done = uniqueDates.has(key); return `<div class="day-tile ${done ? 'done' : ''}"><span>${days[d.getDay()].slice(0,3)}</span><strong>${d.getDate()}</strong><small>${done ? '✓ logged' : '—'}</small></div>`; }).join('');
+  $('#session-cards').innerHTML = state.sessions.length ? state.sessions.map((session, index) => { const setCount = session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0); return `<article class="session-card"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${state.sessions.length - index}</small></div><div class="card-body"><div class="card-stats"><span>${session.exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><h3 data-i18n-user>${esc(sessionWorkoutName(session))}</h3><p class="card-exercises" data-i18n-user>${session.exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment" data-i18n-user>${esc(session.comments)}</p>` : ''}</div><span class="card-stamp" aria-hidden="true">LOGGED</span><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${session.id}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${session.id}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-delete" data-delete-session="${session.id}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></article>`; }).join('') : '<div class="empty"><strong>Η γραμμή εκκίνησης είναι εδώ.</strong><span>Ολοκλήρωσε την πρώτη προπόνηση και άρχισε να χτίζεις το αρχείο σου.</span></div>';
   const bests = new Map();
   const performanceScore = set => set.weightMode === 'bodyweight' ? [Number(set.reps)||0] : set.weightMode === 'mixed' ? [Number(set.plates)||0,Number(set.weight)||0,Number(set.reps)||0] : set.weightMode === 'plates' ? [Number(set.plates)||0,Number(set.reps)||0] : [Number(set.weight)||0,Number(set.reps)||0];
   const isBetter = (candidate, current) => !current || performanceScore(candidate).some((value,index) => value !== performanceScore(current)[index] && performanceScore(candidate).slice(0,index).every((prior,i) => prior === performanceScore(current)[i]) && value > performanceScore(current)[index]);
@@ -280,7 +328,7 @@ function renderOverview() {
   })));
   const ranked = [...bests.values()].sort((a,b) => a.name.localeCompare(b.name,'el'));
   const bestValue = best => best.mode === 'bodyweight' ? `${best.set.reps}<em>επαν.</em>` : best.mode === 'plates' ? `${best.set.plates}<em>πλάκες</em>` : best.mode === 'mixed' ? `${best.set.plates}<em>πλάκες</em> + ${best.set.weight}<em>kg</em>` : `${best.set.weight}<em>${best.mode === 'bodyweight_extra' ? 'extra kg' : 'kg'}</em>`;
-  $('#personal-bests').innerHTML = ranked.length ? ranked.map(best => `<article><div><strong>${esc(best.name)}</strong><small>${best.set.reps} επαναλήψεις</small></div><b>${bestValue(best)}</b></article>`).join('') : '<div class="empty"><strong>Τα σημεία αναφοράς θα έρθουν.</strong><span>Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σου.</span></div>';
+  $('#personal-bests').innerHTML = ranked.length ? ranked.map(best => `<article><div><strong data-i18n-user>${esc(best.name)}</strong><small>${best.set.reps} επαναλήψεις</small></div><b>${bestValue(best)}</b></article>`).join('') : '<div class="empty"><strong>Τα σημεία αναφοράς θα έρθουν.</strong><span>Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σου.</span></div>';
 }
 
 const normalizedName = value => String(value || '').trim().toLocaleLowerCase('el-GR').replace(/\s+/g, ' ');
@@ -298,12 +346,12 @@ function progressWorkouts() {
 
 function renderProgressSelectors() {
   const workouts = progressWorkouts(), workoutSelect = $('#progress-workout'), previousWorkout = workoutSelect.value;
-  workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option value="${esc(item.key)}">${esc(item.name)}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
+  workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option data-i18n-user value="${esc(item.key)}">${esc(item.name)}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
   if (workouts.some(item => item.key === previousWorkout)) workoutSelect.value = previousWorkout;
   const selected = workouts.find(item => item.key === workoutSelect.value), exercises = new Map();
   selected?.sessions.forEach(session => session.exercises.forEach(exercise => { const key = normalizedName(exercise.exercise); if (!exercises.has(key)) exercises.set(key, exercise.exercise); }));
   const exerciseSelect = $('#progress-exercise'), previousExercise = exerciseSelect.value;
-  exerciseSelect.innerHTML = exercises.size ? [...exercises].map(([key, name]) => `<option value="${esc(key)}">${esc(name)}</option>`).join('') : '<option value="">Δεν υπάρχουν ασκήσεις</option>';
+  exerciseSelect.innerHTML = exercises.size ? [...exercises].map(([key, name]) => `<option data-i18n-user value="${esc(key)}">${esc(name)}</option>`).join('') : '<option value="">Δεν υπάρχουν ασκήσεις</option>';
   if (exercises.has(previousExercise)) exerciseSelect.value = previousExercise;
   const selectedExerciseKey = exerciseSelect.value, setSelect = $('#progress-set'), previousSet = setSelect.value;
   const maxSets = selected?.sessions.reduce((maximum, session) => {
@@ -356,10 +404,11 @@ function toast(message) { const el = $('#toast'); el.textContent = message; el.c
 
 function profileAge(birthdate) {
   if (!birthdate) return null;
-  const birth = localDate(birthdate), today = new Date();
-  if (!birth || birth > today) return null;
-  let age = today.getFullYear() - birth.getFullYear();
-  const birthdayPending = today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+  const parts = birthdate.split('-').map(Number), today = new Date();
+  if (parts.length !== 3 || parts.some(part => !Number.isInteger(part)) || birthdate > localDateInputValue(today)) return null;
+  const [birthYear, birthMonth, birthDay] = parts;
+  let age = today.getFullYear() - birthYear;
+  const birthdayPending = today.getMonth() + 1 < birthMonth || (today.getMonth() + 1 === birthMonth && today.getDate() < birthDay);
   if (birthdayPending) age -= 1;
   return age;
 }
@@ -429,7 +478,7 @@ function prepareProfileImage(file) {
 
 function loadProfile() {
   const profile = state.profile;
-  $('#profile-birthdate').max = new Date().toISOString().slice(0,10);
+  $('#profile-birthdate').max = localDateInputValue();
   if (profile) {
     $('#profile-name').value = profile.name || '';
     $('#profile-birthdate').value = profile.birthdate || '';
@@ -476,7 +525,7 @@ function setMode(mode) {
 function resetSessionForm() {
   state.editingSessionId = null;
   state.selectedPlanDay = null;
-  $('#log-date').valueAsDate = new Date();
+  $('#log-date').value = localDateInputValue();
   $('#session-comments').value = '';
   $('#free-exercises').innerHTML = '';
   $('#cancel-session-edit').classList.add('hidden');
@@ -498,7 +547,7 @@ function loadSessionForEdit(sessionId) {
   if (session.type === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
     $('#day-badge').innerHTML = `<span>${dayForDate(session.date)}</span><small>${formatDate(session.date)}</small>`;
-    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2>${esc(sessionWorkoutName(session))}</h2><p>Διόρθωσε τις τιμές που θέλεις και αποθήκευσε ξανά.</p></div></div>${session.exercises.map((item, index) => exerciseCard(item, false, index)).join('')}`;
+    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Διόρθωσε τις τιμές που θέλεις και αποθήκευσε ξανά.</p></div></div>${session.exercises.map((item, index) => exerciseCard(item, false, index)).join('')}`;
   } else {
     $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard(item, true)).join('');
   }
@@ -513,7 +562,7 @@ function loadSessionForEdit(sessionId) {
 
 function showView(view) {
   const current = $('.view.active')?.id.replace('-view','');
-  const labels = { log:'Καταγραφή', plan:'Πρόγραμμα', overview:'Ιστορικό', progress:'Επίβλεψη', profile:'Προφίλ' };
+  const labels = { home:'Αρχική', log:'Καταγραφή', plan:'Πρόγραμμα', overview:'Ιστορικό', progress:'Επίβλεψη', profile:'Προφίλ' };
   closeMenu();
   if (!labels[view]) return;
   history.replaceState(null, '', `#${view}`);
@@ -523,6 +572,7 @@ function showView(view) {
     $(`.nav-button[data-view="${view}"]`).classList.add('active');
     $(`#${view}-view`).classList.add('active');
     $('#current-view-label').textContent = labels[view];
+    if (view === 'home') renderHome();
     if (view === 'overview') renderOverview();
     if (view === 'progress') renderProgressSelectors();
     if (view === 'profile') renderProfilePreview();
@@ -554,7 +604,8 @@ document.addEventListener('keydown', event => { if (event.key === 'Escape') clos
 $('#progress-workout').addEventListener('change', renderProgressSelectors);
 $('#progress-exercise').addEventListener('change', renderProgressSelectors);
 $('#progress-set').addEventListener('change', renderProgressChart);
-$('.brand').addEventListener('click', event => { event.preventDefault(); showView('overview'); });
+$('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
+document.addEventListener('click', event => { if (event.target.closest('[data-home-action="log"]')) showView('log'); });
 $$('.mode-button').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
 $('#log-date').addEventListener('change', () => {
   if (!state.editingSessionId) { state.selectedPlanDay = null; return renderScheduledSession(); }
@@ -568,9 +619,14 @@ $('#routine-form').addEventListener('submit', event => {
   const name = $('#routine-name').value.trim();
   if (!name) return;
   const routine = { id:id(), name, isActive:false, plan:[] };
+  const previousSelectedRoutineId = state.selectedRoutineId;
   state.routines.push(routine);
   state.selectedRoutineId = routine.id;
-  persistRoutines();
+  if (!persistRoutines()) {
+    state.routines.pop();
+    state.selectedRoutineId = previousSelectedRoutineId;
+    return;
+  }
   event.currentTarget.reset();
   resetPlanForm();
   renderRoutines();
@@ -584,9 +640,13 @@ document.addEventListener('submit', event => {
   const routine = state.routines.find(item => item.id === form.dataset.routineRenameForm);
   const nextName = form.querySelector('.routine-inline-name').value.trim();
   if (!routine || !nextName) return;
+  const previousName = routine.name;
   routine.name = nextName;
+  if (!persistRoutines()) {
+    routine.name = previousName;
+    return;
+  }
   state.editingRoutineId = null;
-  persistRoutines();
   renderRoutines();
   renderPlan();
   if (routine.isActive) renderScheduledSession();
@@ -691,9 +751,10 @@ $('#plan-form').addEventListener('submit', event => {
   const previousItems = sourceDay ? plan.filter(item => item.day === sourceDay) : [];
   const exercises = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId || id(), day, workoutName, exercise:card.querySelector('.builder-name').value.trim(), workSets:Number(card.querySelector('.builder-sets').value), cues:card.querySelector('.builder-cues').value.trim(), sets:Array.from({ length:Number(card.querySelector('.builder-sets').value) }, () => ({})) }));
   const savePlan = updateHistory => {
-    routine.plan = [...plan.filter(item => item.day !== day && item.day !== sourceDay), ...exercises];
-    persistRoutines();
-    if (updateHistory) syncPlanChangesToHistory(routine.id, sourceDay, day, previousItems, exercises);
+    const nextPlan = [...plan.filter(item => item.day !== day && item.day !== sourceDay), ...exercises];
+    routine.plan = nextPlan;
+    if (!persistRoutines()) { routine.plan = plan; return; }
+    if (updateHistory && !syncPlanChangesToHistory(routine.id, sourceDay, day, previousItems, exercises)) return;
     resetPlanForm(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview();
     toast(updateHistory ? 'Το Πρόγραμμα και το Ιστορικό ενημερώθηκαν ✓' : sourceDay ? 'Ενημερώθηκε μόνο το Πρόγραμμα ✓' : `Η προπόνηση για ${day} αποθηκεύτηκε`);
   };
@@ -712,12 +773,18 @@ $('#save-session').addEventListener('click', () => {
   if (!exercises.length) return toast('Πρόσθεσε τουλάχιστον μία άσκηση');
   if (container.querySelector(':invalid')) { container.querySelector(':invalid').reportValidity(); return; }
   const existing = state.sessions.find(item => String(item.id) === String(state.editingSessionId));
+  if (state.editingSessionId && !existing) {
+    resetSessionForm();
+    return toast('Η προπόνηση έχει διαγραφεί και δεν μπορεί να αποθηκευτεί ξανά.');
+  }
   const routine = activeRoutine();
   const workoutName = state.mode === 'scheduled' ? (existing ? sessionWorkoutName(existing) : activePlan().find(item => item.day === state.selectedPlanDay)?.workoutName || 'Προπόνηση') : 'Ελεύθερη προπόνηση';
   const session = { id:existing?.id || id(), date:$('#log-date').value, type:state.mode, routineId:state.mode === 'scheduled' ? (existing?.routineId || routine?.id || null) : null, workoutDay:state.mode === 'scheduled' ? state.selectedPlanDay : null, workoutName, comments:$('#session-comments').value.trim(), exercises };
-  if (existing) state.sessions = state.sessions.map(item => String(item.id) === String(existing.id) ? session : item);
-  else state.sessions.unshift(session);
-  store.write('trainingSessions', state.sessions);
+  const nextSessions = existing
+    ? state.sessions.map(item => String(item.id) === String(existing.id) ? session : item)
+    : [session, ...state.sessions];
+  if (!persistSessions(nextSessions)) return;
+  state.sessions = nextSessions;
   const wasEditing = Boolean(existing);
   resetSessionForm(); renderOverview(); toast(wasEditing ? 'Οι διορθώσεις αποθηκεύτηκαν.' : 'Η δουλειά καταγράφηκε.');
 });
@@ -764,10 +831,16 @@ document.addEventListener('click', event => {
   }
   if (activateRoutineButton) {
     const routineId = activateRoutineButton.dataset.activateRoutine;
+    const previousActiveRoutineId = activeRoutine()?.id;
+    const previousSelectedRoutineId = state.selectedRoutineId;
     state.routines.forEach(routine => { routine.isActive = routine.id === routineId; });
     state.selectedRoutineId = routineId;
     state.selectedPlanDay = null;
-    persistRoutines();
+    if (!persistRoutines()) {
+      state.routines.forEach(routine => { routine.isActive = routine.id === previousActiveRoutineId; });
+      state.selectedRoutineId = previousSelectedRoutineId;
+      return;
+    }
     resetPlanForm();
     renderRoutines();
     renderPlan();
@@ -795,10 +868,11 @@ document.addEventListener('click', event => {
     if (!routine) return;
     if (state.routines.length === 1) return toast('Χρειάζεται να υπάρχει τουλάχιστον ένα πρόγραμμα');
     askToConfirm('Διαγραφή εβδομαδιαίου προγράμματος', `Να διαγραφεί οριστικά το «${routine.name}» και όλες οι ημέρες του; Το Ιστορικό προπονήσεων θα παραμείνει.`, () => {
-      state.routines = state.routines.filter(item => item.id !== routine.id);
-      if (routine.isActive) state.routines[0].isActive = true;
+      const nextRoutines = state.routines.filter(item => item.id !== routine.id);
+      if (routine.isActive) nextRoutines[0].isActive = true;
+      if (!safeStoreWrite('trainingRoutines', nextRoutines)) return;
+      state.routines = nextRoutines;
       if (state.selectedRoutineId === routine.id) state.selectedRoutineId = activeRoutine().id;
-      persistRoutines();
       resetPlanForm();
       renderRoutines();
       renderPlan();
@@ -811,8 +885,9 @@ document.addEventListener('click', event => {
   if (event.target.dataset.deleteDay) {
     const day = event.target.dataset.deleteDay;
     askToConfirm('Διαγραφή ημέρας προγράμματος', `Να διαγραφεί ολόκληρο το πρόγραμμα της ${day}; Το ήδη καταγεγραμμένο Ιστορικό θα παραμείνει.`, () => {
-      selectedRoutine().plan = selectedPlan().filter(x => x.day !== day);
-      persistRoutines();
+      const routine = selectedRoutine(), previousPlan = routine.plan;
+      routine.plan = selectedPlan().filter(x => x.day !== day);
+      if (!persistRoutines()) { routine.plan = previousPlan; return; }
       if (state.editingDay === day) resetPlanForm(); else refreshDayOptions();
       renderRoutines(); renderPlan(); renderScheduledSession(); toast(`Το πρόγραμμα της ${day} διαγράφηκε`);
     });
@@ -821,11 +896,23 @@ document.addEventListener('click', event => {
     const sessionId = event.target.dataset.deleteSession;
     const session = state.sessions.find(item => String(item.id) === String(sessionId));
     askToConfirm('Διαγραφή προπόνησης', `Να διαγραφεί οριστικά η προπόνηση ${session ? `«${sessionWorkoutName(session)}» στις ${formatDate(session.date)}` : ''}; Θα χαθούν όλα τα σετ και οι μετρήσεις της.`, () => {
-      state.sessions = state.sessions.filter(x => String(x.id) !== String(sessionId));
-      store.write('trainingSessions', state.sessions); renderOverview(); toast('Η προπόνηση διαγράφηκε');
+      const nextSessions = state.sessions.filter(x => String(x.id) !== String(sessionId));
+      if (!persistSessions(nextSessions)) return;
+      state.sessions = nextSessions;
+      if (String(state.editingSessionId) === String(sessionId)) resetSessionForm();
+      renderOverview(); toast('Η προπόνηση διαγράφηκε');
     });
   }
 });
 
-$('#log-date').valueAsDate = new Date(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile();
+$('#log-date').value = localDateInputValue(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile(); renderHome();
+document.addEventListener('logbook:languagechange', () => {
+  // Re-render only date-dependent views. Form fields and in-progress sets stay intact.
+  const logDate = $('#log-date').value;
+  if (logDate) $('#day-badge').innerHTML = `<span>${dayForDate(logDate)}</span><small>${formatDate(logDate)}</small>`;
+  renderOverview();
+  renderProgressChart();
+  renderHome();
+});
+window.LogbookI18n?.translate(document);
 if (location.hash) showView(location.hash.slice(1));

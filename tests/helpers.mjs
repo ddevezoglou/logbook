@@ -5,6 +5,8 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
+const quotesSource = readFileSync(join(root, 'quotes.js'), 'utf8');
+const i18nSource = readFileSync(join(root, 'i18n.js'), 'utf8');
 const appSource = readFileSync(join(root, 'app.js'), 'utf8');
 
 // Loads the app inside a fresh jsdom window. `seed` pre-populates localStorage
@@ -21,8 +23,10 @@ export function loadApp(seed = {}) {
   window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   window.HTMLElement.prototype.scrollIntoView = function () {}; // not implemented in jsdom
   for (const [key, value] of Object.entries(seed)) {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    window.localStorage.setItem(key, key === 'logbookLanguage' ? value : JSON.stringify(value));
   }
+  window.eval(quotesSource);
+  window.eval(i18nSource);
   window.eval(appSource);
   return { window, document: window.document, localStorage: window.localStorage };
 }

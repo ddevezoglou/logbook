@@ -7,7 +7,25 @@ const planDay = (day, exercise, extra = {}) => ({ id: `p-${day}-${exercise}`, da
 
 test('boots with empty storage without throwing', () => {
   const { document } = loadApp();
+  assert.ok(document.querySelector('#home-view').classList.contains('active'));
+  assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
+  assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
+  assert.equal(document.querySelector('.app-version b').textContent, '0.1.0');
+});
+
+test('home greeting uses the saved profile name and opens the workout log', () => {
+  const { document } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
+  assert.ok(document.querySelector('#home-greeting').textContent.includes('ΔΗΜΗΤΡΗ'));
+  click(document, '[data-home-action="log"]');
+  assert.ok(document.querySelector('#log-view').classList.contains('active'));
+});
+
+test('daily quote remains English when the interface language changes', () => {
+  const { document } = loadApp();
+  const quote = document.querySelector('#daily-quote-text').textContent;
+  click(document, '[data-language="fr"]');
+  assert.equal(document.querySelector('#daily-quote-text').textContent, quote);
 });
 
 test('migrates legacy trainingLogs into sessions', () => {
@@ -133,4 +151,446 @@ test('editing a scheduled session then switching workout day must not silently d
   // cancelling the edit re-enables the selector
   click(document, '#cancel-session-edit');
   assert.equal(document.querySelector('#workout-day-select').disabled, false, 'day select should be re-enabled after edit ends');
+});
+
+test('language picker switches all supported languages and persists the choice', () => {
+  const { document, localStorage } = loadApp();
+  click(document, '[data-language="en"]');
+  assert.equal(document.documentElement.lang, 'en');
+  assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'History');
+  assert.equal(document.querySelector('[data-language="en"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(localStorage.getItem('logbookLanguage'), 'en');
+
+  click(document, '[data-language="fr"]');
+  assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Historique');
+  click(document, '[data-language="de"]');
+  assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Verlauf');
+  click(document, '[data-language="el"]');
+  assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Ιστορικό');
+});
+
+test('changing language preserves in-progress workout values', () => {
+  const { document } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]),
+  });
+  setValue(document, '#log-date', '2026-07-06');
+  const reps = document.querySelector('#scheduled-session .set-reps');
+  const weight = document.querySelector('#scheduled-session .set-weight');
+  reps.value = '8';
+  weight.value = '62.5';
+  click(document, '[data-language="de"]');
+  assert.equal(document.querySelector('#scheduled-session .set-reps').value, '8');
+  assert.equal(document.querySelector('#scheduled-session .set-weight').value, '62.5');
+});
+
+test('saved language is restored on the next load', () => {
+  const { document } = loadApp({ logbookLanguage: 'fr' });
+  assert.equal(document.documentElement.lang, 'fr');
+  assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Historique');
+  assert.equal(document.querySelector('[data-language="fr"]').getAttribute('aria-pressed'), 'true');
+});
+
+test('legacy trainingPlan migrates into a single active routine', () => {
+  const legacy = [planDay('Δευτέρα', 'Squat')];
+  const { localStorage } = loadApp({ trainingPlan: legacy });
+  const routines = JSON.parse(localStorage.getItem('trainingRoutines'));
+  assert.equal(routines.length, 1);
+  assert.equal(routines[0].isActive, true);
+  assert.equal(routines[0].plan[0].exercise, 'Squat');
+});
+
+test('two saved routines flagged active keep only the first as active', () => {
+  const routines = [
+    { id: 'r1', name: 'A', isActive: true, plan: [] },
+    { id: 'r2', name: 'B', isActive: true, plan: [] },
+  ];
+  const { document, localStorage } = loadApp({ trainingRoutines: routines });
+  assert.equal(document.querySelectorAll('.routine-card.active-routine').length, 1);
+  assert.equal(document.querySelector('[data-activate-routine="r1"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(document.querySelector('[data-activate-routine="r2"]').getAttribute('aria-pressed'), 'false');
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingRoutines')).map(routine => routine.isActive), [true, false]);
+});
+
+test('routine persistence failure is handled without showing a false success', () => {
+  const { document, localStorage } = loadApp();
+  Object.getPrototypeOf(localStorage).setItem = () => { throw new Error('quota'); };
+  setValue(document, '#routine-name', 'Will Not Persist', 'input');
+  document.querySelector('#routine-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  assert.equal(JSON.parse(localStorage.getItem('trainingRoutines')).length, 1);
+  assert.match(document.querySelector('#toast').textContent, /Δεν ήταν δυνατή η αποθήκευση/);
+  assert.equal(document.querySelector('#toast').textContent.includes('δημιουργήθηκε'), false);
+});
+
+test('saving a free workout stores a free session with its exercises', () => {
+  const { document, localStorage } = loadApp();
+  setValue(document, '#log-date', '2026-07-06');
+  click(document, '[data-mode="free"]');
+  const card = document.querySelector('#free-exercises [data-exercise]');
+  assert.ok(card, 'switching to free mode should add one exercise card');
+  card.querySelector('.exercise-name').value = 'Dips';
+  card.querySelectorAll('[data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '10';
+    row.querySelector('.set-weight').value = '0';
+  });
+  click(document, '#save-session');
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].type, 'free');
+  assert.equal(sessions[0].workoutName, 'Ελεύθερη προπόνηση');
+  assert.equal(sessions[0].exercises[0].exercise, 'Dips');
+  assert.equal(sessions[0].exercises[0].sets.length, 3);
+});
+
+test('editing a session saves in place without creating a duplicate', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg', plates: null }] }] };
+  const { document, localStorage } = loadApp({ trainingSessions: [session] });
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '[data-edit-session="s1"]');
+  const row = document.querySelector('#free-exercises [data-set]');
+  row.querySelector('.set-reps').value = '6';
+  click(document, '#save-session');
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].id, 's1');
+  assert.equal(sessions[0].exercises[0].sets[0].reps, 6);
+});
+
+test('a deleted session cannot be recreated by its stale edit form', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg', plates: null }] }] };
+  const { document, localStorage } = loadApp({ trainingSessions: [session] });
+  click(document, '[data-edit-session="s1"]');
+  click(document, '[data-delete-session="s1"]');
+  click(document, '#confirm-delete-accept');
+  click(document, '#save-session');
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 0);
+  assert.equal(document.querySelector('#cancel-session-edit').classList.contains('hidden'), true);
+});
+
+test('copy-first-set fills the remaining rows with the first set values', () => {
+  const { document } = loadApp({ trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]) });
+  setValue(document, '#log-date', '2026-07-06');
+  const card = document.querySelector('#scheduled-session [data-exercise]');
+  const first = card.querySelector('[data-set]');
+  first.querySelector('.set-reps').value = '8';
+  setValue(document, '#scheduled-session [data-set] .set-weight', '60', 'input');
+  const button = card.querySelector('.copy-first-set');
+  assert.equal(button.classList.contains('hidden'), false, 'copy button appears once first set is complete');
+  click(document, button);
+  const rows = [...card.querySelectorAll('[data-set]')];
+  assert.equal(rows[1].querySelector('.set-reps').value, '8');
+  assert.equal(rows[2].querySelector('.set-weight').value, '60');
+});
+
+test('extra set is added, saved with the session, and removable with renumbering', () => {
+  const { document, localStorage } = loadApp({ trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]) });
+  setValue(document, '#log-date', '2026-07-06');
+  click(document, '.add-extra-set');
+  let numbers = [...document.querySelectorAll('#scheduled-session .set-number')].map(el => el.textContent);
+  assert.deepEqual(numbers, ['01', '02', '03', '04']);
+  assert.equal(document.querySelector('#scheduled-session [data-extra-set] .set-reps').getAttribute('aria-label'), 'Επαναλήψεις σετ 4');
+  assert.equal(document.querySelector('#scheduled-session [data-extra-set] .weight-mode').getAttribute('aria-label'), 'Τρόπος καταγραφής βάρους για το σετ 4');
+  document.querySelectorAll('#scheduled-session [data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '8';
+    row.querySelector('.set-weight').value = '60';
+  });
+  click(document, '#save-session');
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions'))[0].exercises[0].sets.length, 4);
+  // fresh form after save: add + remove again renumbers back
+  click(document, '.add-extra-set');
+  click(document, '.remove-extra-set');
+  numbers = [...document.querySelectorAll('#scheduled-session .set-number')].map(el => el.textContent);
+  assert.deepEqual(numbers, ['01', '02', '03']);
+});
+
+test('saving a plan day through the form stores exercises on the selected routine', () => {
+  const { document, localStorage } = loadApp();
+  setValue(document, '#plan-day', 'Τετάρτη');
+  setValue(document, '#workout-name', 'Push', 'input');
+  const cards = [...document.querySelectorAll('.plan-exercise-fields')];
+  assert.equal(cards.length, 3, 'default builder shows 3 exercises');
+  cards.forEach((card, i) => { card.querySelector('.builder-name').value = `Ex ${i + 1}`; });
+  document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
+  assert.equal(plan.length, 3);
+  assert.ok(plan.every(item => item.day === 'Τετάρτη' && item.workoutName === 'Push'));
+});
+
+test('renaming a workout during day edit can sync old sessions to the new name', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets: [{ reps: 8, weight: 60, weightMode: 'kg', plates: null }] }] };
+  const { document, localStorage } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
+    trainingSessions: [session],
+  });
+  click(document, '[data-edit-day="Δευτέρα"]');
+  setValue(document, '#workout-name', 'Upper A', 'input');
+  document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'rename should ask about history');
+  click(document, '#confirm-delete-accept'); // primary: Πρόγραμμα + Ιστορικό
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(sessions[0].workoutName, 'Upper A');
+  const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
+  assert.equal(plan[0].workoutName, 'Upper A');
+});
+
+test('deleting a plan day keeps history but clears the day', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets: [{ reps: 8, weight: 60, weightMode: 'kg', plates: null }] }] };
+  const { document, localStorage } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
+    trainingSessions: [session],
+  });
+  click(document, '[data-delete-day="Δευτέρα"]');
+  click(document, '#confirm-delete-accept');
+  assert.equal(JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan.length, 0);
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 1, 'history stays');
+});
+
+test('inline routine rename saves the new name', () => {
+  const { document, localStorage } = loadApp({ trainingRoutines: [{ id: 'r1', name: 'Old', isActive: true, plan: [] }] });
+  click(document, '[data-rename-routine="r1"]');
+  const input = document.querySelector('[data-routine-rename-form="r1"] .routine-inline-name');
+  input.value = 'New Name';
+  document.querySelector('[data-routine-rename-form="r1"]').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  assert.equal(JSON.parse(localStorage.getItem('trainingRoutines'))[0].name, 'New Name');
+});
+
+test('the last remaining routine cannot be deleted', () => {
+  const { document, localStorage } = loadApp({ trainingRoutines: [{ id: 'r1', name: 'Only', isActive: true, plan: [] }] });
+  click(document, '[data-delete-routine="r1"]');
+  assert.notEqual(document.querySelector('#exercise-delete-dialog').open, true, 'no confirmation dialog for last routine');
+  assert.equal(JSON.parse(localStorage.getItem('trainingRoutines')).length, 1);
+});
+
+test('activating another routine switches the scheduled workout', () => {
+  const routines = [
+    { id: 'r1', name: 'A', isActive: true, plan: [planDay('Δευτέρα', 'Bench Press')] },
+    { id: 'r2', name: 'B', isActive: false, plan: [{ ...planDay('Δευτέρα', 'Row'), workoutName: 'Pull Day' }] },
+  ];
+  const { document, localStorage } = loadApp({ trainingRoutines: routines });
+  click(document, '[data-activate-routine="r2"]');
+  assert.ok(document.querySelector('#scheduled-session').innerHTML.includes('Row'));
+  const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
+  assert.deepEqual(saved.map(r => r.isActive), [false, true]);
+});
+
+test('profile form submit persists the profile and updates the menu identity', () => {
+  const { document, localStorage } = loadApp();
+  setValue(document, '#profile-name', 'Δημήτρης', 'input');
+  setValue(document, '#profile-birthdate', '1990-01-01', 'input');
+  setValue(document, '#profile-weight', '80', 'input');
+  document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  const profile = JSON.parse(localStorage.getItem('userProfile'));
+  assert.equal(profile.name, 'Δημήτρης');
+  assert.equal(profile.weight, 80);
+  assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
+  assert.equal(document.querySelector('#profile-status').textContent, 'ΑΠΟΘΗΚΕΥΜΕΝΟ');
+});
+
+test('exercise names with HTML are escaped in the history view', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'free', comments: '<b>bold</b>', exercises: [{ exercise: '<img src=x onerror=alert(1)>', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg' }] }] };
+  const { document } = loadApp({ trainingSessions: [session] });
+  click(document, '.nav-button[data-view="overview"]');
+  assert.equal(document.querySelector('#session-cards img'), null, 'no injected element');
+  assert.ok(document.querySelector('.card-exercises').textContent.includes('<img'));
+  assert.equal(document.querySelector('.card-comment b'), null, 'comments are escaped too');
+});
+
+test('personal bests track modes separately and rank bodyweight by reps', () => {
+  const mk = (id, date, sets) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Pull Up', comments: '', sets }] });
+  const { document } = loadApp({ trainingSessions: [
+    mk('s1', '2026-07-01', [{ reps: 10, weight: null, plates: null, weightMode: 'bodyweight' }]),
+    mk('s2', '2026-07-03', [{ reps: 12, weight: null, plates: null, weightMode: 'bodyweight' }]),
+    mk('s3', '2026-07-05', [{ reps: 6, weight: 10, plates: null, weightMode: 'bodyweight_extra' }]),
+  ] });
+  click(document, '.nav-button[data-view="overview"]');
+  const bests = document.querySelector('#personal-bests').innerHTML;
+  assert.ok(bests.includes('12'), 'bodyweight best is 12 reps');
+  assert.ok(bests.includes('extra kg'), 'bodyweight_extra tracked as its own mode');
+});
+
+test('overview metrics count sessions and total working sets', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'free', comments: '', exercises: [
+    { exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg' }, { reps: 5, weight: 100, weightMode: 'kg' }] },
+    { exercise: 'Dips', comments: '', sets: [{ reps: 10, weight: null, weightMode: 'bodyweight' }] },
+  ] };
+  const { document } = loadApp({ trainingSessions: [session] });
+  click(document, '.nav-button[data-view="overview"]');
+  const metrics = document.querySelector('#metrics').innerHTML;
+  assert.ok(metrics.includes('<strong>1</strong>'), 'one session');
+  assert.ok(metrics.includes('<strong>3</strong>'), 'three working sets');
+});
+
+test('the daily quote is deterministic within the same day', () => {
+  const first = loadApp().document.querySelector('#daily-quote-text').textContent;
+  const second = loadApp().document.querySelector('#daily-quote-text').textContent;
+  assert.equal(first, second);
+});
+
+test('default dates use the local calendar date and a birthday today has age zero', () => {
+  const { window, document } = loadApp();
+  const now = new window.Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  assert.equal(document.querySelector('#log-date').value, today);
+  assert.equal(document.querySelector('#profile-birthdate').max, today);
+  setValue(document, '#profile-birthdate', today, 'input');
+  assert.equal(document.querySelector('#profile-age').textContent, '0');
+});
+
+test('i18n never changes user-authored Greek exercise names', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'free', workoutName: 'Σετ', comments: 'Παρ', exercises: [{ exercise: 'Τρίποδο άλμα · Σετ · Κιλά', comments: 'Τρί', sets: [{ reps: 5, weight: 10, weightMode: 'kg' }] }] };
+  const { document } = loadApp({ trainingSessions: [session] });
+  click(document, '[data-language="en"]');
+  assert.equal(document.querySelector('.card-body h3').textContent, 'Σετ');
+  assert.equal(document.querySelector('.card-exercises').textContent, 'Τρίποδο άλμα · Σετ · Κιλά');
+  assert.equal(document.querySelector('.card-comment').textContent, 'Παρ');
+  assert.equal(document.querySelector('.nav-button[data-view="plan"]').textContent, 'Plan');
+  const boundaryProbe = document.createElement('p');
+  boundaryProbe.textContent = 'Τρίποδο άλμα';
+  document.body.append(boundaryProbe);
+  document.defaultView.LogbookI18n.translate(boundaryProbe);
+  assert.equal(boundaryProbe.textContent, 'Τρίποδο άλμα');
+});
+
+test('the switch-free button on a rest day starts a free workout', () => {
+  const { document } = loadApp(); // empty plan → no scheduled workout
+  click(document, '.nav-button[data-view="log"]');
+  const button = document.querySelector('#scheduled-session .switch-free');
+  assert.ok(button, 'rest-day state offers a free workout button');
+  click(document, button);
+  assert.equal(document.querySelector('#free-session').classList.contains('hidden'), false);
+  assert.ok(document.querySelector('#free-exercises [data-exercise]'), 'a free exercise card is added');
+});
+
+test('Escape key closes the side menu', () => {
+  const { document, window } = loadApp();
+  click(document, '#open-menu');
+  assert.equal(document.querySelector('#side-menu').classList.contains('open'), true);
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert.equal(document.querySelector('#side-menu').classList.contains('open'), false);
+  assert.equal(document.querySelector('#open-menu').getAttribute('aria-expanded'), 'false');
+});
+
+test('week strip marks a session logged today and counts weekly frequency', () => {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const session = { id: 's1', date: today, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg' }] }] };
+  const { document } = loadApp({ trainingSessions: [session] });
+  click(document, '.nav-button[data-view="overview"]');
+  assert.equal(document.querySelectorAll('#week-strip .day-tile').length, 7);
+  assert.equal(document.querySelectorAll('#week-strip .day-tile.done').length, 1);
+  assert.ok(document.querySelector('#metrics').innerHTML.includes('<strong>1<small>/7</small></strong>'));
+});
+
+test('progress chart excludes sessions logged in a different weight mode', () => {
+  const mk = (id, date, sets) => ({ id, date, type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets }] });
+  const { document } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
+    trainingSessions: [
+      mk('s1', '2026-07-01', [{ reps: 8, weight: 60, plates: null, weightMode: 'kg' }]),
+      mk('s2', '2026-07-08', [{ reps: 8, weight: 65, plates: null, weightMode: 'kg' }]),
+      mk('s3', '2026-07-10', [{ reps: 8, weight: null, plates: 4, weightMode: 'plates' }]),
+    ],
+  });
+  click(document, '.nav-button[data-view="progress"]');
+  const panel = document.querySelector('#progress-panel').innerHTML;
+  assert.ok(panel.includes('polyline'), 'kg majority still charts');
+  assert.ok(panel.includes('recording-warning'), 'mismatched plates session is flagged');
+  assert.ok(panel.includes('εξαιρέθηκε'), 'warning mentions one excluded workout');
+});
+
+test('moving a workout to another day can sync the session workoutDay', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets: [{ reps: 8, weight: 60, weightMode: 'kg', plates: null }] }] };
+  const { document, localStorage } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
+    trainingSessions: [session],
+  });
+  click(document, '[data-edit-day="Δευτέρα"]');
+  setValue(document, '#plan-day', 'Τρίτη');
+  document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'moving the day asks about history');
+  click(document, '#confirm-delete-accept'); // Πρόγραμμα + Ιστορικό
+  const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
+  assert.ok(plan.every(item => item.day === 'Τρίτη'));
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions'))[0].workoutDay, 'Τρίτη');
+});
+
+test('renaming an exercise during day edit syncs old sessions by planExerciseId', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets: [{ reps: 8, weight: 60, weightMode: 'kg', plates: null }] }] };
+  const { document, localStorage } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
+    trainingSessions: [session],
+  });
+  click(document, '[data-edit-day="Δευτέρα"]');
+  document.querySelector('.builder-name').value = 'Incline Press';
+  document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
+  assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'rename asks about history');
+  click(document, '#confirm-delete-accept');
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(sessions[0].exercises[0].exercise, 'Incline Press');
+});
+
+test('removing a planned exercise from the log form renumbers the rest', () => {
+  const { document } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press'), planDay('Δευτέρα', 'Row')]),
+  });
+  setValue(document, '#log-date', '2026-07-06');
+  assert.equal(document.querySelectorAll('#scheduled-session [data-exercise]').length, 2);
+  click(document, '#scheduled-session [data-exercise] .remove-planned-exercise');
+  click(document, '#confirm-delete-accept');
+  const cards = document.querySelectorAll('#scheduled-session [data-exercise]');
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].querySelector('.exercise-order').textContent, 'ΑΣΚΗΣΗ 1η');
+});
+
+test('changing the free set count rebuilds rows without losing entered values', () => {
+  const { document } = loadApp();
+  setValue(document, '#log-date', '2026-07-06');
+  click(document, '[data-mode="free"]');
+  const card = document.querySelector('#free-exercises [data-exercise]');
+  card.querySelector('.set-reps').value = '10';
+  card.querySelector('.set-weight').value = '25';
+  const counter = card.querySelector('.free-set-count');
+  counter.value = '5';
+  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles: true }));
+  const rows = card.querySelectorAll('[data-set]');
+  assert.equal(rows.length, 5);
+  assert.equal(rows[0].querySelector('.set-reps').value, '10');
+  assert.equal(rows[0].querySelector('.set-weight').value, '25');
+});
+
+test('switching a set to plates mode swaps the required weight inputs', () => {
+  const { document } = loadApp({ trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]) });
+  setValue(document, '#log-date', '2026-07-06');
+  const row = document.querySelector('#scheduled-session [data-set]');
+  assert.equal(row.querySelector('.set-weight').required, true, 'kg mode requires kg');
+  const modeSelect = row.querySelector('.weight-mode');
+  modeSelect.value = 'plates';
+  modeSelect.dispatchEvent(new (document.defaultView.Event)('change', { bubbles: true }));
+  assert.equal(row.dataset.weightMode, 'plates');
+  assert.equal(row.querySelector('.set-plates').required, true);
+  assert.equal(row.querySelector('.set-weight').required, false);
+});
+
+test('plan cues appear as a banner on the scheduled exercise card', () => {
+  const { document } = loadApp({
+    trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { cues: 'ώμοι πίσω, σταθερά πόδια' })]),
+  });
+  setValue(document, '#log-date', '2026-07-06');
+  const banner = document.querySelector('#scheduled-session .cue-banner');
+  assert.ok(banner, 'cue banner rendered');
+  assert.ok(banner.textContent.includes('ώμοι πίσω'));
+});
+
+test('Greek user content keeps Greek uppercase rules in every interface language', () => {
+  const { document } = loadApp({
+    userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' },
+  });
+  click(document, '[data-language="en"]');
+  assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
+  assert.equal(document.querySelector('#profile-preview-name').getAttribute('lang'), 'el');
+  assert.equal('Δημήτρης'.toLocaleUpperCase('el-GR'), 'ΔΗΜΗΤΡΗΣ');
+
+  click(document, '[data-language="fr"]');
+  assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
+  click(document, '[data-language="de"]');
+  assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
 });
