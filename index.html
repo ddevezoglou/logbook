@@ -20,15 +20,25 @@
   </header>
   <div id="menu-backdrop" class="menu-backdrop"></div>
   <aside id="side-menu" class="side-menu" aria-hidden="true">
-    <div class="side-menu-head"><span class="brand-mark inverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><button id="close-menu" type="button" aria-label="Κλείσιμο μενού">×</button></div>
+    <div class="side-menu-head">
+      <div id="menu-identity" class="menu-identity">
+        <span id="menu-brand-mark" class="brand-mark inverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <div id="menu-profile-summary" class="menu-profile-summary hidden">
+          <span id="menu-profile-avatar" class="avatar-figure menu-avatar male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="menu-profile-image" alt=""></span>
+          <span class="menu-profile-copy"><strong id="menu-profile-name"></strong></span>
+        </div>
+      </div>
+      <button id="close-menu" type="button" aria-label="Κλείσιμο μενού">×</button>
+    </div>
     <p>ΠΛΟΗΓΗΣΗ</p>
     <nav aria-label="Κύρια πλοήγηση">
       <button class="nav-button" data-view="log">Καταγραφή</button>
       <button class="nav-button" data-view="plan">Πρόγραμμα</button>
       <button class="nav-button active" data-view="overview">Ιστορικό</button>
       <button class="nav-button" data-view="progress">Επίβλεψη</button>
+      <button class="nav-button" data-view="profile">Προφίλ</button>
     </nav>
-    <small>LOGBOOK — TRAINING JOURNAL</small>
+    <div class="side-menu-footer"><span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><small>LOGBOOK — TRAINING JOURNAL</small></div>
   </aside>
 
   <main>
@@ -63,11 +73,23 @@
     <section class="view" id="plan-view">
       <div class="hero compact">
         <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟ SPLIT</p><h1>ΧΤΙΣΕ ΤΟ<br><em>SPLIT ΣΟΥ.</em></h1></div>
-        <p class="hero-note">Σταθερό εβδομαδιαίο split. Η συχνότητα και ο όγκος ανά μυϊκή ομάδα προγραμματίζονται — δεν αυτοσχεδιάζονται.</p>
+        <p class="hero-note">Δημιούργησε όσα εβδομαδιαία splits θέλεις. Το πρόγραμμα με το αστέρι είναι εκείνο που εμφανίζεται στην Καταγραφή.</p>
       </div>
+      <section class="routine-manager" aria-labelledby="routine-manager-title">
+        <div class="routine-manager-copy">
+          <p class="eyebrow">01 / ΕΒΔΟΜΑΔΙΑΙΕΣ ΡΟΥΤΙΝΕΣ</p>
+          <h2 id="routine-manager-title">ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ</h2>
+          <p>Επίλεξε πρόγραμμα για να επεξεργαστείς τις ημέρες του ή όρισέ το ως ενεργό με το αστέρι.</p>
+        </div>
+        <form id="routine-form" class="routine-create-form">
+          <label>Νέα εβδομαδιαία ρουτίνα<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
+          <button class="secondary-button" type="submit">＋ Δημιουργία</button>
+        </form>
+        <div id="routine-list" class="routine-list" aria-live="polite"></div>
+      </section>
       <div class="workspace">
         <form id="plan-form" class="sheet">
-          <div class="sheet-heading"><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div>
+          <div class="sheet-heading"><div><span id="selected-routine-label"></span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div></div>
           <div class="field-grid two">
             <label>Ημέρα<select id="plan-day" required></select></label>
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
@@ -78,7 +100,7 @@
           <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button></div>
         </form>
         <aside class="history-panel">
-          <div class="panel-title"><div><h2>ΤΟ SPLIT ΣΟΥ</h2></div><strong id="plan-count"></strong></div>
+          <div class="panel-title"><div><h2 id="plan-board-title">ΤΟ SPLIT ΣΟΥ</h2></div><strong id="plan-count"></strong></div>
           <div id="plan-list" class="week-plan"></div>
         </aside>
       </div>
@@ -98,7 +120,7 @@
             <div id="session-cards" class="session-cards"></div>
           </section>
           <aside>
-            <div class="section-heading bests-heading"><div><h2>ΚΑΛΥΤΕΡΑ ΣΕΤ</h2><span class="best-sets-badge" aria-hidden="true">PR ✻</span></div></div>
+            <div class="section-heading bests-heading"><div><h2>ΚΑΛΥΤΕΡΑ ΣΕΤ</h2><span class="best-sets-badge" aria-hidden="true">PR</span></div></div>
             <div id="personal-bests" class="personal-bests"></div>
           </aside>
         </div>
@@ -117,6 +139,59 @@
           <label>Σετ<select id="progress-set"></select></label>
         </div>
         <section id="progress-panel" class="progress-panel" aria-live="polite"></section>
+      </div>
+    </section>
+
+    <section class="view" id="profile-view">
+      <div class="profile-hero">
+        <div><p class="eyebrow">ATHLETE IDENTITY</p><h1>ΤΟ ΔΙΚΟ ΣΟΥ<br><em>ΑΠΟΤΥΠΩΜΑ.</em></h1></div>
+        <p>Τα βασικά στοιχεία του αθλητή, συγκεντρωμένα σε μία καθαρή κάρτα. Επίλεξε ένα έτοιμο avatar ή ανέβασε τη δική σου εικόνα.</p>
+      </div>
+      <div class="profile-workspace">
+        <form id="profile-form" class="profile-form">
+          <div class="profile-section-title"><span>01</span><div><h2>ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ ΑΘΛΗΤΗ</h2></div></div>
+          <div class="profile-fields">
+            <label>Όνομα<input id="profile-name" type="text" maxlength="50" placeholder="π.χ. Δημήτρης" autocomplete="name" required></label>
+            <label>Ημερομηνία γέννησης<input id="profile-birthdate" type="date" autocomplete="bday" required></label>
+            <div class="age-readout" aria-live="polite"><span>ΗΛΙΚΙΑ</span><strong id="profile-age">—</strong><small id="profile-age-label">Συμπλήρωσε ημερομηνία</small></div>
+            <label class="weight-field">Βάρος<div class="weight-control"><input id="profile-weight" type="number" min="1" step="0.1" placeholder="0.0" required><select id="profile-weight-unit" aria-label="Μονάδα βάρους"><option value="kg">kg</option><option value="lbs">lbs</option></select></div></label>
+          </div>
+
+          <fieldset class="avatar-picker">
+            <legend><span>02</span><strong>ΕΠΙΛΟΓΗ AVATAR</strong></legend>
+            <div class="avatar-options">
+              <label class="avatar-option">
+                <input type="radio" name="profile-avatar" value="male" checked>
+                <span class="avatar-figure male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i></span>
+                <span class="avatar-option-label"><strong>AVATAR 01</strong><small>Επιλογή</small></span>
+              </label>
+              <label class="avatar-option">
+                <input type="radio" name="profile-avatar" value="female">
+                <span class="avatar-figure female-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i></span>
+                <span class="avatar-option-label"><strong>AVATAR 02</strong><small>Επιλογή</small></span>
+              </label>
+              <div id="custom-avatar-option" class="avatar-upload-option">
+                <input id="profile-custom-avatar" type="radio" name="profile-avatar" value="custom">
+                <span class="custom-avatar-thumb" aria-hidden="true"><img id="custom-avatar-thumb" alt=""><i>+</i></span>
+                <span class="avatar-upload-copy"><strong>ΔΙΚΗ ΣΟΥ ΕΙΚΟΝΑ</strong><small id="avatar-upload-status">JPG, PNG ή WEBP</small><button id="profile-avatar-upload-button" type="button">ΑΝΕΒΑΣΕ ΕΙΚΟΝΑ</button></span>
+                <input id="profile-avatar-upload" class="hidden" type="file" accept="image/jpeg,image/png,image/webp">
+              </div>
+            </div>
+          </fieldset>
+          <button class="primary-button profile-save" type="submit">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ <span>✓</span></button>
+        </form>
+
+        <aside class="profile-preview" aria-label="Προεπισκόπηση προφίλ">
+          <div class="profile-card">
+            <div class="profile-card-top"><span>LOGBOOK / ATHLETE</span><small id="profile-status">ΝΕΟ ΠΡΟΦΙΛ</small></div>
+            <div class="profile-card-avatar">
+              <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
+            </div>
+            <div class="profile-card-copy"><span>ΟΝΟΜΑ ΑΘΛΗΤΗ</span><h2 id="profile-preview-name">ΤΟ ΟΝΟΜΑ ΣΟΥ</h2></div>
+            <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
+            <div class="profile-card-foot"><span>TRAIN • RECORD • PROGRESS</span><b aria-hidden="true">LB</b></div>
+          </div>
+        </aside>
       </div>
     </section>
   </main>
