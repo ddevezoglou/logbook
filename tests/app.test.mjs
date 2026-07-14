@@ -12,13 +12,82 @@ test('boots with empty storage without throwing', () => {
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
   assert.equal(document.querySelector('.app-version b').textContent, '0.1.0');
+  assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
+  assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
 
 test('home greeting uses the saved profile name and opens the workout log', () => {
   const { document } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
   assert.ok(document.querySelector('#home-greeting').textContent.includes('ΔΗΜΗΤΡΗ'));
+  assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
+  assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
   click(document, '[data-home-action="log"]');
   assert.ok(document.querySelector('#log-view').classList.contains('active'));
+});
+
+test('home athlete card drag stays bounded and persists its relative position', () => {
+  const { document, localStorage } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
+  const shell = document.querySelector('.home-shell');
+  const card = document.querySelector('#home-profile-card');
+  Object.defineProperties(shell, { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
+  Object.defineProperties(card, { offsetWidth:{ value:250 }, offsetHeight:{ value:160 } });
+  const pointer = (type, x, y) => {
+    const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
+    Object.defineProperties(event, { pointerId:{ value:1 }, button:{ value:0 }, clientX:{ value:x }, clientY:{ value:y } });
+    card.dispatchEvent(event);
+  };
+  pointer('pointerdown', 50, 50);
+  pointer('pointermove', 5000, 5000);
+  pointer('pointerup', 5000, 5000);
+  const position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  assert.deepEqual(position, { x:1, y:1 });
+});
+
+test('home page number counts unique logged days plus one', () => {
+  const mk = (id, date) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg', plates: null }] }] });
+  const { document } = loadApp({ trainingSessions: [mk('s1', '2026-07-01'), mk('s2', '2026-07-01'), mk('s3', '2026-07-08')] });
+  assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 003');
+});
+
+test('home quick navigation buttons open the plan and history views', () => {
+  const { document } = loadApp();
+  click(document, '[data-home-action="plan"]');
+  assert.ok(document.querySelector('#plan-view').classList.contains('active'));
+  click(document, '[data-home-action="overview"]');
+  assert.ok(document.querySelector('#overview-view').classList.contains('active'));
+});
+
+test('arrow keys move the home athlete card within bounds and persist the position', () => {
+  const { document, window, localStorage } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
+  const shell = document.querySelector('.home-shell');
+  const card = document.querySelector('#home-profile-card');
+  Object.defineProperties(shell, { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
+  Object.defineProperties(card, { offsetWidth:{ value:250 }, offsetHeight:{ value:160 } });
+  const key = (name, shiftKey = false) => card.dispatchEvent(new window.KeyboardEvent('keydown', { key: name, shiftKey, bubbles: true, cancelable: true }));
+  key('ArrowRight');
+  key('ArrowDown', true);
+  let position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  assert.ok(Math.abs(position.x - 8 / 750) < 1e-9, 'plain arrow should move 8px on a 750px range');
+  assert.ok(Math.abs(position.y - 30 / 1240) < 1e-9, 'shift+arrow should move 30px on a 1240px range');
+  key('ArrowLeft');
+  key('ArrowLeft');
+  key('ArrowUp', true);
+  position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  assert.deepEqual(position, { x: 0, y: 0 }, 'movement past the top-left corner must clamp to 0');
+});
+
+test('corrupted saved card position is ignored and replaced by a valid one', () => {
+  const { document, window, localStorage } = loadApp({
+    userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' },
+    homeProfileCardPosition: [0.5, 0.5],
+  });
+  const card = document.querySelector('#home-profile-card');
+  assert.ok(!card.classList.contains('hidden'), 'boot with a corrupted position must not hide or break the card');
+  Object.defineProperties(document.querySelector('.home-shell'), { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
+  Object.defineProperties(card, { offsetWidth:{ value:250 }, offsetHeight:{ value:160 } });
+  card.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+  const position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  assert.ok(!Array.isArray(position) && Number.isFinite(position.x) && Number.isFinite(position.y));
 });
 
 test('daily quote remains English when the interface language changes', () => {
@@ -383,6 +452,8 @@ test('profile form submit persists the profile and updates the menu identity', (
   assert.equal(profile.weight, 80);
   assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
   assert.equal(document.querySelector('#profile-status').textContent, 'ΑΠΟΘΗΚΕΥΜΕΝΟ');
+  assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
+  assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
 });
 
 test('exercise names with HTML are escaped in the history view', () => {

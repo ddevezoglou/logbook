@@ -57,12 +57,15 @@ function renderHome() {
   const name = state.profile?.name?.trim();
   $('#home-greeting').textContent = `${greetings[language]}${name ? `, ${name.toLocaleUpperCase(locale)}` : ''}.`;
   $('#home-date').textContent = new Intl.DateTimeFormat(locale, { weekday:'long', day:'numeric', month:'long' }).format(now);
+  const loggedDays = new Set(state.sessions.map(session => session.date)).size;
+  $('.home-pageno').textContent = `PAGE ${String(loggedDays + 1).padStart(3, '0')}`;
   const dayNumber = Math.floor(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 86400000);
   const quoteIndex = dailyQuotes.length ? ((dayNumber % dailyQuotes.length) + dailyQuotes.length) % dailyQuotes.length : 0;
   const quote = dailyQuotes[quoteIndex];
   $('#daily-quote-text').textContent = quote?.text || '—';
   $('#daily-quote-author').textContent = quote?.author || 'Logbook';
   $('#quote-index').textContent = dailyQuotes.length ? `${String(quoteIndex + 1).padStart(2, '0')} / ${String(dailyQuotes.length).padStart(2, '0')}` : '00 / 00';
+  renderHomeProfileCard();
 }
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const id = () => crypto.randomUUID();
@@ -449,6 +452,92 @@ function renderMenuIdentity() {
   $('#menu-profile-image').src = hasCustomImage ? profile.customImage : '';
 }
 
+function readHomeCardPosition() {
+  const saved = store.read('homeProfileCardPosition');
+  return !Array.isArray(saved) && Number.isFinite(saved?.x) && Number.isFinite(saved?.y) ? saved : null;
+}
+
+function homeCardBounds() {
+  const shell = $('.home-shell'), card = $('#home-profile-card');
+  return {
+    maxX:Math.max(0, shell.clientWidth - card.offsetWidth),
+    maxY:Math.max(0, shell.scrollHeight - card.offsetHeight)
+  };
+}
+
+function placeHomeProfileCard(position = readHomeCardPosition()) {
+  const card = $('#home-profile-card');
+  if (card.classList.contains('hidden')) return;
+  const { maxX, maxY } = homeCardBounds();
+  const x = Math.max(0, Math.min(maxX, position ? position.x * maxX : maxX * .92));
+  const y = Math.max(0, Math.min(maxY, position ? position.y * maxY : Math.min(205, maxY * .16)));
+  card.dataset.x = String(x);
+  card.dataset.y = String(y);
+  card.style.setProperty('--card-x', `${x}px`);
+  card.style.setProperty('--card-y', `${y}px`);
+}
+
+function renderHomeProfileCard() {
+  const card = $('#home-profile-card'), profile = state.profile;
+  const hasProfile = Boolean(profile?.name);
+  card.classList.toggle('hidden', !hasProfile);
+  if (!hasProfile) return;
+  const avatar = profile.avatar || 'male';
+  const hasCustomImage = avatar === 'custom' && Boolean(profile.customImage);
+  $('#home-profile-name').textContent = profile.name;
+  $('#home-profile-avatar').classList.toggle('male-avatar', avatar === 'male' || (avatar === 'custom' && !hasCustomImage));
+  $('#home-profile-avatar').classList.toggle('female-avatar', avatar === 'female');
+  $('#home-profile-avatar').classList.toggle('custom-avatar', hasCustomImage);
+  $('#home-profile-image').src = hasCustomImage ? profile.customImage : '';
+  requestAnimationFrame(() => placeHomeProfileCard());
+}
+
+function enableHomeProfileCardDrag() {
+  const card = $('#home-profile-card');
+  let drag = null;
+  const finish = event => {
+    if (!drag || (event.pointerId !== undefined && event.pointerId !== drag.pointerId)) return;
+    const { maxX, maxY } = homeCardBounds();
+    const x = Number(card.dataset.x) || 0, y = Number(card.dataset.y) || 0;
+    safeStoreWrite('homeProfileCardPosition', { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
+    card.classList.remove('is-dragging');
+    drag = null;
+  };
+  card.addEventListener('pointerdown', event => {
+    if (event.button !== undefined && event.button !== 0) return;
+    drag = { pointerId:event.pointerId, startX:event.clientX, startY:event.clientY, x:Number(card.dataset.x) || 0, y:Number(card.dataset.y) || 0 };
+    card.setPointerCapture?.(event.pointerId);
+    card.classList.add('is-dragging');
+    event.preventDefault();
+  });
+  card.addEventListener('pointermove', event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const { maxX, maxY } = homeCardBounds();
+    const x = Math.max(0, Math.min(maxX, drag.x + event.clientX - drag.startX));
+    const y = Math.max(0, Math.min(maxY, drag.y + event.clientY - drag.startY));
+    card.dataset.x = String(x); card.dataset.y = String(y);
+    card.style.setProperty('--card-x', `${x}px`); card.style.setProperty('--card-y', `${y}px`);
+  });
+  card.addEventListener('pointerup', finish);
+  card.addEventListener('pointercancel', finish);
+  card.addEventListener('keydown', event => {
+    const movement = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[event.key];
+    if (!movement) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 30 : 8, { maxX, maxY } = homeCardBounds();
+    const x = Math.max(0, Math.min(maxX, (Number(card.dataset.x) || 0) + movement[0] * step));
+    const y = Math.max(0, Math.min(maxY, (Number(card.dataset.y) || 0) + movement[1] * step));
+    card.dataset.x = String(x); card.dataset.y = String(y);
+    card.style.setProperty('--card-x', `${x}px`); card.style.setProperty('--card-y', `${y}px`);
+    safeStoreWrite('homeProfileCardPosition', { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
+  });
+  let resizeFrame;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => placeHomeProfileCard());
+  });
+}
+
 function prepareProfileImage(file) {
   return new Promise((resolve, reject) => {
     if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('Επίλεξε εικόνα JPG, PNG ή WEBP.'));
@@ -605,7 +694,7 @@ $('#progress-workout').addEventListener('change', renderProgressSelectors);
 $('#progress-exercise').addEventListener('change', renderProgressSelectors);
 $('#progress-set').addEventListener('change', renderProgressChart);
 $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
-document.addEventListener('click', event => { if (event.target.closest('[data-home-action="log"]')) showView('log'); });
+document.addEventListener('click', event => { const action = event.target.closest('[data-home-action]'); if (action) showView(action.dataset.homeAction); });
 $$('.mode-button').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
 $('#log-date').addEventListener('change', () => {
   if (!state.editingSessionId) { state.selectedPlanDay = null; return renderScheduledSession(); }
@@ -716,6 +805,7 @@ $('#profile-form').addEventListener('submit', event => {
   $('#profile-status').textContent = 'ΑΠΟΘΗΚΕΥΜΕΝΟ';
   renderProfilePreview();
   renderMenuIdentity();
+  renderHomeProfileCard();
   toast('Το προφίλ αποθηκεύτηκε ✓');
 });
 document.addEventListener('input', event => {
@@ -905,6 +995,7 @@ document.addEventListener('click', event => {
   }
 });
 
+enableHomeProfileCardDrag();
 $('#log-date').value = localDateInputValue(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile(); renderHome();
 document.addEventListener('logbook:languagechange', () => {
   // Re-render only date-dependent views. Form fields and in-progress sets stay intact.

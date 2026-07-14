@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Screen — Δοκιμές «Ανοιχτό Logbook»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --cork:#b98d5f; --cork-dark:#9a7148; --rule:rgba(21,19,13,.05); }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 18px; }
+h1 { font:700 clamp(3rem,6.5vw,6.6rem)/.84 "Roboto Slab",serif; margin:0; letter-spacing:-.065em; text-transform:uppercase; }
+h1 em { color:var(--orange); font-style:normal; }
+
+/* ===== attempt divider ===== */
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:#a89f86; letter-spacing:.1em; font-weight:700; }
+
+/* shared bits */
+.home-date { margin:0; color:var(--muted); font-size:.7rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+.home-lead { max-width:440px; margin:30px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); font-size:1.06rem; line-height:1.5; }
+.home-start { margin-top:auto; min-width:min(100%,420px); padding:0; border:1px solid var(--ink); background:transparent; display:flex; align-items:stretch; justify-content:space-between; color:var(--ink); cursor:pointer; text-align:left; transition:background .25s,color .25s,transform .25s; }
+.home-start span { padding:19px 22px; font:800 .76rem "Alegreya Sans"; letter-spacing:.12em; }
+.home-start b { width:58px; display:grid; place-items:center; border-left:1px solid currentColor; color:var(--orange); font:700 1.2rem "Roboto Slab"; transition:.25s; }
+.home-start:hover { background:var(--ink); color:var(--paper); transform:translateY(-3px); }
+.home-start:hover b { color:var(--gold); }
+.hand { font-family:"Caveat",cursive; }
+
+/* ============================================================
+   ATTEMPT 1 — ΑΝΟΙΧΤΟ ΔΙΣΕΛΙΔΟ (spread, spine, elastic band)
+   ============================================================ */
+.a1-desk { padding:clamp(22px,4vw,56px) 5vw; background:radial-gradient(120% 100% at 50% 0%, #221e14 0%, var(--ink) 70%); }
+.a1-book { position:relative; max-width:1480px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; min-height:78vh; box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 10px var(--cork), 0 0 0 11px var(--cork-dark); }
+.a1-page { position:relative; padding:clamp(30px,3.6vw,58px) clamp(26px,3.2vw,60px) clamp(34px,3vw,50px); display:flex; flex-direction:column; overflow:hidden;
+  background-color:var(--paper);
+  background-image:linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:32px 32px; }
+.a1-left { border-right:0;
+  background-image:linear-gradient(90deg,var(--rule) 1px,transparent 1px),
+                   linear-gradient(to right, transparent 88%, rgba(21,19,13,.06) 97%, rgba(21,19,13,.14) 100%); }
+.a1-right {
+  background-image:linear-gradient(90deg,var(--rule) 1px,transparent 1px),
+                   linear-gradient(to left, transparent 88%, rgba(21,19,13,.06) 97%, rgba(21,19,13,.14) 100%); }
+/* κεντρική ράχη */
+.a1-book::before { content:""; position:absolute; top:0; bottom:0; left:50%; width:70px; transform:translateX(-50%); z-index:2; pointer-events:none;
+  background:linear-gradient(to right, transparent 0%, rgba(21,19,13,.08) 30%, rgba(21,19,13,.28) 50%, rgba(21,19,13,.08) 70%, transparent 100%); }
+/* στοίβα σελίδων κάτω */
+.a1-book::after { content:""; position:absolute; left:8px; right:8px; bottom:-10px; height:10px; z-index:-0;
+  background:repeating-linear-gradient(to bottom, #f4eddd 0 2px, #cfc5ac 2px 3px); box-shadow:0 6px 18px rgba(0,0,0,.5); }
+/* μαύρο λάστιχο όπως στη φωτογραφία */
+.a1-band { position:absolute; top:-14px; bottom:-14px; right:6%; width:16px; background:linear-gradient(to right,#000 0%,#333 45%,#000 100%); z-index:3; box-shadow:3px 0 8px rgba(0,0,0,.45); border-radius:2px; }
+.a1-intro { min-height:520px; display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1; }
+.a1-intro .home-date { margin-bottom:clamp(40px,6vw,90px); }
+.a1-tab { position:absolute; top:24px; right:-14px; padding:7px 14px 7px 10px; background:var(--orange); color:var(--paper); font:800 .6rem "Alegreya Sans"; letter-spacing:.18em; z-index:4; box-shadow:0 3px 8px rgba(0,0,0,.35); }
+.a1-quote { margin:auto 0; position:relative; z-index:1; padding-right:10%; }
+.a1-quote .qlabel { display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:34px; color:var(--orange); font-size:.62rem; font-weight:800; letter-spacing:.18em; }
+.a1-quote blockquote { margin:0 0 24px; font:600 clamp(1.9rem,2.8vw,3.1rem)/1.15 "Caveat",cursive; color:var(--ink); transform:rotate(-1deg); }
+.a1-quote footer { color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+.a1-quote cite { color:var(--orange); font-style:normal; }
+.a1-scribble { margin-top:40px; color:var(--muted); font:500 1.25rem "Caveat"; transform:rotate(-.5deg); border-top:1px dashed var(--line); padding-top:22px; }
+.a1-scribble b { color:var(--orange); }
+
+/* ============================================================
+   ATTEMPT 2 — ΣΗΜΕΙΩΜΑΤΑΡΙΟ ΣΤΟ ΓΡΑΦΕΙΟ (single page, margin rule, ribbon)
+   ============================================================ */
+.a2-desk { padding:clamp(26px,5vw,70px) 5vw; background:
+  radial-gradient(90% 70% at 70% 20%, rgba(201,162,39,.06), transparent 60%), var(--ink); }
+.a2-page { position:relative; max-width:1240px; margin:0 auto; min-height:80vh; padding:clamp(34px,4vw,64px) clamp(30px,5vw,80px) clamp(40px,4vw,64px) clamp(70px,8vw,130px); display:flex; flex-direction:column; overflow:hidden;
+  background-color:var(--paper);
+  background-image:linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:32px 32px;
+  box-shadow:0 26px 70px rgba(0,0,0,.6), -14px 14px 0 var(--cork-dark), -14px 14px 0 1px #6d4e2f; }
+/* κάθετη κόκκινη γραμμή περιθωρίου */
+.a2-page::before { content:""; position:absolute; top:0; bottom:0; left:clamp(48px,6vw,96px); width:2px; background:rgba(138,44,28,.35); }
+/* τρύπες βιβλιοδεσίας */
+.a2-holes { position:absolute; top:0; bottom:0; left:18px; width:14px; display:flex; flex-direction:column; justify-content:space-evenly; }
+.a2-holes i { width:13px; height:13px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #2c281c, var(--ink) 70%); box-shadow:inset 0 1px 2px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.35); }
+/* κορδέλα-σελιδοδείκτης */
+.a2-ribbon { position:absolute; top:-8px; right:14%; width:26px; height:46%; background:linear-gradient(to right,#0a0a0a,#2b2b2b 50%,#0a0a0a); z-index:3; box-shadow:2px 3px 8px rgba(0,0,0,.4); clip-path:polygon(0 0,100% 0,100% 100%,50% 92%,0 100%); }
+.a2-margin-note { position:absolute; left:clamp(10px,1.4vw,26px); top:clamp(40px,5vw,70px); writing-mode:vertical-rl; transform:rotate(180deg); color:var(--muted); font:800 .64rem "Alegreya Sans"; letter-spacing:.3em; text-transform:uppercase; }
+.a2-body { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr); gap:clamp(28px,4vw,70px); flex:1; }
+.a2-intro { display:flex; flex-direction:column; align-items:flex-start; }
+.a2-intro .home-date { margin-bottom:clamp(36px,5vw,80px); }
+.a2-quote { align-self:start; margin-top:clamp(30px,4vw,60px); padding:26px 26px 22px; background:var(--ink); color:var(--paper); box-shadow:10px 10px 0 var(--paper-dark); transform:rotate(1.2deg); position:relative; }
+.a2-quote::before { content:""; position:absolute; top:-12px; left:50%; width:90px; height:24px; transform:translateX(-50%) rotate(-2deg); background:rgba(201,162,39,.35); backdrop-filter:blur(1px); }
+.a2-quote .qlabel { color:var(--gold); font-size:.6rem; font-weight:800; letter-spacing:.18em; margin-bottom:16px; }
+.a2-quote blockquote { margin:0 0 16px; font:500 1.5rem/1.2 "Roboto Slab"; letter-spacing:-.03em; }
+.a2-quote footer { color:#a89f86; font-size:.68rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+.a2-quote cite { color:var(--gold); font-style:normal; }
+.a2-checklist { margin-top:34px; font:500 1.3rem "Caveat"; color:var(--muted); }
+.a2-checklist div { display:flex; gap:12px; align-items:center; padding:4px 0; }
+.a2-checklist i { width:16px; height:16px; border:2px solid var(--muted); display:inline-block; flex:none; }
+.a2-checklist .done i { background:var(--orange); border-color:var(--orange); position:relative; }
+.a2-checklist .done { text-decoration:line-through; text-decoration-color:rgba(138,106,28,.6); }
+
+/* ============================================================
+   ATTEMPT 3 — FULL-BLEED ΚΑΘΟΛΙΚΟ (ledger, γραφή πάνω στις γραμμές)
+   ============================================================ */
+.a3-page { position:relative; min-height:92vh; padding:clamp(40px,6vw,90px) 5vw 70px clamp(90px,11vw,180px); display:flex; flex-direction:column; overflow:hidden;
+  background-color:var(--paper);
+  /* πυκνότερες κάθετες γραμμές + έντονη ανά 4η = ledger */
+  background-image:
+    linear-gradient(90deg,rgba(21,19,13,.09) 1px,transparent 1px),
+    linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:128px 128px, 32px 32px; }
+/* διπλή κάθετη γραμμή περιθωρίου αριστερά */
+.a3-page::before { content:""; position:absolute; top:0; bottom:0; left:clamp(60px,8vw,130px); width:8px; border-left:2px solid rgba(138,44,28,.4); border-right:1px solid rgba(138,44,28,.28); }
+/* σκιά "ανοιγμένης" σελίδας δεξιά — σαν να σηκώνεται το φύλλο */
+.a3-page::after { content:""; position:absolute; top:0; bottom:0; right:0; width:9%; pointer-events:none;
+  background:linear-gradient(to right, transparent, rgba(21,19,13,.05) 55%, rgba(21,19,13,.16) 92%, rgba(21,19,13,.30)); }
+.a3-corner { position:absolute; right:0; top:0; width:0; height:0; border-style:solid; border-width:0 clamp(60px,7vw,110px) clamp(60px,7vw,110px) 0; border-color:transparent var(--ink) transparent transparent; z-index:2; }
+.a3-margin { position:absolute; left:clamp(14px,2vw,40px); top:clamp(44px,6vw,94px); display:flex; flex-direction:column; gap:26px; color:var(--muted); }
+.a3-margin time { font:800 .66rem "Alegreya Sans"; letter-spacing:.2em; text-transform:uppercase; writing-mode:vertical-rl; transform:rotate(180deg); }
+.a3-margin .stamp { width:44px; height:44px; border:2px solid var(--orange); border-radius:50%; display:grid; place-items:center; color:var(--orange); font:700 .58rem "Alegreya Sans"; letter-spacing:.05em; transform:rotate(-12deg); opacity:.75; }
+.a3-head { display:flex; align-items:baseline; justify-content:space-between; gap:30px; border-bottom:2px solid var(--ink); padding-bottom:10px; margin-bottom:clamp(40px,5vw,72px); }
+.a3-head .pageno { font:700 .9rem "Roboto Slab"; color:var(--muted); letter-spacing:.14em; }
+.a3-body { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr); gap:clamp(28px,5vw,80px); flex:1; align-items:start; }
+.a3-intro { display:flex; flex-direction:column; align-items:flex-start; min-height:480px; }
+/* γραφή "πάνω στη γραμμή": υπογράμμιση με τη γραμμή του χαρτιού */
+.a3-underline { display:inline-block; box-shadow:0 2px 0 rgba(21,19,13,.25); }
+.a3-quote { position:relative; padding:0 0 0 26px; border-left:3px solid var(--gold); margin-top:clamp(30px,5vw,70px); }
+.a3-quote .qlabel { color:var(--orange); font-size:.62rem; font-weight:800; letter-spacing:.18em; margin-bottom:20px; }
+.a3-quote blockquote { margin:0 0 20px; font:600 clamp(1.8rem,2.6vw,2.9rem)/1.18 "Caveat"; transform:rotate(-.8deg); }
+.a3-quote footer { color:var(--muted); font-size:.7rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+.a3-quote cite { color:var(--orange); font-style:normal; }
+.a3-footnote { margin-top:46px; padding-top:18px; border-top:1px dashed var(--line); color:var(--muted); font:500 1.25rem "Caveat"; transform:rotate(-.4deg); }
+
+@media(max-width:900px){
+  .a1-book { grid-template-columns:1fr; }
+  .a1-book::before { display:none; }
+  .a1-band { display:none; }
+  .a2-body,.a3-body { grid-template-columns:1fr; }
+  .a2-ribbon { right:8%; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<!-- ═══════════════ ATTEMPT 1 ═══════════════ -->
+<div class="attempt-label"><b>ΔΟΚΙΜΗ 01</b><span>ΑΝΟΙΧΤΟ ΔΙΣΕΛΙΔΟ — ράχη στο κέντρο, φελλός-εξώφυλλο γύρω, μαύρο λάστιχο όπως στη φωτογραφία, quote χειρόγραφο στη δεξιά σελίδα</span></div>
+<section class="a1-desk">
+  <div class="a1-book">
+    <span class="a1-band" aria-hidden="true"></span>
+    <div class="a1-page a1-left">
+      <span class="a1-tab">TODAY</span>
+      <div class="a1-intro">
+        <p class="home-date">ΔΕΥΤΕΡΑ · 14 ΙΟΥΛΙΟΥ 2026</p>
+        <p class="eyebrow">ΤΟ ΣΗΜΕΡΙΝΟ ΣΟΥ ΣΗΜΕΙΟ ΕΚΚΙΝΗΣΗΣ</p>
+        <h1>ΚΑΛΗΜΕΡΑ<em>.</em></h1>
+        <p class="home-lead">Μία καθαρή σελίδα για όσα αξίζει να επαναλάβεις. Το σώμα θυμάται τη συνέπεια.</p>
+        <button class="home-start" type="button"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
+      </div>
+    </div>
+    <div class="a1-page a1-right">
+      <div class="a1-quote">
+        <div class="qlabel"><span>QUOTE OF THE DAY</span><span>№ 014</span></div>
+        <blockquote>«Η δύναμη δεν έρχεται από τη νίκη. Οι αγώνες σου χτίζουν τη δύναμή σου.»</blockquote>
+        <footer>— <cite>ARNOLD SCHWARZENEGGER</cite></footer>
+      </div>
+      <div class="a1-scribble">σημείωση: <b>community</b> — podcast της εβδομάδας + spotify playlist, έρχονται σύντομα…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ATTEMPT 2 ═══════════════ -->
+<div class="attempt-label"><b>ΔΟΚΙΜΗ 02</b><span>ΣΗΜΕΙΩΜΑΤΑΡΙΟ ΣΤΟ ΓΡΑΦΕΙΟ — μία σελίδα, κόκκινη γραμμή περιθωρίου, τρύπες βιβλιοδεσίας, κορδέλα, quote σαν καρφιτσωμένη κάρτα</span></div>
+<section class="a2-desk">
+  <div class="a2-page">
+    <span class="a2-ribbon" aria-hidden="true"></span>
+    <span class="a2-holes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    <span class="a2-margin-note">LOGBOOK / TRAINING JOURNAL — VOL. 1</span>
+    <div class="a2-body">
+      <div class="a2-intro">
+        <p class="home-date">ΔΕΥΤΕΡΑ · 14 ΙΟΥΛΙΟΥ 2026</p>
+        <p class="eyebrow">ΤΟ ΣΗΜΕΡΙΝΟ ΣΟΥ ΣΗΜΕΙΟ ΕΚΚΙΝΗΣΗΣ</p>
+        <h1>ΚΑΛΗΜΕΡΑ<em>.</em></h1>
+        <p class="home-lead">Μία καθαρή σελίδα για όσα αξίζει να επαναλάβεις. Το σώμα θυμάται τη συνέπεια.</p>
+        <div class="a2-checklist" aria-hidden="true">
+          <div class="done"><i></i>ζέσταμα 10'</div>
+          <div><i></i>σημερινή καταγραφή</div>
+          <div><i></i>νερό — 3L</div>
+        </div>
+        <button class="home-start" type="button" style="margin-top:40px"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
+      </div>
+      <aside class="a2-quote">
+        <div class="qlabel">QUOTE OF THE DAY · № 014</div>
+        <blockquote>«Η δύναμη δεν έρχεται από τη νίκη. Οι αγώνες σου χτίζουν τη δύναμή σου.»</blockquote>
+        <footer>— <cite>ARNOLD SCHWARZENEGGER</cite></footer>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ATTEMPT 3 ═══════════════ -->
+<div class="attempt-label"><b>ΔΟΚΙΜΗ 03</b><span>FULL-BLEED ΚΑΘΟΛΙΚΟ — όλη η οθόνη μία σελίδα, πυκνότερες κάθετες γραμμές, διπλό περιθώριο, ημερομηνία γραμμένη στο περιθώριο, τσάκιση σελίδας δεξιά</span></div>
+<section class="a3-page">
+  <span class="a3-corner" aria-hidden="true"></span>
+  <div class="a3-margin" aria-hidden="true">
+    <time>ΔΕΥΤΕΡΑ · 14.07.2026</time>
+    <span class="stamp">DAY 14</span>
+  </div>
+  <div class="a3-head">
+    <p class="eyebrow" style="margin:0">ΤΟ ΣΗΜΕΡΙΝΟ ΣΟΥ ΣΗΜΕΙΟ ΕΚΚΙΝΗΣΗΣ</p>
+    <span class="pageno">PAGE 014</span>
+  </div>
+  <div class="a3-body">
+    <div class="a3-intro">
+      <h1><span class="a3-underline">ΚΑΛΗΜΕΡΑ</span><em>.</em></h1>
+      <p class="home-lead">Μία καθαρή σελίδα για όσα αξίζει να επαναλάβεις. Το σώμα θυμάται τη συνέπεια.</p>
+      <div class="a3-footnote">* κάθε γραμμή που γεμίζει, μένει γραμμένη — trust the process</div>
+      <button class="home-start" type="button" style="margin-top:auto"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
+    </div>
+    <aside class="a3-quote">
+      <div class="qlabel">QUOTE OF THE DAY · № 014</div>
+      <blockquote>«Η δύναμη δεν έρχεται από τη νίκη. Οι αγώνες σου χτίζουν τη δύναμή σου.»</blockquote>
+      <footer>— <cite>ARNOLD SCHWARZENEGGER</cite></footer>
+    </aside>
+  </div>
+</section>
+
+</body>
+</html>

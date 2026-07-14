@@ -57,12 +57,31 @@
   <main>
     <section class="view active" id="home-view">
       <div class="home-shell">
-        <div class="home-intro">
+        <span class="home-ribbon" aria-hidden="true"></span>
+        <div class="home-margin">
           <p id="home-date" class="home-date"></p>
+          <span class="home-vol" aria-hidden="true">VOL 1</span>
+        </div>
+        <div class="home-page-head">
           <p class="eyebrow">ΤΟ ΣΗΜΕΡΙΝΟ ΣΟΥ ΣΗΜΕΙΟ ΕΚΚΙΝΗΣΗΣ</p>
+          <span class="home-pageno" aria-hidden="true">PAGE 001</span>
+        </div>
+        <article id="home-profile-card" class="home-profile-card hidden" tabindex="0" aria-label="Κάρτα αθλητή. Σύρε για να την μετακινήσεις στην αρχική σελίδα.">
+          <span class="home-card-tape home-card-tape-left" aria-hidden="true"></span>
+          <span class="home-card-tape home-card-tape-right" aria-hidden="true"></span>
+          <div class="home-profile-card-body">
+            <div id="home-profile-avatar" class="avatar-figure home-card-avatar male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="home-profile-image" alt=""></div>
+            <div class="home-profile-card-copy"><strong id="home-profile-name" data-i18n-user></strong></div>
+          </div>
+        </article>
+        <div class="home-intro">
           <h1 id="home-greeting" data-i18n-user>ΚΑΛΗΜΕΡΑ.</h1>
           <p class="home-lead">Μία καθαρή σελίδα για όσα αξίζει να επαναλάβεις. Το σώμα θυμάται τη συνέπεια.</p>
           <button class="home-start" type="button" data-home-action="log"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
+          <div class="home-quick" aria-label="Γρήγορη πλοήγηση">
+            <button type="button" data-home-action="plan"><span>ΠΡΟΓΡΑΜΜΑ</span><small>Χτίσε το εβδομαδιαίο πλάνο</small></button>
+            <button type="button" data-home-action="overview"><span>ΙΣΤΟΡΙΚΟ</span><small>Δες τη δουλειά που έχει γίνει</small></button>
+          </div>
         </div>
 
         <article class="daily-quote" aria-labelledby="daily-quote-label">
@@ -72,6 +91,7 @@
           <span class="quote-mark" aria-hidden="true">“</span>
         </article>
 
+        <!-- COMMUNITY PREVIEW: προσωρινά εκτός αρχικής, διατηρείται για μελλοντική χρήση.
         <section class="community-preview" aria-labelledby="community-title">
           <div class="community-heading">
             <div><p class="eyebrow">COMMUNITY / ΣΥΝΤΟΜΑ</p><h2 id="community-title">ΠΕΡΙΣΣΟΤΕΡΑ ΑΠΟ ΜΙΑ ΚΑΤΑΓΡΑΦΗ.</h2></div>
@@ -82,6 +102,7 @@
             <article><span>02 / MOVE</span><strong>SPOTIFY<br>PLAYLIST</strong><small>ΣΥΝΤΟΜΑ</small></article>
           </div>
         </section>
+        -->
       </div>
     </section>
 
