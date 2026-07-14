@@ -86,7 +86,6 @@
     'Κύρια πλοήγηση':['Main navigation','Navigation principale','Hauptnavigation'],
     'Μετάβαση στην Αρχική':['Go to Home','Accéder à l’accueil','Zur Startseite'],
     'ΤΟ ΣΗΜΕΡΙΝΟ ΣΟΥ ΣΗΜΕΙΟ ΕΚΚΙΝΗΣΗΣ':['YOUR STARTING POINT FOR TODAY','VOTRE POINT DE DÉPART DU JOUR','DEIN STARTPUNKT FÜR HEUTE'],
-    'Μία καθαρή σελίδα για όσα αξίζει να επαναλάβεις. Το σώμα θυμάται τη συνέπεια.':['A clean page for what is worth repeating. The body remembers consistency.','Une page claire pour ce qui mérite d’être répété. Le corps se souvient de la constance.','Eine klare Seite für alles, was sich zu wiederholen lohnt. Der Körper erinnert sich an Beständigkeit.'],
     'ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ':['START TODAY’S LOG','COMMENCER LA SAISIE DU JOUR','HEUTIGEN EINTRAG STARTEN'],
     'ΠΕΡΙΣΣΟΤΕΡΑ ΑΠΟ ΜΙΑ ΚΑΤΑΓΡΑΦΗ.':['MORE THAN A LOG.','PLUS QU’UNE SAISIE.','MEHR ALS EIN EINTRAG.'],
     'Ένας χώρος που θα μεγαλώνει μαζί με την κοινότητα — ήχος, ιστορίες και ιδέες για την επόμενη προπόνηση.':['A space that will grow with the community — sound, stories and ideas for the next workout.','Un espace qui grandira avec la communauté — sons, histoires et idées pour la prochaine séance.','Ein Ort, der mit der Community wächst — Sound, Geschichten und Ideen fürs nächste Training.'],

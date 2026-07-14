@@ -92,5 +92,11 @@ window.LogbookQuotes = [
     active: true,
     author: 'Logbook',
     text: 'Today’s effort is tomorrow’s benchmark.'
+  },
+  {
+    id: 'kuba',
+    active: true,
+    author: 'Kuba Cielen',
+    text: 'You can do only what you can recover from.'
   }
 ];

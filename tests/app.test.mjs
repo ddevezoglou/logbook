@@ -4,6 +4,20 @@ import { loadApp, click, setValue } from './helpers.mjs';
 
 const routineWith = plan => [{ id: 'r1', name: 'Test Routine', isActive: true, plan }];
 const planDay = (day, exercise, extra = {}) => ({ id: `p-${day}-${exercise}`, day, workoutName: `${day} Workout`, exercise, workSets: 3, cues: '', ...extra });
+const rewardDays = ['Δευτέρα', 'Τετάρτη', 'Παρασκευή'];
+const rewardPlan = () => rewardDays.map(day => planDay(day, `${day} Exercise`));
+const rewardDate = (weekOffset, dayOffset = 0) => {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() - ((date.getDay() + 6) % 7) + weekOffset * 7 + dayOffset);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+const rewardSessions = (weekOffsets, routineId = 'r1') => weekOffsets.flatMap(weekOffset => rewardDays.map((day, index) => ({
+  id:`${routineId}-${weekOffset}-${index}`,
+  date:rewardDate(weekOffset, index * 2),
+  type:'scheduled', routineId, workoutDay:day, workoutName:`${day} Workout`, comments:'',
+  exercises:[{ exercise:`${day} Exercise`, comments:'', sets:[{ reps:8, weight:50, weightMode:'kg' }] }],
+})));
 
 test('boots with empty storage without throwing', () => {
   const { document } = loadApp();
@@ -16,9 +30,8 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
 
-test('home greeting uses the saved profile name and opens the workout log', () => {
+test('home shows the saved profile card and opens the workout log', () => {
   const { document } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
-  assert.ok(document.querySelector('#home-greeting').textContent.includes('ΔΗΜΗΤΡΗ'));
   assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
   assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
   click(document, '[data-home-action="log"]');
@@ -664,4 +677,74 @@ test('Greek user content keeps Greek uppercase rules in every interface language
   assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
   click(document, '[data-language="de"]');
   assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
+});
+
+test('reward track grants PLAN SETUP as soon as an active plan has workout days', () => {
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()) });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'PLAN SETUP');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-1'));
+  assert.ok(!document.querySelector('#home-reward-stamp').classList.contains('hidden'));
+  assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '1');
+});
+
+test('one complete program week grants KEEP UP THE WORK', () => {
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions([0]) });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
+  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
+  assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '2');
+});
+
+test('an empty active week breaks the completed-week streak', () => {
+  const sessions = rewardSessions([-2, 0]);
+  const tracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-2), end:null }] } };
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:sessions, routineRewardTracking:tracking });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
+  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
+});
+
+test('four and twelve complete weeks grant NEVER GIVE UP and GYMRAT', () => {
+  const four = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions([-3,-2,-1,0]) }).document;
+  assert.equal(four.querySelector('#home-reward-label').textContent, 'NEVER GIVE UP');
+  const twelve = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions([-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0]) }).document;
+  assert.equal(twelve.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.ok(twelve.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
+});
+
+test('streaks beyond twelve weeks keep GYMRAT and the full streak count', () => {
+  const sixteenWeeks = Array.from({ length: 16 }, (_, index) => index - 15);
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions(sixteenWeeks) });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
+  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('16 συνεχόμενες εβδομάδες'));
+  assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '4');
+});
+
+test('GYMRAT is kept on the same routine even after a missed week past twelve', () => {
+  const longRunWithGap = [...Array.from({ length: 13 }, (_, index) => index - 14), 0]; // -14..-2 complete, -1 missed, current complete
+  const tracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-14), end:null }] } };
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions(longRunWithGap), routineRewardTracking:tracking });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
+  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
+});
+
+test('a missed week before reaching twelve still resets the streak to stage 2', () => {
+  const shortRunWithGap = [...Array.from({ length: 5 }, (_, index) => index - 6), 0]; // -6..-2 complete, -1 missed, current complete
+  const tracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-6), end:null }] } };
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions(shortRunWithGap), routineRewardTracking:tracking });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
+  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
+});
+
+test('switching routines freezes and later restores each routine reward streak', () => {
+  const routines = [
+    { id:'r1', name:'Program One', isActive:true, plan:rewardPlan() },
+    { id:'r2', name:'Program Two', isActive:false, plan:rewardPlan() },
+  ];
+  const { document } = loadApp({ trainingRoutines:routines, trainingSessions:rewardSessions([-1,0]) });
+  click(document, '[data-activate-routine="r2"]');
+  click(document, '[data-activate-routine="r1"]');
+  click(document, '.nav-button[data-view="profile"]');
+  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('2 συνεχόμενες εβδομάδες'));
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
 });

@@ -45,17 +45,7 @@ const dailyQuotes = Array.isArray(window.LogbookQuotes)
 
 function renderHome() {
   const now = new Date();
-  const language = window.LogbookI18n?.getLanguage?.() || 'el';
   const locale = window.LogbookI18n?.getLocale?.() || 'el-GR';
-  const hour = now.getHours();
-  const greetings = {
-    el: hour < 5 ? 'ΚΑΛΗ ΝΥΧΤΑ' : hour < 12 ? 'ΚΑΛΗΜΕΡΑ' : hour < 18 ? 'ΚΑΛΟ ΑΠΟΓΕΥΜΑ' : 'ΚΑΛΗΣΠΕΡΑ',
-    en: hour < 5 ? 'GOOD NIGHT' : hour < 12 ? 'GOOD MORNING' : hour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING',
-    fr: hour < 5 ? 'BONNE NUIT' : hour < 12 ? 'BONJOUR' : hour < 18 ? 'BON APRÈS-MIDI' : 'BONSOIR',
-    de: hour < 5 ? 'GUTE NACHT' : hour < 12 ? 'GUTEN MORGEN' : hour < 18 ? 'GUTEN TAG' : 'GUTEN ABEND'
-  };
-  const name = state.profile?.name?.trim();
-  $('#home-greeting').textContent = `${greetings[language]}${name ? `, ${name.toLocaleUpperCase(locale)}` : ''}.`;
   $('#home-date').textContent = new Intl.DateTimeFormat(locale, { weekday:'long', day:'numeric', month:'long' }).format(now);
   const loggedDays = new Set(state.sessions.map(session => session.date)).size;
   $('.home-pageno').textContent = `PAGE ${String(loggedDays + 1).padStart(3, '0')}`;
@@ -79,6 +69,111 @@ const selectedPlan = () => selectedRoutine()?.plan || [];
 const activePlan = () => activeRoutine()?.plan || [];
 const persistRoutines = () => safeStoreWrite('trainingRoutines', state.routines);
 const persistSessions = sessions => safeStoreWrite('trainingSessions', sessions);
+
+const rewardLabels = ['ΔΗΜΙΟΥΡΓΗΣΕ ΠΡΟΓΡΑΜΜΑ','PLAN SETUP','KEEP UP THE WORK','NEVER GIVE UP','GYMRAT'];
+const weekStartKey = value => {
+  const date = localDate(value) || new Date();
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const offset = (monday.getDay() + 6) % 7;
+  monday.setDate(monday.getDate() - offset);
+  return localDateInputValue(monday);
+};
+const shiftWeek = (week, amount) => { const date = localDate(week); date.setDate(date.getDate() + amount * 7); return localDateInputValue(date); };
+
+function createRewardTracking() {
+  const periods = {};
+  state.routines.forEach(routine => {
+    const weeks = state.sessions
+      .filter(session => session.type === 'scheduled' && session.routineId === routine.id && session.date)
+      .map(session => weekStartKey(session.date)).sort();
+    periods[routine.id] = weeks.length ? [{ start:weeks[0], end:routine.isActive ? null : weeks.at(-1) }] : [];
+  });
+  const active = activeRoutine();
+  if (active && !periods[active.id].some(period => period.end === null)) periods[active.id].push({ start:weekStartKey(localDateInputValue()), end:null });
+  return { version:1, activeRoutineId:active?.id || null, periods };
+}
+
+function loadRewardTracking() {
+  const saved = store.read('routineRewardTracking');
+  const valid = !Array.isArray(saved) && saved?.version === 1 && saved.periods && typeof saved.periods === 'object';
+  const tracking = valid ? saved : createRewardTracking();
+  state.routines.forEach(routine => { if (!Array.isArray(tracking.periods[routine.id])) tracking.periods[routine.id] = []; });
+  const activeId = activeRoutine()?.id || null;
+  if (tracking.activeRoutineId !== activeId) {
+    const previousPeriods = tracking.periods[tracking.activeRoutineId] || [];
+    const previousOpen = previousPeriods.findLast?.(period => period.end === null) || [...previousPeriods].reverse().find(period => period.end === null);
+    if (previousOpen) previousOpen.end = weekStartKey(localDateInputValue());
+    if (activeId) tracking.periods[activeId].push({ start:weekStartKey(localDateInputValue()), end:null });
+    tracking.activeRoutineId = activeId;
+  }
+  safeStoreWrite('routineRewardTracking', tracking);
+  return tracking;
+}
+
+let rewardTracking = loadRewardTracking();
+
+function switchRewardRoutine(previousId, nextId) {
+  if (!nextId || previousId === nextId) return;
+  const currentWeek = weekStartKey(localDateInputValue());
+  const previousPeriods = rewardTracking.periods[previousId] || [];
+  const openPeriod = previousPeriods.findLast?.(period => period.end === null) || [...previousPeriods].reverse().find(period => period.end === null);
+  if (openPeriod) openPeriod.end = currentWeek;
+  if (!Array.isArray(rewardTracking.periods[nextId])) rewardTracking.periods[nextId] = [];
+  const last = rewardTracking.periods[nextId].at(-1);
+  if (!last || last.end !== null) rewardTracking.periods[nextId].push({ start:currentWeek, end:null });
+  rewardTracking.activeRoutineId = nextId;
+  safeStoreWrite('routineRewardTracking', rewardTracking);
+}
+
+function routineReward(routine = activeRoutine()) {
+  const plannedDays = new Set((routine?.plan || []).map(item => item.day));
+  const target = plannedDays.size;
+  if (!routine || !target) return { stage:0, streak:0, target:0, completedThisWeek:0, label:rewardLabels[0], routine };
+  const completions = new Map();
+  state.sessions.forEach(session => {
+    if (session.type !== 'scheduled' || session.routineId !== routine.id || !session.date) return;
+    const week = weekStartKey(session.date);
+    if (!completions.has(week)) completions.set(week, new Set());
+    completions.get(week).add(plannedDays.has(session.workoutDay) ? session.workoutDay : `date:${session.date}`);
+  });
+  const currentWeek = weekStartKey(localDateInputValue());
+  const periods = rewardTracking.periods[routine.id] || [];
+  let streak = 0, maxStreak = 0;
+  const processed = new Set();
+  periods.forEach(period => {
+    const cappedEnd = !period.end || period.end > currentWeek ? currentWeek : period.end;
+    for (let week = period.start; week <= cappedEnd; week = shiftWeek(week, 1)) {
+      if (processed.has(week)) continue;
+      processed.add(week);
+      const completed = (completions.get(week)?.size || 0) >= target;
+      const partialBoundary = week === cappedEnd && (week === currentWeek || period.end !== null);
+      if (completed) { streak += 1; maxStreak = Math.max(maxStreak, streak); }
+      else if (!partialBoundary) streak = 0;
+    }
+  });
+  // GYMRAT is permanent for a routine: once it has hit 12 straight weeks, a missed week no longer drops the stage.
+  const stage = maxStreak >= 12 ? 4 : streak >= 4 ? 3 : streak >= 1 ? 2 : 1;
+  return { stage, streak, target, completedThisWeek:Math.min(target, completions.get(currentWeek)?.size || 0), label:rewardLabels[stage], routine };
+}
+
+function renderRewards() {
+  const reward = routineReward();
+  const ring = $('#profile-reward-ring');
+  if (ring) {
+    ring.className = `profile-reward-ring reward-stage-${reward.stage}`;
+    const detail = reward.target
+      ? `${reward.routine.name} · ${reward.streak} ${reward.streak === 1 ? 'συνεχόμενη εβδομάδα' : 'συνεχόμενες εβδομάδες'} · ${reward.completedThisWeek}/${reward.target} αυτή την εβδομάδα`
+      : 'Δήλωσε τις ημέρες του πρώτου σου προγράμματος';
+    ring.setAttribute('aria-label', `${reward.label} · ${reward.stage} από 4 στάδια επιβράβευσης · ${detail}`);
+  }
+  const stamp = $('#home-reward-stamp');
+  if (stamp) {
+    stamp.classList.toggle('hidden', reward.stage === 0);
+    stamp.dataset.stage = String(reward.stage);
+    $('#home-reward-label').textContent = reward.label;
+    $('#home-profile-card').dataset.rewardStage = String(reward.stage);
+  }
+}
 
 function setRows(count, values = [], prefix = '', options = {}) {
   const { extra = false, startIndex = 0 } = options;
@@ -314,10 +409,14 @@ function renderOverview() {
   const completedRecent = recentDays.filter(d => uniqueDates.has(localDateInputValue(d))).length;
   const workingSetTotal = state.sessions.reduce((total, session) => total + session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0), 0);
   $('#metrics').innerHTML = `<article><strong>${state.sessions.length}</strong><span>ΠΡΟΠΟΝΗΣΕΙΣ</span></article><article><strong>${workingSetTotal}</strong><span>WORKING SETS</span></article><article><strong>${completedRecent}<small>/7</small></strong><span>ΣΥΧΝΟΤΗΤΑ ΕΒΔΟΜΑΔΑΣ</span></article>`;
-  const rhythmMessage = completedRecent === 0 ? 'Η πρώτη καταγραφή είναι η γραμμή εκκίνησης.' : completedRecent === 1 ? 'Ο ρυθμός ξεκίνησε. Η επόμενη καταγραφή τον χτίζει.' : completedRecent < 4 ? `${completedRecent} προπονήσεις σε 7 ημέρες. Ο ρυθμός χτίζεται.` : `${completedRecent} προπονήσεις σε 7 ημέρες. Κράτησε τη γραμμή.`;
-  $('#rhythm-message').textContent = rhythmMessage;
-  $('#week-strip').innerHTML = recentDays.map(d => { const key = localDateInputValue(d); const done = uniqueDates.has(key); return `<div class="day-tile ${done ? 'done' : ''}"><span>${days[d.getDay()].slice(0,3)}</span><strong>${d.getDate()}</strong><small>${done ? '✓ logged' : '—'}</small></div>`; }).join('');
-  $('#session-cards').innerHTML = state.sessions.length ? state.sessions.map((session, index) => { const setCount = session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0); return `<article class="session-card"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${state.sessions.length - index}</small></div><div class="card-body"><div class="card-stats"><span>${session.exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><h3 data-i18n-user>${esc(sessionWorkoutName(session))}</h3><p class="card-exercises" data-i18n-user>${session.exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment" data-i18n-user>${esc(session.comments)}</p>` : ''}</div><span class="card-stamp" aria-hidden="true">LOGGED</span><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${session.id}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${session.id}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-delete" data-delete-session="${session.id}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></article>`; }).join('') : '<div class="empty"><strong>Η γραμμή εκκίνησης είναι εδώ.</strong><span>Ολοκλήρωσε την πρώτη προπόνηση και άρχισε να χτίζεις το αρχείο σου.</span></div>';
+  $('#week-strip').innerHTML = recentDays.map(d => {
+    const key = localDateInputValue(d), done = uniqueDates.has(key);
+    const inner = `<span>${days[d.getDay()].slice(0,3)}</span><strong>${d.getDate()}</strong>`;
+    return done
+      ? `<button class="day-tile done" type="button" data-goto-date="${key}" aria-label="Δες την προπόνηση της ${formatDate(key)}">${inner}</button>`
+      : `<div class="day-tile">${inner}</div>`;
+  }).join('');
+  $('#session-cards').innerHTML = state.sessions.length ? state.sessions.map((session, index) => { const setCount = session.exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0); return `<article class="session-card" data-session-date="${esc(session.date || '')}"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${state.sessions.length - index}</small></div><div class="card-body"><div class="card-stats"><span>${session.exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><h3 data-i18n-user>${esc(sessionWorkoutName(session))}</h3><p class="card-exercises" data-i18n-user>${session.exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment" data-i18n-user>${esc(session.comments)}</p>` : ''}</div><span class="card-stamp" aria-hidden="true">LOGGED</span><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${session.id}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${session.id}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-delete" data-delete-session="${session.id}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></article>`; }).join('') : '<div class="empty"><strong>Η γραμμή εκκίνησης είναι εδώ.</strong><span>Ολοκλήρωσε την πρώτη προπόνηση και άρχισε να χτίζεις το αρχείο σου.</span></div>';
   const bests = new Map();
   const performanceScore = set => set.weightMode === 'bodyweight' ? [Number(set.reps)||0] : set.weightMode === 'mixed' ? [Number(set.plates)||0,Number(set.weight)||0,Number(set.reps)||0] : set.weightMode === 'plates' ? [Number(set.plates)||0,Number(set.reps)||0] : [Number(set.weight)||0,Number(set.reps)||0];
   const isBetter = (candidate, current) => !current || performanceScore(candidate).some((value,index) => value !== performanceScore(current)[index] && performanceScore(candidate).slice(0,index).every((prior,i) => prior === performanceScore(current)[i]) && value > performanceScore(current)[index]);
@@ -435,6 +534,7 @@ function renderProfilePreview() {
   $('#custom-avatar-thumb').src = customAvatarData;
   $('#custom-avatar-option').classList.toggle('has-image', Boolean(customAvatarData));
   $('#avatar-upload-status').textContent = customAvatarData ? 'Η εικόνα είναι έτοιμη' : 'JPG, PNG ή WEBP';
+  renderRewards();
 }
 
 function renderMenuIdentity() {
@@ -489,6 +589,7 @@ function renderHomeProfileCard() {
   $('#home-profile-avatar').classList.toggle('female-avatar', avatar === 'female');
   $('#home-profile-avatar').classList.toggle('custom-avatar', hasCustomImage);
   $('#home-profile-image').src = hasCustomImage ? profile.customImage : '';
+  renderRewards();
   requestAnimationFrame(() => placeHomeProfileCard());
 }
 
@@ -710,9 +811,11 @@ $('#routine-form').addEventListener('submit', event => {
   const routine = { id:id(), name, isActive:false, plan:[] };
   const previousSelectedRoutineId = state.selectedRoutineId;
   state.routines.push(routine);
+  rewardTracking.periods[routine.id] = [];
   state.selectedRoutineId = routine.id;
   if (!persistRoutines()) {
     state.routines.pop();
+    delete rewardTracking.periods[routine.id];
     state.selectedRoutineId = previousSelectedRoutineId;
     return;
   }
@@ -880,6 +983,15 @@ $('#save-session').addEventListener('click', () => {
 });
 
 document.addEventListener('click', event => {
+  const dayTile = event.target.closest('[data-goto-date]');
+  if (dayTile) {
+    const card = $(`.session-card[data-session-date="${dayTile.dataset.gotoDate}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('card-flash');
+      setTimeout(() => card.classList.remove('card-flash'), 1600);
+    }
+  }
   if (event.target.matches('.switch-free')) setMode('free');
   if (event.target.matches('.copy-first-set')) {
     copyFirstSetToRemaining(event.target.closest('[data-exercise]'));
@@ -931,6 +1043,7 @@ document.addEventListener('click', event => {
       state.selectedRoutineId = previousSelectedRoutineId;
       return;
     }
+    switchRewardRoutine(previousActiveRoutineId, routineId);
     resetPlanForm();
     renderRoutines();
     renderPlan();
@@ -961,7 +1074,10 @@ document.addEventListener('click', event => {
       const nextRoutines = state.routines.filter(item => item.id !== routine.id);
       if (routine.isActive) nextRoutines[0].isActive = true;
       if (!safeStoreWrite('trainingRoutines', nextRoutines)) return;
+      if (routine.isActive) switchRewardRoutine(routine.id, nextRoutines[0].id);
       state.routines = nextRoutines;
+      delete rewardTracking.periods[routine.id];
+      safeStoreWrite('routineRewardTracking', rewardTracking);
       if (state.selectedRoutineId === routine.id) state.selectedRoutineId = activeRoutine().id;
       resetPlanForm();
       renderRoutines();
