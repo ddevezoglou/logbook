@@ -173,8 +173,52 @@ test('progress chart renders two comparable points', () => {
   });
   click(document, '.nav-button[data-view="progress"]');
   const panel = document.querySelector('#progress-panel').innerHTML;
-  assert.ok(panel.includes('polyline'), 'chart should render');
+  assert.ok(panel.includes('class="chart-line"'), 'chart should render');
+  assert.ok(panel.includes('class="chart-point"'), 'chart points expose details without crowding the plot');
+  assert.ok(panel.includes('<title>'), 'point details remain available on hover/focus');
+  assert.ok(panel.includes('class="chart-tooltip-card"'), 'hover details include the recording date');
   assert.ok(panel.includes('+5.0'), 'weight delta should be +5.0');
+});
+
+test('progress chart date labels near the last point are skipped to avoid overlap', () => {
+  const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
+  const sessions = Array.from({ length: 11 }, (_, i) => mkSession(`s${i}`, `2026-05-${String(i + 1).padStart(2, '0')}`, 50 + i * 2.5));
+  const { document } = loadApp({ trainingSessions: sessions });
+  click(document, '.nav-button[data-view="progress"]');
+  const dates = [...document.querySelectorAll('#progress-panel .chart-date')].map(t => Number(t.getAttribute('x'))).sort((a, b) => a - b);
+  assert.ok(dates.length >= 3, 'intermediate dates are still sampled');
+  const lastGap = dates[dates.length - 1] - dates[dates.length - 2];
+  assert.ok(lastGap >= 120, `the label before the last must keep its distance (gap ${lastGap})`);
+});
+
+test('progress chart tooltip card grows with long mixed-mode labels', () => {
+  const mkSession = (id, date, plates, weight, reps) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Dip', comments: '', sets: [{ reps, plates, weight, weightMode: 'mixed' }] }] });
+  const { document } = loadApp({ trainingSessions: [mkSession('m1', '2026-06-01', 3.5, 12.5, 9), mkSession('m2', '2026-06-08', 4.5, 12.5, 10)] });
+  click(document, '.nav-button[data-view="progress"]');
+  document.querySelectorAll('#progress-panel .chart-tooltip-card').forEach(card => {
+    const label = card.querySelector('tspan').textContent;
+    const rectWidth = Number(card.querySelector('rect').getAttribute('width'));
+    assert.ok(rectWidth >= label.length * 6 + 16, `tooltip rect (${rectWidth}) must fit "${label}"`);
+  });
+});
+
+test('progress chart raises the hovered point above later points', () => {
+  const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
+  const { document } = loadApp({ trainingSessions: [mkSession('s1', '2026-06-01', 60), mkSession('s2', '2026-06-08', 65), mkSession('s3', '2026-06-15', 70)] });
+  click(document, '.nav-button[data-view="progress"]');
+  const firstPoint = document.querySelector('#progress-panel .chart-point');
+  const svg = firstPoint.closest('svg');
+  assert.notEqual(svg.lastElementChild, firstPoint, 'first point starts below its siblings');
+  firstPoint.dispatchEvent(new document.defaultView.Event('mouseover', { bubbles: true }));
+  assert.equal(svg.lastElementChild, firstPoint, 'hovered point moves to the top of the paint order');
+});
+
+test('bodyweight progress chart labels its line as repetitions', () => {
+  const mkSession = (id, date, reps) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Pull Up', comments: '', sets: [{ reps, weightMode: 'bodyweight' }] }] });
+  const { document } = loadApp({ trainingSessions: [mkSession('b1', '2026-06-01', 8), mkSession('b2', '2026-06-08', 10)] });
+  click(document, '.nav-button[data-view="progress"]');
+  const legend = document.querySelector('#progress-panel .chart-legend').innerHTML;
+  assert.ok(legend.includes('Επαναλήψεις'), 'legend explains what the line measures');
 });
 
 test('progress chart with a single-point mode still guards against division issues', () => {
@@ -503,6 +547,27 @@ test('overview metrics count sessions and total working sets', () => {
   assert.ok(metrics.includes('<strong>3</strong>'), 'three working sets');
 });
 
+test('opening a history workout reveals a read-only page inside the overview', () => {
+  const session = { id: 's1', date: '2026-07-06', type: 'scheduled', workoutName: 'Upper A', comments: 'Καλή ενέργεια', exercises: [
+    { exercise: 'Bench Press', comments: 'Παύση στο στήθος', sets: [{ reps: 8, weight: 72.5, weightMode: 'kg' }, { reps: 7, weight: 72.5, weightMode: 'kg' }] },
+  ] };
+  const { document } = loadApp({ trainingSessions: [session, { ...session, id:'s2', date:'2026-06-29', workoutName:'Upper B' }] });
+  click(document, '.nav-button[data-view="overview"]');
+  assert.equal(document.querySelector('button[data-view-session="s1"]'), null, 'the card has no separate open button');
+  assert.equal(document.querySelector('[data-view-session="s1"]').textContent.includes('ΑΝΟΙΓΜΑ ΣΕΛΙΔΑΣ'), false);
+  click(document, '[data-view-session="s1"] .card-body');
+  assert.ok(document.querySelector('#overview-view').classList.contains('active'), 'history stays on screen');
+  assert.equal(document.querySelector('#log-view').classList.contains('active'), false, 'read-only view does not open the workout form');
+  assert.ok(document.querySelector('.session-card').classList.contains('session-expanded'));
+  assert.equal(document.querySelectorAll('.session-page').length, 1, 'only the opened workout page is rendered');
+  assert.ok(document.querySelector('.session-page').textContent.includes('Bench Press'));
+  assert.ok(document.querySelector('.session-page').textContent.includes('72.5 kg'));
+  assert.equal(document.querySelector('.session-page input'), null, 'the historical page has no editable inputs');
+  click(document, '[data-close-session="s1"]');
+  assert.equal(document.querySelector('.session-card').classList.contains('session-expanded'), false);
+  assert.equal(document.querySelectorAll('.session-page').length, 0);
+});
+
 test('the daily quote is deterministic within the same day', () => {
   const first = loadApp().document.querySelector('#daily-quote-text').textContent;
   const second = loadApp().document.querySelector('#daily-quote-text').textContent;
@@ -562,6 +627,12 @@ test('week strip marks a session logged today and counts weekly frequency', () =
   assert.equal(document.querySelectorAll('#week-strip .day-tile').length, 7);
   assert.equal(document.querySelectorAll('#week-strip .day-tile.done').length, 1);
   assert.ok(document.querySelector('#metrics').innerHTML.includes('<strong>1<small>/7</small></strong>'));
+  click(document, '.session-summary');
+  assert.ok(document.querySelector('.session-card').classList.contains('session-expanded'), 'the card itself opens the workout page');
+  click(document, '#week-strip .day-tile.done');
+  assert.equal(document.querySelector('.session-card').classList.contains('session-expanded'), false, 'date navigation does not open the workout page');
+  assert.equal(document.querySelectorAll('.session-page').length, 0);
+  assert.ok(document.querySelector('#overview-view').classList.contains('active'), 'logged day remains in history');
 });
 
 test('progress chart excludes sessions logged in a different weight mode', () => {
@@ -576,7 +647,7 @@ test('progress chart excludes sessions logged in a different weight mode', () =>
   });
   click(document, '.nav-button[data-view="progress"]');
   const panel = document.querySelector('#progress-panel').innerHTML;
-  assert.ok(panel.includes('polyline'), 'kg majority still charts');
+  assert.ok(panel.includes('class="chart-line"'), 'kg majority still charts');
   assert.ok(panel.includes('recording-warning'), 'mismatched plates session is flagged');
   assert.ok(panel.includes('εξαιρέθηκε'), 'warning mentions one excluded workout');
 });
