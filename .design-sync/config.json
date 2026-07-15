@@ -1,0 +1,7 @@
+{
+  "projectId": "e14c00a0-0796-4cc5-a6d6-c2b84b14e80c",
+  "projectName": "Logbook",
+  "shape": "styles-only",
+  "readmeHeader": ".design-sync/conventions.md",
+  "notes": "Repo is a vanilla HTML/JS/CSS app, not a component library. User chose styles/tokens-only sync: tokens + styles.css + fonts + conventions README, no component bundle."
+}
