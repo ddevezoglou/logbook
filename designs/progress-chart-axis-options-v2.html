@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Progress Chart — Axis Options v2 (futuristic/scientific)</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper-dark); color:var(--ink); font-family:"Alegreya Sans", Arial, sans-serif; padding:40px 5vw 100px; }
+  h1 { font:800 1.4rem "Roboto Slab", serif; letter-spacing:.02em; margin:0 0 6px; }
+  p.intro { max-width:660px; color:var(--muted); line-height:1.5; margin:0 0 40px; }
+  .option { background:var(--paper); border:1px solid var(--ink); box-shadow:4px 4px 0 rgba(21,19,13,.1); margin-bottom:34px; padding:26px 30px 22px; }
+  .option-head { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .option-head b { font:800 1.6rem "Roboto Slab", serif; color:var(--orange); }
+  .option-head h2 { font:700 1.05rem "Roboto Slab", serif; margin:0; }
+  .option p { color:var(--muted); font-size:.85rem; line-height:1.5; max-width:660px; margin:4px 0 18px; }
+  .chart-wrap { overflow-x:auto; }
+  svg { display:block; width:100%; min-width:640px; }
+  .mono { font-family:"JetBrains Mono","Space Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; }
+  .chart-line { fill:none; stroke:var(--orange); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; opacity:.42; }
+  .chart-dot { fill:var(--paper); stroke:var(--orange); stroke-width:2.5; }
+  .chart-date { font-size:10px; font-weight:600; fill:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+  .chart-tick { stroke:var(--muted); stroke-width:1; opacity:.55; }
+  .chart-grid-dot { fill:var(--line); }
+  .readout-box { fill:var(--ink); }
+  .readout-text { font-size:9.5px; font-weight:700; fill:var(--paper); letter-spacing:.05em; }
+  .readout-text.accent { fill:var(--gold); }
+  .crosshair { stroke:var(--orange); stroke-width:1; stroke-dasharray:2 3; opacity:.5; }
+  .pick { margin-top:10px; padding:6px 12px; border:1px solid var(--ink); display:inline-block; font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; cursor:default; background:var(--paper-dark); }
+  .rec { background:var(--ink); color:var(--paper); padding:22px 28px; margin-top:10px; }
+  .rec b { color:var(--gold); }
+</style>
+</head>
+<body>
+
+<h1>SECTION Επίβλεψη — axis v2: μόνο ημερομηνίες, futuristic / επιστημονικό ύφος</h1>
+<p class="intro">Feedback: καμία γραμμή axis, κρατάμε μόνο τις ημερομηνίες κάτω. Η καμπύλη (πορτοκαλί, αχνή, stroke-width 2.5, opacity ~.42) μένει όπως είναι — δεν αλλάζει. Οι 4 παρακάτω παραλλαγές δουλεύουν πάνω στο "background/ύφος" γύρω από την καμπύλη για να δώσουν πιο τεχνικό/επιστημονικό αίσθημα, χωρίς να προσθέσουν πίσω κάποια axis line.</p>
+
+<div class="option">
+  <div class="option-head"><b>E</b><h2>Dot-grid graph paper</h2></div>
+  <p>Πολύ αχνό dot-grid (σαν χαρτί μιλιμετρέ) σε όλο το background του chart, μονόχρωμο, χαμηλή αδιαφάνεια. Ημερομηνίες σε monospace, uppercase, letter-spaced — δίνει "data sheet" αίσθηση χωρίς καμία γραμμή axis.</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <defs>
+      <pattern id="dotgrid" width="24" height="24" patternUnits="userSpaceOnUse">
+        <circle class="chart-grid-dot" cx="2" cy="2" r="1" opacity=".5"/>
+      </pattern>
+    </defs>
+    <rect x="60" y="20" width="780" height="190" fill="url(#dotgrid)"/>
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g><circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/></g>
+    <text class="chart-date mono" x="92" y="228" text-anchor="start">03.06</text>
+    <text class="chart-date mono" x="240" y="228" text-anchor="middle">10.06</text>
+    <text class="chart-date mono" x="388" y="228" text-anchor="middle">17.06</text>
+    <text class="chart-date mono" x="536" y="228" text-anchor="middle">24.06</text>
+    <text class="chart-date mono" x="684" y="228" text-anchor="middle">01.07</text>
+    <text class="chart-date mono" x="808" y="228" text-anchor="end">08.07</text>
+  </svg></div>
+  <div class="pick">Dot-grid background + monospace ημερομηνίες</div>
+</div>
+
+<div class="option">
+  <div class="option-head"><b>F</b><h2>Tick marks χωρίς γραμμή</h2></div>
+  <p>Καμία baseline. Κάτω από κάθε σημείο, μικρό κάθετο tick (5px) αντί για γραμμή axis — σαν οριζόντιο "ruler" χωρίς το ίδιο το ruler. Ημερομηνίες monospace κάτω από κάθε tick. Πιο "instrument panel" παρά "χαρτί".</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g><circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/></g>
+    <g class="chart-tick">
+      <line x1="92" y1="205" x2="92" y2="212"/><line x1="240" y1="205" x2="240" y2="212"/><line x1="388" y1="205" x2="388" y2="212"/><line x1="536" y1="205" x2="536" y2="212"/><line x1="684" y1="205" x2="684" y2="212"/><line x1="808" y1="205" x2="808" y2="212"/>
+    </g>
+    <text class="chart-date mono" x="92" y="228" text-anchor="start">03.06</text>
+    <text class="chart-date mono" x="240" y="228" text-anchor="middle">10.06</text>
+    <text class="chart-date mono" x="388" y="228" text-anchor="middle">17.06</text>
+    <text class="chart-date mono" x="536" y="228" text-anchor="middle">24.06</text>
+    <text class="chart-date mono" x="684" y="228" text-anchor="middle">01.07</text>
+    <text class="chart-date mono" x="808" y="228" text-anchor="end">08.07</text>
+  </svg></div>
+  <div class="pick">Micro-ticks ανά ημερομηνία, καμία baseline</div>
+</div>
+
+<div class="option">
+  <div class="option-head"><b>G</b><h2>Crosshair readout στο τελευταίο σημείο</h2></div>
+  <p>Καμία axis. Στο τελευταίο (πιο πρόσφατο) σημείο, μόνιμο "readout" tag σε μονόχρωμο ink κουτί με μονοσπεισμένα στοιχεία (π.χ. <span class="mono">68.0KG · 12REPS</span>) συνδεδεμένο με λεπτή διακεκομμένη crosshair γραμμή — σαν HUD δεδομένων σε πραγματικό χρόνο. Ημερομηνίες monospace κάτω.</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <line x1="808" y1="55" x2="808" y2="205" class="crosshair"/>
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g><circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/></g>
+    <circle cx="808" cy="55" r="6" fill="var(--orange)" stroke="var(--ink)" stroke-width="1.5"/>
+    <g transform="translate(700 20)">
+      <rect class="readout-box" width="158" height="26" rx="2"/>
+      <text class="readout-text mono" x="10" y="17">68.0<tspan class="readout-text mono">KG</tspan> · <tspan class="readout-text mono accent">12</tspan>REPS</text>
+    </g>
+    <text class="chart-date mono" x="92" y="228" text-anchor="start">03.06</text>
+    <text class="chart-date mono" x="240" y="228" text-anchor="middle">10.06</text>
+    <text class="chart-date mono" x="388" y="228" text-anchor="middle">17.06</text>
+    <text class="chart-date mono" x="536" y="228" text-anchor="middle">24.06</text>
+    <text class="chart-date mono" x="684" y="228" text-anchor="middle">01.07</text>
+    <text class="chart-date mono" x="808" y="228" text-anchor="end">08.07</text>
+  </svg></div>
+  <div class="pick">HUD readout στο τελευταίο σημείο, monospace</div>
+</div>
+
+<div class="option">
+  <div class="option-head"><b>H</b><h2>Faint vertical guides + monospace dates</h2></div>
+  <p>Πολύ αχνές, λεπτές κάθετες διακεκομμένες γραμμές (dotted, πιο ψιλές από B/C) σε κάθε ημερομηνία, μέχρι το κάτω μέρος — καμία οριζόντια γραμμή καθόλου. Δίνει το «στοίχισε τα δεδομένα» feeling scientific plots χωρίς σκληρό axis. Πιο ήπιο από G, πιο δομημένο από E/F.</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <g class="crosshair" opacity=".35">
+      <line x1="92" y1="55" x2="92" y2="210"/><line x1="240" y1="55" x2="240" y2="210"/><line x1="388" y1="55" x2="388" y2="210"/><line x1="536" y1="55" x2="536" y2="210"/><line x1="684" y1="55" x2="684" y2="210"/><line x1="808" y1="55" x2="808" y2="210"/>
+    </g>
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g><circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/></g>
+    <text class="chart-date mono" x="92" y="228" text-anchor="start">03.06</text>
+    <text class="chart-date mono" x="240" y="228" text-anchor="middle">10.06</text>
+    <text class="chart-date mono" x="388" y="228" text-anchor="middle">17.06</text>
+    <text class="chart-date mono" x="536" y="228" text-anchor="middle">24.06</text>
+    <text class="chart-date mono" x="684" y="228" text-anchor="middle">01.07</text>
+    <text class="chart-date mono" x="808" y="228" text-anchor="end">08.07</text>
+  </svg></div>
+  <div class="pick">Αχνές κάθετες dotted guides, καμία baseline</div>
+</div>
+
+<div class="rec">
+  <b>Πρόταση:</b> <b>F</b> ή <b>H</b>. F ("micro-ticks") δίνει πιο "instrument panel" αίσθηση χωρίς να προσθέτει οπτικό θόρυβο — μόνο 5px ticks κάτω από κάθε ημερομηνία. H είναι πιο "scientific plot" (κάθετες dotted guides) αλλά πιο busy σε πολλά data points. G (crosshair readout) πιο εντυπωσιακό αλλά προσθέτει μόνιμο στοιχείο UI — καλό μόνο αν θες emphasis στο τελευταίο σημείο. Και τα 4 χρησιμοποιούν monospace font για ημερομηνίες (νέο — πρέπει να προστεθεί web font, π.χ. "JetBrains Mono" ή "Space Mono" από Google Fonts, καθώς δεν υπάρχει ήδη στο project).
+</div>
+
+</body>
+</html>

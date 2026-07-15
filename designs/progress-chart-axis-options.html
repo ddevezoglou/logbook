@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Progress Chart — Axis Options</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper-dark); color:var(--ink); font-family:"Alegreya Sans", Arial, sans-serif; padding:40px 5vw 100px; }
+  h1 { font:800 1.4rem "Roboto Slab", serif; letter-spacing:.02em; margin:0 0 6px; }
+  p.intro { max-width:640px; color:var(--muted); line-height:1.5; margin:0 0 40px; }
+  .option { background:var(--paper); border:1px solid var(--ink); box-shadow:4px 4px 0 rgba(21,19,13,.1); margin-bottom:34px; padding:26px 30px 22px; }
+  .option-head { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .option-head b { font:800 1.6rem "Roboto Slab", serif; color:var(--orange); }
+  .option-head h2 { font:700 1.05rem "Roboto Slab", serif; margin:0; }
+  .option p { color:var(--muted); font-size:.85rem; line-height:1.5; max-width:640px; margin:4px 0 18px; }
+  .chart-wrap { overflow-x:auto; }
+  svg { display:block; width:100%; min-width:640px; }
+  .chart-axis { stroke:var(--ink); stroke-width:2; }
+  .chart-axis-faint { stroke:var(--line); stroke-width:1; opacity:.55; }
+  .chart-grid { stroke:var(--line); stroke-width:1; stroke-dasharray:3 6; opacity:.45; }
+  .chart-line { fill:none; stroke:var(--orange); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; opacity:.4; }
+  .chart-line-strong { fill:none; stroke:var(--orange); stroke-width:3; stroke-linejoin:round; stroke-linecap:round; opacity:.85; }
+  .chart-area { opacity:.08; }
+  .chart-dot { fill:var(--paper); stroke:var(--orange); stroke-width:2.5; }
+  .chart-date { font:700 11px "Alegreya Sans"; fill:var(--muted); }
+  .chart-ylabel { font:700 10px "Alegreya Sans"; fill:var(--muted); }
+  .chart-tick { stroke:var(--line); stroke-width:1; opacity:.6; }
+  .pick { margin-top:10px; padding:6px 12px; border:1px solid var(--ink); display:inline-block; font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; cursor:default; background:var(--paper-dark); }
+  .rec { background:var(--ink); color:var(--paper); padding:22px 28px; margin-top:10px; }
+  .rec b { color:var(--gold); }
+</style>
+</head>
+<body>
+
+<h1>SECTION Επίβλεψη — επιλογές axis για το γράφημα προόδου</h1>
+<p class="intro">4 παραλλαγές πάνω στο υπάρχον <code>renderProgressChart()</code> (app.js). Η γραμμή δεδομένων μένει αχνή σε όλες. Διαφέρει το τι γίνεται με τον οριζόντιο άξονα (τώρα: συμπαγής μαύρη γραμμή) και τον κάθετο χώρο (τώρα: κενό αριστερό/δεξί margin 92px).</p>
+
+<div class="option">
+  <div class="option-head"><b>A</b><h2>Χωρίς άξονες — μόνο η καμπύλη</h2></div>
+  <p>Αφαίρεση πλήρως της οριζόντιας γραμμής. Το γράφημα «επιπλέει» πάνω στο χαρτί — μόνο καμπύλη, σημεία, ημερομηνίες κάτω από κάθε σημείο. Πιο minimal, ταιριάζει με το αχνό ύφος της γραμμής, αλλά χάνεται σημείο αναφοράς (baseline).</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g>
+      <circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/>
+    </g>
+    <text class="chart-date" x="92" y="215" text-anchor="start">3 Ιουν</text>
+    <text class="chart-date" x="240" y="215" text-anchor="middle">10 Ιουν</text>
+    <text class="chart-date" x="388" y="215" text-anchor="middle">17 Ιουν</text>
+    <text class="chart-date" x="536" y="215" text-anchor="middle">24 Ιουν</text>
+    <text class="chart-date" x="684" y="215" text-anchor="middle">1 Ιουλ</text>
+    <text class="chart-date" x="808" y="215" text-anchor="end">8 Ιουλ</text>
+  </svg></div>
+  <div class="pick">Καμία γραμμή αναφοράς</div>
+</div>
+
+<div class="option">
+  <div class="option-head"><b>B</b><h2>Αχνή διακεκομμένη baseline</h2></div>
+  <p>Η οριζόντια γραμμή μένει, αλλά γίνεται λεπτή, ανοιχτόχρωμη, διακεκομμένη (ίδιο ύφος με τα υπάρχοντα <code>chart-guide</code>) αντί για συμπαγής μαύρη. Κρατά σημείο αναφοράς χωρίς να «κόβει» το βλέμμα. Κάθετος χώρος παραμένει κενός σκόπιμα — καθαρό.</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <line x1="92" y1="205" x2="808" y2="205" class="chart-axis-faint" stroke-dasharray="4 6"/>
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g>
+      <circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/>
+    </g>
+    <text class="chart-date" x="92" y="228" text-anchor="start">3 Ιουν</text>
+    <text class="chart-date" x="240" y="228" text-anchor="middle">10 Ιουν</text>
+    <text class="chart-date" x="388" y="228" text-anchor="middle">17 Ιουν</text>
+    <text class="chart-date" x="536" y="228" text-anchor="middle">24 Ιουν</text>
+    <text class="chart-date" x="684" y="228" text-anchor="middle">1 Ιουλ</text>
+    <text class="chart-date" x="808" y="228" text-anchor="end">8 Ιουλ</text>
+  </svg></div>
+  <div class="pick">Λεπτή, διακεκομμένη, χαμηλή αδιαφάνεια</div>
+</div>
+
+<div class="option">
+  <div class="option-head"><b>C</b><h2>Αχνή baseline + διακριτικές y-τιμές</h2></div>
+  <p>Ίδιο με B, αλλά γεμίζει τον «κενό» κάθετο χώρο με 2 διακριτικές τιμές (min / max) πάνω-κάτω αριστερά, μικρές, χαμηλής έντασης — δίνει κλίμακα χωρίς πλήρες grid. Καλύτερο αν θες να ξέρεις τάξη μεγέθους με μια ματιά.</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <line x1="92" y1="205" x2="808" y2="205" class="chart-axis-faint" stroke-dasharray="4 6"/>
+    <text class="chart-ylabel" x="80" y="194" text-anchor="end">60kg</text>
+    <text class="chart-ylabel" x="80" y="60" text-anchor="end">78kg</text>
+    <line x1="86" y1="190" x2="92" y2="190" class="chart-tick"/>
+    <line x1="86" y1="55" x2="92" y2="55" class="chart-tick"/>
+    <path class="chart-line" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g>
+      <circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/>
+    </g>
+    <text class="chart-date" x="92" y="228" text-anchor="start">3 Ιουν</text>
+    <text class="chart-date" x="240" y="228" text-anchor="middle">10 Ιουν</text>
+    <text class="chart-date" x="388" y="228" text-anchor="middle">17 Ιουν</text>
+    <text class="chart-date" x="536" y="228" text-anchor="middle">24 Ιουν</text>
+    <text class="chart-date" x="684" y="228" text-anchor="middle">1 Ιουλ</text>
+    <text class="chart-date" x="808" y="228" text-anchor="end">8 Ιουλ</text>
+  </svg></div>
+  <div class="pick">Baseline αχνή + min/max τιμές αριστερά</div>
+</div>
+
+<div class="option">
+  <div class="option-head"><b>D</b><h2>Χωρίς άξονα, area fill κάτω από καμπύλη</h2></div>
+  <p>Καμία γραμμή axis. Αντ' αυτού, πολύ αχνό gradient fill κάτω από την καμπύλη ως το κάτω άκρο — δίνει αίσθηση «εδάφους» χωρίς σκληρή γραμμή. Πιο editorial/artistic ύφος, ταιριάζει με το golden-era θέμα του logbook.</p>
+  <div class="chart-wrap"><svg viewBox="0 0 900 260">
+    <defs>
+      <linearGradient id="areaFade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#8a6a1c" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="#8a6a1c" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path class="chart-area" fill="url(#areaFade)" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55 L808 210 L92 210 Z"/>
+    <path class="chart-line-strong" d="M92 190 C160 175,180 160,240 165 S320 130,388 140 S460 100,536 108 S610 70,684 78 S760 60,808 55"/>
+    <g>
+      <circle class="chart-dot" cx="92" cy="190" r="6"/><circle class="chart-dot" cx="240" cy="165" r="6"/><circle class="chart-dot" cx="388" cy="140" r="6"/><circle class="chart-dot" cx="536" cy="108" r="6"/><circle class="chart-dot" cx="684" cy="78" r="6"/><circle class="chart-dot" cx="808" cy="55" r="6"/>
+    </g>
+    <text class="chart-date" x="92" y="230" text-anchor="start">3 Ιουν</text>
+    <text class="chart-date" x="240" y="230" text-anchor="middle">10 Ιουν</text>
+    <text class="chart-date" x="388" y="230" text-anchor="middle">17 Ιουν</text>
+    <text class="chart-date" x="536" y="230" text-anchor="middle">24 Ιουν</text>
+    <text class="chart-date" x="684" y="230" text-anchor="middle">1 Ιουλ</text>
+    <text class="chart-date" x="808" y="230" text-anchor="end">8 Ιουλ</text>
+  </svg></div>
+  <div class="pick">Χωρίς axis, area gradient αντί για baseline</div>
+</div>
+
+<div class="rec">
+  <b>Πρόταση:</b> Option B ή C. Κρατάνε ελάχιστο σημείο αναφοράς (χρήσιμο όταν η καμπύλη πλησιάζει το κάτω άκρο) αλλά διορθώνουν το πρόβλημα — η μαύρη συμπαγής axis γραμμή γίνεται λεπτή/διακεκομμένη σαν τις υπόλοιπες <code>chart-guide</code> γραμμές. C προσθέτει και τιμές κλίμακας στον σήμερα-κενό αριστερό χώρο, χωρίς πλήρες grid. A/D πιο ριζοσπαστικές (καμία γραμμή) — καλές αν θες πιο «artistic» αίσθηση, ρίσκο πιο δύσκολη ανάγνωση τιμών σε γρήγορη ματιά.
+</div>
+
+</body>
+</html>

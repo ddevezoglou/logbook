@@ -153,24 +153,40 @@
         <p class="hero-note">Δημιούργησε προγράμματα με μικρόκυκλο 3–10 ημερών. Το πρόγραμμα με το αστέρι είναι το ενεργό — αυτό ανοίγει στην Καταγραφή.</p>
       </div>
       <section class="routine-manager" aria-labelledby="routine-manager-title">
-        <div class="routine-manager-copy">
-          <p class="eyebrow">01 / ΜΙΚΡΟΚΥΚΛΟΙ ΠΡΟΠΟΝΗΣΗΣ</p>
+        <header class="routine-manager-heading">
           <h2 id="routine-manager-title">ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ</h2>
-          <p>Επίλεξε πρόγραμμα για να επεξεργαστείς τις ημέρες του ή όρισέ το ως ενεργό με το αστέρι.</p>
+          <span aria-hidden="true">ROUTINE DESK</span>
+        </header>
+        <div class="routine-create-panel">
+          <div class="routine-create-copy">
+            <span>ΝΕΟ ΠΡΟΓΡΑΜΜΑ</span>
+            <strong>ΟΡΙΣΕ ΤΟΝ ΜΙΚΡΟΚΥΚΛΟ ΣΟΥ</strong>
+          </div>
+          <form id="routine-form" class="routine-create-form">
+            <label>Όνομα προγράμματος<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
+            <label>Διάρκεια (σε ημέρες)<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
+            <fieldset class="routine-weekday-choice">
+              <legend>Δήλωση ημερών</legend>
+              <div class="routine-weekday-options">
+                <label><input type="radio" name="routine-weekdays" value="false" checked><span>Όχι</span></label>
+                <label><input type="radio" name="routine-weekdays" value="true"><span>Ναι</span></label>
+              </div>
+            </fieldset>
+            <button class="secondary-button" type="submit">＋ Δημιουργία</button>
+          </form>
         </div>
-        <form id="routine-form" class="routine-create-form">
-          <label>Νέο πρόγραμμα<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
-          <label>Διάρκεια (σε ημέρες)<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
-          <fieldset class="routine-weekday-choice">
-            <legend>Δήλωση ημερών</legend>
-            <div class="routine-weekday-options">
-              <label><input type="radio" name="routine-weekdays" value="false" checked><span>Όχι</span></label>
-              <label><input type="radio" name="routine-weekdays" value="true"><span>Ναι</span></label>
+        <div class="routine-carousel">
+          <div class="routine-carousel-bar">
+            <span><b id="routine-carousel-count">00</b> TRAINING SPLITS</span>
+          </div>
+          <div class="routine-carousel-stage">
+            <div id="routine-list" class="routine-list" tabindex="0" aria-label="Προγράμματα προπόνησης" aria-live="polite"></div>
+            <div class="routine-carousel-controls" role="group" aria-label="Πλοήγηση προγραμμάτων">
+              <button type="button" data-routine-scroll="-1" aria-controls="routine-list" aria-label="Προηγούμενο πρόγραμμα"><span aria-hidden="true">←</span></button>
+              <button type="button" data-routine-scroll="1" aria-controls="routine-list" aria-label="Επόμενο πρόγραμμα"><span aria-hidden="true">→</span></button>
             </div>
-          </fieldset>
-          <button class="secondary-button" type="submit">＋ Δημιουργία</button>
-        </form>
-        <div id="routine-list" class="routine-list" aria-live="polite"></div>
+          </div>
+        </div>
       </section>
       <div class="workspace">
         <form id="plan-form" class="sheet">

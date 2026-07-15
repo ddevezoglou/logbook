@@ -82,6 +82,75 @@ test('program manager cards keep the routine name readable in the ticket layout'
   assert.equal(window.getComputedStyle(card).display, 'flex', 'the ticket card must not use the legacy two-column grid');
   assert.equal(window.getComputedStyle(name).whiteSpace, 'normal', 'the full name can use the card width instead of a 30px grid column');
   assert.equal(window.getComputedStyle(card.querySelector('.routine-foot')).display, 'flex', 'metadata and actions stay in the ticket footer');
+  assert.match(styles, /\.routine-carousel-controls button \{[^}]*border:0;[^}]*background:transparent;[^}]*box-shadow:none;/, 'carousel arrows stay frameless and visually independent');
+});
+
+test('program manager follows the title, definition form, tickets hierarchy', () => {
+  const { document } = loadApp();
+  const manager = document.querySelector('.routine-manager');
+  const heading = manager.querySelector('.routine-manager-heading');
+  const createPanel = manager.querySelector('.routine-create-panel');
+  const tickets = manager.querySelector('#routine-list');
+  assert.equal(heading.querySelector('h2').textContent, 'ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ');
+  assert.equal(manager.textContent.includes('01 / ΜΙΚΡΟΚΥΚΛΟΙ ΠΡΟΠΟΝΗΣΗΣ'), false);
+  assert.equal(manager.textContent.includes('Επίλεξε πρόγραμμα για να επεξεργαστείς'), false);
+  assert.ok(heading.compareDocumentPosition(createPanel) & 4, 'the program definition follows the title');
+  assert.ok(createPanel.compareDocumentPosition(tickets) & 4, 'the training tickets follow the definition form');
+});
+
+test('program ticket carousel keeps the active routine first', () => {
+  const routines = [
+    { id:'r-old', name:'Old Routine', isActive:false, cycleLength:8, plan:[] },
+    { id:'r-active', name:'Active Routine', isActive:true, cycleLength:7, plan:[] },
+    { id:'r-next', name:'Next Routine', isActive:false, cycleLength:9, plan:[] },
+  ];
+  const { document } = loadApp({ trainingRoutines:routines });
+  const cards = [...document.querySelectorAll('#routine-list .routine-card')];
+  assert.deepEqual(cards.map(card => card.dataset.routineId), ['r-active', 'r-old', 'r-next']);
+  assert.match(cards[0].querySelector('.routine-ticket-topline').textContent, /ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ/);
+  assert.deepEqual(cards.map(card => card.dataset.carouselPosition), ['0', '1', '-1']);
+  assert.equal(document.querySelector('#routine-carousel-count').textContent, '01 / 03');
+  assert.match(document.querySelector('.routine-carousel-bar').textContent, /TRAINING SPLITS/);
+  assert.doesNotMatch(document.querySelector('.routine-carousel').textContent, /TRAINING TICKETS/);
+  assert.ok(document.querySelector('.routine-carousel-controls').closest('.routine-carousel-stage'));
+});
+
+test('program ticket controls move one ticket left or right', () => {
+  const routines = [
+    { id:'r1', name:'One', isActive:true, cycleLength:7, plan:[] },
+    { id:'r2', name:'Two', isActive:false, cycleLength:8, plan:[] },
+  ];
+  const { document } = loadApp({ trainingRoutines:routines });
+  const list = document.querySelector('#routine-list');
+  click(document, '[data-routine-scroll="1"]');
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+  click(document, '[data-routine-scroll="-1"]');
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r1');
+  list.dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key:'ArrowRight', bubbles:true }));
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+  list.dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key:'ArrowLeft', bubbles:true }));
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r1');
+  const pointer = (type, x) => {
+    const event = new document.defaultView.Event(type, { bubbles:true });
+    Object.defineProperties(event, { button:{ value:0 }, clientX:{ value:x } });
+    list.dispatchEvent(event);
+  };
+  pointer('pointerdown', 220);
+  pointer('pointerup', 120);
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+});
+
+test('activating a program moves its ticket to the first position', () => {
+  const routines = [
+    { id:'r1', name:'One', isActive:true, cycleLength:7, plan:[] },
+    { id:'r2', name:'Two', isActive:false, cycleLength:8, plan:[] },
+  ];
+  const { document } = loadApp({ trainingRoutines:routines });
+  const list = document.querySelector('#routine-list');
+  click(document, '[data-activate-routine="r2"]');
+  assert.equal(document.querySelector('#routine-list .routine-card').dataset.routineId, 'r2');
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+  assert.equal(document.querySelector('#routine-carousel-count').textContent, '01 / 02');
 });
 
 test('home routine ticket drag stays bounded and persists independently', () => {
@@ -342,15 +411,15 @@ test('progress chart renders two comparable points', () => {
   assert.ok(panel.includes('+5.0'), 'weight delta should be +5.0');
 });
 
-test('progress chart date labels near the last point are skipped to avoid overlap', () => {
+test('progress chart shows every date label with room to breathe', () => {
   const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
   const sessions = Array.from({ length: 11 }, (_, i) => mkSession(`s${i}`, `2026-05-${String(i + 1).padStart(2, '0')}`, 50 + i * 2.5));
   const { document } = loadApp({ trainingSessions: sessions });
   click(document, '.nav-button[data-view="progress"]');
   const dates = [...document.querySelectorAll('#progress-panel .chart-date')].map(t => Number(t.getAttribute('x'))).sort((a, b) => a - b);
-  assert.ok(dates.length >= 3, 'intermediate dates are still sampled');
-  const lastGap = dates[dates.length - 1] - dates[dates.length - 2];
-  assert.ok(lastGap >= 120, `the label before the last must keep its distance (gap ${lastGap})`);
+  assert.strictEqual(dates.length, sessions.length, 'every recorded date should get a label');
+  const gaps = dates.slice(1).map((value, i) => value - dates[i]);
+  gaps.forEach(gap => assert.ok(gap >= 40, `label gap too tight (${gap})`));
 });
 
 test('progress chart tooltip card grows with long mixed-mode labels', () => {
@@ -446,6 +515,8 @@ test('language picker switches all supported languages and persists the choice',
   click(document, '[data-language="en"]');
   assert.equal(document.documentElement.lang, 'en');
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'History');
+  assert.equal(document.querySelector('#routine-manager-title').textContent, 'YOUR ROUTINES');
+  assert.equal(document.querySelector('.routine-create-copy strong').textContent, 'DEFINE YOUR TRAINING CYCLE');
   assert.equal(document.querySelector('[data-language="en"]').getAttribute('aria-pressed'), 'true');
   assert.equal(localStorage.getItem('logbookLanguage'), 'en');
 
@@ -455,6 +526,7 @@ test('language picker switches all supported languages and persists the choice',
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Verlauf');
   click(document, '[data-language="el"]');
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Ιστορικό');
+  assert.equal(document.querySelector('.routine-create-copy strong').textContent, 'ΟΡΙΣΕ ΤΟΝ ΜΙΚΡΟΚΥΚΛΟ ΣΟΥ');
 });
 
 test('changing language preserves in-progress workout values', () => {

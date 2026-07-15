@@ -75,6 +75,8 @@ let foundActiveRoutine = false;
 routines.forEach(routine => { if (routine.isActive && !foundActiveRoutine) foundActiveRoutine = true; else if (routine.isActive) routine.isActive = false; });
 const state = { routines, selectedRoutineId:routines.find(routine => routine.isActive)?.id ?? routines[0]?.id ?? null, editingRoutineId:null, sessions: savedSessions.length ? savedSessions : oldLogs.map(log => ({ id:log.id, date:log.date, type:'free', comments:'', exercises:[{ exercise:log.exercise, comments:log.comments || '', sets:log.sets || [] }] })), profile:(!Array.isArray(savedProfile) && savedProfile) ? savedProfile : null, mode: 'scheduled', editingDay:null, editingSessionId:null, selectedPlanDay:null, openSessionId:null };
 let customAvatarData = state.profile?.customImage || '';
+let routineCarouselIndex = 0;
+let routineSwipeStartX = null;
 if (!savedSessions.length && oldLogs.length) safeStoreWrite('trainingSessions', state.sessions);
 if (!(Array.isArray(savedRoutines) && savedRoutines.length) || JSON.stringify(savedRoutines) !== JSON.stringify(state.routines)) safeStoreWrite('trainingRoutines', state.routines);
 const $ = selector => document.querySelector(selector);
@@ -323,18 +325,50 @@ function renderPlan() {
   }).join('');
 }
 
-function renderRoutines() {
-  $('#routine-list').innerHTML = state.routines.map(routine => {
+function updateRoutineCarousel(nextIndex = routineCarouselIndex) {
+  const list = $('#routine-list');
+  const cards = [...list.querySelectorAll('.routine-card')];
+  if (!cards.length) {
+    $('#routine-carousel-count').textContent = '00 / 00';
+    return;
+  }
+  routineCarouselIndex = ((nextIndex % cards.length) + cards.length) % cards.length;
+  cards.forEach((card, index) => {
+    let offset = index - routineCarouselIndex;
+    if (offset > cards.length / 2) offset -= cards.length;
+    if (offset < -cards.length / 2) offset += cards.length;
+    const visible = Math.abs(offset) <= 2;
+    card.dataset.carouselPosition = visible ? String(offset) : 'hidden';
+    card.setAttribute('aria-hidden', String(!visible));
+    card.querySelector('.routine-select')?.setAttribute('aria-current', String(offset === 0));
+    card.querySelectorAll('button,input').forEach(control => { control.tabIndex = visible ? 0 : -1; });
+  });
+  $('#routine-carousel-count').textContent = `${String(routineCarouselIndex + 1).padStart(2, '0')} / ${String(cards.length).padStart(2, '0')}`;
+}
+
+function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) {
+  const list = $('#routine-list');
+  const previousCenteredRoutineId = resetCarousel ? null : list.querySelector('[data-carousel-position="0"]')?.dataset.routineId;
+  const routines = [...state.routines].sort((a, b) => Number(b.isActive) - Number(a.isActive));
+  list.innerHTML = routines.map((routine, index) => {
     const selected = routine.id === state.selectedRoutineId;
     const dayCount = new Set(routine.plan.map(item => itemCycleDay(item, routine))).size;
+    const ticketNumber = String(index + 1).padStart(2, '0');
     if (routine.id === state.editingRoutineId) return `<article class="routine-card routine-card-editing ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
       <form class="routine-inline-form" data-routine-rename-form="${esc(routine.id)}"><label>Όνομα προγράμματος<input class="routine-inline-name" type="text" maxlength="50" value="${esc(routine.name)}" required></label><div><button class="routine-inline-save" type="submit" aria-label="Αποθήκευση ονόματος">✓</button><button class="routine-inline-cancel" data-cancel-routine-edit type="button" aria-label="Ακύρωση μετονομασίας">×</button></div></form>
     </article>`;
     return `<article class="routine-card ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><strong data-i18n-user>${esc(routine.name)}</strong></button>
+      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><span class="routine-ticket-topline"><span>${routine.isActive ? '★ ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ' : `TICKET ${ticketNumber}`}</span><small>${routine.cycleLength || 7} ΗΜΕΡΕΣ</small></span><strong data-i18n-user>${esc(routine.name)}</strong><span class="routine-ticket-number" aria-hidden="true">${ticketNumber}</span></button>
       <div class="routine-foot"><small>${dayCount} ${dayCount === 1 ? 'ημέρα προπόνησης' : 'ημέρες προπόνησης'}</small><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
     </article>`;
   }).join('');
+  const requestedCenterId = centerRoutineId || previousCenteredRoutineId;
+  const requestedCenterIndex = routines.findIndex(routine => routine.id === requestedCenterId);
+  updateRoutineCarousel(requestedCenterIndex >= 0 ? requestedCenterIndex : 0);
+}
+
+function scrollRoutineTickets(direction) {
+  updateRoutineCarousel(routineCarouselIndex + direction);
 }
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
@@ -606,7 +640,9 @@ function renderProgressChart() {
   const points = records.filter(item => item.mode === comparableMode).sort((a,b) => a.session.date.localeCompare(b.session.date));
   const excluded = records.filter(item => !item.mode || item.mode !== comparableMode);
   if (!comparableMode || points.length < 2) { panel.innerHTML = '<div class="recording-warning"><strong>Δεν υπάρχει ασφαλής σύγκριση.</strong><p>Χρειάζονται τουλάχιστον δύο καταγραφές της άσκησης με την ίδια μονάδα βάρους. Μην εναλλάσσεις Κιλά, Πλάκες ή μικτή μέτρηση.</p></div>'; return; }
-  const width=900, height=330, left=92, right=92, top=42, bottom=55, values=points.map(item => item.value), min=Math.min(...values), max=Math.max(...values);
+  const height=330, left=92, right=92, top=42, bottom=55, minPointGap=64, panelWidth=panel.clientWidth || 900;
+  const width=Math.max(panelWidth, left+right+(points.length-1)*minPointGap);
+  const values=points.map(item => item.value), min=Math.min(...values), max=Math.max(...values);
   const floor=min===max ? Math.max(0,min-1) : min-(max-min)*.15, ceiling=min===max ? max+1 : max+(max-min)*.15;
   const repValues=points.map(item => item.reps), repMin=Math.min(...repValues), repMax=Math.max(...repValues), repFloor=repMin===repMax?Math.max(0,repMin-1):repMin-.5, repCeiling=repMin===repMax?repMax+1:repMax+.5;
   const extraValues=comparableMode==='mixed'?points.map(item=>item.extraWeight):[], extraMin=extraValues.length?Math.min(...extraValues):0, extraMax=extraValues.length?Math.max(...extraValues):0, extraFloor=extraMin===extraMax?Math.max(0,extraMin-1):extraMin-(extraMax-extraMin)*.15, extraCeiling=extraMin===extraMax?extraMax+1:extraMax+(extraMax-extraMin)*.15;
@@ -641,10 +677,9 @@ function renderProgressChart() {
   const pointLabel = item => comparableMode === 'bodyweight' ? `${item.reps} επαν.` : comparableMode === 'mixed' ? `${item.value} πλάκες + ${item.extraWeight} kg · ${item.reps} επαν.` : `${item.value} ${primaryUnit} · ${item.reps} επαν.`;
   const weightLegend = `<span class="weight-key">${primaryUnit || 'Επαναλήψεις'}</span>`;
   const weightSeries = `<path d="${smoothLine}" class="chart-line"/>`;
-  const dateStep = Math.max(1, Math.ceil(points.length / 8));
   const axisDate = date => localDate(date).toLocaleDateString(window.LogbookI18n?.getLocale() || 'el-GR', { day:'numeric', month:'short' });
   const latest = points.at(-1), latestLoad = pointLabel(latest);
-  panel.innerHTML = `<div class="chart-summary"><div><h2>${esc(exerciseName)}</h2><small>${points.length} καταγραφές · τελευταία ${formatDate(latest.session.date)}</small></div><div class="chart-latest"><span>ΤΕΛΕΥΤΑΙΑ ΕΠΙΔΟΣΗ</span><strong>${latestLoad}</strong></div>${progressItems ? `<div class="progress-verdict ${decline?'is-alert':''}">${progressItems}</div>` : ''}</div><div class="chart-legend">${weightLegend}${comparableMode==='mixed'?'<span class="extra-weight-key">Επιπλέον kg</span>':''}<span class="chart-hint">Πέρασε πάνω από σημείο για λεπτομέρειες</span></div><div class="chart-wrap"><svg class="progress-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Γράφημα προόδου βάρους και επαναλήψεων"><line x1="${left}" y1="${height-bottom}" x2="${width-right}" y2="${height-bottom}" class="chart-axis"/>${weightSeries}${extraLine?`<path d="${extraLine}" class="chart-extra-line"/>`:''}${points.map((item,i) => { const isFirst=i===0, isLast=i===points.length-1, anchor=isFirst?'start':isLast?'end':'middle', pointY=primaryUnit?y(item.value):repY(item.reps), tipLabel=pointLabel(item), tipDate=formatDate(item.session.date), tooltipWidth=Math.max(120,Math.round(Math.max(tipLabel.length,tipDate.length)*6.6)+26), tooltipX=Math.max(8,Math.min(width-tooltipWidth-8,x(i)-tooltipWidth/2)), tooltipY=Math.max(8,pointY-64), showDate=isFirst || isLast || (i % dateStep === 0 && points.length-1-i >= dateStep); return `<g class="chart-point" tabindex="0"><title>${tipLabel} · ${tipDate}</title><line x1="${x(i)}" y1="${pointY}" x2="${x(i)}" y2="${height-bottom}" class="chart-guide"/>${primaryUnit || comparableMode==='bodyweight'?`<circle cx="${x(i)}" cy="${pointY}" r="7" class="chart-dot"/>`:''}${comparableMode==='mixed'?`<circle cx="${x(i)}" cy="${extraY(item.extraWeight)}" r="5" class="chart-extra-dot"/>`:''}<g class="chart-tooltip-card" transform="translate(${tooltipX} ${tooltipY})" aria-hidden="true"><rect width="${tooltipWidth}" height="48" rx="5"/><text x="${tooltipWidth/2}" y="18" text-anchor="middle"><tspan x="${tooltipWidth/2}" dy="0">${tipLabel}</tspan><tspan x="${tooltipWidth/2}" dy="17">${tipDate}</tspan></text></g>${showDate ? `<text x="${x(i)}" y="${height-bottom+24}" text-anchor="${anchor}" class="chart-date">${axisDate(item.session.date)}</text>` : ''}</g>`; }).join('')}</svg></div>${excluded.length ? `<div class="recording-warning"><strong>Έλεγχος καταγραφής: ${excluded.length} ${excluded.length===1?'προπόνηση εξαιρέθηκε':'προπονήσεις εξαιρέθηκαν'}.</strong><p>Το γράφημα χρησιμοποιεί μόνο «${modeLabel(comparableMode)}». ${excluded.map(item => `${formatDate(item.session.date)} — ${item.reason || `καταγράφηκε σε ${modeLabel(item.mode)}`}`).join(' · ')}</p></div>` : `<div class="recording-ok">✓ Όλες οι καταγραφές του σετ χρησιμοποιούν κοινή μέτρηση: ${modeLabel(comparableMode)}.</div>`}`;
+  panel.innerHTML = `<div class="chart-summary"><div><h2>${esc(exerciseName)}</h2><small>${points.length} καταγραφές · τελευταία ${formatDate(latest.session.date)}</small></div><div class="chart-latest"><span>ΤΕΛΕΥΤΑΙΑ ΕΠΙΔΟΣΗ</span><strong>${latestLoad}</strong></div>${progressItems ? `<div class="progress-verdict ${decline?'is-alert':''}">${progressItems}</div>` : ''}</div><div class="chart-legend">${weightLegend}${comparableMode==='mixed'?'<span class="extra-weight-key">Επιπλέον kg</span>':''}<span class="chart-hint">Πέρασε πάνω από σημείο για λεπτομέρειες</span></div><div class="chart-wrap"><svg class="progress-chart" style="width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="Γράφημα προόδου βάρους και επαναλήψεων"><line x1="${left}" y1="${height-bottom}" x2="${width-right}" y2="${height-bottom}" class="chart-axis"/>${weightSeries}${extraLine?`<path d="${extraLine}" class="chart-extra-line"/>`:''}${points.map((item,i) => { const isFirst=i===0, isLast=i===points.length-1, anchor=isFirst?'start':isLast?'end':'middle', pointY=primaryUnit?y(item.value):repY(item.reps), tipLabel=pointLabel(item), tipDate=formatDate(item.session.date), tooltipWidth=Math.max(120,Math.round(Math.max(tipLabel.length,tipDate.length)*6.6)+26), tooltipX=Math.max(8,Math.min(width-tooltipWidth-8,x(i)-tooltipWidth/2)), tooltipY=Math.max(8,pointY-64), showDate=true; return `<g class="chart-point" tabindex="0"><title>${tipLabel} · ${tipDate}</title><line x1="${x(i)}" y1="${pointY}" x2="${x(i)}" y2="${height-bottom}" class="chart-guide"/>${primaryUnit || comparableMode==='bodyweight'?`<circle cx="${x(i)}" cy="${pointY}" r="7" class="chart-dot"/>`:''}${comparableMode==='mixed'?`<circle cx="${x(i)}" cy="${extraY(item.extraWeight)}" r="5" class="chart-extra-dot"/>`:''}<g class="chart-tooltip-card" transform="translate(${tooltipX} ${tooltipY})" aria-hidden="true"><rect width="${tooltipWidth}" height="48" rx="5"/><text x="${tooltipWidth/2}" y="18" text-anchor="middle"><tspan x="${tooltipWidth/2}" dy="0">${tipLabel}</tspan><tspan x="${tooltipWidth/2}" dy="17">${tipDate}</tspan></text></g>${showDate ? `<text x="${x(i)}" y="${height-bottom+24}" text-anchor="${anchor}" class="chart-date">${axisDate(item.session.date)}</text>` : ''}</g>`; }).join('')}</svg></div>${excluded.length ? `<div class="recording-warning"><strong>Έλεγχος καταγραφής: ${excluded.length} ${excluded.length===1?'προπόνηση εξαιρέθηκε':'προπονήσεις εξαιρέθηκαν'}.</strong><p>Το γράφημα χρησιμοποιεί μόνο «${modeLabel(comparableMode)}». ${excluded.map(item => `${formatDate(item.session.date)} — ${item.reason || `καταγράφηκε σε ${modeLabel(item.mode)}`}`).join(' · ')}</p></div>` : `<div class="recording-ok">✓ Όλες οι καταγραφές του σετ χρησιμοποιούν κοινή μέτρηση: ${modeLabel(comparableMode)}.</div>`}`;
 }
 
 function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
@@ -970,6 +1005,17 @@ $$('.nav-button').forEach(button => button.addEventListener('click', () => showV
 $('#open-menu').addEventListener('click', () => setMenu(true));
 $('#close-menu').addEventListener('click', closeMenu);
 $('#menu-backdrop').addEventListener('click', closeMenu);
+$('#routine-list').addEventListener('pointerdown', event => {
+  if (event.button !== undefined && event.button !== 0) return;
+  routineSwipeStartX = event.clientX;
+});
+$('#routine-list').addEventListener('pointerup', event => {
+  if (routineSwipeStartX === null) return;
+  const distance = event.clientX - routineSwipeStartX;
+  routineSwipeStartX = null;
+  if (Math.abs(distance) >= 45) scrollRoutineTickets(distance < 0 ? 1 : -1);
+});
+$('#routine-list').addEventListener('pointercancel', () => { routineSwipeStartX = null; });
 $('#session-detail-close').addEventListener('click', () => closeSessionDialog());
 $('#session-detail-dialog').addEventListener('cancel', event => {
   event.preventDefault();
@@ -983,9 +1029,14 @@ $('#session-detail-dialog').addEventListener('close', () => {
 });
 document.addEventListener('keydown', event => {
   const sessionSummary = event.target.closest?.('.session-summary[data-view-session]');
+  const routineList = event.target.closest?.('#routine-list');
   if (sessionSummary && event.target === sessionSummary && (event.key === 'Enter' || event.key === ' ')) {
     event.preventDefault();
     sessionSummary.click();
+  }
+  if (routineList && event.target === routineList && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+    event.preventDefault();
+    scrollRoutineTickets(event.key === 'ArrowRight' ? 1 : -1);
   }
   if (event.key === 'Escape') closeMenu();
 });
@@ -1026,7 +1077,7 @@ $('#routine-form').addEventListener('submit', event => {
   }
   event.currentTarget.reset();
   resetPlanForm();
-  renderRoutines();
+  renderRoutines({ centerRoutineId:routine.id });
   renderPlan();
   toast(`Το πρόγραμμα «${name}» δημιουργήθηκε`);
 });
@@ -1239,14 +1290,16 @@ document.addEventListener('click', event => {
   if (event.target.matches('.add-extra-set')) { const card = event.target.closest('[data-exercise]'), rows = card.querySelector('.exercise-sets'); rows.insertAdjacentHTML('beforeend', setRows(1, [{}], '', { extra:true, startIndex:rows.children.length })); refreshCopySetButton(card); }
   if (event.target.matches('.remove-extra-set')) { const card = event.target.closest('[data-exercise]'), rows = event.target.closest('.exercise-sets'); event.target.closest('[data-set]').remove(); [...rows.children].forEach((row, index) => row.querySelector('.set-number').textContent = String(index + 1).padStart(2,'0')); refreshCopySetButton(card); }
   const selectRoutineButton = event.target.closest('[data-select-routine]');
+  const scrollRoutineButton = event.target.closest('[data-routine-scroll]');
   const activateRoutineButton = event.target.closest('[data-activate-routine]');
   const renameRoutineButton = event.target.closest('[data-rename-routine]');
   const deleteRoutineButton = event.target.closest('[data-delete-routine]');
   const cancelRoutineEditButton = event.target.closest('[data-cancel-routine-edit]');
+  if (scrollRoutineButton) scrollRoutineTickets(Number(scrollRoutineButton.dataset.routineScroll));
   if (selectRoutineButton) {
     state.selectedRoutineId = selectRoutineButton.dataset.selectRoutine;
     resetPlanForm();
-    renderRoutines();
+    renderRoutines({ centerRoutineId:state.selectedRoutineId });
     renderPlan();
   }
   if (activateRoutineButton) {
@@ -1263,7 +1316,7 @@ document.addEventListener('click', event => {
     }
     switchRewardRoutine(previousActiveRoutineId, routineId);
     resetPlanForm();
-    renderRoutines();
+    renderRoutines({ resetCarousel:true });
     renderPlan();
     renderScheduledSession();
     toast(`Το «${activeRoutine().name}» είναι τώρα ενεργό ★`);
@@ -1273,7 +1326,7 @@ document.addEventListener('click', event => {
     if (routine) {
       state.editingRoutineId = routine.id;
       state.selectedRoutineId = routine.id;
-      renderRoutines();
+      renderRoutines({ centerRoutineId:routine.id });
       renderPlan();
       const input = $(`[data-routine-rename-form="${routine.id}"] .routine-inline-name`);
       input.focus();
