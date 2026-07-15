@@ -39,11 +39,12 @@ const validCycleDay = (value, length) => Number.isInteger(Number(value)) && Numb
 function normalizeRoutine(routine = {}, index = 0) {
   const cycleLength = clampCycleLength(routine.cycleLength);
   const cycleAnchorDate = dateParts(routine.cycleAnchorDate) ? routine.cycleAnchorDate : mondayFor();
+  const usesWeekdays = routine.usesWeekdays !== false;
   const plan = Array.isArray(routine.plan) ? routine.plan.map(item => {
     const cycleDay = validCycleDay(item.cycleDay, cycleLength) || validCycleDay(legacyCycleDay(item.day), cycleLength);
     return cycleDay ? { ...item, cycleDay } : null;
   }).filter(Boolean) : [];
-  return { id:routine.id || crypto.randomUUID(), name:routine.name || `Πρόγραμμα ${index + 1}`, isActive:Boolean(routine.isActive), cycleLength, cycleAnchorDate, plan };
+  return { id:routine.id || crypto.randomUUID(), name:routine.name || `Πρόγραμμα ${index + 1}`, isActive:Boolean(routine.isActive), cycleLength, cycleAnchorDate, usesWeekdays, plan };
 }
 const cycleDayForDate = (routine, value) => {
   const anchor = dateParts(routine?.cycleAnchorDate);
@@ -58,7 +59,7 @@ const weekdayForCycleDay = (routine, cycleDay) => {
   anchor.setDate(anchor.getDate() + Number(cycleDay) - 1);
   return days[anchor.getDay()];
 };
-const cycleDayLabel = (routine, cycleDay) => `Ημέρα ${cycleDay} · ${weekdayForCycleDay(routine, cycleDay)}`;
+const cycleDayLabel = (routine, cycleDay) => routine?.usesWeekdays === false ? `Ημέρα ${cycleDay}` : `Ημέρα ${cycleDay} · ${weekdayForCycleDay(routine, cycleDay)}`;
 const itemCycleDay = (item, routine) => validCycleDay(item?.cycleDay, clampCycleLength(routine?.cycleLength)) || legacyCycleDay(item?.day);
 const oldLogs = store.read('trainingLogs');
 const savedSessions = store.read('trainingSessions');
@@ -96,6 +97,7 @@ function renderHome() {
   $('#daily-quote-author').textContent = quote?.author || 'Logbook';
   $('#quote-index').textContent = dailyQuotes.length ? `${String(quoteIndex + 1).padStart(2, '0')} / ${String(dailyQuotes.length).padStart(2, '0')}` : '00 / 00';
   renderHomeProfileCard();
+  renderHomeRoutineCard();
 }
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const id = () => crypto.randomUUID();
@@ -309,10 +311,11 @@ function renderPlan() {
   $('#plan-board-title').toggleAttribute('data-i18n-user', Boolean(routine?.name));
   $('#selected-routine-label').textContent = routine?.name || '';
   $('#plan-board-title').textContent = routine?.name || 'ΤΟ ΠΛΑΝΟ ΣΟΥ';
+  $('#plan-day-label').textContent = routine?.usesWeekdays === false ? 'Σειρά στον μικρόκυκλο' : 'Ημέρα μικρόκυκλου';
   $('#plan-count').textContent = `${activeDays}/${routine?.cycleLength || 7} ημέρες`;
   $('#plan-list').innerHTML = Array.from({ length:routine?.cycleLength || 7 }, (_, dayIndex) => {
     const cycleDay = dayIndex + 1;
-    const day = weekdayForCycleDay(routine, cycleDay);
+    const day = routine?.usesWeekdays === false ? `Ημέρα ${cycleDay}` : weekdayForCycleDay(routine, cycleDay);
     const items = plan.filter(item => itemCycleDay(item, routine) === cycleDay);
     const workoutName = items[0]?.workoutName || (items.length ? 'Προπόνηση' : 'Ημέρα ξεκούρασης');
     return `<section class="day-card ${items.length ? 'active-day' : ''}"><div class="day-card-head"><span>${String(cycleDay).padStart(2,'0')}</span><div><h3>${day}</h3><p ${items.length ? 'data-i18n-user' : ''}>${esc(workoutName)}</p></div>${items.length ? `<div class="day-card-actions"><button class="edit-day" data-edit-day="${cycleDay}" type="button">Επεξεργασία</button><button class="delete-day" data-delete-day="${cycleDay}" aria-label="Διαγραφή ημέρας ${cycleDay}">×</button></div>` : ''}</div>
@@ -321,17 +324,15 @@ function renderPlan() {
 }
 
 function renderRoutines() {
-  $('#routine-list').innerHTML = state.routines.map((routine, index) => {
+  $('#routine-list').innerHTML = state.routines.map(routine => {
     const selected = routine.id === state.selectedRoutineId;
     const dayCount = new Set(routine.plan.map(item => itemCycleDay(item, routine))).size;
     if (routine.id === state.editingRoutineId) return `<article class="routine-card routine-card-editing ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <form class="routine-inline-form" data-routine-rename-form="${esc(routine.id)}"><span>${String(index + 1).padStart(2,'0')}</span><label>Όνομα προγράμματος<input class="routine-inline-name" type="text" maxlength="50" value="${esc(routine.name)}" required></label><div><button class="routine-inline-save" type="submit" aria-label="Αποθήκευση ονόματος">✓</button><button class="routine-inline-cancel" data-cancel-routine-edit type="button" aria-label="Ακύρωση μετονομασίας">×</button></div></form>
-      ${routine.isActive ? '<em>ΣΤΗΝ ΚΑΤΑΓΡΑΦΗ</em>' : ''}
+      <form class="routine-inline-form" data-routine-rename-form="${esc(routine.id)}"><label>Όνομα προγράμματος<input class="routine-inline-name" type="text" maxlength="50" value="${esc(routine.name)}" required></label><div><button class="routine-inline-save" type="submit" aria-label="Αποθήκευση ονόματος">✓</button><button class="routine-inline-cancel" data-cancel-routine-edit type="button" aria-label="Ακύρωση μετονομασίας">×</button></div></form>
     </article>`;
     return `<article class="routine-card ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><span>${String(index + 1).padStart(2,'0')}</span><strong data-i18n-user>${esc(routine.name)}</strong><small>${dayCount}/${routine.cycleLength} ημέρες · έναρξη ${formatDate(routine.cycleAnchorDate)}</small></button>
-      <div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div>
-      ${routine.isActive ? '<em>ΣΤΗΝ ΚΑΤΑΓΡΑΦΗ</em>' : ''}
+      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><strong data-i18n-user>${esc(routine.name)}</strong></button>
+      <div class="routine-foot"><small>${dayCount} ${dayCount === 1 ? 'ημέρα προπόνησης' : 'ημέρες προπόνησης'}</small><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
     </article>`;
   }).join('');
 }
@@ -458,7 +459,7 @@ function syncPlanChangesToHistory(routineId, sourceDay, targetDay, previousItems
       const replacement = nextItems.find(item => item.id === exercise.planExerciseId) || renameByOldName.get(normalizedName(exercise.exercise));
       return replacement ? { ...exercise, exercise:replacement.exercise, planExerciseId:replacement.id } : exercise;
     });
-    return { ...session, routineId, cycleDay:Number(targetDay), workoutDay:weekdayForCycleDay(routine, targetDay), workoutName:nextItems[0]?.workoutName || session.workoutName, exercises:syncedExercises };
+    return { ...session, routineId, cycleDay:Number(targetDay), workoutDay:routine?.usesWeekdays === false ? null : weekdayForCycleDay(routine, targetDay), workoutName:nextItems[0]?.workoutName || session.workoutName, exercises:syncedExercises };
   });
   if (!persistSessions(nextSessions)) return false;
   state.sessions = nextSessions;
@@ -660,29 +661,36 @@ function renderMenuIdentity() {
   $('#menu-profile-image').src = hasCustomImage ? profile.customImage : '';
 }
 
-function readHomeCardPosition() {
-  const saved = store.read('homeProfileCardPosition');
+function readHomeCardPosition(storageKey = 'homeProfileCardPosition') {
+  const saved = store.read(storageKey);
   return !Array.isArray(saved) && Number.isFinite(saved?.x) && Number.isFinite(saved?.y) ? saved : null;
 }
 
-function homeCardBounds() {
-  const shell = $('.home-shell'), card = $('#home-profile-card');
+function homeCardBounds(card = $('#home-profile-card')) {
+  const shell = $('.home-shell');
   return {
     maxX:Math.max(0, shell.clientWidth - card.offsetWidth),
     maxY:Math.max(0, shell.scrollHeight - card.offsetHeight)
   };
 }
 
-function placeHomeProfileCard(position = readHomeCardPosition()) {
-  const card = $('#home-profile-card');
+function placeHomeCard(card, position, fallback) {
   if (card.classList.contains('hidden')) return;
-  const { maxX, maxY } = homeCardBounds();
-  const x = Math.max(0, Math.min(maxX, position ? position.x * maxX : maxX * .92));
-  const y = Math.max(0, Math.min(maxY, position ? position.y * maxY : Math.min(205, maxY * .16)));
+  const { maxX, maxY } = homeCardBounds(card);
+  const x = Math.max(0, Math.min(maxX, position ? position.x * maxX : fallback.x(maxX)));
+  const y = Math.max(0, Math.min(maxY, position ? position.y * maxY : fallback.y(maxY)));
   card.dataset.x = String(x);
   card.dataset.y = String(y);
   card.style.setProperty('--card-x', `${x}px`);
   card.style.setProperty('--card-y', `${y}px`);
+}
+
+function placeHomeProfileCard(position = readHomeCardPosition()) {
+  placeHomeCard($('#home-profile-card'), position, { x:maxX => maxX * .92, y:maxY => Math.min(205, maxY * .16) });
+}
+
+function placeHomeRoutineCard(position = readHomeCardPosition('homeRoutineCardPosition')) {
+  placeHomeCard($('#home-routine-card'), position, { x:maxX => maxX * .58, y:maxY => Math.min(330, maxY * .62) });
 }
 
 function renderHomeProfileCard() {
@@ -701,19 +709,37 @@ function renderHomeProfileCard() {
   requestAnimationFrame(() => placeHomeProfileCard());
 }
 
-function enableHomeProfileCardDrag() {
-  const card = $('#home-profile-card');
+function renderHomeRoutineCard() {
+  const card = $('#home-routine-card');
+  const routine = activeRoutine();
+  const plannedDays = Array.from({ length:routine?.cycleLength || 0 }, (_, index) => index + 1).map(cycleDay => {
+    const items = (routine?.plan || []).filter(item => itemCycleDay(item, routine) === cycleDay);
+    return items.length ? { cycleDay, workoutName:items[0].workoutName || 'Προπόνηση' } : null;
+  }).filter(Boolean);
+  card.classList.toggle('hidden', !routine);
+  if (!routine) return;
+  $('#home-routine-name').textContent = routine.name;
+  $('#home-routine-days').innerHTML = plannedDays.length
+    ? plannedDays.map(({ cycleDay, workoutName }) => {
+      const declaredDay = routine.usesWeekdays === false ? '' : weekdayForCycleDay(routine, cycleDay);
+      return `<li><span>${String(cycleDay).padStart(2,'0')}</span><div><strong data-i18n-user>${esc(workoutName)}</strong>${declaredDay ? `<small>${declaredDay}</small>` : ''}</div></li>`;
+    }).join('')
+    : '<li class="home-routine-empty"><span>—</span><div><strong>Κενό πρόγραμμα</strong><small>Πρόσθεσε την πρώτη ημέρα προπόνησης</small></div></li>';
+  requestAnimationFrame(() => placeHomeRoutineCard());
+}
+
+function enableHomeCardDrag(card, storageKey, placeCard) {
   let drag = null;
   const finish = event => {
     if (!drag || (event.pointerId !== undefined && event.pointerId !== drag.pointerId)) return;
-    const { maxX, maxY } = homeCardBounds();
+    const { maxX, maxY } = homeCardBounds(card);
     const x = Number(card.dataset.x) || 0, y = Number(card.dataset.y) || 0;
-    safeStoreWrite('homeProfileCardPosition', { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
+    safeStoreWrite(storageKey, { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
     card.classList.remove('is-dragging');
     drag = null;
   };
   card.addEventListener('pointerdown', event => {
-    if (event.button !== undefined && event.button !== 0) return;
+    if ((event.button !== undefined && event.button !== 0) || event.target.closest('button,a,input,select,textarea')) return;
     drag = { pointerId:event.pointerId, startX:event.clientX, startY:event.clientY, x:Number(card.dataset.x) || 0, y:Number(card.dataset.y) || 0 };
     card.setPointerCapture?.(event.pointerId);
     card.classList.add('is-dragging');
@@ -721,7 +747,7 @@ function enableHomeProfileCardDrag() {
   });
   card.addEventListener('pointermove', event => {
     if (!drag || event.pointerId !== drag.pointerId) return;
-    const { maxX, maxY } = homeCardBounds();
+    const { maxX, maxY } = homeCardBounds(card);
     const x = Math.max(0, Math.min(maxX, drag.x + event.clientX - drag.startX));
     const y = Math.max(0, Math.min(maxY, drag.y + event.clientY - drag.startY));
     card.dataset.x = String(x); card.dataset.y = String(y);
@@ -730,21 +756,30 @@ function enableHomeProfileCardDrag() {
   card.addEventListener('pointerup', finish);
   card.addEventListener('pointercancel', finish);
   card.addEventListener('keydown', event => {
+    if (event.target !== card) return;
     const movement = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[event.key];
     if (!movement) return;
     event.preventDefault();
-    const step = event.shiftKey ? 30 : 8, { maxX, maxY } = homeCardBounds();
+    const step = event.shiftKey ? 30 : 8, { maxX, maxY } = homeCardBounds(card);
     const x = Math.max(0, Math.min(maxX, (Number(card.dataset.x) || 0) + movement[0] * step));
     const y = Math.max(0, Math.min(maxY, (Number(card.dataset.y) || 0) + movement[1] * step));
     card.dataset.x = String(x); card.dataset.y = String(y);
     card.style.setProperty('--card-x', `${x}px`); card.style.setProperty('--card-y', `${y}px`);
-    safeStoreWrite('homeProfileCardPosition', { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
+    safeStoreWrite(storageKey, { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
   });
   let resizeFrame;
   window.addEventListener('resize', () => {
     cancelAnimationFrame(resizeFrame);
-    resizeFrame = requestAnimationFrame(() => placeHomeProfileCard());
+    resizeFrame = requestAnimationFrame(placeCard);
   });
+}
+
+function enableHomeProfileCardDrag() {
+  enableHomeCardDrag($('#home-profile-card'), 'homeProfileCardPosition', () => placeHomeProfileCard());
+}
+
+function enableHomeRoutineCardDrag() {
+  enableHomeCardDrag($('#home-routine-card'), 'homeRoutineCardPosition', () => placeHomeRoutineCard());
 }
 
 function prepareProfileImage(file) {
@@ -929,9 +964,9 @@ $('#routine-form').addEventListener('submit', event => {
   const name = $('#routine-name').value.trim();
   if (!name) return;
   const cycleLength = clampCycleLength($('#routine-cycle-length').value);
-  const cycleAnchorDate = $('#routine-cycle-anchor').value;
-  if (!dateParts(cycleAnchorDate)) return;
-  const routine = { id:id(), name, isActive:false, cycleLength, cycleAnchorDate, plan:[] };
+  const usesWeekdays = $('#routine-form input[name="routine-weekdays"]:checked')?.value === 'true';
+  const cycleAnchorDate = usesWeekdays ? mondayFor() : localDateInputValue();
+  const routine = { id:id(), name, isActive:false, cycleLength, cycleAnchorDate, usesWeekdays, plan:[] };
   const previousSelectedRoutineId = state.selectedRoutineId;
   state.routines.push(routine);
   rewardTracking.periods[routine.id] = [];
@@ -943,7 +978,6 @@ $('#routine-form').addEventListener('submit', event => {
     return;
   }
   event.currentTarget.reset();
-  $('#routine-cycle-anchor').value = localDateInputValue();
   resetPlanForm();
   renderRoutines();
   renderPlan();
@@ -1067,7 +1101,7 @@ $('#plan-form').addEventListener('submit', event => {
   const workoutName = $('#workout-name').value.trim();
   const sourceDay = state.editingDay;
   const previousItems = sourceDay ? plan.filter(item => itemCycleDay(item, routine) === Number(sourceDay)) : [];
-  const exercises = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId || id(), cycleDay:day, day:weekdayForCycleDay(routine, day), workoutName, exercise:card.querySelector('.builder-name').value.trim(), workSets:Number(card.querySelector('.builder-sets').value), cues:card.querySelector('.builder-cues').value.trim(), sets:Array.from({ length:Number(card.querySelector('.builder-sets').value) }, () => ({})) }));
+  const exercises = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId || id(), cycleDay:day, day:routine.usesWeekdays === false ? null : weekdayForCycleDay(routine, day), workoutName, exercise:card.querySelector('.builder-name').value.trim(), workSets:Number(card.querySelector('.builder-sets').value), cues:card.querySelector('.builder-cues').value.trim(), sets:Array.from({ length:Number(card.querySelector('.builder-sets').value) }, () => ({})) }));
   const savePlan = updateHistory => {
     const nextPlan = [...plan.filter(item => itemCycleDay(item, routine) !== day && itemCycleDay(item, routine) !== Number(sourceDay)), ...exercises];
     routine.plan = nextPlan;
@@ -1257,7 +1291,8 @@ document.addEventListener('click', event => {
 });
 
 enableHomeProfileCardDrag();
-$('#log-date').value = localDateInputValue(); $('#routine-cycle-anchor').value = localDateInputValue(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile(); renderHome();
+enableHomeRoutineCardDrag();
+$('#log-date').value = localDateInputValue(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile(); renderHome();
 document.addEventListener('logbook:languagechange', () => {
   // Re-render only date-dependent views. Form fields and in-progress sets stay intact.
   const logDate = $('#log-date').value;

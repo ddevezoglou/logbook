@@ -26,16 +26,27 @@ const pastWeeks = 13;
 const todayOffset = (new Date().getDay() + 6) % 7;
 const expectedThisWeek = planOffsets.filter(offset => offset <= todayOffset).length;
 
-test('seed-week.js produces one active 4-day routine and thirteen full previous weeks of logs', () => {
+test('seed-week.js produces one active routine plus 8/9/10-day examples and thirteen full previous weeks of logs', () => {
   const { routines, sessions } = runSeed();
-  assert.equal(routines.length, 1);
+  assert.equal(routines.length, 4);
   assert.ok(routines[0].isActive);
+  assert.deepEqual(routines.map(routine => routine.cycleLength), [7, 8, 9, 10]);
+  assert.deepEqual(routines.map(routine => routine.usesWeekdays), [true, false, true, false]);
+  assert.deepEqual(routines.map(routine => routine.isActive), [true, false, false, false]);
+  routines.forEach(routine => {
+    assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(routine.cycleAnchorDate));
+    assert.ok(routine.plan.every(item => item.cycleDay >= 1 && item.cycleDay <= routine.cycleLength));
+  });
+  for (const routine of routines.slice(1)) {
+    assert.ok(routine.plan.some(item => item.cycleDay > 7), `${routine.cycleLength}-day routine must exercise a slot after day 7`);
+  }
   assert.equal(new Set(routines[0].plan.map(item => item.day)).size, 4);
   routines[0].plan.forEach(item => assert.ok(item.id && item.exercise && item.workoutName));
   assert.equal(sessions.length, planOffsets.length * pastWeeks + expectedThisWeek);
   sessions.forEach(session => {
     assert.equal(session.type, 'scheduled');
     assert.equal(session.routineId, routines[0].id);
+    assert.ok(session.cycleDay >= 1 && session.cycleDay <= 7);
     assert.ok(session.exercises.length >= 3);
     session.exercises.forEach(exercise => {
       assert.ok(routines[0].plan.some(item => item.id === exercise.planExerciseId), `${exercise.exercise} must link to a plan exercise`);

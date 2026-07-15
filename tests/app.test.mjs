@@ -38,6 +38,52 @@ test('home shows the saved profile card and opens the workout log', () => {
   assert.ok(document.querySelector('#log-view').classList.contains('active'));
 });
 
+test('home shows the active routine as a movable program ticket', () => {
+  const routines = [{
+    id:'r-ticket', name:'Golden Push Pull', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true,
+    plan:[planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Push Day' }), planDay('Τετάρτη', 'Row', { cycleDay:3, workoutName:'Pull Day' })],
+  }];
+  const { document } = loadApp({ trainingRoutines:routines });
+  const card = document.querySelector('#home-routine-card');
+  assert.ok(!card.classList.contains('hidden'));
+  assert.equal(document.querySelector('#home-routine-name').textContent, 'Golden Push Pull');
+  assert.equal(document.querySelector('.home-routine-head').textContent.trim(), 'ΠΡΟΓΡΑΜΜΑ');
+  assert.equal(document.querySelector('#home-routine-cycle'), null);
+  assert.deepEqual([...document.querySelectorAll('#home-routine-days strong')].map(node => node.textContent), ['Push Day', 'Pull Day']);
+  assert.deepEqual([...document.querySelectorAll('#home-routine-days small')].map(node => node.textContent), ['Δευτέρα', 'Τετάρτη']);
+  assert.doesNotMatch(card.textContent, /ACTIVE PROGRAM|DAYS|Ημέρα 1|ασκήσεις/);
+  click(document, '.home-routine-open');
+  assert.ok(document.querySelector('#plan-view').classList.contains('active'));
+});
+
+test('home program ticket omits weekday metadata when weekdays are not declared', () => {
+  const routines = [{
+    id:'r-floating', name:'Floating Rotation', isActive:true, cycleLength:8, cycleAnchorDate:'2026-07-06', usesWeekdays:false,
+    plan:[planDay(null, 'Squat', { cycleDay:1, workoutName:'Lower A' })],
+  }];
+  const { document } = loadApp({ trainingRoutines:routines });
+  assert.equal(document.querySelector('#home-routine-days strong').textContent, 'Lower A');
+  assert.equal(document.querySelector('#home-routine-days small'), null);
+});
+
+test('home routine ticket drag stays bounded and persists independently', () => {
+  const { document, localStorage } = loadApp();
+  const shell = document.querySelector('.home-shell');
+  const card = document.querySelector('#home-routine-card');
+  Object.defineProperties(shell, { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
+  Object.defineProperties(card, { offsetWidth:{ value:300 }, offsetHeight:{ value:320 } });
+  const pointer = (type, x, y) => {
+    const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
+    Object.defineProperties(event, { pointerId:{ value:2 }, button:{ value:0 }, clientX:{ value:x }, clientY:{ value:y } });
+    card.dispatchEvent(event);
+  };
+  pointer('pointerdown', 40, 40);
+  pointer('pointermove', 5000, 5000);
+  pointer('pointerup', 5000, 5000);
+  assert.deepEqual(JSON.parse(localStorage.getItem('homeRoutineCardPosition')), { x:1, y:1 });
+  assert.equal(localStorage.getItem('homeProfileCardPosition'), null);
+});
+
 test('home athlete card drag stays bounded and persists its relative position', () => {
   const { document, localStorage } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
   const shell = document.querySelector('.home-shell');
@@ -128,16 +174,40 @@ test('creating a routine adds it and selects it', () => {
   assert.equal(routines[1].name, 'Push Pull Legs');
 });
 
-test('creating a routine persists a microcycle length and anchor date', () => {
+test('creating a routine persists a microcycle length and assigns its anchor internally', () => {
   const { document, localStorage } = loadApp();
   setValue(document, '#routine-name', 'Eight Day Rotation', 'input');
   setValue(document, '#routine-cycle-length', '8', 'input');
-  setValue(document, '#routine-cycle-anchor', '2026-07-06', 'input');
   document.querySelector('#routine-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
   const routine = JSON.parse(localStorage.getItem('trainingRoutines')).at(-1);
   assert.equal(routine.cycleLength, 8);
-  assert.equal(routine.cycleAnchorDate, '2026-07-06');
+  assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(routine.cycleAnchorDate));
+  assert.equal(document.querySelector('#routine-cycle-anchor'), null);
   assert.equal(document.querySelectorAll('#plan-list .day-card').length, 8);
+});
+
+test('a new circular routine can omit weekday names', () => {
+  const { document, localStorage } = loadApp();
+  setValue(document, '#routine-name', 'Floating Pull Push', 'input');
+  setValue(document, '#routine-cycle-length', '8', 'input');
+  document.querySelector('#routine-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  const routine = JSON.parse(localStorage.getItem('trainingRoutines')).at(-1);
+  assert.equal(routine.usesWeekdays, false);
+  assert.equal(document.querySelector('#plan-day-label').textContent, 'Σειρά στον μικρόκυκλο');
+  assert.equal(document.querySelector('#plan-day option').textContent, 'Ημέρα 1');
+  assert.equal(document.querySelector('#plan-list .day-card h3').textContent, 'Ημέρα 1');
+});
+
+test('weekday display can be explicitly enabled when creating a routine', () => {
+  const { document, localStorage } = loadApp();
+  const enabled = document.querySelector('#routine-form input[name="routine-weekdays"][value="true"]');
+  enabled.checked = true;
+  setValue(document, '#routine-name', 'Calendar Rotation', 'input');
+  document.querySelector('#routine-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  const routine = JSON.parse(localStorage.getItem('trainingRoutines')).at(-1);
+  assert.equal(routine.usesWeekdays, true);
+  assert.equal(document.querySelector('#plan-day-label').textContent, 'Ημέρα μικρόκυκλου');
+  assert.ok(document.querySelector('#plan-day option').textContent.includes('Δευτέρα'));
 });
 
 test('legacy weekly routines migrate to seven stable cycle slots', () => {
@@ -145,6 +215,7 @@ test('legacy weekly routines migrate to seven stable cycle slots', () => {
   const { localStorage } = loadApp({ trainingRoutines:legacy });
   const routine = JSON.parse(localStorage.getItem('trainingRoutines'))[0];
   assert.equal(routine.cycleLength, 7);
+  assert.equal(routine.usesWeekdays, true);
   assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(routine.cycleAnchorDate));
   assert.deepEqual(routine.plan.map(item => item.cycleDay), [1, 7]);
 });

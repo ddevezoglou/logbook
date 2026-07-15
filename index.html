@@ -75,6 +75,19 @@
             <div class="home-profile-card-copy"><strong id="home-profile-name" data-i18n-user></strong></div>
           </div>
         </article>
+        <article id="home-routine-card" class="home-routine-card hidden" tabindex="0" aria-label="Κάρτα ενεργού προγράμματος. Σύρε για να την μετακινήσεις στην αρχική σελίδα.">
+          <span class="home-routine-punch" aria-hidden="true"></span>
+          <header class="home-routine-head">
+            <span>ΠΡΟΓΡΑΜΜΑ</span>
+          </header>
+          <div class="home-routine-title">
+            <strong id="home-routine-name" data-i18n-user></strong>
+          </div>
+          <ol id="home-routine-days" class="home-routine-days"></ol>
+          <button class="home-routine-open" type="button" data-home-action="plan">
+            <span>ΑΝΟΙΓΜΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</span><b aria-hidden="true">↗</b>
+          </button>
+        </article>
         <div class="home-intro">
           <button class="home-start" type="button" data-home-action="log"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
           <div class="home-quick" aria-label="Γρήγορη πλοήγηση">
@@ -147,8 +160,14 @@
         </div>
         <form id="routine-form" class="routine-create-form">
           <label>Νέο πρόγραμμα<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
-          <label>Ημέρες μικρόκυκλου<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
-          <label>Έναρξη μικρόκυκλου<input id="routine-cycle-anchor" type="date" required></label>
+          <label>Διάρκεια (σε ημέρες)<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
+          <fieldset class="routine-weekday-choice">
+            <legend>Δήλωση ημερών</legend>
+            <div class="routine-weekday-options">
+              <label><input type="radio" name="routine-weekdays" value="false" checked><span>Όχι</span></label>
+              <label><input type="radio" name="routine-weekdays" value="true"><span>Ναι</span></label>
+            </div>
+          </fieldset>
           <button class="secondary-button" type="submit">＋ Δημιουργία</button>
         </form>
         <div id="routine-list" class="routine-list" aria-live="polite"></div>
@@ -157,7 +176,7 @@
         <form id="plan-form" class="sheet">
           <div class="sheet-heading"><div><span id="selected-routine-label"></span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div></div>
           <div class="field-grid two">
-            <label>Ημέρα μικρόκυκλου<select id="plan-day" required></select></label>
+            <label><span id="plan-day-label">Ημέρα μικρόκυκλου</span><select id="plan-day" required></select></label>
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
             <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>

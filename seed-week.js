@@ -1,7 +1,8 @@
 // Seed script για δοκιμή του συστήματος επιβράβευσης.
 // Χρήση: άνοιξε το index.html στον browser, άνοιξε DevTools Console (F12),
 // επικόλλησε ΟΛΟ το περιεχόμενο του αρχείου και πάτησε Enter.
-// Δημιουργεί: ενεργό πρόγραμμα 4 ημερών + πλήρη logs των 13 προηγούμενων εβδομάδων
+// Δημιουργεί: ενεργό 7ήμερο πρόγραμμα 4 προπονήσεων, παραδείγματα μικρόκυκλων
+// 8/9/10 ημερών και πλήρη logs των 13 προηγούμενων εβδομάδων
 // + logs της τρέχουσας εβδομάδας μέχρι σήμερα, και κάνει reload.
 //
 // Αναμενόμενο αποτέλεσμα στο Προφίλ:
@@ -23,6 +24,12 @@
     const d = new Date(monday);
     d.setDate(d.getDate() + weekOffset * 7 + dayOffset);
     return d;
+  };
+  const weekdays = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+  const weekdayAtCycleDay = cycleDay => {
+    const date = new Date(monday);
+    date.setDate(date.getDate() + cycleDay - 1);
+    return weekdays[date.getDay()];
   };
 
   const kg = (reps, weight) => ({ reps, weightMode: 'kg', weight, plates: null });
@@ -62,8 +69,12 @@
     id: routineId,
     name: 'Push/Pull Δοκιμής',
     isActive: true,
+    cycleLength: 7,
+    cycleAnchorDate: iso(monday),
+    usesWeekdays: true,
     plan: workouts.flatMap(workout => workout.exercises.map(item => ({
       id: item.id,
+      cycleDay: workout.dayOffset + 1,
       day: workout.day,
       workoutName: workout.workoutName,
       exercise: item.exercise,
@@ -73,6 +84,47 @@
     })))
   };
 
+  const exampleRoutine = (cycleLength, name, usesWeekdays, cycleWorkouts) => ({
+    id: uid(),
+    name,
+    isActive: false,
+    cycleLength,
+    cycleAnchorDate: iso(monday),
+    usesWeekdays,
+    plan: cycleWorkouts.flatMap(workout => workout.exercises.map(exercise => ({
+      id: uid(),
+      cycleDay: workout.cycleDay,
+      day: usesWeekdays ? weekdayAtCycleDay(workout.cycleDay) : null,
+      workoutName: workout.workoutName,
+      exercise,
+      workSets: 3,
+      cues: '',
+      sets: [{}, {}, {}]
+    })))
+  });
+
+  const exampleRoutines = [
+    exampleRoutine(8, '8-Day Strength Rotation', false, [
+      { cycleDay:1, workoutName:'Upper Strength', exercises:['Bench Press','Barbell Row','Overhead Press'] },
+      { cycleDay:3, workoutName:'Lower Strength', exercises:['Back Squat','Romanian Deadlift','Calf Raises'] },
+      { cycleDay:5, workoutName:'Pull Hypertrophy', exercises:['Pull-ups','Cable Row','Face Pulls'] },
+      { cycleDay:8, workoutName:'Full Body', exercises:['Front Squat','Incline DB Press','Lat Pulldown'] }
+    ]),
+    exampleRoutine(9, '9-Day Push Pull Legs', true, [
+      { cycleDay:1, workoutName:'Push', exercises:['Bench Press','Overhead Press','Triceps Extension'] },
+      { cycleDay:4, workoutName:'Pull', exercises:['Deadlift','Pull-ups','Barbell Curl'] },
+      { cycleDay:6, workoutName:'Legs', exercises:['Back Squat','Leg Press','Leg Curl'] },
+      { cycleDay:9, workoutName:'Conditioning', exercises:['Farmer Walk','Sled Push','Hanging Knee Raise'] }
+    ]),
+    exampleRoutine(10, '10-Day Powerbuilding', false, [
+      { cycleDay:1, workoutName:'Upper A', exercises:['Bench Press','Barbell Row','Lateral Raise'] },
+      { cycleDay:3, workoutName:'Lower A', exercises:['Back Squat','Romanian Deadlift','Calf Raises'] },
+      { cycleDay:6, workoutName:'Upper B', exercises:['Overhead Press','Pull-ups','Dips'] },
+      { cycleDay:8, workoutName:'Lower B', exercises:['Deadlift','Front Squat','Leg Curl'] },
+      { cycleDay:10, workoutName:'Athletic Day', exercises:['Box Jump','Farmer Walk','Plank'] }
+    ])
+  ];
+
   const pastWeeks = 13;
 
   const sessionFor = (workout, weekOffset, progression) => ({
@@ -80,6 +132,7 @@
     date: iso(dateAt(weekOffset, workout.dayOffset)),
     type: 'scheduled',
     routineId,
+    cycleDay: workout.dayOffset + 1,
     workoutDay: workout.day,
     workoutName: workout.workoutName,
     comments: weekOffset === -pastWeeks ? 'Καλή ενέργεια, όλα τα σετ ολοκληρώθηκαν.' : 'Μικρή αύξηση βάρους από την προηγούμενη εβδομάδα.',
@@ -100,10 +153,10 @@
   });
   sessions.sort((a, b) => b.date.localeCompare(a.date));
 
-  localStorage.setItem('trainingRoutines', JSON.stringify([routine]));
+  localStorage.setItem('trainingRoutines', JSON.stringify([routine, ...exampleRoutines]));
   localStorage.setItem('trainingSessions', JSON.stringify(sessions));
   localStorage.removeItem('routineRewardTracking');
   localStorage.removeItem('trainingLogs');
-  console.log(`Seed OK: 1 πρόγραμμα (4 ημέρες), ${sessions.length} προπονήσεις σε ${pastWeeks} εβδομάδες + τρέχουσα. Reload...`);
+  console.log(`Seed OK: 4 προγράμματα (7/8/9/10 ημέρες), ${sessions.length} προπονήσεις σε ${pastWeeks} εβδομάδες + τρέχουσα. Reload...`);
   location.reload();
 })();

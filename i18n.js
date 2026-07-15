@@ -245,6 +245,8 @@
     'σε 7 ημέρες. Ο ρυθμός χτίζεται.':['workouts in 7 days. The rhythm is building.','séances en 7 jours. Le rythme se construit.','Trainings in 7 Tagen. Der Rhythmus wächst.'],
     'σε 7 ημέρες. Κράτησε τη γραμμή.':['workouts in 7 days. Keep the streak.','séances en 7 jours. Gardez le rythme.','Trainings in 7 Tagen. Halte die Serie.'],
     'προπονήσεις':['workouts','séances','Trainings'],
+    'ημέρες προπόνησης':['training days','jours d’entraînement','Trainingstage'],
+    'ημέρα προπόνησης':['training day','jour d’entraînement','Trainingstag'],
     'ημέρες':['days','jours','Tage'],
     'Πώς πήγε συνολικά η σημερινή προπόνηση;':['How did today’s workout go overall?','Comment s’est passée la séance aujourd’hui ?','Wie lief das heutige Training insgesamt?'],
     'π.χ. ώμοι πίσω, σταθερά πόδια':['e.g. shoulders back, feet planted','p. ex. épaules en arrière, pieds stables','z. B. Schultern zurück, Füße stabil'],
