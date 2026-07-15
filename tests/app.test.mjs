@@ -128,6 +128,79 @@ test('creating a routine adds it and selects it', () => {
   assert.equal(routines[1].name, 'Push Pull Legs');
 });
 
+test('creating a routine persists a microcycle length and anchor date', () => {
+  const { document, localStorage } = loadApp();
+  setValue(document, '#routine-name', 'Eight Day Rotation', 'input');
+  setValue(document, '#routine-cycle-length', '8', 'input');
+  setValue(document, '#routine-cycle-anchor', '2026-07-06', 'input');
+  document.querySelector('#routine-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  const routine = JSON.parse(localStorage.getItem('trainingRoutines')).at(-1);
+  assert.equal(routine.cycleLength, 8);
+  assert.equal(routine.cycleAnchorDate, '2026-07-06');
+  assert.equal(document.querySelectorAll('#plan-list .day-card').length, 8);
+});
+
+test('legacy weekly routines migrate to seven stable cycle slots', () => {
+  const legacy = routineWith([planDay('Δευτέρα', 'Bench Press'), planDay('Κυριακή', 'Deadlift')]);
+  const { localStorage } = loadApp({ trainingRoutines:legacy });
+  const routine = JSON.parse(localStorage.getItem('trainingRoutines'))[0];
+  assert.equal(routine.cycleLength, 7);
+  assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(routine.cycleAnchorDate));
+  assert.deepEqual(routine.plan.map(item => item.cycleDay), [1, 7]);
+});
+
+test('a ten-day microcycle keeps repeated weekdays as distinct plan slots', () => {
+  const routine = [{
+    id:'r1', name:'Ten Day', isActive:true, cycleLength:10, cycleAnchorDate:'2026-07-06',
+    plan:[
+      { ...planDay('Δευτέρα', 'Bench Press'), cycleDay:1, workoutName:'Alpha' },
+      { ...planDay('Δευτέρα', 'Row'), cycleDay:8, workoutName:'Beta' },
+    ],
+  }];
+  const { document } = loadApp({ trainingRoutines:routine });
+  const cards = [...document.querySelectorAll('#plan-list .day-card')];
+  assert.equal(cards.length, 10);
+  assert.equal(cards[0].querySelector('h3').textContent, 'Δευτέρα');
+  assert.equal(cards[7].querySelector('h3').textContent, 'Δευτέρα');
+  assert.equal(cards[0].querySelector('[data-edit-day]').dataset.editDay, '1');
+  assert.equal(cards[7].querySelector('[data-edit-day]').dataset.editDay, '8');
+});
+
+test('logging resolves an eight-day rotation by date instead of alphabetically', () => {
+  const routine = [{
+    id:'r1', name:'Eight Day', isActive:true, cycleLength:8, cycleAnchorDate:'2026-07-06',
+    plan:[
+      { ...planDay('Δευτέρα', 'Bench Press'), cycleDay:1, workoutName:'Zulu Day' },
+      { ...planDay('Δευτέρα', 'Row'), cycleDay:8, workoutName:'Alpha Day' },
+    ],
+  }];
+  const { document } = loadApp({ trainingRoutines:routine });
+  setValue(document, '#log-date', '2026-07-13'); // seven days after the anchor => cycle day 8
+  assert.equal(document.querySelector('#workout-day-select').value, '8');
+  assert.equal(document.querySelector('#scheduled-session h2').textContent, 'Alpha Day');
+  setValue(document, '#log-date', '2026-07-14'); // next cycle starts => cycle day 1
+  assert.equal(document.querySelector('#workout-day-select').value, '1');
+  assert.equal(document.querySelector('#scheduled-session h2').textContent, 'Zulu Day');
+});
+
+test('a scheduled log persists the distinct microcycle slot', () => {
+  const routine = [{
+    id:'r1', name:'Eight Day', isActive:true, cycleLength:8, cycleAnchorDate:'2026-07-06',
+    plan:[{ ...planDay('Δευτέρα', 'Row'), cycleDay:8, workoutName:'Day Eight' }],
+  }];
+  const { document, localStorage } = loadApp({ trainingRoutines:routine });
+  setValue(document, '#log-date', '2026-07-13');
+  document.querySelectorAll('#scheduled-session [data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '8';
+    row.querySelector('.set-weight').value = '50';
+  });
+  click(document, '#save-session');
+  const session = JSON.parse(localStorage.getItem('trainingSessions'))[0];
+  assert.equal(session.cycleDay, 8);
+  assert.equal(session.workoutName, 'Day Eight');
+  assert.equal(session.workoutDay, 'Δευτέρα');
+});
+
 test('saving a scheduled session stores it with the plan workout name', () => {
   const { document, localStorage } = loadApp({
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]),
@@ -422,6 +495,7 @@ test('extra set is added, saved with the session, and removable with renumbering
   click(document, '#save-session');
   assert.equal(JSON.parse(localStorage.getItem('trainingSessions'))[0].exercises[0].sets.length, 4);
   // fresh form after save: add + remove again renumbers back
+  setValue(document, '#log-date', '2026-07-06');
   click(document, '.add-extra-set');
   click(document, '.remove-extra-set');
   numbers = [...document.querySelectorAll('#scheduled-session .set-number')].map(el => el.textContent);
@@ -430,7 +504,7 @@ test('extra set is added, saved with the session, and removable with renumbering
 
 test('saving a plan day through the form stores exercises on the selected routine', () => {
   const { document, localStorage } = loadApp();
-  setValue(document, '#plan-day', 'Τετάρτη');
+  setValue(document, '#plan-day', '3');
   setValue(document, '#workout-name', 'Push', 'input');
   const cards = [...document.querySelectorAll('.plan-exercise-fields')];
   assert.equal(cards.length, 3, 'default builder shows 3 exercises');
@@ -438,7 +512,7 @@ test('saving a plan day through the form stores exercises on the selected routin
   document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
   const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
   assert.equal(plan.length, 3);
-  assert.ok(plan.every(item => item.day === 'Τετάρτη' && item.workoutName === 'Push'));
+  assert.ok(plan.every(item => item.cycleDay === 3 && item.day === 'Τετάρτη' && item.workoutName === 'Push'));
 });
 
 test('renaming a workout during day edit can sync old sessions to the new name', () => {
@@ -447,7 +521,7 @@ test('renaming a workout during day edit can sync old sessions to the new name',
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
     trainingSessions: [session],
   });
-  click(document, '[data-edit-day="Δευτέρα"]');
+  click(document, '[data-edit-day="1"]');
   setValue(document, '#workout-name', 'Upper A', 'input');
   document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
   assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'rename should ask about history');
@@ -464,7 +538,7 @@ test('deleting a plan day keeps history but clears the day', () => {
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
     trainingSessions: [session],
   });
-  click(document, '[data-delete-day="Δευτέρα"]');
+  click(document, '[data-delete-day="1"]');
   click(document, '#confirm-delete-accept');
   assert.equal(JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan.length, 0);
   assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 1, 'history stays');
@@ -492,6 +566,7 @@ test('activating another routine switches the scheduled workout', () => {
     { id: 'r2', name: 'B', isActive: false, plan: [{ ...planDay('Δευτέρα', 'Row'), workoutName: 'Pull Day' }] },
   ];
   const { document, localStorage } = loadApp({ trainingRoutines: routines });
+  setValue(document, '#log-date', '2026-07-06');
   click(document, '[data-activate-routine="r2"]');
   assert.ok(document.querySelector('#scheduled-session').innerHTML.includes('Row'));
   const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
@@ -658,13 +733,13 @@ test('moving a workout to another day can sync the session workoutDay', () => {
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
     trainingSessions: [session],
   });
-  click(document, '[data-edit-day="Δευτέρα"]');
-  setValue(document, '#plan-day', 'Τρίτη');
+  click(document, '[data-edit-day="1"]');
+  setValue(document, '#plan-day', '2');
   document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
   assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'moving the day asks about history');
   click(document, '#confirm-delete-accept'); // Πρόγραμμα + Ιστορικό
   const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
-  assert.ok(plan.every(item => item.day === 'Τρίτη'));
+  assert.ok(plan.every(item => item.cycleDay === 2 && item.day === 'Τρίτη'));
   assert.equal(JSON.parse(localStorage.getItem('trainingSessions'))[0].workoutDay, 'Τρίτη');
 });
 
@@ -674,7 +749,7 @@ test('renaming an exercise during day edit syncs old sessions by planExerciseId'
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
     trainingSessions: [session],
   });
-  click(document, '[data-edit-day="Δευτέρα"]');
+  click(document, '[data-edit-day="1"]');
   document.querySelector('.builder-name').value = 'Incline Press';
   document.querySelector('#plan-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
   assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'rename asks about history');

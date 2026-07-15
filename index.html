@@ -78,7 +78,7 @@
         <div class="home-intro">
           <button class="home-start" type="button" data-home-action="log"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
           <div class="home-quick" aria-label="Γρήγορη πλοήγηση">
-            <button type="button" data-home-action="plan"><span>ΠΡΟΓΡΑΜΜΑ</span><small>Χτίσε το εβδομαδιαίο πλάνο</small></button>
+            <button type="button" data-home-action="plan"><span>ΠΡΟΓΡΑΜΜΑ</span><small>Χτίσε τον μικρόκυκλο</small></button>
             <button type="button" data-home-action="overview"><span>ΙΣΤΟΡΙΚΟ</span><small>Δες τη δουλειά που έχει γίνει</small></button>
           </div>
         </div>
@@ -137,16 +137,18 @@
     <section class="view" id="plan-view">
       <div class="hero compact">
         <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ</p><h1>ΧΤΙΣΕ ΤΟ<br><em>ΠΛΑΝΟ ΣΟΥ.</em></h1></div>
-        <p class="hero-note">Δημιούργησε όσα εβδομαδιαία προγράμματα θέλεις. Το πρόγραμμα με το αστέρι είναι το ενεργό — αυτό ανοίγει στην Καταγραφή.</p>
+        <p class="hero-note">Δημιούργησε προγράμματα με μικρόκυκλο 3–10 ημερών. Το πρόγραμμα με το αστέρι είναι το ενεργό — αυτό ανοίγει στην Καταγραφή.</p>
       </div>
       <section class="routine-manager" aria-labelledby="routine-manager-title">
         <div class="routine-manager-copy">
-          <p class="eyebrow">01 / ΕΒΔΟΜΑΔΙΑΙΕΣ ΡΟΥΤΙΝΕΣ</p>
+          <p class="eyebrow">01 / ΜΙΚΡΟΚΥΚΛΟΙ ΠΡΟΠΟΝΗΣΗΣ</p>
           <h2 id="routine-manager-title">ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ</h2>
           <p>Επίλεξε πρόγραμμα για να επεξεργαστείς τις ημέρες του ή όρισέ το ως ενεργό με το αστέρι.</p>
         </div>
         <form id="routine-form" class="routine-create-form">
-          <label>Νέα εβδομαδιαία ρουτίνα<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
+          <label>Νέο πρόγραμμα<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
+          <label>Ημέρες μικρόκυκλου<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
+          <label>Έναρξη μικρόκυκλου<input id="routine-cycle-anchor" type="date" required></label>
           <button class="secondary-button" type="submit">＋ Δημιουργία</button>
         </form>
         <div id="routine-list" class="routine-list" aria-live="polite"></div>
@@ -155,7 +157,7 @@
         <form id="plan-form" class="sheet">
           <div class="sheet-heading"><div><span id="selected-routine-label"></span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div></div>
           <div class="field-grid two">
-            <label>Ημέρα<select id="plan-day" required></select></label>
+            <label>Ημέρα μικρόκυκλου<select id="plan-day" required></select></label>
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
             <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>
