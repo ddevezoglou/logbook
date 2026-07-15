@@ -547,7 +547,7 @@ test('overview metrics count sessions and total working sets', () => {
   assert.ok(metrics.includes('<strong>3</strong>'), 'three working sets');
 });
 
-test('opening a history workout reveals a read-only page inside the overview', () => {
+test('opening a history workout reveals a read-only modal over the overview', () => {
   const session = { id: 's1', date: '2026-07-06', type: 'scheduled', workoutName: 'Upper A', comments: 'Καλή ενέργεια', exercises: [
     { exercise: 'Bench Press', comments: 'Παύση στο στήθος', sets: [{ reps: 8, weight: 72.5, weightMode: 'kg' }, { reps: 7, weight: 72.5, weightMode: 'kg' }] },
   ] };
@@ -558,14 +558,19 @@ test('opening a history workout reveals a read-only page inside the overview', (
   click(document, '[data-view-session="s1"] .card-body');
   assert.ok(document.querySelector('#overview-view').classList.contains('active'), 'history stays on screen');
   assert.equal(document.querySelector('#log-view').classList.contains('active'), false, 'read-only view does not open the workout form');
-  assert.ok(document.querySelector('.session-card').classList.contains('session-expanded'));
+  assert.equal(document.querySelector('#session-detail-dialog').open, true, 'the workout opens as a modal');
+  assert.equal(document.querySelector('.session-card .session-page'), null, 'the workout is not expanded below its card');
   assert.equal(document.querySelectorAll('.session-page').length, 1, 'only the opened workout page is rendered');
   assert.ok(document.querySelector('.session-page').textContent.includes('Bench Press'));
   assert.ok(document.querySelector('.session-page').textContent.includes('72.5 kg'));
   assert.equal(document.querySelector('.session-page input'), null, 'the historical page has no editable inputs');
   click(document, '[data-close-session="s1"]');
-  assert.equal(document.querySelector('.session-card').classList.contains('session-expanded'), false);
+  assert.equal(document.querySelector('#session-detail-dialog').open, false);
   assert.equal(document.querySelectorAll('.session-page').length, 0);
+  click(document, '[data-view-session="s1"] .card-body');
+  document.querySelector('#session-detail-dialog').dispatchEvent(new document.defaultView.Event('cancel', { cancelable:true }));
+  assert.equal(document.querySelector('#session-detail-dialog').open, false, 'Escape/cancel closes the modal');
+  assert.equal(document.activeElement, document.querySelector('[data-view-session="s1"]'), 'focus returns to the opened card');
 });
 
 test('the daily quote is deterministic within the same day', () => {
@@ -628,9 +633,10 @@ test('week strip marks a session logged today and counts weekly frequency', () =
   assert.equal(document.querySelectorAll('#week-strip .day-tile.done').length, 1);
   assert.ok(document.querySelector('#metrics').innerHTML.includes('<strong>1<small>/7</small></strong>'));
   click(document, '.session-summary');
-  assert.ok(document.querySelector('.session-card').classList.contains('session-expanded'), 'the card itself opens the workout page');
+  assert.equal(document.querySelector('#session-detail-dialog').open, true, 'the card itself opens the workout modal');
+  click(document, '#session-detail-close');
   click(document, '#week-strip .day-tile.done');
-  assert.equal(document.querySelector('.session-card').classList.contains('session-expanded'), false, 'date navigation does not open the workout page');
+  assert.equal(document.querySelector('#session-detail-dialog').open, false, 'date navigation does not open the workout page');
   assert.equal(document.querySelectorAll('.session-page').length, 0);
   assert.ok(document.querySelector('#overview-view').classList.contains('active'), 'logged day remains in history');
 });
