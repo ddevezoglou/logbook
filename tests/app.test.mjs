@@ -604,7 +604,7 @@ test('progress chart renders two comparable points', () => {
   assert.ok(panel.includes('class="chart-point"'), 'chart points expose details without crowding the plot');
   assert.ok(panel.includes('<title>'), 'point details remain available on hover/focus');
   assert.ok(panel.includes('class="chart-tooltip-card"'), 'hover details include the recording date');
-  assert.ok(panel.includes('+5.0'), 'weight delta should be +5.0');
+  assert.ok(panel.includes('65 kg · 8 επαν.'), 'latest performance shows weight and reps');
 });
 
 test('progress chart shows every date label with room to breathe', () => {
@@ -646,6 +646,67 @@ test('bodyweight progress chart labels its line as repetitions', () => {
   click(document, '.nav-button[data-view="progress"]');
   const legend = document.querySelector('#progress-panel .chart-legend').innerHTML;
   assert.ok(legend.includes('Επαναλήψεις'), 'legend explains what the line measures');
+});
+
+test('bodyweight and bodyweight+extra sessions chart together as extra-kg progress', () => {
+  const mk = (id, date, set) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Pull Up', comments: '', sets: [set] }] });
+  const { document } = loadApp({ trainingSessions: [
+    mk('b1', '2026-06-01', { reps: 8, weightMode: 'bodyweight' }),
+    mk('b2', '2026-06-08', { reps: 8, weight: 5, weightMode: 'bodyweight_extra' }),
+  ] });
+  click(document, '.nav-button[data-view="progress"]');
+  const panel = document.querySelector('#progress-panel').innerHTML;
+  assert.ok(panel.includes('class="chart-line"'), 'both bodyweight modes chart on one line');
+  assert.ok(!panel.includes('recording-warning'), 'no session is excluded');
+  assert.ok(panel.includes('Σωματικό βάρος + 5 kg'), 'extra kg shows on the point details');
+});
+
+test('plates and plates+kg sessions chart together on the plates scale', () => {
+  const mk = (id, date, set) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Dip', comments: '', sets: [set] }] });
+  const { document } = loadApp({ trainingSessions: [
+    mk('p1', '2026-06-01', { reps: 8, plates: 4, weight: null, weightMode: 'plates' }),
+    mk('p2', '2026-06-08', { reps: 8, plates: 4, weight: 2.5, weightMode: 'mixed' }),
+  ] });
+  click(document, '.nav-button[data-view="progress"]');
+  const panel = document.querySelector('#progress-panel').innerHTML;
+  assert.ok(panel.includes('class="chart-line"'), 'both plate modes chart on one line');
+  assert.ok(!panel.includes('recording-warning'), 'no session is excluded');
+  const dotY = [...document.querySelectorAll('#progress-panel .chart-dot')].map(dot => Number(dot.getAttribute('cy')));
+  assert.ok(dotY[1] < dotY[0], 'adding extra kg on the same plates plots as a rise');
+  assert.ok(panel.includes('+ 2.5 kg'), 'extra kg shows on the point details');
+});
+
+test('a rep drop alongside a weight increase is not flagged as decline', () => {
+  const mk = (id, date, weight, reps) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Row', comments: '', sets: [{ reps, weight, weightMode: 'kg', plates: null }] }] });
+  const { document } = loadApp({ trainingSessions: [mk('r1', '2026-07-01', 50, 9), mk('r2', '2026-07-08', 50.5, 8)] });
+  click(document, '.nav-button[data-view="progress"]');
+  const panel = document.querySelector('#progress-panel').innerHTML;
+  assert.ok(!panel.includes('progress-alert'), 'weight went up — no decline alert for the rep drop');
+  assert.ok(panel.includes('50.5 kg · 8 επαν.'), 'latest point keeps weight and reps in its details');
+  assert.ok(!panel.includes('επαναλήψεις</span>'), 'no reps chip on a weight-based chart');
+});
+
+test('equal weight with fewer reps shows neither progress nor decline', () => {
+  const mk = (id, date, reps) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Row', comments: '', sets: [{ reps, weight: 50, weightMode: 'kg', plates: null }] }] });
+  const { document } = loadApp({ trainingSessions: [mk('r1', '2026-07-01', 10), mk('r2', '2026-07-08', 9)] });
+  click(document, '.nav-button[data-view="progress"]');
+  const panel = document.querySelector('#progress-panel').innerHTML;
+  assert.ok(!panel.includes('progress-alert'), 'a rep change alone is not a decline');
+  assert.ok(panel.includes('9 επαν.'), 'reps stay available on the point tooltip');
+});
+
+test('progress chart fits the panel without horizontal scrolling', () => {
+  const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
+  const sessions = Array.from({ length: 16 }, (_, i) => mkSession(`s${i}`, `2026-05-${String(i + 1).padStart(2, '0')}`, 50 + i * 2.5));
+  const { document } = loadApp({ trainingSessions: sessions });
+  click(document, '.nav-button[data-view="progress"]');
+  const svg = document.querySelector('#progress-panel svg.progress-chart');
+  assert.ok(!svg.hasAttribute('style'), 'svg no longer forces a fixed pixel width');
+  const viewWidth = Number(svg.getAttribute('viewBox').split(' ')[2]);
+  assert.ok(viewWidth <= 900, `viewBox width (${viewWidth}) stays within the panel fallback width`);
+  const rotated = [...svg.querySelectorAll('.chart-date')].every(t => (t.getAttribute('transform') || '').includes('rotate'));
+  assert.ok(rotated, 'date labels are angled so all of them fit');
+  assert.strictEqual(svg.querySelectorAll('.chart-date').length, sessions.length, 'every date keeps its label');
 });
 
 test('progress chart with a single-point mode still guards against division issues', () => {
@@ -797,6 +858,24 @@ test('saving a free workout stores a free session with its exercises', () => {
   assert.equal(sessions[0].exercises[0].sets.length, 3);
 });
 
+test('a second workout cannot be logged on an already occupied date', () => {
+  const existing = { id:'s1', date:'2026-07-06', type:'free', comments:'', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg', plates:null }] }] };
+  const { document, localStorage } = loadApp({ trainingSessions:[existing] });
+  setValue(document, '#log-date', existing.date);
+  click(document, '[data-mode="free"]');
+  const card = document.querySelector('#free-exercises [data-exercise]');
+  card.querySelector('.exercise-name').value = 'Dips';
+  card.querySelectorAll('[data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '10';
+    row.querySelector('.set-weight').value = '0';
+  });
+
+  click(document, '#save-session');
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), [existing]);
+  assert.equal(document.querySelector('#toast').textContent, 'Υπάρχει ήδη καταγεγραμμένη προπόνηση για αυτή την ημέρα.');
+});
+
 test('editing a session saves in place without creating a duplicate', () => {
   const session = { id: 's1', date: '2026-07-06', type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg', plates: null }] }] };
   const { document, localStorage } = loadApp({ trainingSessions: [session] });
@@ -809,6 +888,104 @@ test('editing a session saves in place without creating a duplicate', () => {
   assert.equal(sessions.length, 1);
   assert.equal(sessions[0].id, 's1');
   assert.equal(sessions[0].exercises[0].sets[0].reps, 6);
+});
+
+test('editing a session cannot move it onto an occupied date', () => {
+  const first = { id:'s1', date:'2026-07-06', type:'free', comments:'First', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg', plates:null }] }] };
+  const second = { id:'s2', date:'2026-07-07', type:'free', comments:'Second', exercises:[{ exercise:'Dips', comments:'', sets:[{ reps:10, weightMode:'bodyweight' }] }] };
+  const { document, localStorage } = loadApp({ trainingSessions:[first, second] });
+
+  click(document, '[data-edit-session="s1"]');
+  setValue(document, '#log-date', second.date);
+  click(document, '#save-session');
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), [first, second]);
+  assert.equal(document.querySelector('#toast').textContent, 'Υπάρχει ήδη καταγεγραμμένη προπόνηση για αυτή την ημέρα.');
+});
+
+test('copying a history session creates a new workout for today and preserves the original', () => {
+  const session = { id:'s1', date:'2026-07-06', type:'scheduled', routineId:'r1', cycleDay:1, workoutDay:'Δευτέρα', workoutName:'Push Day', comments:'Original notes', exercises:[{ exercise:'Bench Press', planExerciseId:'p1', comments:'Pause', sets:[{ reps:8, weight:60, weightMode:'kg', plates:null }] }] };
+  const { document, localStorage } = loadApp({
+    trainingRoutines:routineWith([planDay('Δευτέρα', 'Bench Press', { id:'p1', cycleDay:1, workoutName:'Push Day' })]),
+    trainingSessions:[session],
+  });
+  const today = new Date();
+  const todayValue = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '[data-copy-session="s1"]');
+
+  assert.ok(document.querySelector('#log-view').classList.contains('active'));
+  assert.equal(document.querySelector('#log-date').value, todayValue);
+  assert.equal(document.querySelector('#save-session').textContent, 'Ολοκλήρωση προπόνησης');
+  assert.equal(document.querySelector('#cancel-session-edit').textContent, 'Ακύρωση αντιγραφής');
+  assert.equal(document.querySelector('#scheduled-session .set-reps').value, '8');
+
+  click(document, '[data-language="en"]');
+  assert.equal(document.querySelector('#cancel-session-edit').textContent, 'Cancel copy');
+  assert.equal(document.querySelector('#save-session').textContent, 'Complete workout');
+  assert.equal(document.querySelector('#scheduled-session .session-intro p').textContent, 'Adjust what you completed today, then finish the new workout.');
+
+  document.querySelector('#scheduled-session .set-reps').value = '9';
+  click(document, '#save-session');
+
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  const original = sessions.find(item => item.id === 's1');
+  const duplicate = sessions.find(item => item.id !== 's1');
+  assert.equal(sessions.length, 2);
+  assert.deepEqual(original, session, 'the source history entry remains unchanged');
+  assert.ok(duplicate, 'a second session is created');
+  assert.equal(duplicate.date, todayValue);
+  assert.equal(duplicate.workoutName, 'Push Day');
+  assert.equal(duplicate.routineId, 'r1');
+  assert.equal(duplicate.cycleDay, 1);
+  assert.equal(duplicate.exercises[0].sets[0].reps, 9);
+});
+
+test('copying keeps the source workout when the selected date has a different planned workout', () => {
+  const source = { id:'source', date:'2026-07-06', type:'scheduled', routineId:'r1', cycleDay:1, workoutDay:'Δευτέρα', workoutName:'Upper A', comments:'Source notes', exercises:[{ exercise:'Bench Press', planExerciseId:'upper', comments:'Pause', sets:[{ reps:8, weight:60, weightMode:'kg', plates:null }] }] };
+  const { document, localStorage } = loadApp({
+    trainingRoutines:[{
+      id:'r1', name:'Alternating', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true,
+      plan:[
+        planDay('Δευτέρα', 'Bench Press', { id:'upper', cycleDay:1, workoutName:'Upper A' }),
+        planDay('Τρίτη', 'Squat', { id:'lower', cycleDay:2, workoutName:'Lower B' }),
+      ],
+    }],
+    trainingSessions:[source],
+  });
+
+  click(document, '[data-copy-session="source"]');
+  setValue(document, '#log-date', '2026-07-07');
+
+  assert.equal(document.querySelector('#scheduled-session h2').textContent, 'Upper A');
+  assert.equal(document.querySelector('#scheduled-session .workout-exercise h3').textContent, 'Bench Press');
+  assert.equal(document.querySelector('#scheduled-session .set-reps').value, '8');
+
+  click(document, '#save-session');
+
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  const duplicate = sessions.find(item => item.id !== 'source');
+  assert.equal(sessions.length, 2);
+  assert.deepEqual(sessions.find(item => item.id === 'source'), source);
+  assert.equal(duplicate.date, '2026-07-07');
+  assert.equal(duplicate.workoutName, 'Upper A');
+  assert.equal(duplicate.cycleDay, 1);
+  assert.equal(duplicate.exercises[0].exercise, 'Bench Press');
+});
+
+test('copying a workout is blocked when today already has a logged session', () => {
+  const today = new Date();
+  const todayValue = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const source = { id:'source', date:'2026-07-06', type:'free', comments:'', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg', plates:null }] }] };
+  const todaySession = { id:'today', date:todayValue, type:'free', comments:'', exercises:[{ exercise:'Dips', comments:'', sets:[{ reps:10, weightMode:'bodyweight' }] }] };
+  const { document, localStorage } = loadApp({ trainingSessions:[source, todaySession] });
+
+  click(document, '[data-copy-session="source"]');
+  click(document, '#save-session');
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), [source, todaySession]);
+  assert.equal(document.querySelector('#toast').textContent, 'Υπάρχει ήδη καταγεγραμμένη προπόνηση για αυτή την ημέρα.');
 });
 
 test('a deleted session cannot be recreated by its stale edit form', () => {
