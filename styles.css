@@ -139,7 +139,7 @@ input:focus,textarea:focus,select:focus { background:#fdf6e3; border-color:var(-
 .routine-manager { grid-template-columns:minmax(220px,.7fr) minmax(310px,1fr); }
 .routine-create-form { grid-template-columns:minmax(150px,1fr) minmax(90px,.4fr) minmax(245px,1.15fr) auto; }
 .routine-weekday-choice { min-width:0; margin:0; padding:0; border:0; }
-.routine-weekday-choice legend { margin-bottom:7px; color:#b9af96; font-size:.67rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.routine-weekday-choice legend { margin-bottom:7px; color:#b9af96; font-size:.76rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; }
 .routine-weekday-options { display:grid; grid-template-columns:1fr 1fr; gap:3px; padding:3px; border:1px solid #625b48; background:rgba(255,255,255,.035); }
 .routine-weekday-choice label { display:block; width:auto; margin:0; cursor:pointer; }
 .routine-weekday-choice input { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
@@ -379,38 +379,31 @@ body { background-color:var(--paper); background-image:linear-gradient(90deg,rgb
 @media(max-width:600px){.session-summary{grid-template-columns:1fr}.card-title-row{align-items:flex-start;flex-direction:column;gap:8px}.session-page{width:calc(100% - 24px);margin:18px auto 26px;padding:30px 18px 24px 44px}.session-page::before{left:34px}.page-binding{left:8px;width:16px}.page-binding i{width:9px;height:9px}.session-page-head{display:block}.session-page-head time{display:block;margin-top:10px;text-align:left}.session-page-title{align-items:flex-start;padding:24px 0}.session-page-title>span{display:none}.page-exercise-title{grid-template-columns:26px 1fr}.page-set-table{margin-left:38px}.page-set-head,.page-set-row{grid-template-columns:32px minmax(86px,1fr) minmax(78px,.9fr);column-gap:8px}.page-set-head{font-size:.5rem;letter-spacing:.07em}.session-page footer{align-items:flex-start;flex-direction:column}.card-body{padding-top:75px}}
 @keyframes pageReveal { from { opacity:0; transform:translateY(-12px) rotateX(-2deg); } to { opacity:1; transform:none; } }
 
-/* Program cards — ticket layout with a readable title and attached actions */
-.routine-card { min-height:0; display:flex; flex-direction:column; grid-template-columns:none; overflow:hidden; }
+/* Program cards — tear-off ticket: actions topline, readable body, vertical duration stub */
+.routine-card { min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 54px; grid-template-rows:auto 1fr; overflow:hidden; }
 .routine-card.selected-routine { border-color:var(--paper); box-shadow:none; }
-.routine-card.active-routine { border-color:var(--gold); box-shadow:none; }
-.routine-select { display:block; flex:1; padding:18px 16px 14px; }
+.routine-topline { grid-column:1; display:flex; align-items:center; padding:9px 12px 8px 14px; border-bottom:1px dashed rgba(239,232,216,.28); }
+.routine-select { grid-column:1; display:block; padding:14px 16px 16px; }
 .routine-select strong { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; text-overflow:clip; overflow-wrap:anywhere; font:700 1.02rem/1.3 "Roboto Slab"; }
-.routine-foot { position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px 8px 16px; border-top:1px dashed #5b5234; }
-.routine-foot::before,.routine-foot::after { content:""; position:absolute; top:-10px; width:18px; height:18px; border-radius:50%; background:var(--ink); border:1px solid #4b4537; }
-.routine-foot::before { left:-10px; }
-.routine-foot::after { right:-10px; }
-.routine-foot>small { color:#a89f86; font-size:.6rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
-.active-routine .routine-foot { border-top-color:var(--gold); background:rgba(201,162,39,.1); }
-.active-routine .routine-foot::before,.active-routine .routine-foot::after { border-color:var(--gold); }
-.selected-routine .routine-foot::before,.selected-routine .routine-foot::after { border-color:var(--paper); }
-.routine-actions { padding:0; align-items:center; }
+.routine-day-count { display:block; margin-top:11px; color:#a89f86; font-size:.6rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+.routine-stub { position:relative; grid-column:2; grid-row:1 / -1; display:flex; align-items:center; justify-content:center; border-left:1px dashed rgba(239,232,216,.32); background:rgba(239,232,216,.04); }
+.routine-stub::before,.routine-stub::after { content:""; position:absolute; left:-8px; width:15px; height:15px; border-radius:50%; background:var(--paper); border:1px solid #4b4537; }
+.routine-stub::before { top:-9px; }
+.routine-stub::after { bottom:-9px; }
+.routine-stub span { writing-mode:vertical-rl; transform:rotate(180deg); color:#a89f86; font-size:.55rem; font-weight:800; letter-spacing:.22em; text-transform:uppercase; white-space:nowrap; }
+.routine-actions { padding:0; align-items:center; gap:5px; }
 .routine-actions button { width:29px; height:29px; }
+.routine-actions .routine-star[aria-pressed="true"] { border-color:var(--gold); background:var(--gold); color:var(--ink); }
 .routine-card:hover { transform:translateY(-2px); }
-.routine-card-editing { overflow:visible; }
+.routine-card-editing { display:flex; overflow:visible; }
 .routine-inline-form { grid-column:auto; grid-template-columns:minmax(130px,1fr) auto; padding:14px 12px 18px 16px; }
 @media(prefers-reduced-motion:reduce){.routine-card:hover{transform:none}}
 
 /* Programs desk — paper hierarchy, definition strip, then training tickets */
 .routine-manager { position:relative; overflow:hidden; padding:clamp(42px,6vw,72px) 5vw 54px; display:grid; grid-template-columns:1fr; gap:22px; background-color:var(--paper); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; color:var(--ink); }
 .routine-manager::before { content:""; position:absolute; top:0; bottom:0; left:clamp(16px,2vw,36px); width:5px; background:linear-gradient(var(--gold),#6b5518); box-shadow:8px 0 0 rgba(138,106,28,.08); opacity:.78; }
-.routine-manager-heading { position:relative; z-index:1; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding:0 0 12px clamp(28px,4vw,58px); border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
-.routine-manager-heading h2 { margin:0; font-size:clamp(1.8rem,3.5vw,3.2rem); letter-spacing:-.025em; }
-.routine-manager-heading>span { margin-bottom:4px; padding:5px 9px; border:2px solid rgba(138,106,28,.42); color:rgba(138,106,28,.68); font-size:.56rem; font-weight:800; letter-spacing:.18em; transform:rotate(-2deg); }
-.routine-create-panel { position:relative; z-index:1; margin-left:clamp(28px,4vw,58px); display:grid; grid-template-columns:minmax(205px,.36fr) minmax(0,1fr); border:1px solid var(--ink); background:rgba(255,255,255,.34); box-shadow:6px 7px 0 rgba(21,19,13,.12); }
+.routine-create-panel { position:relative; z-index:1; margin-left:clamp(28px,4vw,58px); border:1px solid var(--ink); background:rgba(255,255,255,.34); box-shadow:6px 7px 0 rgba(21,19,13,.12); }
 .routine-create-panel::after { content:""; position:absolute; right:16px; top:-8px; width:72px; height:22px; background:rgba(213,194,145,.62); transform:rotate(3deg); box-shadow:inset 0 0 0 1px rgba(90,72,35,.08); pointer-events:none; }
-.routine-create-copy { min-height:122px; padding:20px 22px; display:flex; flex-direction:column; justify-content:space-between; border-right:1px solid var(--ink); background:var(--ink); color:var(--paper); }
-.routine-create-copy span { color:var(--gold); font-size:.58rem; font-weight:800; letter-spacing:.19em; }
-.routine-create-copy strong { font:700 clamp(1rem,1.7vw,1.35rem)/1.12 "Roboto Slab"; letter-spacing:-.02em; }
 .routine-create-form { padding:18px 20px; grid-template-columns:minmax(160px,1fr) minmax(105px,.38fr) minmax(220px,.9fr) auto; gap:12px; }
 .routine-create-form label,.routine-weekday-choice legend { color:var(--muted); }
 .routine-create-form input { color:var(--ink); border-color:rgba(21,19,13,.45); background:rgba(255,255,255,.28); }
@@ -425,15 +418,16 @@ body { background-color:var(--paper); background-image:linear-gradient(90deg,rgb
 .routine-card { min-height:124px; border-color:#4b4537; background:var(--ink); color:var(--paper); box-shadow:4px 5px 0 rgba(21,19,13,.14); transform:rotate(-.18deg); }
 .routine-card:nth-child(even) { transform:rotate(.18deg); }
 .routine-card.selected-routine { border-color:var(--paper); box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--paper),6px 7px 0 rgba(21,19,13,.14); }
-.routine-card.active-routine { border-color:var(--gold); box-shadow:inset 0 3px 0 var(--gold),4px 5px 0 rgba(21,19,13,.14); }
-.routine-card.selected-routine.active-routine { box-shadow:inset 0 3px 0 var(--gold),0 0 0 2px var(--ink),0 0 0 4px var(--gold),6px 7px 0 rgba(21,19,13,.14); }
 .routine-select { color:var(--paper); }
-.routine-foot::before,.routine-foot::after { background:var(--paper); }
 .routine-card:hover,.routine-card:nth-child(even):hover { transform:translateY(-3px) rotate(0); box-shadow:7px 9px 0 rgba(21,19,13,.16); }
 .routine-card-editing { background:var(--ink); }
-@media(max-width:1000px){.routine-create-panel{grid-template-columns:1fr}.routine-create-copy{min-height:0;border-right:0;border-bottom:1px solid var(--ink);flex-direction:row;align-items:end;gap:20px}.routine-create-form{grid-template-columns:1fr 1fr}.routine-create-form .secondary-button{grid-column:1 / -1}.routine-list{grid-column:auto}}
-@media(max-width:600px){.routine-manager{padding-left:22px;padding-right:22px}.routine-manager::before{left:10px;width:3px}.routine-manager-heading{padding-left:0}.routine-manager-heading>span{display:none}.routine-create-panel,.routine-list{margin-left:0}.routine-create-copy{display:block;padding:17px 18px}.routine-create-copy strong{display:block;margin-top:8px}.routine-create-form{grid-template-columns:1fr;padding:18px}.routine-create-form .secondary-button{grid-column:auto}.routine-list{grid-template-columns:1fr}.routine-card{transform:none}.routine-card:nth-child(even){transform:none}}
+@media(max-width:1000px){.routine-create-form{grid-template-columns:1fr 1fr}.routine-create-form .secondary-button{grid-column:1 / -1}.routine-list{grid-column:auto}}
+@media(max-width:600px){.routine-manager{padding-left:22px;padding-right:22px}.routine-manager::before{left:10px;width:3px}.routine-create-panel,.routine-list{margin-left:0}.routine-create-form{grid-template-columns:1fr;padding:18px}.routine-create-form .secondary-button{grid-column:auto}.routine-list{grid-template-columns:1fr}.routine-card{transform:none}.routine-card:nth-child(even){transform:none}}
 @media(prefers-reduced-motion:reduce){.routine-create-form .secondary-button:hover{transform:none}}
+
+/* Routines without declared weekdays are a collection, not an ordered calendar. */
+.week-plan.unordered-plan .day-card-head { grid-template-columns:1fr auto; }
+.week-plan.unordered-plan .day-exercises { padding-left:16px; }
 
 /* Training ticket carousel */
 .routine-carousel { position:relative; z-index:1; min-width:0; margin:6px 0 0 clamp(28px,4vw,58px); }
@@ -462,17 +456,10 @@ body { background-color:var(--paper); background-image:linear-gradient(90deg,rgb
 .routine-list .routine-card[data-carousel-position="-2"] { z-index:3; opacity:.42; filter:saturate(.48) brightness(.78); transform:translate(-174%,-50%) scale(.66) rotateY(12deg); }
 .routine-list .routine-card[data-carousel-position="2"] { z-index:3; opacity:.42; filter:saturate(.48) brightness(.78); transform:translate(74%,-50%) scale(.66) rotateY(-12deg); }
 .routine-list .routine-card[data-carousel-position="hidden"] { z-index:1; opacity:0; pointer-events:none; transform:translate(-50%,-50%) scale(.54); }
-.routine-list .routine-card[data-carousel-position="0"] .routine-ticket-topline { border-bottom-color:rgba(201,162,39,.58); }
-.routine-select { position:relative; overflow:hidden; padding:15px 18px 19px; }
-.routine-ticket-topline { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px dashed rgba(239,232,216,.28); color:#a89f86; font-size:.55rem; font-weight:800; letter-spacing:.15em; }
-.routine-ticket-topline>span { color:var(--gold); }
-.routine-ticket-topline small { color:inherit; font:inherit; white-space:nowrap; }
-.routine-select strong { position:relative; z-index:2; min-height:2.6em; margin-top:17px; padding-right:48px; font-size:clamp(1.05rem,1.55vw,1.28rem); }
-.routine-ticket-number { position:absolute; z-index:1; right:14px; bottom:2px; color:rgba(239,232,216,.07); font:700 4.5rem/.8 "Roboto Slab"; letter-spacing:-.08em; pointer-events:none; }
-.active-routine .routine-select { background:linear-gradient(125deg,rgba(201,162,39,.13),transparent 56%); }
-.active-routine .routine-ticket-topline { border-bottom-color:rgba(201,162,39,.46); }
-.active-routine .routine-ticket-number { color:rgba(201,162,39,.11); }
-.routine-foot { min-height:47px; }
+.routine-list .routine-card[data-carousel-position="0"] .routine-topline { border-bottom-color:rgba(201,162,39,.58); }
+.routine-select { padding:16px 18px 19px; }
+.routine-select strong { min-height:2.6em; font-size:clamp(1.05rem,1.55vw,1.28rem); }
+.routine-stub span { font-size:.58rem; }
 .routine-card-editing .routine-inline-form { flex:1; }
 @media(max-width:600px){.routine-carousel{margin-left:0}.routine-carousel-bar>span{letter-spacing:.12em}.routine-carousel-controls{inset:0}.routine-carousel-controls button{width:40px;height:58px;font-size:1.35rem}.routine-list{height:270px;overflow:hidden}.routine-list .routine-card{width:min(78vw,330px);min-height:160px}.routine-list .routine-card[data-carousel-position="-1"]{transform:translate(-104%,-50%) scale(.77) rotateY(7deg)}.routine-list .routine-card[data-carousel-position="1"]{transform:translate(4%,-50%) scale(.77) rotateY(-7deg)}.routine-list .routine-card[data-carousel-position="-2"]{transform:translate(-142%,-50%) scale(.56);opacity:.22}.routine-list .routine-card[data-carousel-position="2"]{transform:translate(42%,-50%) scale(.56);opacity:.22}}
 @media(prefers-reduced-motion:reduce){.routine-list .routine-card,.routine-carousel-controls button{transition:none}}

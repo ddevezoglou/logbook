@@ -152,16 +152,8 @@
         <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ</p><h1>ΧΤΙΣΕ ΤΟ<br><em>ΠΛΑΝΟ ΣΟΥ.</em></h1></div>
         <p class="hero-note">Δημιούργησε προγράμματα με μικρόκυκλο 3–10 ημερών. Το πρόγραμμα με το αστέρι είναι το ενεργό — αυτό ανοίγει στην Καταγραφή.</p>
       </div>
-      <section class="routine-manager" aria-labelledby="routine-manager-title">
-        <header class="routine-manager-heading">
-          <h2 id="routine-manager-title">ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ</h2>
-          <span aria-hidden="true">ROUTINE DESK</span>
-        </header>
+      <section class="routine-manager" aria-label="Διαχείριση προγραμμάτων">
         <div class="routine-create-panel">
-          <div class="routine-create-copy">
-            <span>ΝΕΟ ΠΡΟΓΡΑΜΜΑ</span>
-            <strong>ΟΡΙΣΕ ΤΟΝ ΜΙΚΡΟΚΥΚΛΟ ΣΟΥ</strong>
-          </div>
           <form id="routine-form" class="routine-create-form">
             <label>Όνομα προγράμματος<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
             <label>Διάρκεια (σε ημέρες)<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
@@ -192,7 +184,7 @@
         <form id="plan-form" class="sheet">
           <div class="sheet-heading"><div><span id="selected-routine-label"></span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div></div>
           <div class="field-grid two">
-            <label><span id="plan-day-label">Ημέρα μικρόκυκλου</span><select id="plan-day" required></select></label>
+            <label id="plan-day-field"><span id="plan-day-label">Ημέρα</span><select id="plan-day" required></select></label>
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
             <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>

@@ -59,8 +59,15 @@ const weekdayForCycleDay = (routine, cycleDay) => {
   anchor.setDate(anchor.getDate() + Number(cycleDay) - 1);
   return days[anchor.getDay()];
 };
-const cycleDayLabel = (routine, cycleDay) => routine?.usesWeekdays === false ? `Ημέρα ${cycleDay}` : `Ημέρα ${cycleDay} · ${weekdayForCycleDay(routine, cycleDay)}`;
 const itemCycleDay = (item, routine) => validCycleDay(item?.cycleDay, clampCycleLength(routine?.cycleLength)) || legacyCycleDay(item?.day);
+const planItemsForCycleDay = (routine, cycleDay) => (routine?.plan || []).filter(item => itemCycleDay(item, routine) === Number(cycleDay));
+const declaredWeekdayForCycleDay = (routine, cycleDay) => planItemsForCycleDay(routine, cycleDay)[0]?.day || weekdayForCycleDay(routine, cycleDay);
+const weekdayDeclarationCount = (routine, weekday, excludedCycleDay = null) => [
+  ...new Set((routine?.plan || []).map(item => itemCycleDay(item, routine)).filter(Boolean)),
+].filter(cycleDay => cycleDay !== Number(excludedCycleDay) && declaredWeekdayForCycleDay(routine, cycleDay) === weekday).length;
+const cycleDayLabel = (routine, cycleDay) => routine?.usesWeekdays === false
+  ? planItemsForCycleDay(routine, cycleDay)[0]?.workoutName || 'Προπόνηση'
+  : declaredWeekdayForCycleDay(routine, cycleDay);
 const oldLogs = store.read('trainingLogs');
 const savedSessions = store.read('trainingSessions');
 const savedProfile = store.read('userProfile');
@@ -285,12 +292,39 @@ function copyFirstSetToRemaining(card) {
 function refreshDayOptions(preferred = null) {
   const routine = selectedRoutine();
   if (!routine) return;
+  const field = $('#plan-day-field');
+  const select = $('#plan-day');
   const preferredCycleDay = validCycleDay(preferred, routine.cycleLength);
   const used = new Set(selectedPlan().map(item => itemCycleDay(item, routine)));
   const available = Array.from({ length:routine.cycleLength }, (_, index) => index + 1).filter(cycleDay => !used.has(cycleDay) || cycleDay === preferredCycleDay);
-  $('#plan-day').innerHTML = available.length
-    ? available.map(cycleDay => `<option value="${cycleDay}" ${cycleDay === preferredCycleDay ? 'selected' : ''}>${cycleDayLabel(routine, cycleDay)}</option>`).join('')
-    : '<option value="" selected disabled>Όλες οι ημέρες του μικρόκυκλου έχουν πρόγραμμα</option>';
+  select.disabled = false;
+  delete select.dataset.cycleDay;
+
+  if (routine.usesWeekdays === false) {
+    field.classList.add('hidden');
+    const cycleDay = preferredCycleDay || available[0];
+    select.innerHTML = cycleDay
+      ? `<option value="${cycleDay}" selected></option>`
+      : '<option value="" selected disabled></option>';
+    return;
+  }
+
+  field.classList.remove('hidden');
+  $('#plan-day-label').textContent = 'Ημέρα';
+  if (routine.cycleLength > 7) {
+    const cycleDay = preferredCycleDay || available[0];
+    const currentWeekday = preferredCycleDay ? declaredWeekdayForCycleDay(routine, preferredCycleDay) : planOrder[0];
+    const availableWeekdays = planOrder.filter(weekday => weekdayDeclarationCount(routine, weekday, preferredCycleDay) < 2);
+    select.dataset.cycleDay = cycleDay || '';
+    select.innerHTML = cycleDay
+      ? availableWeekdays.map(weekday => `<option value="${weekday}" ${weekday === currentWeekday ? 'selected' : ''}>${weekday}</option>`).join('')
+      : '<option value="" selected disabled>Έχουν δηλωθεί όλες οι προπονήσεις</option>';
+    return;
+  }
+
+  select.innerHTML = available.length
+    ? available.map(cycleDay => `<option value="${cycleDay}" ${cycleDay === preferredCycleDay ? 'selected' : ''}>${weekdayForCycleDay(routine, cycleDay)}</option>`).join('')
+    : '<option value="" selected disabled>Έχουν δηλωθεί όλες οι ημέρες</option>';
 }
 
 function renderPlanExercises() {
@@ -313,16 +347,30 @@ function renderPlan() {
   $('#plan-board-title').toggleAttribute('data-i18n-user', Boolean(routine?.name));
   $('#selected-routine-label').textContent = routine?.name || '';
   $('#plan-board-title').textContent = routine?.name || 'ΤΟ ΠΛΑΝΟ ΣΟΥ';
-  $('#plan-day-label').textContent = routine?.usesWeekdays === false ? 'Σειρά στον μικρόκυκλο' : 'Ημέρα μικρόκυκλου';
-  $('#plan-count').textContent = `${activeDays}/${routine?.cycleLength || 7} ημέρες`;
-  $('#plan-list').innerHTML = Array.from({ length:routine?.cycleLength || 7 }, (_, dayIndex) => {
-    const cycleDay = dayIndex + 1;
-    const day = routine?.usesWeekdays === false ? `Ημέρα ${cycleDay}` : weekdayForCycleDay(routine, cycleDay);
+  $('#plan-form-title').textContent = state.editingDay
+    ? $('#plan-form-title').textContent
+    : routine?.usesWeekdays === false ? 'Νέα προπόνηση' : 'Νέα προπόνηση ημέρας';
+  $('#plan-submit').innerHTML = state.editingDay
+    ? $('#plan-submit').innerHTML
+    : `${routine?.usesWeekdays === false ? 'Αποθήκευση προπόνησης' : 'Αποθήκευση ημέρας'} <span>↗</span>`;
+  $('#plan-count').textContent = routine?.usesWeekdays === false
+    ? `${activeDays}/${routine?.cycleLength || 7} προπονήσεις`
+    : `${activeDays}/${routine?.cycleLength || 7} ημέρες`;
+  const planList = $('#plan-list');
+  planList.classList.toggle('unordered-plan', routine?.usesWeekdays === false);
+  const visibleCycleDays = routine?.usesWeekdays === false
+    ? [...new Set(plan.map(item => itemCycleDay(item, routine)))].filter(Boolean)
+    : Array.from({ length:routine?.cycleLength || 7 }, (_, dayIndex) => dayIndex + 1);
+  planList.innerHTML = visibleCycleDays.length ? visibleCycleDays.map(cycleDay => {
+    const day = declaredWeekdayForCycleDay(routine, cycleDay);
     const items = plan.filter(item => itemCycleDay(item, routine) === cycleDay);
     const workoutName = items[0]?.workoutName || (items.length ? 'Προπόνηση' : 'Ημέρα ξεκούρασης');
-    return `<section class="day-card ${items.length ? 'active-day' : ''}"><div class="day-card-head"><span>${String(cycleDay).padStart(2,'0')}</span><div><h3>${day}</h3><p ${items.length ? 'data-i18n-user' : ''}>${esc(workoutName)}</p></div>${items.length ? `<div class="day-card-actions"><button class="edit-day" data-edit-day="${cycleDay}" type="button">Επεξεργασία</button><button class="delete-day" data-delete-day="${cycleDay}" aria-label="Διαγραφή ημέρας ${cycleDay}">×</button></div>` : ''}</div>
+    const heading = routine?.usesWeekdays === false ? workoutName : day;
+    const detail = routine?.usesWeekdays === false ? `${items.length} ασκήσεις` : workoutName;
+    const number = routine?.usesWeekdays === false ? '' : `<span>${String(cycleDay).padStart(2,'0')}</span>`;
+    return `<section class="day-card ${items.length ? 'active-day' : ''}"><div class="day-card-head">${number}<div><h3 ${routine?.usesWeekdays === false ? 'data-i18n-user' : ''}>${esc(heading)}</h3><p ${items.length ? 'data-i18n-user' : ''}>${esc(detail)}</p></div>${items.length ? `<div class="day-card-actions"><button class="edit-day" data-edit-day="${cycleDay}" type="button">Επεξεργασία</button><button class="delete-day" data-delete-day="${cycleDay}" aria-label="Διαγραφή προπόνησης">×</button></div>` : ''}</div>
       <div class="day-exercises">${items.length ? items.map(item => `<article><div><strong data-i18n-user>${esc(item.exercise)}</strong><small>${item.sets?.length || item.workSets || 3} εργάσιμα σετ</small></div>${item.cues ? `<p data-i18n-user>→ ${esc(item.cues)}</p>` : ''}</article>`).join('') : '<small>Δεν έχει οριστεί προπόνηση</small>'}</div></section>`;
-  }).join('');
+  }).join('') : '<section class="day-card"><div class="day-card-head"><div><h3>Δεν υπάρχουν προπονήσεις</h3></div></div></section>';
 }
 
 function updateRoutineCarousel(nextIndex = routineCarouselIndex) {
@@ -353,13 +401,13 @@ function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) 
   list.innerHTML = routines.map((routine, index) => {
     const selected = routine.id === state.selectedRoutineId;
     const dayCount = new Set(routine.plan.map(item => itemCycleDay(item, routine))).size;
-    const ticketNumber = String(index + 1).padStart(2, '0');
     if (routine.id === state.editingRoutineId) return `<article class="routine-card routine-card-editing ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
       <form class="routine-inline-form" data-routine-rename-form="${esc(routine.id)}"><label>Όνομα προγράμματος<input class="routine-inline-name" type="text" maxlength="50" value="${esc(routine.name)}" required></label><div><button class="routine-inline-save" type="submit" aria-label="Αποθήκευση ονόματος">✓</button><button class="routine-inline-cancel" data-cancel-routine-edit type="button" aria-label="Ακύρωση μετονομασίας">×</button></div></form>
     </article>`;
     return `<article class="routine-card ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><span class="routine-ticket-topline"><span>${routine.isActive ? '★ ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ' : `TICKET ${ticketNumber}`}</span><small>${routine.cycleLength || 7} ΗΜΕΡΕΣ</small></span><strong data-i18n-user>${esc(routine.name)}</strong><span class="routine-ticket-number" aria-hidden="true">${ticketNumber}</span></button>
-      <div class="routine-foot"><small>${dayCount} ${dayCount === 1 ? 'ημέρα προπόνησης' : 'ημέρες προπόνησης'}</small><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
+      <div class="routine-topline"><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
+      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><strong data-i18n-user>${esc(routine.name)}</strong><small class="routine-day-count">${dayCount} ${dayCount === 1 ? 'ημέρα προπόνησης' : 'ημέρες προπόνησης'}</small></button>
+      <span class="routine-stub"><span>ΔΙΑΡΚΕΙΑ: ${routine.cycleLength || 7} ΗΜΕΡΕΣ</span></span>
     </article>`;
   }).join('');
   const requestedCenterId = centerRoutineId || previousCenteredRoutineId;
@@ -392,11 +440,18 @@ function refreshWorkoutDayOptions(preferredDay) {
     $('#workout-day-select').innerHTML = '<option value="" selected disabled>Δεν έχει δηλωθεί πρόγραμμα</option>';
     return preferredDay;
   }
-  const selectedDay = validCycleDay(preferredDay, routine.cycleLength) || 1;
-  const slots = Array.from({ length:routine.cycleLength }, (_, index) => {
-    const cycleDay = index + 1;
+  const plannedCycleDays = [...new Set(plan.map(item => itemCycleDay(item, routine)))].filter(Boolean);
+  const requestedDay = validCycleDay(preferredDay, routine.cycleLength);
+  const selectedDay = routine.usesWeekdays === false
+    ? (plannedCycleDays.includes(requestedDay) ? requestedDay : plannedCycleDays[0])
+    : requestedDay || 1;
+  const cycleDays = routine.usesWeekdays === false
+    ? plannedCycleDays
+    : Array.from({ length:routine.cycleLength }, (_, index) => index + 1);
+  const slots = cycleDays.map(cycleDay => {
     const workoutName = plan.find(item => itemCycleDay(item, routine) === cycleDay)?.workoutName || 'Ξεκούραση';
-    return { cycleDay, label:`${cycleDayLabel(routine, cycleDay)} — ${workoutName}` };
+    const label = routine.usesWeekdays === false ? workoutName : `${cycleDayLabel(routine, cycleDay)} — ${workoutName}`;
+    return { cycleDay, label };
   });
   $('#workout-day-select').innerHTML = slots.map(item => `<option data-i18n-user value="${item.cycleDay}" ${item.cycleDay === selectedDay ? 'selected' : ''}>${esc(item.label)}</option>`).join('');
   return selectedDay;
@@ -413,7 +468,8 @@ function renderScheduledSession(preferredDay = null) {
   const planned = activePlan().filter(item => itemCycleDay(item, routine) === Number(planDay)).map(item => ({ ...item, sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
   const workoutName = planned[0]?.workoutName || 'Η προπόνηση της ημέρας';
   const slotLabel = cycleDayLabel(routine, planDay);
-  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2><p>${slotLabel} · Συμπλήρωσε όσα πραγματικά εκτέλεσες.</p></div></div>${planned.map((item, index) => exerciseCard(item, false, index)).join('')}` : `<div class="no-workout"><span data-i18n-user>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')} / REST</span><h2>Δεν υπάρχει ορισμένη προπόνηση για ${slotLabel}.</h2><p>Επίλεξε άλλη ημέρα μικρόκυκλου ή ξεκίνα μια «Ελεύθερη» καταγραφή.</p><button class="secondary-button switch-free" type="button">Έναρξη ελεύθερης προπόνησης</button></div>`;
+  const sessionPrompt = routine?.usesWeekdays === false ? 'Συμπλήρωσε όσα πραγματικά εκτέλεσες.' : `${slotLabel} · Συμπλήρωσε όσα πραγματικά εκτέλεσες.`;
+  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2><p>${sessionPrompt}</p></div></div>${planned.map((item, index) => exerciseCard(item, false, index)).join('')}` : `<div class="no-workout"><span data-i18n-user>★ ${esc(routine?.name || 'Ενεργό πρόγραμμα')} / REST</span><h2>Δεν υπάρχει ορισμένη προπόνηση για ${slotLabel}.</h2><p>Επίλεξε άλλη ημέρα μικρόκυκλου ή ξεκίνα μια «Ελεύθερη» καταγραφή.</p><button class="secondary-button switch-free" type="button">Έναρξη ελεύθερης προπόνησης</button></div>`;
   refreshCopySetButtons($('#scheduled-session'));
 }
 
@@ -439,7 +495,7 @@ function loadDayForEdit(day) {
     card.querySelector('.builder-cues').value = items[index].cues || '';
   });
   $('#plan-form-title').textContent = `Επεξεργασία · ${cycleDayLabel(routine, cycleDay)}`;
-  $('#plan-submit').innerHTML = 'Ενημέρωση ημέρας <span>↗</span>';
+  $('#plan-submit').innerHTML = `${routine.usesWeekdays === false ? 'Ενημέρωση προπόνησης' : 'Ενημέρωση ημέρας'} <span>↗</span>`;
   $('#cancel-plan-edit').classList.remove('hidden');
   $('#plan-form').scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -451,8 +507,9 @@ function resetPlanForm() {
   refreshDayOptions();
   $('#plan-exercises-container').innerHTML = '';
   renderPlanExercises();
-  $('#plan-form-title').textContent = 'Νέα προπόνηση ημέρας';
-  $('#plan-submit').innerHTML = 'Αποθήκευση ημέρας <span>↗</span>';
+  const routine = selectedRoutine();
+  $('#plan-form-title').textContent = routine?.usesWeekdays === false ? 'Νέα προπόνηση' : 'Νέα προπόνηση ημέρας';
+  $('#plan-submit').innerHTML = `${routine?.usesWeekdays === false ? 'Αποθήκευση προπόνησης' : 'Αποθήκευση ημέρας'} <span>↗</span>`;
   $('#cancel-plan-edit').classList.add('hidden');
 }
 
@@ -493,7 +550,7 @@ function syncPlanChangesToHistory(routineId, sourceDay, targetDay, previousItems
       const replacement = nextItems.find(item => item.id === exercise.planExerciseId) || renameByOldName.get(normalizedName(exercise.exercise));
       return replacement ? { ...exercise, exercise:replacement.exercise, planExerciseId:replacement.id } : exercise;
     });
-    return { ...session, routineId, cycleDay:Number(targetDay), workoutDay:routine?.usesWeekdays === false ? null : weekdayForCycleDay(routine, targetDay), workoutName:nextItems[0]?.workoutName || session.workoutName, exercises:syncedExercises };
+    return { ...session, routineId, cycleDay:Number(targetDay), workoutDay:routine?.usesWeekdays === false ? null : nextItems[0]?.day || weekdayForCycleDay(routine, targetDay), workoutName:nextItems[0]?.workoutName || session.workoutName, exercises:syncedExercises };
   });
   if (!persistSessions(nextSessions)) return false;
   state.sessions = nextSessions;
@@ -792,7 +849,7 @@ function renderHomeRoutineCard() {
   $('#home-routine-name').textContent = routine.name;
   $('#home-routine-days').innerHTML = plannedDays.length
     ? plannedDays.map(({ cycleDay, workoutName }) => {
-      const declaredDay = routine.usesWeekdays === false ? '' : weekdayForCycleDay(routine, cycleDay);
+      const declaredDay = routine.usesWeekdays === false ? '' : declaredWeekdayForCycleDay(routine, cycleDay);
       return `<li><span>${String(cycleDay).padStart(2,'0')}</span><div><strong data-i18n-user>${esc(workoutName)}</strong>${declaredDay ? `<small>${declaredDay}</small>` : ''}</div></li>`;
     }).join('')
     : '<li class="home-routine-empty"><span>—</span><div><strong>Κενό πρόγραμμα</strong><small>Πρόσθεσε την πρώτη ημέρα προπόνησης</small></div></li>';
@@ -1194,12 +1251,20 @@ $('#plan-form').addEventListener('submit', event => {
   event.preventDefault();
   const routine = selectedRoutine();
   const plan = selectedPlan();
-  const day = validCycleDay($('#plan-day').value, routine?.cycleLength);
+  const daySelect = $('#plan-day');
+  const day = validCycleDay(routine?.usesWeekdays && routine.cycleLength > 7 ? daySelect.dataset.cycleDay : daySelect.value, routine?.cycleLength);
   if (!routine || !day) return;
+  const declaredWeekday = routine.usesWeekdays === false
+    ? null
+    : routine.cycleLength > 7 ? daySelect.value : weekdayForCycleDay(routine, day);
+  const weekdayLimit = routine.cycleLength > 7 ? 2 : 1;
+  if (declaredWeekday && weekdayDeclarationCount(routine, declaredWeekday, state.editingDay) >= weekdayLimit) {
+    return toast(`Η ${declaredWeekday} έχει ήδη δηλωθεί ${weekdayLimit === 1 ? 'μία φορά' : 'δύο φορές'}`);
+  }
   const workoutName = $('#workout-name').value.trim();
   const sourceDay = state.editingDay;
   const previousItems = sourceDay ? plan.filter(item => itemCycleDay(item, routine) === Number(sourceDay)) : [];
-  const exercises = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId || id(), cycleDay:day, day:routine.usesWeekdays === false ? null : weekdayForCycleDay(routine, day), workoutName, exercise:card.querySelector('.builder-name').value.trim(), workSets:Number(card.querySelector('.builder-sets').value), cues:card.querySelector('.builder-cues').value.trim(), sets:Array.from({ length:Number(card.querySelector('.builder-sets').value) }, () => ({})) }));
+  const exercises = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId || id(), cycleDay:day, day:declaredWeekday, workoutName, exercise:card.querySelector('.builder-name').value.trim(), workSets:Number(card.querySelector('.builder-sets').value), cues:card.querySelector('.builder-cues').value.trim(), sets:Array.from({ length:Number(card.querySelector('.builder-sets').value) }, () => ({})) }));
   const savePlan = updateHistory => {
     const nextPlan = [...plan.filter(item => itemCycleDay(item, routine) !== day && itemCycleDay(item, routine) !== Number(sourceDay)), ...exercises];
     routine.plan = nextPlan;
@@ -1211,7 +1276,8 @@ $('#plan-form').addEventListener('submit', event => {
   const renamedWorkout = previousItems.length && previousItems[0].workoutName !== workoutName;
   const renamedExercise = previousItems.some(previous => { const next = exercises.find(item => item.id === previous.id); return next && next.exercise !== previous.exercise; });
   const movedDay = Boolean(sourceDay && sourceDay !== day);
-  if (renamedWorkout || renamedExercise || movedDay) {
+  const changedWeekday = Boolean(previousItems.length && previousItems[0].day !== declaredWeekday);
+  if (renamedWorkout || renamedExercise || movedDay || changedWeekday) {
     askToChoose('Ενημέρωση παλιού Ιστορικού', 'Άλλαξε όνομα προπόνησης, άσκησης ή ημέρα. Θέλεις οι παλιές καταγραφές να διατηρήσουν τα ιστορικά τους ονόματα ή να ενημερωθούν μαζί με το Πρόγραμμα;', 'Πρόγραμμα + Ιστορικό', 'Μόνο Πρόγραμμα', () => savePlan(true), () => savePlan(false));
   } else savePlan(false);
 });
@@ -1299,7 +1365,14 @@ document.addEventListener('click', event => {
   if (selectRoutineButton) {
     state.selectedRoutineId = selectRoutineButton.dataset.selectRoutine;
     resetPlanForm();
-    renderRoutines({ centerRoutineId:state.selectedRoutineId });
+    const routineCards = [...$('#routine-list').querySelectorAll('.routine-card')];
+    const selectedIndex = routineCards.findIndex(card => card.dataset.routineId === state.selectedRoutineId);
+    if (selectedIndex >= 0) {
+      routineCards.forEach(card => card.classList.toggle('selected-routine', card.dataset.routineId === state.selectedRoutineId));
+      updateRoutineCarousel(selectedIndex);
+    } else {
+      renderRoutines({ centerRoutineId:state.selectedRoutineId });
+    }
     renderPlan();
   }
   if (activateRoutineButton) {

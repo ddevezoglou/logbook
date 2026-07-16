@@ -79,22 +79,34 @@ test('program manager cards keep the routine name readable in the ticket layout'
   const card = document.querySelector('#routine-list .routine-card');
   const name = card.querySelector('.routine-select strong');
   assert.equal(name.textContent, 'Readable Routine Name');
-  assert.equal(window.getComputedStyle(card).display, 'flex', 'the ticket card must not use the legacy two-column grid');
+  assert.equal(window.getComputedStyle(card).display, 'grid', 'the ticket card uses the topline + stub grid layout');
   assert.equal(window.getComputedStyle(name).whiteSpace, 'normal', 'the full name can use the card width instead of a 30px grid column');
-  assert.equal(window.getComputedStyle(card.querySelector('.routine-foot')).display, 'flex', 'metadata and actions stay in the ticket footer');
+  assert.equal(window.getComputedStyle(card.querySelector('.routine-topline')).display, 'flex', 'the actions live in the ticket topline');
+  assert.equal(window.getComputedStyle(card.querySelector('.routine-stub')).display, 'flex', 'the duration stub sits beside the ticket body');
   assert.match(styles, /\.routine-carousel-controls button \{[^}]*border:0;[^}]*background:transparent;[^}]*box-shadow:none;/, 'carousel arrows stay frameless and visually independent');
 });
 
-test('program manager follows the title, definition form, tickets hierarchy', () => {
+test('program manager keeps only the three creation fields before the tickets', () => {
   const { document } = loadApp();
   const manager = document.querySelector('.routine-manager');
-  const heading = manager.querySelector('.routine-manager-heading');
   const createPanel = manager.querySelector('.routine-create-panel');
+  const createForm = createPanel.querySelector('#routine-form');
   const tickets = manager.querySelector('#routine-list');
-  assert.equal(heading.querySelector('h2').textContent, 'ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ');
+  assert.equal(manager.querySelector('.routine-manager-heading'), null);
+  assert.equal(manager.querySelector('.routine-create-copy'), null);
+  assert.equal(manager.textContent.includes('ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ'), false);
+  assert.equal(manager.textContent.includes('ROUTINE DESK'), false);
+  assert.equal(createForm.querySelectorAll(':scope > label, :scope > fieldset').length, 3);
+  const style = document.createElement('style');
+  style.textContent = styles;
+  document.head.append(style);
+  assert.equal(
+    document.defaultView.getComputedStyle(createForm.querySelector('.routine-weekday-choice legend')).fontSize,
+    document.defaultView.getComputedStyle(createForm.querySelector(':scope > label')).fontSize,
+    'the weekday legend uses the same type size as the other creation labels',
+  );
   assert.equal(manager.textContent.includes('01 / ΜΙΚΡΟΚΥΚΛΟΙ ΠΡΟΠΟΝΗΣΗΣ'), false);
   assert.equal(manager.textContent.includes('Επίλεξε πρόγραμμα για να επεξεργαστείς'), false);
-  assert.ok(heading.compareDocumentPosition(createPanel) & 4, 'the program definition follows the title');
   assert.ok(createPanel.compareDocumentPosition(tickets) & 4, 'the training tickets follow the definition form');
 });
 
@@ -107,7 +119,10 @@ test('program ticket carousel keeps the active routine first', () => {
   const { document } = loadApp({ trainingRoutines:routines });
   const cards = [...document.querySelectorAll('#routine-list .routine-card')];
   assert.deepEqual(cards.map(card => card.dataset.routineId), ['r-active', 'r-old', 'r-next']);
-  assert.match(cards[0].querySelector('.routine-ticket-topline').textContent, /ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ/);
+  assert.equal(cards[0].querySelector('.routine-star').getAttribute('aria-pressed'), 'true', 'the active routine is marked only by the highlighted star');
+  assert.doesNotMatch(cards[0].textContent, /TICKET|ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ/);
+  assert.match(cards[0].querySelector('.routine-stub').textContent, /ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ/);
+  assert.equal(cards[0].querySelector('.routine-ticket-number'), null, 'no ghost ticket number in the background');
   assert.deepEqual(cards.map(card => card.dataset.carouselPosition), ['0', '1', '-1']);
   assert.equal(document.querySelector('#routine-carousel-count').textContent, '01 / 03');
   assert.match(document.querySelector('.routine-carousel-bar').textContent, /TRAINING SPLITS/);
@@ -138,6 +153,20 @@ test('program ticket controls move one ticket left or right', () => {
   pointer('pointerdown', 220);
   pointer('pointerup', 120);
   assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+});
+
+test('clicking a side ticket centers it without rebuilding the carousel', () => {
+  const routines = [
+    { id:'r1', name:'One', isActive:true, cycleLength:7, plan:[] },
+    { id:'r2', name:'Two', isActive:false, cycleLength:8, plan:[] },
+  ];
+  const { document } = loadApp({ trainingRoutines:routines });
+  const list = document.querySelector('#routine-list');
+  const sideCard = list.querySelector('[data-routine-id="r2"]');
+  click(document, '[data-select-routine="r2"]');
+  assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+  assert.equal(list.querySelector('[data-routine-id="r2"]'), sideCard, 'the card element survives so the CSS transition can animate the move');
+  assert.ok(sideCard.classList.contains('selected-routine'));
 });
 
 test('activating a program moves its ticket to the first position', () => {
@@ -270,19 +299,19 @@ test('creating a routine persists a microcycle length and assigns its anchor int
   assert.equal(routine.cycleLength, 8);
   assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(routine.cycleAnchorDate));
   assert.equal(document.querySelector('#routine-cycle-anchor'), null);
-  assert.equal(document.querySelectorAll('#plan-list .day-card').length, 8);
+  assert.equal(document.querySelectorAll('#plan-list .day-card').length, 1, 'an unordered empty routine shows one empty state instead of numbered day slots');
 });
 
-test('a new circular routine can omit weekday names', () => {
+test('a routine without declared weekdays hides day order and assigns internal slots automatically', () => {
   const { document, localStorage } = loadApp();
   setValue(document, '#routine-name', 'Floating Pull Push', 'input');
   setValue(document, '#routine-cycle-length', '8', 'input');
   document.querySelector('#routine-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
   const routine = JSON.parse(localStorage.getItem('trainingRoutines')).at(-1);
   assert.equal(routine.usesWeekdays, false);
-  assert.equal(document.querySelector('#plan-day-label').textContent, 'Σειρά στον μικρόκυκλο');
-  assert.equal(document.querySelector('#plan-day option').textContent, 'Ημέρα 1');
-  assert.equal(document.querySelector('#plan-list .day-card h3').textContent, 'Ημέρα 1');
+  assert.equal(document.querySelector('#plan-day-field').classList.contains('hidden'), true);
+  assert.equal(document.querySelector('#plan-form-title').textContent, 'Νέα προπόνηση');
+  assert.equal(document.querySelector('#plan-form').textContent.includes('Ημέρα μικρόκυκλου'), false);
 });
 
 test('weekday display can be explicitly enabled when creating a routine', () => {
@@ -293,8 +322,114 @@ test('weekday display can be explicitly enabled when creating a routine', () => 
   document.querySelector('#routine-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
   const routine = JSON.parse(localStorage.getItem('trainingRoutines')).at(-1);
   assert.equal(routine.usesWeekdays, true);
-  assert.equal(document.querySelector('#plan-day-label').textContent, 'Ημέρα μικρόκυκλου');
-  assert.ok(document.querySelector('#plan-day option').textContent.includes('Δευτέρα'));
+  assert.equal(document.querySelector('#plan-day-label').textContent, 'Ημέρα');
+  assert.deepEqual([...document.querySelectorAll('#plan-day option')].map(option => option.textContent), ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']);
+});
+
+test('a weekday is hidden after it is assigned in a seven-day routine', () => {
+  const { document } = loadApp({ trainingRoutines:[{ id:'r1', name:'Calendar', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan:[] }] });
+  setValue(document, '#workout-name', 'Push', 'input');
+  document.querySelectorAll('.builder-name').forEach((input, index) => { input.value = `Exercise ${index + 1}`; });
+  document.querySelector('#plan-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  const weekdays = [...document.querySelectorAll('#plan-day option')].map(option => option.textContent);
+  assert.equal(weekdays.includes('Δευτέρα'), false);
+  assert.deepEqual(weekdays, ['Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']);
+});
+
+test('an eight-day routine keeps all seven weekday choices and allows repeats', () => {
+  const { document, localStorage } = loadApp({ trainingRoutines:[{ id:'r1', name:'Long Calendar', isActive:true, cycleLength:8, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan:[] }] });
+  const expected = ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  assert.deepEqual([...document.querySelectorAll('#plan-day option')].map(option => option.textContent), expected);
+
+  for (const [index, workoutName] of ['First Monday', 'Second Monday'].entries()) {
+    setValue(document, '#plan-day', 'Δευτέρα');
+    setValue(document, '#workout-name', workoutName, 'input');
+    document.querySelectorAll('.builder-name').forEach((input, index) => { input.value = `${workoutName} Exercise ${index + 1}`; });
+    document.querySelector('#plan-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+    const remaining = [...document.querySelectorAll('#plan-day option')].map(option => option.textContent);
+    assert.deepEqual(remaining, index === 0 ? expected : expected.slice(1));
+  }
+
+  const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
+  assert.deepEqual([...new Set(plan.map(item => item.cycleDay))], [1, 2]);
+  assert.ok(plan.every(item => item.day === 'Δευτέρα'));
+  assert.deepEqual([...document.querySelectorAll('#plan-list .active-day h3')].map(heading => heading.textContent), ['Δευτέρα', 'Δευτέρα']);
+});
+
+test('every weekday is capped at two declarations in 8, 9 and 10-day routines', () => {
+  const weekdays = ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  for (const cycleLength of [8, 9, 10]) {
+    for (const weekday of weekdays) {
+      const plan = [
+        planDay(weekday, `${weekday} A`, { cycleDay:1, workoutName:`${weekday} A` }),
+        planDay(weekday, `${weekday} B`, { cycleDay:2, workoutName:`${weekday} B` }),
+      ];
+      const { document } = loadApp({ trainingRoutines:[{ id:`r-${cycleLength}-${weekday}`, name:'Capped', isActive:true, cycleLength, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan }] });
+      const options = [...document.querySelectorAll('#plan-day option')].map(option => option.textContent);
+      assert.deepEqual(options, weekdays.filter(day => day !== weekday), `${weekday} must disappear after two uses in a ${cycleLength}-day routine`);
+    }
+  }
+});
+
+test('editing one of two repeated weekdays keeps it selectable and reopens it after a change', () => {
+  const plan = [
+    planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Monday A' }),
+    planDay('Δευτέρα', 'Row', { cycleDay:2, workoutName:'Monday B' }),
+  ];
+  const { document } = loadApp({ trainingRoutines:[{ id:'r1', name:'Editable', isActive:true, cycleLength:8, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan }] });
+  assert.equal([...document.querySelectorAll('#plan-day option')].some(option => option.textContent === 'Δευτέρα'), false);
+  click(document, '[data-edit-day="1"]');
+  assert.equal([...document.querySelectorAll('#plan-day option')].some(option => option.textContent === 'Δευτέρα'), true, 'the weekday being edited remains available');
+  setValue(document, '#plan-day', 'Τρίτη');
+  document.querySelector('#plan-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  click(document, '#confirm-delete-secondary');
+  assert.equal([...document.querySelectorAll('#plan-day option')].some(option => option.textContent === 'Δευτέρα'), true, 'Monday reopens after one declaration moves to Tuesday');
+});
+
+test('the save handler rejects a third declaration even if the weekday cap UI is bypassed', () => {
+  const plan = [
+    planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Monday A' }),
+    planDay('Δευτέρα', 'Row', { cycleDay:2, workoutName:'Monday B' }),
+  ];
+  const { document, localStorage } = loadApp({ trainingRoutines:[{ id:'r1', name:'Guarded', isActive:true, cycleLength:10, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan }] });
+  const forcedMonday = document.createElement('option');
+  forcedMonday.value = 'Δευτέρα';
+  forcedMonday.textContent = 'Δευτέρα';
+  document.querySelector('#plan-day').append(forcedMonday);
+  setValue(document, '#plan-day', 'Δευτέρα');
+  setValue(document, '#workout-name', 'Third Monday', 'input');
+  document.querySelectorAll('.builder-name').forEach((input, index) => { input.value = `Forced ${index + 1}`; });
+  document.querySelector('#plan-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  const storedPlan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
+  assert.equal(new Set(storedPlan.map(item => item.cycleDay)).size, 2);
+  assert.match(document.querySelector('#toast').textContent, /δύο φορές/);
+});
+
+test('weekday routines stop accepting declarations when all cycle slots are filled', () => {
+  const weekdays = ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  for (const cycleLength of [8, 9, 10]) {
+    const plan = Array.from({ length:cycleLength }, (_, index) => planDay(weekdays[index % 7], `Exercise ${index + 1}`, { cycleDay:index + 1, workoutName:`Workout ${index + 1}` }));
+    const { document } = loadApp({ trainingRoutines:[{ id:`r-${cycleLength}`, name:'Full', isActive:true, cycleLength, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan }] });
+    const onlyOption = document.querySelector('#plan-day option');
+    assert.equal(onlyOption.disabled, true);
+    assert.equal(onlyOption.textContent, 'Έχουν δηλωθεί όλες οι προπονήσεις');
+  }
+});
+
+test('an unordered routine stores workouts without exposing day numbers', () => {
+  const { document, localStorage } = loadApp({ trainingRoutines:[{ id:'r1', name:'Floating', isActive:true, cycleLength:8, cycleAnchorDate:'2026-07-06', usesWeekdays:false, plan:[] }] });
+  for (const workoutName of ['Push', 'Pull']) {
+    setValue(document, '#workout-name', workoutName, 'input');
+    document.querySelectorAll('.builder-name').forEach((input, index) => { input.value = `${workoutName} Exercise ${index + 1}`; });
+    document.querySelector('#plan-form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  }
+  const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
+  assert.deepEqual([...new Set(plan.map(item => item.cycleDay))], [1, 2]);
+  assert.ok(plan.every(item => item.day === null));
+  assert.equal(document.querySelector('#plan-day-field').classList.contains('hidden'), true);
+  assert.deepEqual([...document.querySelectorAll('#plan-list .active-day h3')].map(heading => heading.textContent), ['Push', 'Pull']);
+  assert.deepEqual([...document.querySelectorAll('#workout-day-select option')].map(option => option.textContent), ['Push', 'Pull']);
+  assert.equal(document.querySelector('#plan-list').textContent.includes('Ημέρα 1'), false);
 });
 
 test('legacy weekly routines migrate to seven stable cycle slots', () => {
@@ -515,8 +650,8 @@ test('language picker switches all supported languages and persists the choice',
   click(document, '[data-language="en"]');
   assert.equal(document.documentElement.lang, 'en');
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'History');
-  assert.equal(document.querySelector('#routine-manager-title').textContent, 'YOUR ROUTINES');
-  assert.equal(document.querySelector('.routine-create-copy strong').textContent, 'DEFINE YOUR TRAINING CYCLE');
+  assert.equal(document.querySelector('#routine-form > label').childNodes[0].textContent, 'Routine name');
+  assert.match(document.querySelector('#routine-form .secondary-button').textContent, /Create/);
   assert.equal(document.querySelector('[data-language="en"]').getAttribute('aria-pressed'), 'true');
   assert.equal(localStorage.getItem('logbookLanguage'), 'en');
 
@@ -526,7 +661,7 @@ test('language picker switches all supported languages and persists the choice',
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Verlauf');
   click(document, '[data-language="el"]');
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Ιστορικό');
-  assert.equal(document.querySelector('.routine-create-copy strong').textContent, 'ΟΡΙΣΕ ΤΟΝ ΜΙΚΡΟΚΥΚΛΟ ΣΟΥ');
+  assert.equal(document.querySelector('#routine-form > label').childNodes[0].textContent, 'Όνομα προγράμματος');
 });
 
 test('changing language preserves in-progress workout values', () => {

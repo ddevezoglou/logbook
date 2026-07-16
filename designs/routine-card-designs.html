@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Routine Ticket — Προτάσεις Σχεδίασης Κάρτας</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:560px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,70px) 5vw 66px; display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:clamp(28px,4vw,56px); align-items:start; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.slot { display:flex; flex-direction:column; align-items:center; gap:22px; }
+.slot>small { font-size:.6rem; font-weight:800; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; }
+.notes { grid-column:1 / -1; max-width:640px; margin:8px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+.card { position:relative; width:min(380px,100%); min-height:170px; color:var(--paper); }
+
+/* shared action buttons */
+.acts { display:flex; gap:6px; }
+.acts button { width:30px; height:30px; display:grid; place-items:center; padding:0; border:1px solid #4b4537; background:transparent; color:var(--faded); font-size:.85rem; cursor:pointer; transition:.22s; }
+.acts button:hover { border-color:var(--gold); color:var(--gold); }
+.acts button.on { border-color:var(--gold); background:var(--gold); color:var(--ink); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 1 — «ΑΠΟΚΟΜΜΑ» (tear-off stub, κάθετη διάτρηση)
+   ============================================================ */
+.t1 { display:grid; grid-template-columns:1fr 64px; background:var(--ink); border:1px solid #4b4537; box-shadow:4px 5px 0 rgba(21,19,13,.14); }
+.t1.active { border-color:var(--gold); box-shadow:0 -3px 0 var(--gold) inset, 4px 5px 0 rgba(21,19,13,.14); }
+.t1-main { position:relative; padding:16px 18px 14px; overflow:hidden; }
+.t1-top { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding-bottom:10px; border-bottom:1px dashed rgba(239,232,216,.28); font-size:.55rem; font-weight:800; letter-spacing:.15em; color:var(--faded); }
+.t1-top>span:first-child { color:var(--gold); }
+.t1.active .t1-top { border-bottom-color:rgba(201,162,39,.46); }
+.t1-main strong { position:relative; z-index:2; display:block; margin-top:16px; min-height:2.5em; font:700 1.24rem/1.25 "Roboto Slab"; text-transform:uppercase; letter-spacing:.01em; }
+.t1-main small { display:block; margin-top:12px; color:var(--faded); font-size:.6rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+.t1-no { position:absolute; z-index:1; right:10px; bottom:-8px; color:rgba(239,232,216,.07); font:700 4.5rem/.8 "Roboto Slab"; letter-spacing:-.08em; pointer-events:none; }
+.t1.active .t1-no { color:rgba(201,162,39,.11); }
+.t1.active .t1-main { background:linear-gradient(125deg,rgba(201,162,39,.13),transparent 56%); }
+.t1-stub { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:14px 0 10px; border-left:1px dashed rgba(239,232,216,.32); background:rgba(239,232,216,.04); }
+.t1.active .t1-stub { border-left-color:rgba(201,162,39,.5); background:rgba(201,162,39,.08); }
+/* διάτρηση: εγκοπές πάνω/κάτω στη γραμμή σκισίματος */
+.t1-stub::before,.t1-stub::after { content:""; position:absolute; left:-8px; width:15px; height:15px; border-radius:50%; background:var(--paper); border:1px solid #4b4537; }
+.t1-stub::before { top:-9px; } .t1-stub::after { bottom:-9px; }
+.t1.active .t1-stub::before,.t1.active .t1-stub::after { border-color:var(--gold); }
+.t1-days { writing-mode:vertical-rl; transform:rotate(180deg); font-size:.58rem; font-weight:800; letter-spacing:.26em; color:var(--faded); text-transform:uppercase; }
+.t1.active .t1-days { color:var(--gold); }
+.t1-stub .acts { flex-direction:column; }
+.t1-stub .acts button { width:26px; height:26px; font-size:.75rem; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 2 — «ΚΑΡΤΑ ΕΠΙΒΙΒΑΣΗΣ» (data strip + σφραγίδα)
+   ============================================================ */
+.t2 { background:var(--ink); border:1px solid #4b4537; box-shadow:4px 5px 0 rgba(21,19,13,.14); overflow:visible; }
+.t2.active { border-color:var(--gold); }
+.t2-head { display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:1px solid #3d3828; font-size:.55rem; font-weight:800; letter-spacing:.16em; color:var(--faded); }
+.t2.active .t2-head { background:var(--gold); color:var(--ink); border-bottom-color:var(--gold); }
+.t2.active .t2-head b { color:var(--ink); }
+.t2-head b { color:var(--gold); font-weight:800; letter-spacing:inherit; }
+.t2-body { position:relative; padding:16px 16px 14px; overflow:hidden; }
+.t2-body strong { display:block; min-height:2.4em; font:700 1.24rem/1.25 "Roboto Slab"; text-transform:uppercase; }
+.t2-no { position:absolute; right:12px; top:4px; color:rgba(239,232,216,.07); font:700 4rem/.8 "Roboto Slab"; letter-spacing:-.08em; pointer-events:none; }
+.t2.active .t2-no { color:rgba(201,162,39,.11); }
+.t2-data { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end; margin:0 16px; padding:12px 0 13px; border-top:1px dashed rgba(239,232,216,.28); }
+.t2-cell span { display:block; font-size:.5rem; font-weight:800; letter-spacing:.2em; color:#736c58; text-transform:uppercase; }
+.t2-cell b { font:700 1.05rem "Roboto Slab"; color:var(--paper); letter-spacing:.02em; }
+.t2.active .t2-cell b.gold { color:var(--gold); }
+/* στρογγυλή σφραγίδα ενεργού */
+.t2-seal { position:absolute; top:-16px; right:-14px; width:74px; height:74px; border-radius:50%; display:grid; place-items:center; transform:rotate(11deg); color:var(--gold); border:2px solid rgba(201,162,39,.85); box-shadow:inset 0 0 0 3px var(--ink), inset 0 0 0 4px rgba(201,162,39,.55); background:var(--ink); font:800 .5rem "Alegreya Sans"; letter-spacing:.12em; text-align:center; line-height:1.5; pointer-events:none; }
+.t2-seal i { display:block; font-style:normal; font-size:.9rem; line-height:1; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 3 — «ΚΑΤΑΛΟΓΟΣ ΑΡΧΕΙΟΥ» (χάρτινο δελτίο + σφραγίδα μελάνης)
+   ============================================================ */
+.t3 { background:#e8dcc1; border:1px solid rgba(57,47,28,.55); color:var(--ink); box-shadow:5px 8px 16px rgba(40,32,18,.17); }
+.t3::before { content:""; position:absolute; inset:5px; border:1px dashed rgba(79,62,31,.32); pointer-events:none; }
+.t3.active { box-shadow:0 0 0 1px var(--gold), 5px 8px 16px rgba(40,32,18,.2); }
+.t3-tape { position:absolute; z-index:3; top:-12px; left:50%; width:74px; height:24px; transform:translateX(-50%) rotate(-3deg); background:rgba(213,194,145,.72); box-shadow:inset 0 0 0 1px rgba(90,72,35,.1); pointer-events:none; }
+.t3-body { position:relative; z-index:1; padding:18px 20px 12px; }
+.t3-top { display:flex; justify-content:space-between; align-items:baseline; font-size:.55rem; font-weight:800; letter-spacing:.16em; color:var(--muted); text-transform:uppercase; }
+.t3-top b { color:var(--orange); letter-spacing:inherit; }
+.t3-body strong { display:block; margin-top:14px; min-height:2.4em; font:700 1.26rem/1.25 "Roboto Slab"; text-transform:uppercase; color:var(--ink); }
+.t3-hand { font:600 1.05rem "Caveat",cursive; color:var(--pen,#4d3f24); margin-top:2px; display:block; transform:rotate(-1deg); }
+.t3-foot { position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; margin:0 20px; padding:9px 0 11px; border-top:1px solid rgba(79,62,31,.3); }
+.t3-foot small { font-size:.58rem; font-weight:800; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+.t3 .acts button { border-color:rgba(79,62,31,.4); color:var(--muted); }
+.t3 .acts button:hover { border-color:var(--orange); color:var(--orange); }
+.t3 .acts button.on { border-color:var(--orange); background:var(--orange); color:var(--paper); }
+/* σφραγίδα μελάνης */
+.t3-stamp { position:absolute; z-index:2; top:12px; right:14px; padding:5px 10px; transform:rotate(-8deg); border:2px solid rgba(138,106,28,.75); color:rgba(138,106,28,.85); font:800 .62rem "Alegreya Sans"; letter-spacing:.22em; text-transform:uppercase; border-radius:3px; mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.92'/%3E%3C/svg%3E"); mask-size:120px; pointer-events:none; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 4 — «ΑΦΙΣΑ ΑΓΩΝΑ» (marquee, κομμένες γωνίες, μετάλλιο)
+   ============================================================ */
+.t4 { background:var(--ink); border:1px solid #4b4537; box-shadow:4px 5px 0 rgba(21,19,13,.14); clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px); }
+.t4::before { content:""; position:absolute; inset:6px; border:1px solid rgba(239,232,216,.14); clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px); pointer-events:none; }
+.t4.active::before { border-color:rgba(201,162,39,.4); }
+.t4-marquee { display:flex; justify-content:center; gap:10px; padding:9px 14px; font-size:.55rem; font-weight:800; letter-spacing:.3em; color:var(--faded); border-bottom:1px solid rgba(239,232,216,.14); text-transform:uppercase; }
+.t4.active .t4-marquee { background:linear-gradient(180deg,var(--gold),#ab8a1f); color:var(--ink); border-bottom:0; }
+.t4-body { position:relative; padding:18px 18px 12px; text-align:center; }
+.t4-body strong { display:block; min-height:2.4em; font:700 1.35rem/1.2 "Roboto Slab"; text-transform:uppercase; letter-spacing:.02em; }
+.t4-rule { display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--faded); font-size:.55rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; }
+.t4-rule::before,.t4-rule::after { content:""; flex:1; height:1px; background:rgba(239,232,216,.2); }
+.t4.active .t4-rule { color:var(--gold); }
+.t4.active .t4-rule::before,.t4.active .t4-rule::after { background:rgba(201,162,39,.4); }
+.t4-foot { display:flex; justify-content:space-between; align-items:center; padding:8px 14px 10px; }
+.t4-medal { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(239,232,216,.25); color:var(--faded); font:700 .8rem "Roboto Slab"; }
+.t4.active .t4-medal { border-color:var(--gold); color:var(--gold); box-shadow:0 0 0 3px rgba(201,162,39,.15); }
+.t4-medal span { display:block; text-align:center; line-height:1; }
+.t4-medal small { display:block; font:800 .38rem "Alegreya Sans"; letter-spacing:.12em; color:inherit; }
+
+/* hover δείγμα — κοινό για όλες */
+.card { transition:transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s; }
+.card:hover { transform:translateY(-3px); }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN PROPOSALS — ΚΑΡΤΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</p>
+  <h1>Routine <em>Ticket</em>.</h1>
+  <p>Τέσσερις στοχευμένες κατευθύνσεις για την κάρτα «ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ» του carousel. Όλες κρατούν τη μεταφορά του εισιτηρίου, την παλέτα ink/paper/gold και την τυπογραφία Roboto Slab / Alegreya Sans του project. Κάθε πρόταση δείχνει ενεργή και ανενεργή κατάσταση.</p>
+</header>
+
+<!-- ================= ΠΡΟΤΑΣΗ 1 ================= -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 1</b><span>«ΑΠΟΚΟΜΜΑ» — εισιτήριο με κάθετο tear-off stub</span></div>
+<section class="stage">
+  <div class="slot"><small>Ενεργό πρόγραμμα</small>
+    <article class="card t1 active">
+      <div class="t1-main">
+        <div class="t1-top"><span>★ ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ</span><span>Νο 01</span></div>
+        <strong>Routine</strong>
+        <small>5 ημέρες προπόνησης</small>
+        <span class="t1-no">01</span>
+      </div>
+      <div class="t1-stub">
+        <span class="t1-days">7 ΗΜΕΡΕΣ</span>
+        <div class="acts"><button class="on" aria-label="Ενεργό">★</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+    </article>
+  </div>
+  <div class="slot"><small>Ανενεργό πρόγραμμα</small>
+    <article class="card t1">
+      <div class="t1-main">
+        <div class="t1-top"><span style="color:var(--faded)">TICKET 02</span><span>Νο 02</span></div>
+        <strong>Push / Pull / Legs</strong>
+        <small>3 ημέρες προπόνησης</small>
+        <span class="t1-no">02</span>
+      </div>
+      <div class="t1-stub">
+        <span class="t1-days">7 ΗΜΕΡΕΣ</span>
+        <div class="acts"><button aria-label="Ορισμός ενεργού">☆</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Σκεπτικό:</b> Το εισιτήριο αποκτά πραγματική ανατομία — κύριο σώμα και απόκομμα. Η κάθετη διάτρηση με τις εγκοπές δίνει την πιο πιστή «ticket» αίσθηση, ενώ τα κουμπιά ενεργειών φεύγουν από τον τίτλο και στοιβάζονται στο stub, καθαρίζοντας το footer. Η διάρκεια κύκλου διαβάζεται κάθετα, όπως στα παλιά εισιτήρια εισόδου. <b>Χαμηλό ρίσκο</b>, μικρή απόσταση από το υπάρχον DOM.</p>
+</section>
+
+<!-- ================= ΠΡΟΤΑΣΗ 2 ================= -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 2</b><span>«ΚΑΡΤΑ ΕΠΙΒΙΒΑΣΗΣ» — data strip και χρυσή σφραγίδα</span></div>
+<section class="stage">
+  <div class="slot"><small>Ενεργό πρόγραμμα</small>
+    <article class="card t2 active">
+      <div class="t2-head"><b>★ ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ</b><span>Νο 01</span></div>
+      <div class="t2-body"><strong>Routine</strong><span class="t2-no">01</span></div>
+      <div class="t2-data">
+        <div class="t2-cell"><span>Κύκλος</span><b class="gold">7 ΗΜ.</b></div>
+        <div class="t2-cell"><span>Προπονήσεις</span><b class="gold">5</b></div>
+        <div class="acts"><button class="on" aria-label="Ενεργό">★</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+      <div class="t2-seal"><span><i>★</i>ΣΕ ΧΡΗΣΗ</span></div>
+    </article>
+  </div>
+  <div class="slot"><small>Ανενεργό πρόγραμμα</small>
+    <article class="card t2">
+      <div class="t2-head"><span>TICKET 02</span><span>Νο 02</span></div>
+      <div class="t2-body"><strong>Push / Pull / Legs</strong><span class="t2-no">02</span></div>
+      <div class="t2-data">
+        <div class="t2-cell"><span>Κύκλος</span><b>7 ΗΜ.</b></div>
+        <div class="t2-cell"><span>Προπονήσεις</span><b>3</b></div>
+        <div class="acts"><button aria-label="Ορισμός ενεργού">☆</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Σκεπτικό:</b> Η πιο «λειτουργική» κατεύθυνση. Τα δεδομένα (κύκλος, προπονήσεις) παύουν να είναι διάσπαρτα labels και γίνονται δομημένο data strip με σαφή ιεραρχία — όπως πεδία σε boarding pass. Το ενεργό δηλώνεται διπλά: γεμάτη χρυσή κεφαλίδα και στρογγυλή σφραγίδα «ΣΕ ΧΡΗΣΗ» που δραπετεύει από τη γωνία. Καλύτερη επεκτασιμότητα αν προστεθούν μελλοντικά στοιχεία (π.χ. εβδομάδα κύκλου).</p>
+</section>
+
+<!-- ================= ΠΡΟΤΑΣΗ 3 ================= -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 3</b><span>«ΚΑΤΑΛΟΓΟΣ ΑΡΧΕΙΟΥ» — χάρτινο δελτίο με σφραγίδα μελάνης</span></div>
+<section class="stage">
+  <div class="slot"><small>Ενεργό πρόγραμμα</small>
+    <article class="card t3 active">
+      <div class="t3-tape"></div>
+      <div class="t3-body">
+        <div class="t3-top"><b>ΔΕΛΤΙΟ Νο 01</b><span>Κύκλος 7 ημερών</span></div>
+        <strong>Routine</strong>
+        <span class="t3-hand">τρέχον πρόγραμμα ✓</span>
+      </div>
+      <div class="t3-foot">
+        <small>5 ημέρες προπόνησης</small>
+        <div class="acts"><button class="on" aria-label="Ενεργό">★</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+      <div class="t3-stamp">ΕΝΕΡΓΟ</div>
+    </article>
+  </div>
+  <div class="slot"><small>Ανενεργό πρόγραμμα</small>
+    <article class="card t3">
+      <div class="t3-tape" style="transform:translateX(-50%) rotate(2deg)"></div>
+      <div class="t3-body">
+        <div class="t3-top"><b>ΔΕΛΤΙΟ Νο 02</b><span>Κύκλος 7 ημερών</span></div>
+        <strong>Push / Pull / Legs</strong>
+        <span class="t3-hand">&nbsp;</span>
+      </div>
+      <div class="t3-foot">
+        <small>3 ημέρες προπόνησης</small>
+        <div class="acts"><button aria-label="Ορισμός ενεργού">☆</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Σκεπτικό:</b> Αντιστροφή: αντί για σκούρο εισιτήριο, χάρτινο δελτίο αρχείου — δένει με τις vintage κάρτες της αρχικής σελίδας (profile card, ταινία, sepia). Το «ΕΝΕΡΓΟ» γίνεται σφραγίδα μελάνης με φθαρμένη υφή (mask από noise) και η χειρόγραφη σημείωση σε Caveat προσθέτει την ανθρώπινη πινελιά του logbook. <b>Προσοχή:</b> αλλάζει τη σχέση φωτεινότητας με το φόντο του carousel — θέλει έλεγχο αντίθεσης στις πλαϊνές, θολωμένες θέσεις.</p>
+</section>
+
+<!-- ================= ΠΡΟΤΑΣΗ 4 ================= -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 4</b><span>«ΑΦΙΣΑ ΑΓΩΝΑ» — marquee, κομμένες γωνίες, μετάλλιο ημερών</span></div>
+<section class="stage">
+  <div class="slot"><small>Ενεργό πρόγραμμα</small>
+    <article class="card t4 active">
+      <div class="t4-marquee">★ ΕΝΕΡΓΟ ΠΡΟΓΡΑΜΜΑ ★</div>
+      <div class="t4-body">
+        <strong>Routine</strong>
+        <div class="t4-rule">5 ΗΜΕΡΕΣ ΠΡΟΠΟΝΗΣΗΣ</div>
+      </div>
+      <div class="t4-foot">
+        <div class="t4-medal"><span>7<small>ΗΜ.</small></span></div>
+        <div class="acts"><button class="on" aria-label="Ενεργό">★</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+    </article>
+  </div>
+  <div class="slot"><small>Ανενεργό πρόγραμμα</small>
+    <article class="card t4">
+      <div class="t4-marquee">TICKET Νο 02</div>
+      <div class="t4-body">
+        <strong>Push / Pull / Legs</strong>
+        <div class="t4-rule">3 ΗΜΕΡΕΣ ΠΡΟΠΟΝΗΣΗΣ</div>
+      </div>
+      <div class="t4-foot">
+        <div class="t4-medal"><span>7<small>ΗΜ.</small></span></div>
+        <div class="acts"><button aria-label="Ορισμός ενεργού">☆</button><button aria-label="Μετονομασία">✎</button><button aria-label="Διαγραφή">×</button></div>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Σκεπτικό:</b> Η πιο θεατρική κατεύθυνση — παλιά αφίσα πυγμαχίας. Κεντραρισμένη τυπογραφία, κομμένες γωνίες (clip-path) σαν σφραγισμένο κουπόνι, διπλή εσωτερική κορνίζα letterpress. Το ενεργό «ανάβει» ολόκληρη τη χρυσή μαρκίζα — αναγνωρίσιμο ακόμη και στις μικρές, θολές πλαϊνές θέσεις του carousel. Το μετάλλιο με τον κύκλο ημερών γίνεται το σταθερό οπτικό anchor κάτω αριστερά.</p>
+</section>
+
+</body>
+</html>
