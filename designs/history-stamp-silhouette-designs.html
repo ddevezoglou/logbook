@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ιστορικό — Σφραγίδα με σιλουέτα bodybuilder</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 90px; }
+  h1 { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:760px; line-height:1.5; margin:0 0 40px; }
+  .variant { margin-bottom:55px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.25rem; margin:0; }
+  .variant-title span { color:var(--orange); font-weight:800; font-size:.7rem; letter-spacing:.12em; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:720px; line-height:1.45; }
+
+  /* ---- mockup of overview-hero context ---- */
+  .hero-mock { background:var(--paper); border:1px solid var(--line); padding:55px 5vw 40px; display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:40px; overflow:hidden; }
+  .hero-mock h1 { font-size:clamp(2.4rem,4.5vw,4.2rem); line-height:.95; text-transform:uppercase; }
+  .hero-mock h1 em { font-style:italic; }
+
+  /* ---- proposed stamp: smaller than current (430x205 -> 350x165) ---- */
+  .stamp { justify-self:end; width:min(100%,350px); min-height:165px; padding:30px 16px 20px; position:relative; z-index:1; display:grid; place-items:end center; overflow:visible; color:rgba(72,70,60,.76); transform:rotate(-1.2deg); isolation:isolate; }
+  .stamp-shadow { position:absolute; z-index:-1; left:50%; top:-8px; width:300px; height:190px; overflow:visible; color:rgba(58,60,56,.72); fill:currentColor; transform:translateX(-50%) rotate(-4deg); filter:url(#ink-wash); }
+  .stamp-shadow .wash { opacity:.055; transform:translate(-3px,2px) scale(1.03); transform-origin:center; }
+  .stamp-shadow .ink { opacity:.085; }
+  .stamp-copy { position:relative; z-index:2; display:flex; align-items:baseline; justify-content:center; gap:11px; padding:6px 12px 4px; color:rgba(72,70,60,.78); mix-blend-mode:multiply; }
+  .stamp-copy strong { flex:none; min-width:1.25ch; font:700 clamp(2.7rem,4.6vw,4.1rem)/.8 "Roboto Slab",serif; letter-spacing:-.08em; opacity:.9; }
+  .stamp-label { max-width:160px; font:800 clamp(.6rem,1vw,.72rem)/1.25 "Alegreya Sans",sans-serif; letter-spacing:.15em; text-transform:uppercase; opacity:.88; }
+
+  /* current-size ghost for size comparison */
+  .stamp.current-size { width:min(100%,430px); min-height:205px; }
+  .stamp.current-size .stamp-shadow { width:178px; height:235px; top:-15px; transform:translateX(-44%) rotate(-6deg); }
+  .stamp.current-size .wash { opacity:.11; }
+  .stamp.current-size .ink { opacity:.155; }
+  .stamp.current-size .stamp-copy strong { font-size:clamp(3.25rem,5.8vw,5.15rem); }
+  .stamp.current-size .stamp-label { max-width:185px; font-size:clamp(.67rem,1.15vw,.8rem); }
+
+  .opacity-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:14px; }
+  .opacity-cell { background:var(--paper); border:1px solid var(--line); padding:20px 8px; display:grid; place-items:center; }
+  .opacity-cell figure { margin:0; display:grid; place-items:center; gap:8px; }
+  .opacity-cell figcaption { color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  .opacity-cell svg { width:190px; height:120px; color:rgba(58,60,56,.72); fill:currentColor; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="ink-wash" x="-30%" y="-30%" width="160%" height="160%">
+    <feTurbulence type="fractalNoise" baseFrequency=".035 .11" numOctaves="3" seed="19" result="paperNoise"/>
+    <feDisplacementMap in="SourceGraphic" in2="paperNoise" scale="5" xChannelSelector="R" yChannelSelector="G" result="roughFigure"/>
+    <feGaussianBlur in="roughFigure" stdDeviation=".32" result="softInk"/>
+    <feBlend in="softInk" in2="roughFigure" mode="multiply"/>
+  </filter>
+
+  <!-- A: Πλάγιο flex — κοντά στη reference εικόνα: τεράστιο μπράτσο δίπλα στο κεφάλι, χέρι που "σέρνεται" -->
+  <symbol id="flex-side" viewBox="0 0 220 150">
+    <circle cx="94" cy="42" r="12"/>
+    <path d="M100 52 Q112 58 118 70 L104 80 Q96 66 92 54 Z"/>
+    <circle cx="132" cy="14" r="8"/>
+    <path d="M132 18 L150 42" stroke="currentColor" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <circle cx="144" cy="58" r="17"/>
+    <circle cx="120" cy="78" r="19"/>
+    <ellipse cx="88" cy="100" rx="30" ry="22"/>
+    <ellipse cx="58" cy="106" rx="18" ry="15"/>
+    <path d="M112 86 Q132 102 126 126 Q120 144 104 148 L86 142 Q104 124 102 104 Z"/>
+    <path d="M48 118 Q28 124 10 130" stroke="currentColor" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <ellipse cx="9" cy="130" rx="9" ry="6"/>
+  </symbol>
+
+  <!-- B: Front double biceps — και τα δύο χέρια ψηλά -->
+  <symbol id="flex-double" viewBox="0 0 220 150">
+    <circle cx="110" cy="28" r="11"/>
+    <ellipse cx="110" cy="47" rx="25" ry="11"/>
+    <circle cx="78" cy="56" r="16"/>
+    <circle cx="142" cy="56" r="16"/>
+    <circle cx="59" cy="42" r="14"/>
+    <circle cx="161" cy="42" r="14"/>
+    <path d="M59 42 L74 17" stroke="currentColor" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M161 42 L146 17" stroke="currentColor" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <circle cx="75" cy="14" r="8"/>
+    <circle cx="145" cy="14" r="8"/>
+    <ellipse cx="110" cy="80" rx="33" ry="22"/>
+    <path d="M80 88 Q76 112 96 132 L124 132 Q144 112 140 88 Q126 104 110 104 Q94 104 80 88 Z"/>
+  </symbol>
+
+  <!-- C: Most muscular / «κάβουρας» — σκυμμένος, χέρια μπροστά -->
+  <symbol id="flex-crab" viewBox="0 0 220 150">
+    <circle cx="110" cy="34" r="11"/>
+    <ellipse cx="110" cy="54" rx="26" ry="11"/>
+    <circle cx="76" cy="64" r="17"/>
+    <circle cx="144" cy="64" r="17"/>
+    <ellipse cx="93" cy="84" rx="17" ry="14"/>
+    <ellipse cx="127" cy="84" rx="17" ry="14"/>
+    <circle cx="72" cy="92" r="14"/>
+    <circle cx="148" cy="92" r="14"/>
+    <path d="M72 92 Q86 108 100 114" stroke="currentColor" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <path d="M148 92 Q134 108 120 114" stroke="currentColor" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <circle cx="104" cy="116" r="9"/>
+    <circle cx="116" cy="116" r="9"/>
+    <path d="M94 98 Q92 126 104 138 L116 138 Q128 126 126 98 Q118 106 110 106 Q102 106 94 98 Z"/>
+  </symbol>
+
+  <!-- D: Back lat spread — πλάτη σε V, χέρια ψηλά -->
+  <symbol id="flex-lat" viewBox="0 0 220 150">
+    <circle cx="110" cy="24" r="10"/>
+    <circle cx="57" cy="15" r="8"/>
+    <circle cx="163" cy="15" r="8"/>
+    <path d="M57 15 L72 40" stroke="currentColor" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <path d="M163 15 L148 40" stroke="currentColor" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <circle cx="75" cy="45" r="14"/>
+    <circle cx="145" cy="45" r="14"/>
+    <circle cx="86" cy="58" r="15"/>
+    <circle cx="134" cy="58" r="15"/>
+    <path d="M72 52 Q110 40 148 52 Q168 74 148 102 Q132 122 120 134 L100 134 Q88 122 72 102 Q52 74 72 52 Z"/>
+  </symbol>
+</defs></svg>
+
+<h1>Σφραγίδα Ιστορικού — σιλουέτα bodybuilder</h1>
+<p class="intro">Αντικατάσταση του «ανθρωπάκου» πίσω από τον μετρητή προπονήσεων με σιλουέτα σε comic ύφος (φουσκωμένοι μύες, flex), πολύ πιο αχνή — σαν σκιά στο χαρτί. Παράλληλα η σφραγίδα μικραίνει: 430×205px → 350×165px, μικρότερος αριθμός. Όλες οι σιλουέτες είναι πρωτότυπα SVG (δικά μας, χωρίς θέμα αδειών). Κρατιέται το υπάρχον ink-wash φίλτρο για την υφή μελανιού. Νέες opacity: wash .055 / ink .085 (από .11 / .155).</p>
+
+<div class="variant">
+  <div class="variant-title"><span>A</span><h2>Πλάγιο flex — «η σκιά της δουλειάς»</h2></div>
+  <p class="variant-note">Πιο κοντά στη reference εικόνα: τεράστιο μπράτσο διπλωμένο δίπλα στο κεφάλι, όγκος στήθους, και το άλλο χέρι να «σέρνεται» χαμηλά. Οριζόντια σύνθεση — γεμίζει το πλάτος της σφραγίδας πίσω από τον αριθμό.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <svg class="stamp-shadow" viewBox="0 0 220 150"><use class="wash" href="#flex-side"/><use class="ink" href="#flex-side"/></svg>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="variant">
+  <div class="variant-title"><span>B</span><h2>Front double biceps</h2></div>
+  <p class="variant-note">Κλασική συμμετρική πόζα — και τα δύο χέρια ψηλά. Πιο «θριαμβευτική», κάθεται συμμετρικά πίσω από τον αριθμό.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <svg class="stamp-shadow" viewBox="0 0 220 150"><use class="wash" href="#flex-double"/><use class="ink" href="#flex-double"/></svg>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="variant">
+  <div class="variant-title"><span>C</span><h2>Most muscular («κάβουρας»)</h2></div>
+  <p class="variant-note">Σκυμμένος με τα χέρια σφιγμένα μπροστά, τραπεζοειδείς ψηλά. Η πιο «άγρια» πόζα — πολύ πυκνή μάζα, διαβάζεται καθαρά ακόμα και σε χαμηλό opacity.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <svg class="stamp-shadow" viewBox="0 0 220 150"><use class="wash" href="#flex-crab"/><use class="ink" href="#flex-crab"/></svg>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="variant">
+  <div class="variant-title"><span>D</span><h2>Back lat spread — V-taper</h2></div>
+  <p class="variant-note">Πλάτη από πίσω σε σχήμα V με τα χέρια ψηλά. Το πιο «γραφιστικό» σχήμα — καθαρό τρίγωνο, δένει με το βαρύ typography της σελίδας.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <svg class="stamp-shadow" viewBox="0 0 220 150"><use class="wash" href="#flex-lat"/><use class="ink" href="#flex-lat"/></svg>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="variant">
+  <div class="variant-title"><span>E</span><h2>Σύγκριση μεγέθους — τωρινό vs μικρότερο</h2></div>
+  <p class="variant-note">Πάνω: τωρινό μέγεθος (430×205, opacity .11/.155) με το τωρινό ανθρωπάκι-στυλ σκιά (εδώ με τη σιλουέτα Α για σύγκριση). Κάτω: προτεινόμενο μικρότερο (350×165, opacity .055/.085).</p>
+  <div class="hero-mock">
+    <div><h1>ΤΩΡΙΝΟ<br><em>ΜΕΓΕΘΟΣ</em></h1></div>
+    <div class="stamp current-size">
+      <svg class="stamp-shadow" viewBox="0 0 220 150"><use class="wash" href="#flex-side"/><use class="ink" href="#flex-side"/></svg>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="hero-mock">
+    <div><h1>ΝΕΟ<br><em>ΜΕΓΕΘΟΣ</em></h1></div>
+    <div class="stamp">
+      <svg class="stamp-shadow" viewBox="0 0 220 150"><use class="wash" href="#flex-side"/><use class="ink" href="#flex-side"/></svg>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="variant">
+  <div class="variant-title"><span>F</span><h2>Οι σιλουέτες σε πλήρες μελάνι (για έλεγχο σχήματος)</h2></div>
+  <p class="variant-note">Ίδιες σιλουέτες σε πλήρη ορατότητα — έτσι κρίνεται το σχέδιο πριν γίνει σκιά.</p>
+  <div class="opacity-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="opacity-cell"><figure><svg viewBox="0 0 220 150"><use href="#flex-side"/></svg><figcaption>A — Πλάγιο flex</figcaption></figure></div>
+    <div class="opacity-cell"><figure><svg viewBox="0 0 220 150"><use href="#flex-double"/></svg><figcaption>B — Double biceps</figcaption></figure></div>
+    <div class="opacity-cell"><figure><svg viewBox="0 0 220 150"><use href="#flex-crab"/></svg><figcaption>C — Most muscular</figcaption></figure></div>
+    <div class="opacity-cell"><figure><svg viewBox="0 0 220 150"><use href="#flex-lat"/></svg><figcaption>D — Lat spread</figcaption></figure></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Σχέδια — Απόκομα χαρτιού για οδηγίες</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Playpen+Sans:wght@400;600&family=Caveat:wght@500;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --scrap:#f6f1e2; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+h1,h2,h3 { font-family:"Roboto Slab",serif; text-transform:uppercase; margin:0; }
+.page-head { padding:40px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.page-head p { max-width:660px; color:var(--muted); line-height:1.5; }
+.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.variant { padding:50px 5vw 60px; border-bottom:1px solid var(--line); }
+.variant-label { display:flex; align-items:baseline; gap:16px; margin-bottom:8px; }
+.variant-label b { font:700 1.3rem "Roboto Slab"; }
+.variant-label span { color:var(--muted); font-weight:800; font-size:.7rem; letter-spacing:.18em; }
+.variant > p.desc { max-width:640px; color:var(--muted); line-height:1.5; margin:0 0 30px; }
+.stage { border:1px dashed var(--line); padding:45px 40px 120px; position:relative; min-height:340px; }
+.stage.dark { background:var(--ink); color:var(--paper); }
+.stage h1 { font-size:clamp(2rem,4vw,3.2rem); line-height:.95; }
+.stage h1 em { color:var(--orange); font-style:normal; }
+.stage.dark h1 em { color:var(--gold); }
+.note { margin-top:26px; color:var(--muted); font-size:.85rem; max-width:600px; line-height:1.5; }
+footer { padding:35px 5vw; color:var(--muted); font-size:.8rem; letter-spacing:.14em; font-weight:800; }
+.hidden { display:none !important; }
+
+/* ---------- η υπάρχουσα σφραγίδα (αμετάβλητη) ---------- */
+.info-stamp { position:absolute; right:40px; top:34px; z-index:6; width:48px; height:48px; padding:0; background:transparent; border:2.5px solid currentColor; border-radius:50%; color:rgba(138,106,28,.6); font:700 1.35rem "Roboto Slab"; display:grid; place-items:center; cursor:pointer; transform:rotate(-8deg); mix-blend-mode:multiply; transition:color .25s, transform .25s; }
+.info-stamp::before { content:""; position:absolute; inset:3px; border:1px solid currentColor; border-radius:50%; opacity:.65; }
+.info-stamp:hover, .info-stamp[aria-expanded="true"] { color:var(--orange); transform:rotate(-4deg); }
+.stage.dark .info-stamp { color:rgba(201,162,39,.6); mix-blend-mode:normal; }
+.stage.dark .info-stamp:hover, .stage.dark .info-stamp[aria-expanded="true"] { color:var(--gold); }
+
+/* κοινή θέση αποκόμματος */
+.scrap { position:absolute; right:40px; top:96px; z-index:7; width:min(360px,86%); }
+
+/* =========================================================
+   A. ΣΚΙΣΜΕΝΟ ΑΠΟΚΟΜΑ ΜΕ ΧΑΡΤΟΤΑΙΝΙΑ
+   ========================================================= */
+.scrap-torn { background:var(--scrap); color:var(--ink); padding:30px 26px 26px; transform:rotate(-1.6deg); filter:drop-shadow(5px 8px 10px rgba(40,32,18,.3));
+  clip-path:polygon(1.5% 3%, 8% 0.5%, 16% 2.5%, 25% 0.8%, 34% 2.8%, 44% 0.5%, 53% 2.2%, 63% 0.6%, 72% 2.6%, 82% 0.4%, 91% 2.4%, 99% 1%, 98.5% 12%, 100% 24%, 98.6% 37%, 99.8% 51%, 98.4% 64%, 100% 77%, 98.6% 89%, 99.4% 98%, 91% 97%, 82% 99.4%, 72% 97.2%, 62% 99.6%, 52% 97.4%, 42% 99.5%, 32% 97.3%, 22% 99.6%, 12% 97.5%, 4% 99.3%, 0.8% 97.6%, 1.8% 86%, 0.2% 74%, 1.6% 61%, 0.4% 48%, 1.8% 35%, 0.3% 22%, 1.6% 10%); }
+.scrap-torn::after { content:""; position:absolute; inset:0; pointer-events:none; background:
+  repeating-linear-gradient(0deg, transparent 0 27px, rgba(122,100,50,.14) 27px 28px);
+  background-position:0 66px; clip-path:inherit; }
+.scrap-torn .tape { position:absolute; top:-12px; left:50%; width:96px; height:26px; transform:translateX(-50%) rotate(-2.5deg); background:rgba(201,162,39,.32); border-left:1px dashed rgba(138,106,28,.35); border-right:1px dashed rgba(138,106,28,.35); box-shadow:0 1px 3px rgba(40,32,18,.15); }
+.scrap-torn h3 { font-family:"Caveat",cursive; text-transform:none; font-size:1.5rem; color:var(--orange); border-bottom:2px solid rgba(138,106,28,.35); display:inline-block; padding-bottom:2px; margin-bottom:10px; transform:rotate(-.6deg); }
+.scrap-torn ol { margin:0; padding:0; list-style:none; position:relative; z-index:1; }
+.scrap-torn li { display:flex; gap:12px; align-items:baseline; font-family:"Caveat",cursive; font-size:1.28rem; line-height:28px; min-height:28px; }
+.scrap-torn li b { flex:none; color:var(--orange); font:700 .85rem "Roboto Slab"; }
+.scrap-torn small { display:block; margin-top:8px; font:800 .6rem "Alegreya Sans"; letter-spacing:.18em; color:var(--muted); }
+
+/* =========================================================
+   B. ΦΥΛΛΟ ΣΗΜΕΙΩΜΑΤΑΡΙΟΥ (σπιράλ + κόκκινο περιθώριο)
+   ========================================================= */
+.scrap-notebook { background:#faf6ea; color:var(--ink); padding:24px 22px 20px 56px; transform:rotate(1.1deg); box-shadow:6px 9px 16px rgba(40,32,18,.28); border-radius:2px;
+  background-image:
+    linear-gradient(90deg, transparent 42px, rgba(160,60,50,.5) 42px, rgba(160,60,50,.5) 43px, transparent 43px),
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(90,110,160,.25) 27px 28px);
+  background-position:0 0, 0 14px; }
+.scrap-notebook::before { content:""; position:absolute; left:12px; top:18px; bottom:18px; width:14px;
+  background:radial-gradient(circle 6px at 7px 10px, var(--paper-dark) 5px, rgba(40,32,18,.35) 6px, transparent 7px);
+  background-size:14px 44px; background-repeat:repeat-y; }
+.scrap-notebook h3 { font-family:"Playpen Sans",cursive; text-transform:none; font-size:1.05rem; color:#a03c32; margin-bottom:12px; }
+.scrap-notebook ol { margin:0; padding:0; list-style:none; }
+.scrap-notebook li { font-family:"Playpen Sans",cursive; font-size:.92rem; line-height:28px; display:flex; gap:10px; align-items:baseline; }
+.scrap-notebook li b { flex:none; font:600 .8rem "Playpen Sans"; color:#a03c32; }
+
+/* =========================================================
+   C. POST-IT ΜΕ ΤΣΑΛΑΚΩΜΕΝΗ ΓΩΝΙΑ
+   ========================================================= */
+.scrap-postit { background:linear-gradient(160deg, #f3e6b5, #ecd98f); color:#4a3d18; padding:26px 24px 20px; transform:rotate(-2.2deg); box-shadow:4px 10px 14px rgba(40,32,18,.3); }
+.scrap-postit::after { content:""; position:absolute; right:0; bottom:0; width:0; height:0; border-style:solid; border-width:0 0 34px 34px; border-color:transparent transparent rgba(40,32,18,.18) transparent; filter:drop-shadow(-2px -2px 2px rgba(40,32,18,.12)); }
+.scrap-postit::before { content:""; position:absolute; top:10px; left:50%; width:11px; height:11px; border-radius:50%; transform:translateX(-50%); background:radial-gradient(circle at 35% 30%, #d9524a, #7a2f1e); box-shadow:0 2px 3px rgba(40,32,18,.4); }
+.scrap-postit h3 { font-family:"Caveat",cursive; text-transform:none; font-size:1.45rem; margin-bottom:8px; }
+.scrap-postit ul { margin:0; padding:0; list-style:none; }
+.scrap-postit li { font-family:"Caveat",cursive; font-size:1.25rem; line-height:1.35; padding:5px 0 5px 26px; position:relative; }
+.scrap-postit li::before { content:""; position:absolute; left:2px; top:12px; width:12px; height:12px; border:2px solid rgba(74,61,24,.65); transform:rotate(-3deg); }
+.scrap-postit li.done::after { content:"✓"; position:absolute; left:3px; top:2px; font:700 1.15rem "Caveat"; color:#7a2f1e; }
+
+/* =========================================================
+   D. ΑΠΟΔΕΙΞΗ ΓΥΜΝΑΣΤΗΡΙΟΥ (receipt)
+   ========================================================= */
+.scrap-receipt { width:min(300px,80%); background:#fbf8ee; color:#2b2718; padding:20px 20px 14px; transform:rotate(1.4deg); box-shadow:5px 8px 14px rgba(40,32,18,.28); font-family:"Special Elite",monospace;
+  --zz:12px;
+  clip-path:polygon(0 6px, 4% 0, 8% 6px, 12% 0, 16% 6px, 20% 0, 24% 6px, 28% 0, 32% 6px, 36% 0, 40% 6px, 44% 0, 48% 6px, 52% 0, 56% 6px, 60% 0, 64% 6px, 68% 0, 72% 6px, 76% 0, 80% 6px, 84% 0, 88% 6px, 92% 0, 96% 6px, 100% 0, 100% calc(100% - 6px), 96% 100%, 92% calc(100% - 6px), 88% 100%, 84% calc(100% - 6px), 80% 100%, 76% calc(100% - 6px), 72% 100%, 68% calc(100% - 6px), 64% 100%, 60% calc(100% - 6px), 56% 100%, 52% calc(100% - 6px), 48% 100%, 44% calc(100% - 6px), 40% 100%, 36% calc(100% - 6px), 32% 100%, 28% calc(100% - 6px), 24% 100%, 20% calc(100% - 6px), 16% 100%, 12% calc(100% - 6px), 8% 100%, 4% calc(100% - 6px), 0 100%); }
+.scrap-receipt h3 { font-family:inherit; font-size:.85rem; letter-spacing:.14em; text-align:center; border-bottom:1px dashed rgba(43,39,24,.5); padding-bottom:10px; margin-bottom:10px; }
+.scrap-receipt ol { margin:0; padding:0; list-style:none; }
+.scrap-receipt li { display:flex; gap:10px; font-size:.78rem; line-height:1.5; padding:5px 0; border-bottom:1px dotted rgba(43,39,24,.25); }
+.scrap-receipt li:last-of-type { border-bottom:0; }
+.scrap-receipt li b { flex:none; font-weight:400; }
+.scrap-receipt .total { border-top:1px dashed rgba(43,39,24,.5); margin-top:8px; padding-top:8px; font-size:.72rem; letter-spacing:.18em; text-align:center; }
+
+/* =========================================================
+   E. ΚΑΡΤΕΛΑ ΑΡΧΕΙΟΥ ΜΕ ΣΥΝΔΕΤΗΡΑ (index card)
+   ========================================================= */
+.scrap-card { background:#f8f3e4; color:var(--ink); padding:22px 24px 18px; transform:rotate(-.8deg); box-shadow:6px 9px 0 rgba(138,106,28,.3), 6px 9px 14px rgba(40,32,18,.18); border:1px solid rgba(138,106,28,.3); border-radius:3px;
+  background-image:linear-gradient(0deg, transparent 0, transparent calc(100% - 58px), rgba(138,106,28,.5) calc(100% - 58px), rgba(138,106,28,.5) calc(100% - 56px), transparent calc(100% - 56px)),
+  repeating-linear-gradient(0deg, transparent 0 25px, rgba(122,100,50,.18) 25px 26px);
+  background-position:0 0, 0 8px; }
+.scrap-card::before { content:""; position:absolute; top:-14px; left:26px; width:22px; height:48px; border:3px solid rgba(120,120,125,.85); border-radius:11px/14px; border-bottom-color:transparent; transform:rotate(4deg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); }
+.scrap-card h3 { font-size:.82rem; letter-spacing:.16em; color:var(--orange); margin-bottom:14px; }
+.scrap-card ol { margin:0; padding:0; list-style:none; }
+.scrap-card li { display:grid; grid-template-columns:24px 1fr; gap:10px; font-family:"Playpen Sans",cursive; font-size:.9rem; line-height:26px; }
+.scrap-card li b { font:700 .78rem "Roboto Slab"; color:var(--orange); line-height:26px; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <p class="eyebrow">DESIGNS / ΑΠΟΚΟΜΑ ΟΔΗΓΙΩΝ</p>
+  <h1>Απόκομα χαρτιού με βήματα</h1>
+  <p>Πέντε προτάσεις για το panel που ανοίγει η σφραγίδα (i). Η σφραγίδα μένει ως έχει — αλλάζει μόνο το «χαρτί» που εμφανίζεται. Κάθε mockup λειτουργεί: πάτησε τη σφραγίδα. Το ίδιο στυλ θα εφαρμοστεί ενιαία σε Καταγραφή, Πρόγραμμα, Πρόοδο και Προφίλ.</p>
+</header>
+
+<!-- A -->
+<section class="variant">
+  <div class="variant-label"><b>Α. Σκισμένο απόκομα</b><span>TORN SCRAP + ΧΑΡΤΟΤΑΙΝΙΑ</span></div>
+  <p class="desc">Κομμάτι χαρτί σκισμένο στο χέρι, κολλημένο με χαρτοταινία. Αχνές γραμμές τετραδίου, χειρόγραφη γραφή (Caveat), αριθμοί βημάτων τυπωμένοι. Το πιο «gym logbook» απ' όλα.</p>
+  <div class="stage">
+    <h1>ΣΗΜΕΡΑ<br><em>ΜΕΤΡΑΕΙ.</em></h1>
+    <button class="info-stamp" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+    <aside class="scrap scrap-torn hidden">
+      <span class="tape"></span>
+      <h3>Βήματα καταγραφής</h3>
+      <ol>
+        <li><b>01</b><span>Διάλεξε ημερομηνία προπόνησης</span></li>
+        <li><b>02</b><span>«Από το πρόγραμμα» ή «Ελεύθερη»</span></li>
+        <li><b>03</b><span>Γράψε κιλά και επαναλήψεις σε κάθε σετ</span></li>
+        <li><b>04</b><span>Πάτα «Ολοκλήρωση» — πάει στο Ιστορικό</span></li>
+      </ol>
+      <small>ΚΑΤΑΓΡΑΦΗ / HOW-TO</small>
+    </aside>
+  </div>
+</section>
+
+<!-- B -->
+<section class="variant">
+  <div class="variant-label"><b>Β. Φύλλο σημειωματάριου</b><span>SPIRAL NOTEBOOK PAGE</span></div>
+  <p class="desc">Σελίδα από σπιράλ μπλοκ: τρύπες αριστερά, κόκκινο περιθώριο, γαλάζιες γραμμές. Γραφή Playpen Sans — πιο «καθαρό» χειρόγραφο, καλύτερη αναγνωσιμότητα σε μικρά μεγέθη.</p>
+  <div class="stage">
+    <h1>ΧΤΙΣΕ ΤΟ<br><em>ΠΛΑΝΟ ΣΟΥ.</em></h1>
+    <button class="info-stamp" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+    <aside class="scrap scrap-notebook hidden">
+      <h3>Πρόγραμμα — βήματα</h3>
+      <ol>
+        <li><b>1.</b><span>Νέο πρόγραμμα: όνομα + μικρόκυκλος 3–10 ημερών</span></li>
+        <li><b>2.</b><span>Πρόσθεσε προπονήσεις ημέρας με ασκήσεις και sets</span></li>
+        <li><b>3.</b><span>Το ★ δείχνει το ενεργό — αυτό ανοίγει στην Καταγραφή</span></li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- C -->
+<section class="variant">
+  <div class="variant-label"><b>Γ. Post-it με πινέζα</b><span>STICKY NOTE + CHECKBOXES</span></div>
+  <p class="desc">Κίτρινο αυτοκόλλητο χαρτάκι καρφιτσωμένο με πινέζα, τσαλακωμένη γωνία κάτω δεξιά. Τα βήματα ως checklist με κουτάκια — το πρώτο ήδη τσεκαρισμένο για «ζωντανή» αίσθηση.</p>
+  <div class="stage dark">
+    <h1>ΔΕΣ ΤΗΝ<br><em>ΠΟΡΕΙΑ ΣΟΥ.</em></h1>
+    <button class="info-stamp" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+    <aside class="scrap scrap-postit hidden">
+      <h3>Πρόοδος — τι κάνω εδώ;</h3>
+      <ul>
+        <li class="done">Διάλεξε άσκηση από τη λίστα</li>
+        <li>Δες το γράφημα βάρους ανά προπόνηση</li>
+        <li>Έλεγξε τα personal bests σου</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<!-- D -->
+<section class="variant">
+  <div class="variant-label"><b>Δ. Απόδειξη γυμναστηρίου</b><span>RECEIPT / TICKET</span></div>
+  <p class="desc">Στενή χάρτινη απόδειξη με ζιγκ-ζαγκ κομμένες άκρες και γραφομηχανή (Special Elite). Παίζει με το retro ύφος της εφαρμογής — «η απόδειξη ότι ήρθες».</p>
+  <div class="stage">
+    <h1>ΣΗΜΕΡΑ<br><em>ΜΕΤΡΑΕΙ.</em></h1>
+    <button class="info-stamp" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+    <aside class="scrap scrap-receipt hidden">
+      <h3>* ΚΑΤΑΓΡΑΦΗ — ΟΔΗΓΙΕΣ *</h3>
+      <ol>
+        <li><b>01</b><span>Ημερομηνια προπονησης</span></li>
+        <li><b>02</b><span>Προγραμμα ή ελευθερη</span></li>
+        <li><b>03</b><span>Κιλα + επαναληψεις ανα σετ</span></li>
+        <li><b>04</b><span>Ολοκληρωση → Ιστορικο</span></li>
+      </ol>
+      <p class="total">*** EARN IT ***</p>
+    </aside>
+  </div>
+</section>
+
+<!-- E -->
+<section class="variant">
+  <div class="variant-label"><b>Ε. Καρτέλα αρχείου</b><span>INDEX CARD + ΣΥΝΔΕΤΗΡΑΣ</span></div>
+  <p class="desc">Καρτέλα ευρετηρίου πιασμένη με συνδετήρα. Πιο «τακτική» από το σκισμένο χαρτί: τυπωμένος τίτλος, χειρόγραφα βήματα πάνω σε γραμμές. Ισορροπία retro και ευανάγνωστου.</p>
+  <div class="stage dark">
+    <h1>ΤΟ ΠΡΟΦΙΛ<br><em>ΣΟΥ.</em></h1>
+    <button class="info-stamp" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+    <aside class="scrap scrap-card hidden">
+      <h3>ΠΡΟΦΙΛ / ΒΗΜΑΤΑ</h3>
+      <ol>
+        <li><b>01</b><span>Συμπλήρωσε σωματομετρικά στοιχεία</span></li>
+        <li><b>02</b><span>Κάνε εξαγωγή backup των δεδομένων</span></li>
+        <li><b>03</b><span>Επαναφορά από αρχείο όποτε χρειαστεί</span></li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<footer>LOGBOOK — DESIGN EXPLORATIONS / INSTRUCTIONS SCRAP</footer>
+
+<script>
+document.querySelectorAll('.info-stamp').forEach(btn => {
+  const scrap = btn.parentElement.querySelector('.scrap');
+  btn.addEventListener('click', () => {
+    const open = scrap.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', String(!open));
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StyleSeed Design Review — Logbook</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#6d6551; --line:#b6ad97; --bad:#9b3213; --ok:#64705a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 "Segoe UI", system-ui, sans-serif; padding:40px clamp(18px,5vw,70px) 90px; }
+  h1 { font-size:clamp(1.7rem,4vw,2.6rem); letter-spacing:-.02em; margin:0; text-transform:uppercase; }
+  h1 em { color:var(--orange); font-style:normal; }
+  .sub { color:var(--muted); margin:6px 0 34px; font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+  h2 { margin:54px 0 6px; font-size:1.25rem; text-transform:uppercase; border-bottom:3px solid var(--ink); padding-bottom:8px; }
+  h2 small { color:var(--muted); font-size:.7rem; letter-spacing:.12em; margin-left:10px; }
+  h3 { margin:26px 0 8px; font-size:1rem; }
+  .score-band { display:inline-grid; place-items:center; width:86px; height:86px; border:3px solid var(--orange); border-radius:50%; transform:rotate(-6deg); color:var(--orange); font-weight:800; font-size:1.5rem; }
+  .score-head { display:flex; align-items:center; gap:26px; margin:20px 0 10px; }
+  table { width:100%; border-collapse:collapse; margin:14px 0 8px; background:rgba(255,255,255,.35); }
+  th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; font-size:.9rem; }
+  th { font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  td b { font-variant-numeric:tabular-nums; }
+  .finding { border:1px solid var(--line); border-left:4px solid var(--orange); background:rgba(255,255,255,.4); padding:14px 16px; margin:12px 0; }
+  .finding.minor { border-left-color:var(--line); }
+  .finding .where { display:block; color:var(--muted); font-size:.72rem; font-weight:700; letter-spacing:.05em; margin-bottom:4px; }
+  .fix { margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:.9rem; }
+  .fix::before { content:"ΠΡΟΤΑΣΗ → "; color:var(--ok); font-weight:800; font-size:.7rem; letter-spacing:.1em; }
+  code, pre { font-family:Consolas, monospace; font-size:.82rem; background:#e6dec9; padding:1px 5px; border-radius:2px; }
+  pre { display:block; padding:12px 14px; overflow-x:auto; border-left:3px solid var(--ink); margin:8px 0 0; white-space:pre; }
+  .tag { display:inline-block; padding:2px 7px; border:1px solid currentColor; font-size:.62rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-right:6px; }
+  .tag.high { color:var(--bad); } .tag.med { color:var(--orange); } .tag.low { color:var(--muted); }
+  .swatch { display:inline-block; width:14px; height:14px; vertical-align:-2px; border:1px solid var(--ink); margin-right:4px; }
+  .prio li { margin:8px 0; }
+  .prio b { color:var(--orange); }
+</style>
+</head>
+<body>
+
+<h1>StyleSeed <em>Design Review</em></h1>
+<p class="sub">Logbook — training journal · index.html + styles.css + app.js · 2026-07</p>
+
+<div class="score-head">
+  <span class="score-band">72</span>
+  <div>
+    <strong>72 / 100 — Βαθμίδα C.</strong><br>
+    Η αισθητική «Golden Era εργαστήριο/χαρτί» είναι δυνατή και <em>δεν</em> μοιάζει AI-generated —
+    το πρόβλημα δεν είναι η ταυτότητα, είναι η <strong>συνέπεια της εφαρμογής της</strong>:
+    διπλοί accent τόνοι, hardcoded αποχρώσεις, μικροσκοπική τυπογραφία κάτω από όριο αναγνωσιμότητας,
+    ένα toast για όλα (και τα λάθη «σφραγίζονται» ως RECORDED), και CSS που έχει χτιστεί σε στρώματα-εποχές που αλληλοπατιούνται.
+  </div>
+</div>
+
+<table>
+  <tr><th>Κατηγορία</th><th>Σκορ</th><th>Κύρια ευρήματα</th></tr>
+  <tr><td>Coherence</td><td><b>15/20</b></td><td>gold + orange ως δύο accents χωρίς γραπτό κανόνα· 3 «γλώσσες» σκιών (hard offset, soft blur, glow)</td></tr>
+  <tr><td>Color discipline</td><td><b>8/16</b></td><td>--oxblood ≡ --orange (ίδια τιμή)· ~15× hardcoded #3d3828 κ.ά.· --muted κάτω από AA σε micro μεγέθη</td></tr>
+  <tr><td>Hierarchy & typography</td><td><b>12/16</b></td><td>δεκάδες αυθαίρετα μεγέθη .42–.9rem χωρίς κλίμακα· .42rem = 6.7px</td></tr>
+  <tr><td>Layout & spacing</td><td><b>10/12</b></td><td>αποστάσεις εκτός grid (13/17/21/26px) — «τυπογραφικά» αποδεκτό αλλά ασυστηματοποίητο</td></tr>
+  <tr><td>States</td><td><b>8/12</b></td><td>empty states με ωραία φωνή αλλά χωρίς κουμπί ενέργειας· λάθη περνούν από success-styled toast</td></tr>
+  <tr><td>UX writing</td><td><b>10/12</b></td><td>εξαιρετική φωνή («Η δουλειά καταγράφηκε.») — αλλά «LOGBOOK / RECORDED» πάνω από μηνύματα λάθους</td></tr>
+  <tr><td>Motion & polish</td><td><b>9/12</b></td><td>reduced-motion καλύπτει μέρος μόνο των animations· χάρτης: γραμμή βάρους σχεδόν αόρατη (opacity .38)</td></tr>
+</table>
+
+<h2>Fix first <small>ταξινομημένα κατά κέρδος σκορ</small></h2>
+<ol class="prio">
+  <li><b>+6</b> — Σύστημα χρωματικών tokens: σβήσε το διπλό <code>--oxblood</code>, αντικατέστησε τα επαναλαμβανόμενα hex με tokens, σκούρυνε το <code>--muted</code>.</li>
+  <li><b>+4</b> — Toast σε 2 παραλλαγές (recorded / error) — τα λάθη να μη «σφραγίζονται» ως RECORDED.</li>
+  <li><b>+4</b> — Τυπογραφική κλίμακα + ελάχιστο μέγεθος 10px (.625rem).</li>
+  <li><b>+3</b> — CTA κουμπιά στα empty states (Ιστορικό → «Ξεκίνα καταγραφή», Επίβλεψη → «Άνοιξε την Καταγραφή»).</li>
+  <li><b>+3</b> — Καθολικό reduced-motion guard.</li>
+  <li><b>+2</b> — Κανόνας σκιών: «χάρτινα αντικείμενα = soft blur, controls = hard offset» — και εφαρμογή παντού.</li>
+</ol>
+<p>Εκτίμηση μετά τις 1–4: <strong>~86 / 100 (B)</strong>.</p>
+
+<!-- ============================================================ -->
+<h2>Α. Καθολικά (design system)</h2>
+
+<div class="finding">
+  <span class="tag high">HIGH</span><strong>Διπλό token: <code>--oxblood</code> = <code>--orange</code> = #8a6a1c</strong>
+  <span class="where">styles.css:1</span>
+  Δύο ονόματα, μία τιμή. Ο κώδικας «νομίζει» ότι έχει τρίτο χρώμα (toast, personal-bests, progress-alert χρησιμοποιούν oxblood) ενώ στην πράξη είναι το orange. Επιπλέον gold <span class="swatch" style="background:#c9a227"></span>#c9a227 και orange <span class="swatch" style="background:#8a6a1c"></span>#8a6a1c εναλλάσσονται ως accent χωρίς κανόνα.
+  <div class="fix">Κράτα τον κανόνα που ήδη <em>σχεδόν</em> ισχύει και γράψε τον ως token: <b>orange = accent πάνω σε χαρτί, gold = accent πάνω σε μελάνι (σκούρο φόντο)</b>. Σβήσε το <code>--oxblood</code> ή δώσε του πραγματική τιμή (π.χ. βαθύ κόκκινο-καφέ #7a3325 για destructive/PR).
+  <pre>:root {
+  --accent: #8a6a1c;        /* σε ανοιχτό φόντο (πρώην orange/oxblood) */
+  --accent-on-ink: #c9a227; /* σε σκούρο φόντο (πρώην gold) */
+  --danger: #7a3325;        /* διαγραφές, λάθη */
+}</pre></div>
+</div>
+
+<div class="finding">
+  <span class="tag high">HIGH</span><strong>Hardcoded hex όπου υπάρχει (ή λείπει) token</strong>
+  <span class="where">styles.css:14, 236-241, 263, 281-285 κ.ά.</span>
+  Το <code>#3d3828</code> (γραμμές πάνω σε ink) επαναλαμβάνεται ~15 φορές· επίσης <code>#b9af96</code>, <code>#a89f86</code>, <code>#cfc6ac</code>, <code>#918873</code>, <code>#625b48</code>, <code>#8f866e</code> — όλα «muted πάνω σε μελάνι» σε 6 παραλλαγές. Το glow του reward ring χρησιμοποιεί <code>#ffd447</code> (styles.css:319) — τέταρτη χρυσή απόχρωση.
+  <div class="fix">Τρία νέα tokens και μαζική αντικατάσταση — μειώνει τις «σκόρπιες» αποχρώσεις από ~10 σε 3:
+  <pre>:root {
+  --ink-line:  #3d3828;  /* διαχωριστικά σε σκούρο φόντο */
+  --ink-muted: #a89f86;  /* δευτερεύον κείμενο σε σκούρο φόντο */
+  --ink-faint: #6f695a;  /* micro-labels σε σκούρο φόντο */
+}</pre>
+  Το reward glow να γίνει <code>var(--accent-on-ink)</code> αντί για #ffd447.</div>
+</div>
+
+<div class="finding">
+  <span class="tag high">HIGH</span><strong>Contrast: το <code>--muted #7c745f</code> σε micro-μεγέθη πέφτει κάτω από AA</strong>
+  <span class="where">styles.css:1 + χρήσεις σε .55–.68rem (98, 127, 180, 384)</span>
+  #7c745f πάνω σε #efe8d8 ≈ 3.9:1 — κάτω από το 4.5:1 που απαιτεί το μικρό κείμενο, και χρησιμοποιείται σχεδόν αποκλειστικά σε <em>πολύ μικρό</em> uppercase (labels, hints, footers).
+  <div class="fix"><code>--muted: #6d6551</code> (≈4.8:1) — οπτικά σχεδόν ίδιο, περνάει AA. Σε σκούρο φόντο το <code>#8f866e</code> των day-tiles (styles.css:129) οριακά περνάει, αλλά ανέβασέ το στο --ink-muted για σιγουριά.</div>
+</div>
+
+<div class="finding">
+  <span class="tag med">MED</span><strong>Καμία τυπογραφική κλίμακα — και μεγέθη κάτω από όριο αναγνωσιμότητας</strong>
+  <span class="where">styles.css:284 (.42rem), 224 (.48rem), 281 (.5rem), 379 (.56rem) …</span>
+  Μετρήθηκαν 20+ διαφορετικά μεγέθη μεταξύ .42 και .9rem. Το .42rem = <b>6.7px</b> («VERSION» στο μενού) και το .48rem = 7.7px (PR badge) είναι πρακτικά μη αναγνώσιμα — και σε 800 weight uppercase με letter-spacing γίνονται μουτζούρα σε κινητό.
+  <div class="fix">Κλίμακα 6 βημάτων για τα micro/label μεγέθη με <b>δάπεδο τα 10px</b>:
+  <pre>:root {
+  --fs-micro: .625rem;  /* 10px — stamps, version, badges (πρώην .42–.58) */
+  --fs-label: .7rem;    /* 11px — labels, eyebrows (πρώην .6–.68) */
+  --fs-meta:  .78rem;   /* 12.5px — hints, meta (πρώην .7–.76) */
+}</pre>
+  Ό,τι σήμερα είναι &lt;.58rem ανεβαίνει στο --fs-micro. Το «στάμπα» ύφος διατηρείται — απλώς διαβάζεται.</div>
+</div>
+
+<div class="finding">
+  <span class="tag med">MED</span><strong>Τρεις «γλώσσες» σκιών χωρίς κανόνα</strong>
+  <span class="where">styles.css:26 (soft blur), 67 (hard offset 5px 5px 0), 128 (drop-shadow), 325 (glow)</span>
+  Hard offset στα κουμπιά/panels, soft blur στις «χάρτινες» κάρτες, drop-shadows στα βέλη, glow στα rewards. Καθεμία μόνη της δουλεύει· μαζί χωρίς κανόνα διασπούν τη συνοχή.
+  <div class="fix">Γράψε τον κανόνα που ήδη υπονοείται και εφάρμοσέ τον 100%: <b>φυσικά/χάρτινα αντικείμενα (κάρτες home, session page, info-panel) = μαλακή σκιά με blur · UI controls (κουμπιά, panels, dialogs) = hard offset χωρίς blur</b>. Παράβαση: το .confirm-dialog ορίζει <code>box-shadow:14px 14px 0 var(--orange)</code> και αμέσως μετά το μηδενίζει (styles.css:133→134 — νεκρός κώδικας, διάλεξε το ένα).</div>
+</div>
+
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>CSS αρχιτεκτονική: στρώματα-«εποχές» που αλληλοαναιρούνται</strong>
+  <span class="where">styles.css — .avatar-figure ορίζεται 3 φορές (262, 269, 274)· .profile-card 3 φορές (263, 296, 310)· .routine-manager/.routine-card 3 φορές (118, 390, 410+)</span>
+  Κάθε redesign προστέθηκε από κάτω αντί να αντικαταστήσει το προηγούμενο. Λειτουργεί, αλλά κάθε μελλοντική αλλαγή απαιτεί ανάγνωση 3 ορισμών, και τα «νεκρά» πρώτα στρώματα (π.χ. avatar-head/body/legs των 262) δεν χρησιμοποιούνται πια.
+  <div class="fix">Πέρασμα συγχώνευσης: ένας ορισμός ανά component, σβήσιμο των νεκρών (avatar full-body σύστημα, παλιό .routine-manager dark grid, πρώτο .profile-card). Καμία οπτική αλλαγή — μόνο μείωση ~20% του αρχείου και μία πηγή αλήθειας.</div>
+</div>
+
+<!-- ============================================================ -->
+<h2>Β. States & Feedback <small>toast, empty, errors</small></h2>
+
+<div class="finding">
+  <span class="tag high">HIGH</span><strong>Ένα toast για όλα — τα λάθη «σφραγίζονται» ως RECORDED</strong>
+  <span class="where">styles.css:231-232, app.js:784, 1163, 1255, 1276</span>
+  Το toast έχει μόνιμο prefix <code>content:"LOGBOOK / RECORDED"</code>. Όταν όμως καλείται με μήνυμα λάθους («Η ημερομηνία … δεν μπορεί να είναι μεταγενέστερη», «Δεν υπάρχει αρκετός χώρος για την εικόνα»), ο χρήστης βλέπει τη σφραγίδα επιτυχίας πάνω από το λάθος — αντιφατικό σήμα.
+  <div class="fix">Δεύτερο όρισμα στη <code>toast(message, kind)</code> και δύο παραλλαγές:
+  <pre>function toast(message, kind = 'recorded') {
+  const el = $('#toast');
+  el.textContent = message;
+  el.classList.toggle('toast-error', kind === 'error');
+  el.classList.add('show');
+  …
+}</pre>
+  <pre>.toast::before { content:"LOGBOOK / RECORDED"; }
+.toast.toast-error { background:var(--danger); border-left-color:var(--ink); }
+.toast.toast-error::before { content:"LOGBOOK / ΠΡΟΣΟΧΗ"; }</pre>
+  Κλήσεις λάθους (app.js:1163, 1255, 1276, 1320, 1347-1357, 1474) περνούν <code>'error'</code>.</div>
+</div>
+
+<div class="finding">
+  <span class="tag med">MED</span><strong>Empty states χωρίς επόμενη ενέργεια</strong>
+  <span class="where">app.js:673 (Ιστορικό), 726 (Επίβλεψη), 897 (κενό πρόγραμμα)</span>
+  Η φωνή είναι εξαιρετική («Η γραμμή εκκίνησης είναι εδώ.») αλλά σταματά εκεί — ο χρήστης πρέπει μόνος του να βρει πού πάει. Το empty της Επίβλεψης (l.726) είναι σκέτο κείμενο χωρίς καν τίτλο, ασύμβατο με τα άλλα δύο.
+  <div class="fix">Κουμπί-ενέργεια σε κάθε empty, με το υπάρχον secondary-button ύφος:
+  <pre>'&lt;div class="empty"&gt;&lt;strong&gt;Η γραμμή εκκίνησης είναι εδώ.&lt;/strong&gt;
+&lt;span&gt;Ολοκλήρωσε την πρώτη προπόνηση…&lt;/span&gt;
+&lt;button class="secondary-button" data-home-action="log" type="button"&gt;
+  Ξεκίνα καταγραφή ↗&lt;/button&gt;&lt;/div&gt;'</pre>
+  Αντίστοιχα στην Επίβλεψη: «Άνοιξε την Καταγραφή» + ενοποίηση με strong/span δομή.</div>
+</div>
+
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>Διπλός ορισμός χρωμάτων warning</strong>
+  <span class="where">styles.css:159 (#f7ddcf) → 250 (#e8dcc1) · 189 (#f7ddcf) → 251 (#e5d7b7)</span>
+  Τα .recording-warning και .progress-alert ορίζονται με ροζ φόντο και μετά ξαναβάφονται μπεζ πιο κάτω. Το ροζ δεν εμφανίζεται ποτέ — νεκρές τιμές που μπερδεύουν.
+  <div class="fix">Ένας ορισμός, μία τιμή· ιδανικά token <code>--warning-bg:#e8dcc1</code>.</div>
+</div>
+
+<!-- ============================================================ -->
+<h2>Γ. Ανά ενότητα</h2>
+
+<h3>ΑΡΧΙΚΗ (home) — η πιο δουλεμένη ενότητα</h3>
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>Σκιές home καρτών vs κουμπιών</strong>
+  <span class="where">styles.css:26, 40 (blur) vs 67, 72 (hard offset)</span>
+  Σωστό ως πρόθεση (χαρτί vs control) — απλώς να γίνει ρητός κανόνας (βλ. Α). Καμία άλλη ουσιαστική παρατήρηση: ιεραρχία, φωνή και εικαστική ταυτότητα είναι το δυνατότερο σημείο της εφαρμογής.
+</div>
+
+<h3>ΚΑΤΑΓΡΑΦΗ (log)</h3>
+<div class="finding">
+  <span class="tag med">MED</span><strong>Mode toggle χωρίς aria-pressed</strong>
+  <span class="where">index.html:139-140</span>
+  Τα «Από το πρόγραμμα / Ελεύθερη» δηλώνουν κατάσταση μόνο οπτικά (class active). Το language-picker (index.html:45-48) το κάνει σωστά με <code>aria-pressed</code> — ασυνέπεια μεταξύ ίδιων patterns.
+  <div class="fix"><code>aria-pressed="true/false"</code> στα mode-buttons και ενημέρωση στο toggle handler του app.js.</div>
+</div>
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>Ασυνεπές ύψος controls στο toolbar</strong>
+  <span class="where">styles.css:96 (input padding 13px) vs 109 (mode-button 13px 20px) vs 99 (set-row input 9px)</span>
+  Στο session-toolbar τα τρία controls (date input, toggle, select) ευθυγραμμίζονται με <code>align-items:end</code> αλλά έχουν διαφορετικά ύψη. <span class="fix" style="display:inline">Κοινό <code>min-height:46px</code> σε input/select/mode-button του toolbar.</span>
+</div>
+
+<h3>ΠΡΟΓΡΑΜΜΑ (plan)</h3>
+<div class="finding">
+  <span class="tag med">MED</span><strong>Carousel: τα πλαϊνά «κρυφά» tickets μένουν εστιάσιμα και ημι-κλικαμπλ</strong>
+  <span class="where">styles.css:461-465</span>
+  Οι κάρτες σε θέσεις ±1/±2 έχουν opacity .78/.42 αλλά τα κουμπιά τους (★, edit, delete) παραμένουν ενεργά και στο tab order — εύκολο κατά λάθος κλικ σε λάθος πρόγραμμα.
+  <div class="fix">Στο app.js, όταν <code>data-carousel-position ≠ "0"</code>: <code>inert</code> στην κάρτα (ή tabindex="-1" στα κουμπιά + pointer-events:none εκτός από click-to-center).</div>
+</div>
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>«00 TRAINING SPLITS» με μηδενικά</strong>
+  <span class="where">index.html:189</span>
+  Το αρχικό «00» πριν φορτώσει το JS διαβάζεται ως «μηδέν προγράμματα». <span class="fix" style="display:inline">Placeholder «—» ή απόκρυψη μέχρι το πρώτο render.</span>
+</div>
+
+<h3>ΙΣΤΟΡΙΚΟ (overview)</h3>
+<div class="finding">
+  <span class="tag med">MED</span><strong>Βέλη εβδομάδας: πιθανή αντιστροφή σήμανσης</strong>
+  <span class="where">index.html:232-234</span>
+  Το αριστερό βέλος (←) έχει <code>data-history-week-step="1"</code> και label «Προηγούμενη ημέρα», το δεξί (→) step="-1" «Επόμενη». Αν το step=1 πάει προς παλαιότερες μέρες, το mapping στέκει λογικά αλλά είναι εύθραυστο — έλεγξε ότι screen reader label, βέλος και πραγματική κατεύθυνση συμφωνούν, και μετονόμασε το attribute σε κάτι αυτονόητο (π.χ. <code>data-history-step="older/newer"</code>).
+</div>
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>Counter «0 καταγεγραμμένες προπονήσεις» ως μόνιμη σφραγίδα</strong>
+  <span class="where">index.html:223-228</span>
+  Με 0 προπονήσεις η σφραγίδα-στάμπα με το «0» δείχνει σαν παράσημο για το τίποτα. <span class="fix" style="display:inline">Κρύψε τη στάμπα κάτω από 1 καταγραφή — το empty state της λίστας καλύπτει ήδη την περίπτωση.</span>
+</div>
+
+<h3>ΕΠΙΒΛΕΨΗ (progress)</h3>
+<div class="finding">
+  <span class="tag med">MED</span><strong>Η κύρια γραμμή βάρους είναι σχεδόν αόρατη — και ο θρύλος λέει ψέματα</strong>
+  <span class="where">styles.css:186 (.chart-line opacity:.38, stroke 2.5px) vs 163 (legend: συμπαγές orange 3px)</span>
+  Η πιο σημαντική σειρά του γραφήματος (βάρος) σβήνει στο 38% πάνω σε ανοιχτό χαρτί, ενώ το swatch του θρύλου δείχνει συμπαγές πορτοκαλί. Οι βοηθητικές (reps, extra) με συμπαγή ink γίνονται οπτικά κυρίαρχες — αντεστραμμένη ιεραρχία.
+  <div class="fix"><code>.chart-line { opacity:.85; stroke-width:3; }</code> και οι δευτερεύουσες να πέσουν σε opacity .45. Το <code>#756f63</code> της extra σειράς (styles.css:165) να γίνει token.</div>
+</div>
+
+<h3>ΠΡΟΦΙΛ (profile)</h3>
+<div class="finding minor">
+  <span class="tag low">LOW</span><strong>Reward ring: νέα χρυσή απόχρωση + glow εκτός συστήματος</strong>
+  <span class="where">styles.css:319 (#ffd447 + drop-shadow glow)</span>
+  Το #ffd447 είναι τέταρτο «χρυσό» και το glow είναι η μόνη λάμψη στην εφαρμογή. <span class="fix" style="display:inline">Στάδια με <code>var(--accent-on-ink)</code>· αν χρειάζεται έμφαση στο στάδιο 4, πάχυνε το stroke (4→6) αντί για glow.</span>
+</div>
+
+<!-- ============================================================ -->
+<h2>Δ. Motion & reduced-motion</h2>
+<div class="finding">
+  <span class="tag med">MED</span><strong>Το prefers-reduced-motion καλύπτει ~μισά animations</strong>
+  <span class="where">styles.css:143, 354, 407, 433, 472 (καλύπτονται) — ΔΕΝ καλύπτονται: 130 (week-shift), 128 (arrows), 131 (session-card transform), 105 (toast), 135 (slide/reveal keyframes), 3 (scroll-behavior)</span>
+  Οι μεγαλύτερες κινήσεις (wipe, dialog) προστατεύονται, αλλά week-strip slides, card translations και smooth scroll τρέχουν πάντα.
+  <div class="fix">Ένας καθολικός guard στο τέλος του αρχείου αντί για ad-hoc εξαιρέσεις:
+  <pre>@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior:auto; }
+  *, *::before, *::after {
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}</pre>
+  Και σβήσιμο των 5 σκόρπιων guards — λιγότερος κώδικας, πλήρης κάλυψη.</div>
+</div>
+
+<p class="sub" style="margin-top:60px">StyleSeed rubric · review-only — καμία αλλαγή δεν έχει εφαρμοστεί στον κώδικα.</p>
+</body>
+</html>

@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logbook — Aesthetic Audit & Directions</title>
+  <style>
+    :root {
+      --ink: #17150f;
+      --ink-2: #302b20;
+      --paper: #f0e9d9;
+      --paper-2: #e2d7bf;
+      --paper-hi: #faf5e8;
+      --accent: #87661c;
+      --gold: #c7a23a;
+      --danger: #783426;
+      --muted: #675f4d;
+      --line: #b7ad96;
+      --green: #52624d;
+      --shadow-paper: 0 12px 28px rgba(35, 29, 19, .15);
+      --shadow-control: 5px 5px 0 rgba(23, 21, 15, .16);
+      --radius: 2px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(199, 162, 58, .08), transparent 26rem),
+        var(--paper);
+      color: var(--ink);
+      font: 16px/1.55 "Segoe UI", system-ui, sans-serif;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      opacity: .08;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+    }
+    a { color: inherit; }
+    code {
+      padding: .12rem .35rem;
+      background: rgba(23, 21, 15, .08);
+      font: .86em Consolas, monospace;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; }
+    h1 {
+      max-width: 950px;
+      margin-bottom: 18px;
+      font-size: clamp(2.8rem, 8vw, 7rem);
+      line-height: .87;
+      letter-spacing: -.065em;
+      text-transform: uppercase;
+    }
+    h1 em { color: var(--accent); font-style: normal; }
+    h2 {
+      margin-bottom: 24px;
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      line-height: 1;
+      letter-spacing: -.035em;
+    }
+    h3 { margin-bottom: 8px; font-size: 1.15rem; }
+    .eyebrow {
+      margin-bottom: 14px;
+      color: var(--accent);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+    .muted { color: var(--muted); }
+    .page {
+      width: min(1260px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+    .hero {
+      min-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 0 54px;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-copy {
+      max-width: 740px;
+      margin: 0 0 34px 4px;
+      padding-left: 18px;
+      border-left: 3px solid var(--accent);
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+    }
+    .hero-meta {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 680px);
+      gap: 24px;
+      align-items: center;
+    }
+    .score {
+      width: 106px;
+      height: 106px;
+      display: grid;
+      place-items: center;
+      border: 3px double var(--accent);
+      border-radius: 50%;
+      color: var(--accent);
+      font: 700 1.7rem Georgia, serif;
+      transform: rotate(-5deg);
+    }
+    .score small {
+      display: block;
+      margin-top: -24px;
+      font: 800 .5rem "Segoe UI", sans-serif;
+      letter-spacing: .14em;
+    }
+    .jump {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 46px;
+    }
+    .jump a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid var(--ink);
+      text-decoration: none;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .jump a:hover, .jump a:focus-visible {
+      background: var(--ink);
+      color: var(--paper);
+      outline: none;
+    }
+    section { padding: 78px 0; border-bottom: 1px solid var(--line); }
+    .section-lead {
+      max-width: 760px;
+      margin: -10px 0 32px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .diagnosis {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+    .diagnosis-main, .diagnosis-side {
+      padding: clamp(24px, 4vw, 48px);
+      border: 1px solid var(--ink);
+      background: rgba(255, 255, 255, .24);
+    }
+    .diagnosis-main { box-shadow: var(--shadow-control); }
+    .diagnosis-main blockquote {
+      margin: 0;
+      font: 700 clamp(1.55rem, 3.2vw, 2.75rem)/1.12 Georgia, serif;
+      letter-spacing: -.035em;
+    }
+    .diagnosis-main blockquote em { color: var(--accent); font-style: normal; }
+    .diagnosis-side ul { margin: 0; padding-left: 20px; }
+    .diagnosis-side li { margin: 0 0 13px; }
+
+    .findings {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .finding {
+      position: relative;
+      min-height: 210px;
+      padding: 24px 24px 22px 74px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .3);
+    }
+    .finding .num {
+      position: absolute;
+      top: 22px;
+      left: 20px;
+      color: var(--accent);
+      font: 700 1.45rem Georgia, serif;
+    }
+    .finding p { margin-bottom: 0; color: var(--muted); }
+    .finding strong {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--green);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .finding.critical { border-left: 5px solid var(--danger); }
+    .finding.high { border-left: 5px solid var(--accent); }
+
+    .token-alert {
+      margin-top: 18px;
+      padding: 20px 22px;
+      border: 1px solid var(--danger);
+      background: rgba(120, 52, 38, .07);
+    }
+    .token-alert b { color: var(--danger); }
+    pre {
+      margin: 14px 0 0;
+      padding: 15px 17px;
+      overflow: auto;
+      border-left: 3px solid var(--accent);
+      background: var(--ink);
+      color: var(--paper);
+      font: .82rem/1.55 Consolas, monospace;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .rule {
+      padding: 22px;
+      border-top: 4px solid var(--ink);
+      background: var(--paper-hi);
+      box-shadow: var(--shadow-paper);
+    }
+    .rule b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: .7rem;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .direction-grid { display: grid; gap: 26px; }
+    .direction {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr);
+      border: 1px solid var(--ink);
+      background: rgba(255, 255, 255, .22);
+      overflow: hidden;
+    }
+    .direction-copy { padding: clamp(26px, 4vw, 46px); }
+    .direction-copy h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+    .direction-copy ul { padding-left: 19px; color: var(--muted); }
+    .direction-copy li { margin: 7px 0; }
+    .recommend {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 5px 9px;
+      background: var(--accent);
+      color: white;
+      font-size: .64rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      transform: rotate(-1deg);
+    }
+    .mock {
+      min-height: 410px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 34px;
+    }
+    .mock-ledger {
+      background:
+        linear-gradient(90deg, rgba(23, 21, 15, .055) 1px, transparent 1px),
+        var(--paper-2);
+      background-size: 42px 42px;
+    }
+    .ledger-page {
+      width: min(100%, 410px);
+      min-height: 290px;
+      position: relative;
+      padding: 32px 28px 26px 54px;
+      background: var(--paper-hi);
+      box-shadow: 9px 12px 26px rgba(23, 21, 15, .2);
+      transform: rotate(-1deg);
+    }
+    .ledger-page::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 32px;
+      border-left: 1px solid rgba(120, 52, 38, .4);
+    }
+    .mini-label {
+      color: var(--accent);
+      font-size: .58rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .ledger-page h4 {
+      margin: 34px 0 10px;
+      font: 700 clamp(2rem, 5vw, 3.2rem)/.9 Georgia, serif;
+      text-transform: uppercase;
+    }
+    .ledger-button {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--ink);
+      box-shadow: 4px 4px 0 var(--paper-2);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+    .mock-archive { background: #2a2418; }
+    .archive-desk {
+      width: min(100%, 430px);
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr .9fr;
+      gap: 18px;
+      align-items: center;
+    }
+    .archive-photo {
+      min-height: 240px;
+      padding: 16px;
+      background: #ded1b5;
+      box-shadow: 9px 12px 20px rgba(0, 0, 0, .3);
+      transform: rotate(-4deg);
+    }
+    .archive-photo::before {
+      content: "";
+      display: block;
+      height: 170px;
+      background:
+        radial-gradient(circle at 50% 32%, #615b51 0 17%, transparent 18%),
+        radial-gradient(ellipse at 50% 76%, #615b51 0 29%, transparent 30%),
+        #eee7d8;
+      filter: grayscale(1);
+    }
+    .archive-photo b {
+      display: block;
+      margin-top: 12px;
+      font: 700 .85rem Georgia, serif;
+      text-transform: uppercase;
+    }
+    .archive-ticket {
+      padding: 21px;
+      border: 1px solid #514838;
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 7px 8px 0 rgba(199, 162, 58, .3);
+      transform: rotate(2deg);
+    }
+    .archive-ticket strong {
+      display: block;
+      margin: 20px 0 7px;
+      font: 700 1.45rem/1.05 Georgia, serif;
+      text-transform: uppercase;
+    }
+    .archive-ticket small { color: #b8ae98; }
+    .mock-gym {
+      background:
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, .025) 0 8px, transparent 8px 16px),
+        #17150f;
+    }
+    .gym-poster {
+      width: min(100%, 420px);
+      padding: 28px;
+      border: 2px solid var(--gold);
+      color: var(--paper);
+      text-align: center;
+      clip-path: polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px);
+    }
+    .gym-poster h4 {
+      margin: 24px 0 14px;
+      color: var(--gold);
+      font: 700 clamp(2.4rem, 6vw, 4rem)/.84 Georgia, serif;
+      letter-spacing: -.05em;
+      text-transform: uppercase;
+    }
+    .gym-rule {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ada48f;
+      font-size: .62rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .gym-rule::before, .gym-rule::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #514838;
+    }
+    .gym-cta {
+      margin-top: 28px;
+      padding: 13px;
+      background: var(--gold);
+      color: var(--ink);
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .1em;
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .system-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .28);
+    }
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .swatch {
+      min-height: 92px;
+      padding: 9px;
+      display: flex;
+      align-items: flex-end;
+      font: 800 .55rem/1.25 "Segoe UI", sans-serif;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .type-sample { margin-top: 20px; }
+    .type-sample strong {
+      display: block;
+      font: 700 2rem/1 Georgia, serif;
+    }
+    .type-sample span {
+      display: block;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .demo-button {
+      min-height: 46px;
+      padding: 0 16px;
+      border: 1px solid var(--ink);
+      background: transparent;
+      color: var(--ink);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .demo-button.primary { background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0 var(--paper-2); }
+    .demo-button.danger { border-color: var(--danger); color: var(--danger); }
+    .shadow-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+    .shadow-paper, .shadow-control {
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      text-align: center;
+      background: var(--paper-hi);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .shadow-paper { box-shadow: var(--shadow-paper); transform: rotate(-1deg); }
+    .shadow-control { border: 1px solid var(--ink); box-shadow: var(--shadow-control); }
+
+    .roadmap { display: grid; gap: 12px; }
+    .roadmap-row {
+      display: grid;
+      grid-template-columns: 80px minmax(190px, .75fr) minmax(0, 1.5fr) 95px;
+      gap: 16px;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .22);
+    }
+    .priority {
+      color: var(--accent);
+      font: 700 1.15rem Georgia, serif;
+    }
+    .impact {
+      color: var(--green);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .avoid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .avoid div {
+      padding: 22px;
+      border-top: 4px solid var(--danger);
+      background: rgba(120, 52, 38, .06);
+    }
+    .method {
+      padding: 46px 0 70px;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    @media (max-width: 880px) {
+      .diagnosis, .direction, .system-grid { grid-template-columns: 1fr; }
+      .direction .mock { order: -1; }
+      .rules, .avoid { grid-template-columns: 1fr; }
+      .roadmap-row { grid-template-columns: 66px 1fr; }
+      .roadmap-row p, .roadmap-row .impact { grid-column: 2; }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 24px, 1260px); }
+      .hero { min-height: auto; padding-top: 62px; }
+      .hero-meta, .findings { grid-template-columns: 1fr; }
+      .score { width: 90px; height: 90px; }
+      section { padding: 58px 0; }
+      .finding { padding-left: 62px; }
+      .mock { min-height: 340px; padding: 22px; }
+      .archive-desk { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .archive-photo { min-height: 200px; }
+      .archive-photo::before { height: 135px; }
+      .swatches { grid-template-columns: 1fr 1fr; }
+      .shadow-demo { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">UI/UX PRO MAX · AESTHETIC AUDIT · 16.07.2026</p>
+      <h1>Logbook<br><em>χωρίς θόρυβο.</em></h1>
+      <p class="hero-copy">Η ταυτότητα είναι ήδη δυνατή: προσωπικό training journal, χαρτί, εισιτήρια, σφραγίδες και «Golden Era» αναφορές. Το επόμενο επίπεδο δεν χρειάζεται νέο στιλ· χρειάζεται αυστηρότερη σκηνοθεσία του υπάρχοντος.</p>
+      <div class="hero-meta">
+        <div class="score">7.8<small>/ 10</small></div>
+        <p><strong>Κύριο συμπέρασμα:</strong> η εφαρμογή ξεχωρίζει και δεν μοιάζει generic. Η αισθητική χάνει πόντους όταν χαρτί, ticket, stamp, poster, glow και hard-shadow διεκδικούν ταυτόχρονα την προσοχή. Η καλύτερη κατεύθυνση είναι <strong>Editorial Ledger</strong>: 70% καθαρή χρηστικότητα, 20% υλικότητα χαρτιού, 10% θεατρική έμφαση.</p>
+      </div>
+      <nav class="jump" aria-label="Περιεχόμενα">
+        <a href="#diagnosis">Διάγνωση</a>
+        <a href="#improvements">Βελτιώσεις</a>
+        <a href="#directions">Κατευθύνσεις</a>
+        <a href="#system">Mini system</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+    </header>
+
+    <section id="diagnosis">
+      <p class="eyebrow">01 · Design diagnosis</p>
+      <h2>Δυνατή φωνή, πολλές ταυτόχρονες εντάσεις.</h2>
+      <div class="diagnosis">
+        <div class="diagnosis-main">
+          <blockquote>Το Logbook πρέπει να μοιάζει με <em>αντικείμενο που χρησιμοποιείται</em>, όχι με συλλογή από vintage effects.</blockquote>
+        </div>
+        <div class="diagnosis-side">
+          <h3>Τι δουλεύει ήδη</h3>
+          <ul>
+            <li>Ξεκάθαρη ink / paper / gold χρωματική μνήμη.</li>
+            <li>Ισχυρή editorial τυπογραφική βάση.</li>
+            <li>Home με προσωπικότητα και πραγματικά draggable αντικείμενα.</li>
+            <li>Routine tickets και session pages που μετατρέπουν δεδομένα σε «αρχεία».</li>
+            <li>Αρκετά καλή συνέπεια μεταξύ ελληνικών και αγγλικών labels.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="improvements">
+      <p class="eyebrow">02 · Highest-value improvements</p>
+      <h2>Οι 8 αλλαγές με το μεγαλύτερο αισθητικό κέρδος.</h2>
+      <p class="section-lead">Δεν προτείνω ολικό redesign. Προτείνω να οριστούν κανόνες ώστε κάθε υπάρχον εύρημα να έχει συγκεκριμένο ρόλο.</p>
+      <div class="findings">
+        <article class="finding critical">
+          <span class="num">01</span>
+          <h3>Διόρθωσε πρώτα τα semantic tokens</h3>
+          <p>Στο τρέχον <code>:root</code> τα <code>--ink-line</code> και <code>--ink-muted</code> αναφέρονται στον εαυτό τους. Έτσι αρκετά σκοτεινά borders και secondary labels χάνουν την προβλεπόμενη τιμή και η συνοχή εξαρτάται από fallbacks.</p>
+          <strong>Κέρδος: άμεση σταθερότητα σε menu, profile, tickets</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">02</span>
+          <h3>Ένα υλικό ανά component</h3>
+          <p>Home profile = κολλημένη φωτογραφία. Routine = ticket. Session detail = σελίδα τετραδίου. Reward = σφραγίδα. Όχι tape + glow + perforation + stamp στο ίδιο αντικείμενο.</p>
+          <strong>Κέρδος: πιο premium και λιγότερο «σκηνογραφικό»</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">03</span>
+          <h3>Κανόνας έντασης 70 / 20 / 10</h3>
+          <p>70% καθαρές surfaces και ήρεμη πληροφορία, 20% paper texture/ledger lines, 10% χρυσό, stamp ή rotated element. Σήμερα αρκετές οθόνες πλησιάζουν 40 / 30 / 30.</p>
+          <strong>Κέρδος: καθαρότερη ιεραρχία χωρίς απώλεια χαρακτήρα</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">04</span>
+          <h3>Τυπογραφικό πάτωμα και 6 ρόλοι</h3>
+          <p>Micro labels κάτω από 10px φαίνονται σαν texture αντί για κείμενο. Κράτησε μόνο 10, 11, 13, 16, 24 και fluid display. Το uppercase tracking να μικραίνει όσο μικραίνει το viewport.</p>
+          <strong>Κέρδος: αναγνωσιμότητα και πιο ώριμος ρυθμός</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">05</span>
+          <h3>Δύο γλώσσες σκιάς, όχι περισσότερες</h3>
+          <p>Paper objects: απαλή, φυσική σκιά. Controls: hard offset χωρίς blur. Status/reward: stroke ή ink density, όχι glow. Αυτό αρκεί για να διαχωρίζονται υλικό και λειτουργία.</p>
+          <strong>Κέρδος: συνοχή σε Home, Profile, Plan</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">06</span>
+          <h3>Safe zones για τα draggable Home cards</h3>
+          <p>Διατήρησε την ελευθερία drag, αλλά δείξε διακριτικά «καλές περιοχές» ή κάνε soft snap μακριά από CTA, quote και page header. Το Home πρέπει να παραμένει συνθετικά ισορροπημένο μετά από μετακινήσεις.</p>
+          <strong>Κέρδος: προσωπικότητα χωρίς τυχαία σύνθεση</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">07</span>
+          <h3>Λιγότερη διακόσμηση στις εργασιακές οθόνες</h3>
+          <p>Log και Plan είναι εργαλεία. Εκεί το scrapbook ύφος πρέπει να εμφανίζεται σε headers, dividers και confirmations — όχι σε κάθε input/card. Η λειτουργική πυκνότητα χρειάζεται ησυχία.</p>
+          <strong>Κέρδος: ταχύτερη σάρωση και λιγότερη κόπωση</strong>
+        </article>
+        <article class="finding high">
+          <span class="num">08</span>
+          <h3>Μία οικογένεια interaction states</h3>
+          <p>Hover, pressed, focus και selected να έχουν σταθερή λογική: ink fill, 2px focus ring, 1–2px lift μόνο στα controls. Τα rotated paper objects να μην «χοροπηδούν» σαν buttons.</p>
+          <strong>Κέρδος: πιο φυσική αίσθηση χειρισμού</strong>
+        </article>
+      </div>
+
+      <aside class="token-alert">
+        <b>Συγκεκριμένο τεχνικό εύρημα</b> — το τρέχον CSS περιέχει:
+        <pre>--ink-line: var(--ink-line);
+--ink-muted: var(--ink-muted);</pre>
+        Προτεινόμενη αφετηρία:
+        <pre>--ink-line:  #3d3828;
+--ink-muted: #a89f86;
+--ink-faint: #756e5d;</pre>
+      </aside>
+    </section>
+
+    <section>
+      <p class="eyebrow">03 · Visual grammar</p>
+      <h2>Ανάθεσε ρόλο σε κάθε μεταφορά.</h2>
+      <div class="rules">
+        <article class="rule"><b>Paper / page</b><h3>Περιεχόμενο και ιστορία</h3><p class="muted">Home canvas, session detail, notes, quote. Soft shadow, ελαφριά υφή, μικρή περιστροφή μόνο όταν είναι ανεξάρτητο αντικείμενο.</p></article>
+        <article class="rule"><b>Ticket / card</b><h3>Επιλογή και πρόγραμμα</h3><p class="muted">Routine cards, active program, compact metadata. Perforation ή stub, όχι tape. Selected state με border και contrast.</p></article>
+        <article class="rule"><b>Stamp / ink</b><h3>Κατάσταση και επιβεβαίωση</h3><p class="muted">Reward, recorded, active, completed. Χρώμα + λέξη + σχήμα. Όχι ως μόνιμη διακόσμηση σε κάθε hero.</p></article>
+      </div>
+    </section>
+
+    <section id="directions">
+      <p class="eyebrow">04 · Three art directions</p>
+      <h2>Τρεις δρόμοι — ένας είναι ο πιο σωστός τώρα.</h2>
+      <div class="direction-grid">
+        <article class="direction">
+          <div class="direction-copy">
+            <span class="recommend">Προτεινόμενο</span>
+            <h3>A. Editorial Ledger</h3>
+            <p>Εξέλιξη του σημερινού design με καθαρότερη ιεραρχία. Το χαρτί είναι το canvas, τα δεδομένα μπαίνουν σε αυστηρό grid και οι vintage λεπτομέρειες λειτουργούν σαν υπογραφή.</p>
+            <ul>
+              <li>Πιο ήρεμο Home με 1–2 tactile objects.</li>
+              <li>Forms σχεδόν επίπεδα, με δυνατές γραμμές και labels.</li>
+              <li>Orange πάνω σε paper, gold μόνο πάνω σε ink.</li>
+              <li>Καλύτερη βάση για mobile και accessibility.</li>
+            </ul>
+          </div>
+          <div class="mock mock-ledger" aria-label="Οπτικό δείγμα Editorial Ledger">
+            <div class="ledger-page">
+              <span class="mini-label">Logbook / page 001</span>
+              <h4>Σήμερα<br>μετράει.</h4>
+              <p class="muted">Καθαρή σελίδα, ένα κύριο μήνυμα, μία κύρια ενέργεια.</p>
+              <div class="ledger-button"><span>Ξεκίνα καταγραφή</span><b>↗</b></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction">
+          <div class="direction-copy">
+            <h3>B. Archive Desk</h3>
+            <p>Πιο προσωπικό και scrapbook. Δίνει βάρος σε φωτογραφίες, αποκόμματα και χειρόγραφες λεπτομέρειες, αλλά απαιτεί αυστηρά όρια για να μην γίνει collage.</p>
+            <ul>
+              <li>Ιδανικό κυρίως για Home και Profile.</li>
+              <li>Κάθε αντικείμενο έχει διαφορετικό φυσικό υλικό.</li>
+              <li>Περισσότερη ζεστασιά, λιγότερη «αθλητική αφίσα».</li>
+              <li>Μέτριο ρίσκο σε μικρές οθόνες.</li>
+            </ul>
+          </div>
+          <div class="mock mock-archive" aria-label="Οπτικό δείγμα Archive Desk">
+            <div class="archive-desk">
+              <div class="archive-photo"><b>Δημήτρης</b></div>
+              <div class="archive-ticket"><span class="mini-label">Πρόγραμμα</span><strong>Push / Pull / Legs</strong><small>Τρίτη · Pull</small></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction">
+          <div class="direction-copy">
+            <h3>C. Golden Era Gym</h3>
+            <p>Πιο έντονο, σκοτεινό και αθλητικό. Αντλεί από παλιές αφίσες αγώνων και gym signage. Δυνατό για rewards, milestones και marketing moments — βαρύ για ολόκληρη την εφαρμογή.</p>
+            <ul>
+              <li>Ιδανικό ως «celebration layer».</li>
+              <li>Χρυσό ως σπάνιο premium signal.</li>
+              <li>Μεγάλες condensed επικεφαλίδες και hard frames.</li>
+              <li>Υψηλό ρίσκο αν εφαρμοστεί σε forms και charts.</li>
+            </ul>
+          </div>
+          <div class="mock mock-gym" aria-label="Οπτικό δείγμα Golden Era Gym">
+            <div class="gym-poster">
+              <span class="mini-label" style="color:#c7a23a">12 weeks / earned</span>
+              <h4>Gymrat</h4>
+              <div class="gym-rule">Consistency award</div>
+              <div class="gym-cta">ΣΥΝΕΧΙΣΕ ΤΗ ΔΟΥΛΕΙΑ</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="system">
+      <p class="eyebrow">05 · Mini visual system</p>
+      <h2>Μικρότερο λεξιλόγιο, μεγαλύτερη συνοχή.</h2>
+      <div class="system-grid">
+        <article class="system-card">
+          <h3>Χρώμα: 5 πραγματικοί ρόλοι</h3>
+          <p class="muted">Μην αυξήσεις την παλέτα. Αφαίρεσε ενδιάμεσες αποχρώσεις και δώσε semantic χρήση.</p>
+          <div class="swatches">
+            <div class="swatch" style="background:#17150f;color:#f0e9d9">Ink<br>#17150f</div>
+            <div class="swatch" style="background:#f0e9d9">Paper<br>#f0e9d9</div>
+            <div class="swatch" style="background:#87661c;color:white">Accent<br>#87661c</div>
+            <div class="swatch" style="background:#c7a23a">Gold<br>#c7a23a</div>
+            <div class="swatch" style="background:#783426;color:white">Danger<br>#783426</div>
+          </div>
+        </article>
+        <article class="system-card">
+          <h3>Τυπογραφία: editorial + utility</h3>
+          <p class="muted">Serif/Slab για τίτλους και αριθμούς-σήματα. Sans για labels, forms και πυκνή πληροφορία. Handwriting μόνο σε πραγματικές «σημειώσεις».</p>
+          <div class="type-sample">
+            <strong>Η δουλειά καταγράφηκε.</strong>
+            <span>Workout · 04 sets · 72.5 kg</span>
+          </div>
+        </article>
+        <article class="system-card">
+          <h3>Controls: μία ιεραρχία</h3>
+          <p class="muted">Ένα primary ανά οθόνη. Secondary outline. Destructive απομονωμένο και κόκκινο, ποτέ χρυσό.</p>
+          <div class="button-row">
+            <button class="demo-button primary">Καταγραφή</button>
+            <button class="demo-button">Ακύρωση</button>
+            <button class="demo-button danger">Διαγραφή</button>
+          </div>
+        </article>
+        <article class="system-card">
+          <h3>Elevation: δύο κανόνες</h3>
+          <p class="muted">Η σκιά εξηγεί αν βλέπεις φυσικό αντικείμενο ή χειριστήριο.</p>
+          <div class="shadow-demo">
+            <div class="shadow-paper">Paper object<br>soft blur</div>
+            <div class="shadow-control">UI control<br>hard offset</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <p class="eyebrow">06 · Suggested roadmap</p>
+      <h2>Σειρά εφαρμογής.</h2>
+      <div class="roadmap">
+        <div class="roadmap-row"><span class="priority">P0</span><strong>Token repair</strong><p class="muted">Διόρθωση self-referencing tokens και ενοποίηση ink/paper/accent τιμών.</p><span class="impact">1–2 ώρες · υψηλό</span></div>
+        <div class="roadmap-row"><span class="priority">P0</span><strong>Type floor</strong><p class="muted">Ανέβασμα όλων των labels κάτω από 10px και μείωση των αυθαίρετων μεγεθών.</p><span class="impact">2–4 ώρες · υψηλό</span></div>
+        <div class="roadmap-row"><span class="priority">P1</span><strong>Shadow grammar</strong><p class="muted">Paper soft / controls hard / rewards stroke. Αφαίρεση glow και διπλών shadows.</p><span class="impact">3–5 ώρες · υψηλό</span></div>
+        <div class="roadmap-row"><span class="priority">P1</span><strong>Home safe zones</strong><p class="muted">Προστασία CTA και quote από draggable cards, προαιρετικό soft snapping.</p><span class="impact">4–8 ώρες · υψηλό</span></div>
+        <div class="roadmap-row"><span class="priority">P1</span><strong>Functional calm</strong><p class="muted">Απλοποίηση Log/Plan surfaces και κοινά control heights 44–48px.</p><span class="impact">1 ημέρα · υψηλό</span></div>
+        <div class="roadmap-row"><span class="priority">P2</span><strong>Chart hierarchy</strong><p class="muted">Κύρια σειρά πιο έντονη, secondary σειρές υποτονικές, direct labels και mobile simplification.</p><span class="impact">4–6 ώρες · μέσο</span></div>
+        <div class="roadmap-row"><span class="priority">P2</span><strong>Celebration layer</strong><p class="muted">Golden Era treatment μόνο για stages, milestones και earned rewards.</p><span class="impact">4–8 ώρες · μέσο</span></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">07 · Avoid</p>
+      <h2>Τι δεν θα έκανα.</h2>
+      <div class="avoid">
+        <div><h3>Όχι νέο generic dashboard</h3><p class="muted">Η προσωπικότητα είναι πλεονέκτημα. Cards με μεγάλα radii, gradients και glassmorphism θα την ακυρώσουν.</p></div>
+        <div><h3>Όχι περισσότερα vintage effects</h3><p class="muted">Δεν λείπει texture. Λείπει editing. Κάθε νέο tape, stamp ή noise πρέπει να αντικαθιστά κάτι, όχι να προστίθεται.</p></div>
+        <div><h3>Όχι ίδιο βάρος παντού</h3><p class="muted">Home/Profile μπορούν να είναι εκφραστικά. Log/Plan/Progress πρέπει να είναι πιο ήρεμα και γρήγορα.</p></div>
+      </div>
+    </section>
+
+    <footer class="method">
+      <strong>Μεθοδολογία:</strong> review του τρέχοντος <code>index.html</code>, <code>styles.css</code>, των υπαρχόντων design explorations και των accessibility/layout/style κανόνων του UI/UX Pro Max. Το bundled Python search CLI και το in-app browser runtime δεν ήταν διαθέσιμα στη συγκεκριμένη συνεδρία, επομένως δεν έγινε live screenshot validation. Καμία αλλαγή δεν εφαρμόστηκε στην εφαρμογή.
+    </footer>
+  </main>
+</body>
+</html>

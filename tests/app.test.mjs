@@ -94,7 +94,7 @@ test('program manager keeps only the three creation fields before the tickets', 
   const tickets = manager.querySelector('#routine-list');
   assert.equal(manager.querySelector('.routine-manager-heading'), null);
   assert.equal(manager.querySelector('.routine-create-copy'), null);
-  assert.equal(manager.textContent.includes('ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ'), false);
+  assert.equal(manager.textContent.includes('ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΑΣ'), false);
   assert.equal(manager.textContent.includes('ROUTINE DESK'), false);
   assert.equal(createForm.querySelectorAll(':scope > label, :scope > fieldset').length, 3);
   const style = document.createElement('style');
@@ -108,6 +108,38 @@ test('program manager keeps only the three creation fields before the tickets', 
   assert.equal(manager.textContent.includes('01 / ΜΙΚΡΟΚΥΚΛΟΙ ΠΡΟΠΟΝΗΣΗΣ'), false);
   assert.equal(manager.textContent.includes('Επίλεξε πρόγραμμα για να επεξεργαστείς'), false);
   assert.ok(createPanel.compareDocumentPosition(tickets) & 4, 'the training tickets follow the definition form');
+});
+
+test('the plan exercise heading has no explanatory description', () => {
+  const { document } = loadApp();
+  const heading = document.querySelector('.exercise-builder-heading');
+  assert.equal(heading.querySelector('span').textContent, 'ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ');
+  assert.equal(heading.querySelector('small'), null);
+});
+
+test('stamp copy uses the shortened notification labels and session wording', () => {
+  const { document } = loadApp();
+  assert.equal(document.querySelector('.bests-motto').textContent.trim(), 'STRONGER EVERY SESSION');
+  assert.match(styles, /\.toast::before\s*\{\s*content:"RECORDED"/);
+  assert.match(styles, /\.toast\.toast-error::before\s*\{\s*content:"ATTENTION"/);
+});
+
+test('internal section heroes share one compact light visual system', () => {
+  const { document, window } = loadApp();
+  const style = document.createElement('style');
+  style.textContent = styles;
+  document.head.append(style);
+  const heroes = ['#log-view .hero', '#plan-view .hero', '.overview-hero', '.progress-hero', '.profile-hero']
+    .map(selector => document.querySelector(selector));
+  const titleSizes = heroes.map(hero => window.getComputedStyle(hero.querySelector('h1')).fontSize);
+  assert.equal(new Set(titleSizes).size, 1, 'all internal hero headings use the same type scale');
+  const logStyle = window.getComputedStyle(heroes[0]);
+  [heroes[3], heroes[4]].forEach(hero => {
+    const computed = window.getComputedStyle(hero);
+    assert.equal(computed.backgroundColor, logStyle.backgroundColor, 'progress and profile use the same light surface as log');
+    assert.equal(computed.color, logStyle.color, 'progress and profile use the same text color as log');
+  });
+  assert.match(styles, /font-size:clamp\(2\.8rem,5\.2vw,5\.5rem\)/, 'desktop hero headings use the compact shared scale');
 });
 
 test('program ticket carousel keeps the active routine first', () => {
@@ -430,6 +462,35 @@ test('an unordered routine stores workouts without exposing day numbers', () => 
   assert.deepEqual([...document.querySelectorAll('#plan-list .active-day h3')].map(heading => heading.textContent), ['Push', 'Pull']);
   assert.deepEqual([...document.querySelectorAll('#workout-day-select option')].map(option => option.textContent), ['Push', 'Pull']);
   assert.equal(document.querySelector('#plan-list').textContent.includes('Ημέρα 1'), false);
+});
+
+test('the log workout selector shows only workout names for weekday routines', () => {
+  const routine = [{
+    id:'r1', name:'Calendar', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true,
+    plan:[
+      planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Upper A' }),
+      planDay('Τρίτη', 'Squat', { cycleDay:2, workoutName:'Lower A' }),
+    ],
+  }];
+  const { document } = loadApp({ trainingRoutines:routine });
+  setValue(document, '#log-date', '2026-07-08');
+  assert.deepEqual([...document.querySelectorAll('#workout-day-select option:not([hidden])')].map(option => option.textContent), ['Upper A', 'Lower A']);
+  assert.equal(document.querySelectorAll('#workout-day-select option[hidden]').length, 1);
+  assert.equal(document.querySelector('#workout-day-select').value, '3');
+});
+
+test('the scheduled log shows the routine name as a plain stamp without the session prompt', () => {
+  const { document } = loadApp({
+    trainingRoutines:[{
+      id:'r1', name:'Push/Pull Δοκιμής', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true,
+      plan:[planDay('Τρίτη', 'Squat', { cycleDay:2, workoutName:'Lower A' })],
+    }],
+  });
+  setValue(document, '#log-date', '2026-07-07');
+  const intro = document.querySelector('#scheduled-session .session-intro');
+  assert.equal(intro.querySelector('.active-routine-label').textContent, 'Push/Pull Δοκιμής');
+  assert.equal(intro.querySelector('p'), null);
+  assert.doesNotMatch(intro.textContent, /★|Συμπληρώστε όσα πραγματικά εκτελέσατε/);
 });
 
 test('legacy weekly routines migrate to seven stable cycle slots', () => {
@@ -867,10 +928,16 @@ test('activating another routine switches the scheduled workout', () => {
   assert.ok(document.querySelector('#scheduled-session').innerHTML.includes('Row'));
   const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
   assert.deepEqual(saved.map(r => r.isActive), [false, true]);
+  assert.equal(document.querySelector('#toast').textContent, 'Το «B» είναι τώρα ενεργό');
+  assert.doesNotMatch(document.querySelector('#toast').textContent, /★/);
 });
 
 test('profile form submit persists the profile and updates the menu identity', () => {
   const { document, localStorage } = loadApp();
+  assert.equal(document.querySelectorAll('[name="profile-avatar"]').length, 0);
+  assert.equal(document.querySelectorAll('.avatar-option').length, 0);
+  assert.ok(document.querySelector('#profile-avatar-upload'));
+  assert.equal(document.querySelector('.avatar-picker legend strong').textContent, 'ΕΙΚΟΝΑ ΠΡΟΦΙΛ');
   setValue(document, '#profile-name', 'Δημήτρης', 'input');
   setValue(document, '#profile-birthdate', '1990-01-01', 'input');
   setValue(document, '#profile-weight', '80', 'input');
@@ -878,10 +945,81 @@ test('profile form submit persists the profile and updates the menu identity', (
   const profile = JSON.parse(localStorage.getItem('userProfile'));
   assert.equal(profile.name, 'Δημήτρης');
   assert.equal(profile.weight, 80);
+  assert.equal(profile.avatar, 'custom');
   assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
   assert.equal(document.querySelector('#profile-status').textContent, 'ΑΠΟΘΗΚΕΥΜΕΝΟ');
   assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
   assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
+  assert.equal(document.querySelector('#toast').textContent, 'Το προφίλ αποθηκεύτηκε');
+});
+
+test('profile drafts stay unsaved and are discarded after leaving the profile view', () => {
+  const savedProfile = { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' };
+  const { document, localStorage } = loadApp({ userProfile:savedProfile });
+  click(document, '.nav-button[data-view="profile"]');
+  setValue(document, '#profile-name', 'Πρόχειρο όνομα', 'input');
+  setValue(document, '#profile-birthdate', '2000-02-02', 'input');
+  setValue(document, '#profile-weight', '95', 'input');
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('userProfile')), savedProfile);
+  assert.equal(document.querySelector('#profile-status').textContent, 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ');
+  assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
+  assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
+
+  click(document, '.nav-button[data-view="home"]');
+  click(document, '.nav-button[data-view="profile"]');
+  assert.equal(document.querySelector('#profile-name').value, 'Δημήτρης');
+  assert.equal(document.querySelector('#profile-birthdate').value, '1990-01-01');
+  assert.equal(document.querySelector('#profile-weight').value, '80');
+  assert.equal(document.querySelector('#profile-status').textContent, 'ΑΠΟΘΗΚΕΥΜΕΝΟ');
+});
+
+test('an unfinished new profile is cleared without creating stored profile data', () => {
+  const { document, localStorage } = loadApp();
+  click(document, '.nav-button[data-view="profile"]');
+  setValue(document, '#profile-name', 'Πρόχειρο όνομα', 'input');
+  setValue(document, '#profile-birthdate', '2000-02-02', 'input');
+  setValue(document, '#profile-weight', '75', 'input');
+  click(document, '.nav-button[data-view="home"]');
+  click(document, '.nav-button[data-view="profile"]');
+
+  assert.equal(localStorage.getItem('userProfile'), null);
+  assert.equal(document.querySelector('#profile-name').value, '');
+  assert.equal(document.querySelector('#profile-birthdate').value, '');
+  assert.equal(document.querySelector('#profile-weight').value, '');
+  assert.equal(document.querySelector('#profile-status').textContent, 'ΝΕΟ ΠΡΟΦΙΛ');
+});
+
+test('the unsaved profile status follows the selected interface language', () => {
+  const { document, window } = loadApp({ userProfile:{ name:'Dimitris', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
+  click(document, '[data-language="en"]');
+  setValue(document, '#profile-birthdate', '2000-02-02', 'input');
+  window.LogbookI18n.translate(document);
+  assert.equal(document.querySelector('#profile-status').textContent, 'UNSAVED CHANGES');
+});
+
+test('editing core form drafts does not persist data before an explicit save action', () => {
+  const profile = { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' };
+  const routine = routineWith([planDay('Δευτέρα', 'Bench Press')]);
+  const session = { id:'s1', date:'2026-07-06', type:'free', comments:'', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg' }] }] };
+  const { document, localStorage } = loadApp({ userProfile:profile, trainingRoutines:routine, trainingSessions:[session] });
+  const before = {
+    userProfile:localStorage.getItem('userProfile'),
+    trainingRoutines:localStorage.getItem('trainingRoutines'),
+    trainingSessions:localStorage.getItem('trainingSessions'),
+  };
+
+  setValue(document, '#routine-name', 'Πρόχειρο πρόγραμμα', 'input');
+  setValue(document, '#exercise-count', '3', 'input');
+  setValue(document, '#profile-birthdate', '2000-02-02', 'input');
+  click(document, '[data-mode="free"]');
+  document.querySelector('#free-exercises .exercise-name').value = 'Πρόχειρη άσκηση';
+
+  assert.deepEqual({
+    userProfile:localStorage.getItem('userProfile'),
+    trainingRoutines:localStorage.getItem('trainingRoutines'),
+    trainingSessions:localStorage.getItem('trainingSessions'),
+  }, before);
 });
 
 test('exercise names with HTML are escaped in the history view', () => {
@@ -906,16 +1044,37 @@ test('personal bests track modes separately and rank bodyweight by reps', () => 
   assert.ok(bests.includes('extra kg'), 'bodyweight_extra tracked as its own mode');
 });
 
-test('overview metrics count sessions and total working sets', () => {
+test('overview stamp counts logged workout sessions', () => {
   const session = { id: 's1', date: '2026-07-06', type: 'free', comments: '', exercises: [
     { exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg' }, { reps: 5, weight: 100, weightMode: 'kg' }] },
     { exercise: 'Dips', comments: '', sets: [{ reps: 10, weight: null, weightMode: 'bodyweight' }] },
   ] };
-  const { document } = loadApp({ trainingSessions: [session] });
+  const { document } = loadApp({ trainingSessions: [session, { ...session, id:'s2' }] });
   click(document, '.nav-button[data-view="overview"]');
-  const metrics = document.querySelector('#metrics').innerHTML;
-  assert.ok(metrics.includes('<strong>1</strong>'), 'one session');
-  assert.ok(metrics.includes('<strong>3</strong>'), 'three working sets');
+  assert.equal(document.querySelector('#history-session-count').textContent, '2');
+  assert.equal(document.querySelectorAll('#history-counter .history-counter-label').length, 1);
+  assert.equal(document.querySelector('#history-counter').textContent.trim().replace(/\s+/g, ' '), '2 καταγεγραμμένες προπονήσεις');
+  assert.equal(document.querySelector('#history-counter .history-counter-shadow'), null, 'the background figure is removed');
+  assert.equal(document.querySelector('#metrics'), null, 'the old metric cards are removed');
+});
+
+test('history, personal bests and progress empty states show only their guidance sentence', () => {
+  const { document } = loadApp();
+  click(document, '.nav-button[data-view="overview"]');
+  const historyEmpty = document.querySelector('#session-cards .empty');
+  const bestsEmpty = document.querySelector('#personal-bests .empty');
+  assert.equal(historyEmpty.children.length, 1);
+  assert.equal(historyEmpty.firstElementChild.tagName, 'SPAN');
+  assert.equal(historyEmpty.textContent, 'Ολοκληρώστε την πρώτη προπόνηση και αρχίστε να χτίζετε το αρχείο σας.');
+  assert.equal(bestsEmpty.children.length, 1);
+  assert.equal(bestsEmpty.firstElementChild.tagName, 'SPAN');
+  assert.equal(bestsEmpty.textContent, 'Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σας.');
+
+  click(document, '.nav-button[data-view="progress"]');
+  const progressEmpty = document.querySelector('#progress-panel .empty');
+  assert.equal(progressEmpty.children.length, 1);
+  assert.equal(progressEmpty.firstElementChild.tagName, 'SPAN');
+  assert.equal(progressEmpty.textContent, 'Καταγράψτε τουλάχιστον δύο ίδια σετ για να δείτε πρόοδο.');
 });
 
 test('opening a history workout reveals a read-only modal over the overview', () => {
@@ -934,6 +1093,9 @@ test('opening a history workout reveals a read-only modal over the overview', ()
   assert.equal(document.querySelectorAll('.session-page').length, 1, 'only the opened workout page is rendered');
   assert.ok(document.querySelector('.session-page').textContent.includes('Bench Press'));
   assert.ok(document.querySelector('.session-page').textContent.includes('72.5 kg'));
+  assert.doesNotMatch(document.querySelector('.session-page').textContent, /Η ΣΕΛΙΔΑ ΤΗΣ ΠΡΟΠΟΝΗΣΗΣ|ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ|LOGBOOK \/ TRAINING JOURNAL/);
+  assert.ok(document.querySelector('.session-page-head').textContent.includes('SESSION No'));
+  assert.ok(document.querySelector('.session-page footer button'));
   assert.equal(document.querySelector('.session-page input'), null, 'the historical page has no editable inputs');
   click(document, '[data-close-session="s1"]');
   assert.equal(document.querySelector('#session-detail-dialog').open, false);
@@ -955,9 +1117,39 @@ test('default dates use the local calendar date and a birthday today has age zer
   const now = new window.Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   assert.equal(document.querySelector('#log-date').value, today);
+  assert.equal(document.querySelector('#log-date').max, today);
   assert.equal(document.querySelector('#profile-birthdate').max, today);
   setValue(document, '#profile-birthdate', today, 'input');
   assert.equal(document.querySelector('#profile-age').textContent, '0');
+});
+
+test('a future workout date immediately returns to today', () => {
+  const { window, document } = loadApp();
+  const today = document.querySelector('#log-date').max;
+  const tomorrow = new window.Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const futureDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  setValue(document, '#log-date', futureDate);
+  assert.equal(document.querySelector('#log-date').value, today);
+  assert.match(document.querySelector('#toast').textContent, /δεν μπορεί να είναι μεταγενέστερη/);
+});
+
+test('a future workout date cannot bypass the save guard', () => {
+  const { window, document, localStorage } = loadApp();
+  const tomorrow = new window.Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const futureDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  document.querySelector('#log-date').value = futureDate;
+  click(document, '[data-mode="free"]');
+  const card = document.querySelector('#free-exercises [data-exercise]');
+  card.querySelector('.exercise-name').value = 'Dips';
+  card.querySelectorAll('[data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '10';
+    row.querySelector('.set-weight').value = '0';
+  });
+  click(document, '#save-session');
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions') || '[]').length, 0);
+  assert.match(document.querySelector('#toast').textContent, /δεν μπορεί να είναι μεταγενέστερη/);
 });
 
 test('i18n never changes user-authored Greek exercise names', () => {
@@ -975,14 +1167,70 @@ test('i18n never changes user-authored Greek exercise names', () => {
   assert.equal(boundaryProbe.textContent, 'Τρίποδο άλμα');
 });
 
-test('the switch-free button on a rest day starts a free workout', () => {
+test('i18n leaves no Greek UI fragments in translated rendered content', () => {
+  const routines = [{
+    id:'r1', name:'Routine A', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true,
+    plan:[planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Upper A', cues:'Κράτα τον κορμό σταθερό' })],
+  }];
+  const sessions = [{
+    id:'s1', date:'2026-07-06', type:'scheduled', routineId:'r1', workoutDay:'Δευτέρα', workoutName:'Upper A',
+    comments:'Καλή ενέργεια', exercises:[{ exercise:'Bench Press', comments:'Παύση στο στήθος', sets:[{ reps:8, weight:72.5, weightMode:'kg' }] }],
+  }];
+  const { document, window } = loadApp({
+    trainingRoutines:routines,
+    trainingSessions:sessions,
+    userProfile:{ name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' },
+  });
+  click(document, '[data-language="en"]');
+  ['home','log','plan','overview','progress','profile'].forEach(view => {
+    click(document, `.nav-button[data-view="${view}"]`);
+    window.LogbookI18n.translate(document);
+  });
+  click(document, '[data-view-session="s1"] .card-body');
+  window.LogbookI18n.translate(document);
+
+  const greek = /[\u0370-\u03ff\u1f00-\u1fff]/;
+  const leaks = [];
+  const walker = document.createTreeWalker(document.body, window.NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    const text = node.nodeValue.trim().replace(/\s+/g, ' ');
+    if (text && greek.test(text) && !node.parentElement?.matches('[data-i18n-user]')) {
+      leaks.push(`text: ${text}`);
+    }
+  }
+  document.querySelectorAll('[aria-label],[placeholder],[title]').forEach(element => {
+    ['aria-label','placeholder','title'].forEach(attribute => {
+      const value = element.getAttribute(attribute);
+      if (value && greek.test(value) && !element.matches('[data-i18n-user]')) {
+        leaks.push(`${attribute}: ${value}`);
+      }
+    });
+  });
+
+  assert.deepEqual([...new Set(leaks)], []);
+  assert.ok(document.querySelector('.session-page').textContent.includes('NOTES'), 'nested UI labels inside user-content containers are translated');
+  assert.ok(document.querySelector('.session-page').textContent.includes('Καλή ενέργεια'), 'the user-authored note remains Greek');
+});
+
+test('i18n translates empty and reward setup states in every supported UI language', () => {
+  ['en','fr','de'].forEach(language => {
+    const { document } = loadApp();
+    click(document, `[data-language="${language}"]`);
+    assert.doesNotMatch(document.querySelector('#home-reward-label').textContent, /[\u0370-\u03ff\u1f00-\u1fff]/);
+    assert.doesNotMatch(document.querySelector('#profile-reward-ring').getAttribute('aria-label'), /[\u0370-\u03ff\u1f00-\u1fff]/);
+  });
+});
+
+test('a rest day shows only the no-workout heading', () => {
   const { document } = loadApp(); // empty plan → no scheduled workout
   click(document, '.nav-button[data-view="log"]');
-  const button = document.querySelector('#scheduled-session .switch-free');
-  assert.ok(button, 'rest-day state offers a free workout button');
-  click(document, button);
-  assert.equal(document.querySelector('#free-session').classList.contains('hidden'), false);
-  assert.ok(document.querySelector('#free-exercises [data-exercise]'), 'a free exercise card is added');
+  const restState = document.querySelector('#scheduled-session .no-workout');
+  assert.equal(restState.children.length, 1);
+  assert.equal(restState.firstElementChild.tagName, 'SPAN');
+  assert.ok(restState.classList.contains('empty'));
+  assert.match(restState.textContent, /Δεν υπάρχει ορισμένη προπόνηση για/);
+  assert.equal(restState.querySelector('h2,p,button'), null);
 });
 
 test('Escape key closes the side menu', () => {
@@ -994,22 +1242,24 @@ test('Escape key closes the side menu', () => {
   assert.equal(document.querySelector('#open-menu').getAttribute('aria-expanded'), 'false');
 });
 
-test('week strip marks a session logged today and counts weekly frequency', () => {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const session = { id: 's1', date: today, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg' }] }] };
-  const { document } = loadApp({ trainingSessions: [session] });
+test('history strip moves one day at a time and selects logged workouts without markers', () => {
+  const dateAt = daysAgo => { const date = new Date(); date.setHours(12,0,0,0); date.setDate(date.getDate() - daysAgo); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
+  const mk = (id, daysAgo) => ({ id, date:dateAt(daysAgo), type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 5, weight: 100, weightMode: 'kg' }] }] });
+  const { document } = loadApp({ trainingSessions: [mk('s1', 1), mk('s2', 7), mk('s3', 15)] });
   click(document, '.nav-button[data-view="overview"]');
   assert.equal(document.querySelectorAll('#week-strip .day-tile').length, 7);
   assert.equal(document.querySelectorAll('#week-strip .day-tile.done').length, 1);
-  assert.ok(document.querySelector('#metrics').innerHTML.includes('<strong>1<small>/7</small></strong>'));
-  click(document, '.session-summary');
-  assert.equal(document.querySelector('#session-detail-dialog').open, true, 'the card itself opens the workout modal');
-  click(document, '#session-detail-close');
+  assert.equal(document.querySelector('#week-strip i'), null, 'logged days have no circular marker');
+  assert.equal(document.querySelector('.history-week-panel').textContent.includes('ΣΥΧΝΟΤΗΤΑ'), false);
   click(document, '#week-strip .day-tile.done');
-  assert.equal(document.querySelector('#session-detail-dialog').open, false, 'date navigation does not open the workout page');
-  assert.equal(document.querySelectorAll('.session-page').length, 0);
-  assert.ok(document.querySelector('#overview-view').classList.contains('active'), 'logged day remains in history');
+  assert.equal(document.querySelector('.session-card.history-date-active').dataset.sessionDate, dateAt(1));
+  click(document, '[data-history-week-step="1"]');
+  assert.equal(document.querySelectorAll('#week-strip .day-tile').length, 7);
+  assert.equal(document.querySelector('#week-strip .day-tile.done').dataset.historyDate, dateAt(7), 'one click reveals the day just before the previous window');
+  assert.ok(document.querySelector('#week-strip').classList.contains('week-shift-older'));
+  assert.equal(document.querySelector('[data-history-week-step="-1"]').disabled, false);
+  click(document, '[data-history-week-step="-1"]');
+  assert.equal(document.querySelector('#week-strip .day-tile.done').dataset.historyDate, dateAt(1));
 });
 
 test('progress chart excludes sessions logged in a different weight mode', () => {

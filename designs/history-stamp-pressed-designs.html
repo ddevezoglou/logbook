@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ιστορικό — Σφραγίδα: θέση αριστερά, κλίση, πατημένο μελάνι</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 90px; }
+  h1 { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:760px; line-height:1.5; margin:0 0 40px; }
+  .variant { margin-bottom:55px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.25rem; margin:0; }
+  .variant-title span { color:var(--orange); font-weight:800; font-size:.7rem; letter-spacing:.12em; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:720px; line-height:1.45; }
+
+  /* ---- mockup of overview-hero context ---- */
+  .hero-mock { background:var(--paper); border:1px solid var(--line); padding:55px 5vw 40px; display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:40px; overflow:hidden; }
+  .hero-mock h1 { font-family:"Roboto Slab",serif; font-size:clamp(2.4rem,4.5vw,4.2rem); line-height:.95; text-transform:uppercase; margin:0; }
+  .hero-mock h1 em { font-style:italic; }
+
+  /* ---- base stamp (shared) ---- */
+  .stamp { width:min(100%,300px); min-height:140px; padding:24px 14px 16px; position:relative; z-index:1; display:grid; place-items:end center; overflow:visible; color:rgba(72,70,60,.76); text-align:left; isolation:isolate; }
+  .stamp-silhouette { content:""; position:absolute; z-index:-2; left:39px; right:4px; top:64px; height:74px; opacity:.16; transform:rotate(-4deg) skewX(-12deg); background:linear-gradient(90deg,transparent 0,currentColor 8%,currentColor 82%,transparent 100%); -webkit-mask-image:radial-gradient(ellipse at center,#000 0 42%,transparent 76%),repeating-linear-gradient(176deg,#000 0 3px,transparent 3px 7px); mask-image:radial-gradient(ellipse at center,#000 0 42%,transparent 76%),repeating-linear-gradient(176deg,#000 0 3px,transparent 3px 7px); -webkit-mask-composite:source-in; mask-composite:intersect; pointer-events:none; }
+  .stamp-copy { position:relative; z-index:2; width:auto; display:flex; align-items:baseline; justify-content:center; gap:13px; padding:7px 14px 5px; color:rgba(72,70,60,.78); mix-blend-mode:multiply; }
+  .stamp-copy strong { flex:none; min-width:1.25ch; font:700 clamp(2.3rem,3.9vw,3.4rem)/.8 "Roboto Slab",serif; letter-spacing:-.08em; opacity:.9; }
+  .stamp-label { max-width:140px; font:800 clamp(.55rem,.9vw,.66rem)/1.25 "Alegreya Sans",sans-serif; letter-spacing:.15em; text-transform:uppercase; opacity:.88; }
+
+  /* current state, for comparison */
+  .v0 .stamp { justify-self:end; transform:rotate(-1.2deg); }
+
+  /* ============ A: μετατόπιση + κλίση, ελαφρύ πάτημα ============ */
+  /* left: justify-self center αντί για end. Tilt -6deg. Ελαφριά διάβρωση μελανιού. */
+  .vA .stamp { justify-self:center; margin-right:8%; transform:rotate(-6deg); }
+  .vA .stamp-copy { filter:url(#press-light); }
+
+  /* ============ B: πιο αριστερά + πιο πλάγια, καθαρό «πάτημα» ============ */
+  /* Σχεδόν κολλάει στη μέση του hero. Tilt -9deg. Μελάνι φαγωμένο στο κέντρο
+     (η σφραγίδα πατάει πιο δυνατά στις άκρες), όπως αληθινό λαστιχένιο πάτημα. */
+  .vB .stamp { justify-self:start; margin-left:4%; transform:rotate(-9deg); }
+  .vB .stamp-copy { filter:url(#press-medium); }
+  .vB .stamp-copy::after { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 48% 45%,var(--paper) 0 18%,transparent 62%); opacity:.28; mix-blend-mode:normal; pointer-events:none; }
+
+  /* ============ C: διπλό πάτημα (ghost strike) ============ */
+  /* Ίδια θέση με B αλλά με δεύτερο, αχνό αντίγραφο ελαφρά μετατοπισμένο —
+     σαν η σφραγίδα να κούνησε την ώρα που πατήθηκε. Tilt -8deg. */
+  .vC .stamp { justify-self:center; margin-right:12%; transform:rotate(-8deg); }
+  .vC .stamp-copy { filter:url(#press-medium); }
+  .vC .stamp-ghost { position:absolute; inset:0; z-index:1; display:grid; place-items:end center; padding:24px 14px 16px; pointer-events:none; }
+  .vC .stamp-ghost .stamp-copy { opacity:.22; transform:translate(3px,-2px) rotate(.6deg); filter:url(#press-heavy) blur(.4px); }
+
+  /* ============ D: βαριά πατημένη, έντονη κλίση ============ */
+  /* Πιο επιθετικό: tilt -13deg, βαριά διάβρωση, ανομοιόμορφη πίεση από
+     turbulence displacement — οι άκρες των γραμμάτων τρέμουν ελαφρά. */
+  .vD .stamp { justify-self:start; margin-left:10%; transform:rotate(-13deg); }
+  .vD .stamp-copy { filter:url(#press-heavy); }
+  .vD .stamp-silhouette { opacity:.13; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <!-- ελαφριά διάβρωση: μικρές τρύπες στο μελάνι -->
+  <filter id="press-light" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency=".09 .07" numOctaves="4" seed="11" result="noise"/>
+    <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -.55" result="holes"/>
+    <feComposite in="SourceGraphic" in2="holes" operator="in"/>
+  </filter>
+
+  <!-- μεσαίο πάτημα: περισσότερες τρύπες + τραχιές άκρες -->
+  <filter id="press-medium" x="-12%" y="-12%" width="124%" height="124%">
+    <feTurbulence type="fractalNoise" baseFrequency=".11 .09" numOctaves="4" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+    <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.6 -.75" result="holes"/>
+    <feComposite in="rough" in2="holes" operator="in"/>
+  </filter>
+
+  <!-- βαρύ πάτημα: έντονη διάβρωση + displacement -->
+  <filter id="press-heavy" x="-15%" y="-15%" width="130%" height="130%">
+    <feTurbulence type="fractalNoise" baseFrequency=".13 .1" numOctaves="5" seed="23" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+    <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 3 -1" result="holes"/>
+    <feComposite in="rough" in2="holes" operator="in"/>
+  </filter>
+</defs></svg>
+
+<h1>Σφραγίδα ιστορικού — θέση, κλίση, «πατημένο» μελάνι</h1>
+<p class="intro">Τέσσερις παραλλαγές για τη σφραγίδα «καταγεγραμμένες προπονήσεις» στο hero του Ιστορικού: πιο αριστερά από τη σημερινή θέση (δεξιά άκρη), με μεγαλύτερη πλάγια κλίση, και με εφέ μελανιού σαν αληθινό πάτημα σφραγίδας (φαγωμένο μελάνι, άνιση πίεση, διπλό πάτημα). Το τρέχον σχέδιο φαίνεται πρώτο για σύγκριση.</p>
+
+<section class="variant v0">
+  <div class="variant-title"><h2>Τρέχουσα κατάσταση</h2><span>REFERENCE</span></div>
+  <p class="variant-note">Όπως είναι σήμερα: δεξιά άκρη, κλίση μόλις -1.2°, καθαρό μελάνι.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <i class="stamp-silhouette"></i>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="variant vA">
+  <div class="variant-title"><h2>Α — Διακριτική μετατόπιση</h2><span>SUBTLE</span></div>
+  <p class="variant-note">Η σφραγίδα έρχεται προς το κέντρο της δεξιάς στήλης, κλίση -6°, ελαφριά διάβρωση μελανιού (μικρές τρύπες). Η πιο συντηρητική εκδοχή — κρατάει την τωρινή αίσθηση, απλώς πιο «χειροποίητη».</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <i class="stamp-silhouette"></i>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="variant vB">
+  <div class="variant-title"><h2>Β — Άνιση πίεση</h2><span>PRESSED</span></div>
+  <p class="variant-note">Αρκετά πιο αριστερά (αρχή της δεξιάς στήλης, κοντά στον τίτλο), κλίση -9°. Το μελάνι είναι πιο αχνό στο κέντρο και πιο γεμάτο στις άκρες — όπως όταν η λαστιχένια σφραγίδα δεν πατάει ομοιόμορφα. Οι άκρες των γραμμάτων ελαφρά τραχιές.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <i class="stamp-silhouette"></i>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="variant vC">
+  <div class="variant-title"><h2>Γ — Διπλό πάτημα</h2><span>GHOST STRIKE</span></div>
+  <p class="variant-note">Θέση ανάμεσα στο Α και το Β, κλίση -8°. Πίσω από το κείμενο υπάρχει ένα δεύτερο, πολύ αχνό αντίγραφο, ελαφρά μετατοπισμένο — σαν η σφραγίδα να κούνησε την ώρα του πατήματος. Δίνει βάθος χωρίς να θολώνει το νούμερο.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <i class="stamp-silhouette"></i>
+      <div class="stamp-ghost"><div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div></div>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="variant vD">
+  <div class="variant-title"><h2>Δ — Βαρύ πάτημα</h2><span>HEAVY</span></div>
+  <p class="variant-note">Η πιο επιθετική εκδοχή: αριστερή πλευρά της στήλης, κλίση -13°, βαριά διάβρωση με displacement — τα περιγράμματα τρέμουν ελαφρά σαν μελάνι σε χαρτί με υφή. Η σιλουέτα από πίσω πιο αχνή για να μη «λερώνει» μαζί με το φθαρμένο κείμενο.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp">
+      <i class="stamp-silhouette"></i>
+      <div class="stamp-copy"><strong>27</strong><span class="stamp-label">καταγεγραμμένες προπονήσεις</span></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

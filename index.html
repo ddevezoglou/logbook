@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="flex-icon" viewBox="0 0 24 24"><path d="M3 18.34C3 18.34 4 7.09 7 3L12 4L11 7.09H9V14.25H10C12 11.18 16.14 10.06 18.64 11.18C21.94 12.71 21.64 17.32 18.64 19.36C16.24 21 9 22.43 3 18.34Z"/></symbol><symbol id="dumbbell-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L8.43 7L12 3.43L10.57 2L9.14 3.43L7.71 2L5.57 4.14L4.14 2.71L2.71 4.14L4.14 5.57L2 7.71L3.43 9.14L2 10.57L3.43 12L7 8.43L15.57 17L12 20.57L13.43 22L14.86 20.57L16.29 22L18.43 19.86L19.86 21.29L21.29 19.86L19.86 18.43L22 16.29L20.57 14.86Z"/></symbol></svg>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="flex-icon" viewBox="0 0 24 24"><path d="M3 18.34C3 18.34 4 7.09 7 3L12 4L11 7.09H9V14.25H10C12 11.18 16.14 10.06 18.64 11.18C21.94 12.71 21.64 17.32 18.64 19.36C16.24 21 9 22.43 3 18.34Z"/></symbol><symbol id="dumbbell-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L8.43 7L12 3.43L10.57 2L9.14 3.43L7.71 2L5.57 4.14L4.14 2.71L2.71 4.14L4.14 5.57L2 7.71L3.43 9.14L2 10.57L3.43 12L7 8.43L15.57 17L12 20.57L13.43 22L14.86 20.57L16.29 22L18.43 19.86L19.86 21.29L21.29 19.86L19.86 18.43L22 16.29L20.57 14.86Z"/></symbol><filter id="press-light" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".09 .07" numOctaves="4" seed="11" result="noise"/><feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -.55" result="holes"/><feComposite in="SourceGraphic" in2="holes" operator="in"/></filter></svg>
   <div class="grain"></div>
   <div id="view-transition" class="view-transition" aria-hidden="true"><span></span></div>
   <header class="topbar">
@@ -63,11 +63,10 @@
           <span class="home-vol" aria-hidden="true">VOL 1</span>
         </div>
         <div class="home-page-head">
-          <p class="eyebrow">ΤΟ ΣΗΜΕΡΙΝΟ ΣΟΥ ΣΗΜΕΙΟ ΕΚΚΙΝΗΣΗΣ</p>
           <span class="home-pageno" aria-hidden="true">PAGE 001</span>
         </div>
         <span id="home-reward-stamp" class="home-reward-stamp hidden" role="status"><svg aria-hidden="true"><use href="#dumbbell-icon"/></svg><b id="home-reward-label">PLAN SETUP</b><svg class="flip" aria-hidden="true"><use href="#dumbbell-icon"/></svg></span>
-        <article id="home-profile-card" class="home-profile-card hidden" tabindex="0" aria-label="Κάρτα αθλητή. Σύρε για να την μετακινήσεις στην αρχική σελίδα.">
+        <article id="home-profile-card" class="home-profile-card hidden" tabindex="0" aria-label="Κάρτα αθλητή. Σύρετε για να την μετακινήσετε στην αρχική σελίδα.">
           <span class="home-card-tape home-card-tape-left" aria-hidden="true"></span>
           <span class="home-card-tape home-card-tape-right" aria-hidden="true"></span>
           <div class="home-profile-card-body">
@@ -75,7 +74,7 @@
             <div class="home-profile-card-copy"><strong id="home-profile-name" data-i18n-user></strong></div>
           </div>
         </article>
-        <article id="home-routine-card" class="home-routine-card hidden" tabindex="0" aria-label="Κάρτα ενεργού προγράμματος. Σύρε για να την μετακινήσεις στην αρχική σελίδα.">
+        <article id="home-routine-card" class="home-routine-card hidden" tabindex="0" aria-label="Κάρτα ενεργού προγράμματος. Σύρετε για να την μετακινήσετε στην αρχική σελίδα.">
           <span class="home-routine-punch" aria-hidden="true"></span>
           <header class="home-routine-head">
             <span>ΠΡΟΓΡΑΜΜΑ</span>
@@ -89,10 +88,10 @@
           </button>
         </article>
         <div class="home-intro">
-          <button class="home-start" type="button" data-home-action="log"><span>ΞΕΚΙΝΑ ΤΗ ΣΗΜΕΡΙΝΗ ΚΑΤΑΓΡΑΦΗ</span><b aria-hidden="true">↗</b></button>
+          <button class="home-start" type="button" data-home-action="log"><span>ΚΑΤΑΓΡΑΦΗ ΠΡΟΠΟΝΗΣΗΣ</span></button>
           <div class="home-quick" aria-label="Γρήγορη πλοήγηση">
-            <button type="button" data-home-action="plan"><span>ΠΡΟΓΡΑΜΜΑ</span><small>Χτίσε τον μικρόκυκλο</small></button>
-            <button type="button" data-home-action="overview"><span>ΙΣΤΟΡΙΚΟ</span><small>Δες τη δουλειά που έχει γίνει</small></button>
+            <button type="button" data-home-action="plan"><span>ΠΡΟΓΡΑΜΜΑ</span></button>
+            <button type="button" data-home-action="overview"><span>ΙΣΤΟΡΙΚΟ</span></button>
           </div>
         </div>
 
@@ -120,15 +119,24 @@
 
     <section class="view" id="log-view">
       <div class="hero">
-        <div><p class="eyebrow">ΕΚΤΕΛΕΣΗ ΠΡΟΠΟΝΗΣΗΣ</p><h1>ΣΗΜΕΡΑ<br><em>ΜΕΤΡΑΕΙ.</em></h1></div>
-        <p class="hero-note">Το σημερινό σου πλάνο σε περιμένει. Κατάγραψε σετ, κιλά και επαναλήψεις — τα νούμερα χτίζουν την πρόοδο.</p>
+        <div><h1>ΣΗΜΕΡΑ<br><em>ΜΕΤΡΑΕΙ.</em></h1></div>
+        <button class="info-stamp" type="button" aria-controls="log-guide" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+        <aside id="log-guide" class="info-panel hidden">
+          <h3>ΟΔΗΓΙΕΣ</h3>
+          <ol>
+            <li><b>01</b><span>Διαλέξτε ημερομηνία προπόνησης.</span></li>
+            <li><b>02</b><span>«Από το πρόγραμμα» φορτώνει την ημέρα του ενεργού πλάνου — «Ελεύθερη» για δικές σας ασκήσεις.</span></li>
+            <li><b>03</b><span>Συμπληρώστε κιλά και επαναλήψεις σε κάθε σετ.</span></li>
+            <li><b>04</b><span>Πατήστε «Ολοκλήρωση προπόνησης» για να αποθηκευτεί στο Ιστορικό.</span></li>
+          </ol>
+        </aside>
       </div>
       <div class="session-shell">
         <div class="session-toolbar">
           <label>Ημερομηνία<input id="log-date" type="date" required></label>
           <div class="mode-toggle" aria-label="Τύπος προπόνησης">
-            <button class="mode-button active" data-mode="scheduled">Από το πρόγραμμα</button>
-            <button class="mode-button" data-mode="free">Ελεύθερη</button>
+            <button class="mode-button active" data-mode="scheduled" aria-pressed="true">Από το πρόγραμμα</button>
+            <button class="mode-button" data-mode="free" aria-pressed="false">Ελεύθερη</button>
           </div>
           <label id="workout-day-field">Προπόνηση ημέρας<select id="workout-day-select"></select></label>
           <div id="day-badge" class="day-badge"></div>
@@ -142,15 +150,23 @@
         <div class="session-save-actions">
           <span class="motto-stamp" aria-hidden="true"><svg><use href="#flex-icon"/></svg>EARN IT<svg class="flip"><use href="#flex-icon"/></svg></span>
           <button id="cancel-session-edit" class="secondary-button hidden" type="button">Ακύρωση διορθώσεων</button>
-          <button id="save-session" class="primary-button save-session" type="button">ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ <span>✓</span></button>
+          <button id="save-session" class="primary-button save-session" type="button">ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ</button>
         </div>
       </div>
     </section>
 
     <section class="view" id="plan-view">
       <div class="hero compact">
-        <div><p class="eyebrow">ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ</p><h1>ΧΤΙΣΕ ΤΟ<br><em>ΠΛΑΝΟ ΣΟΥ.</em></h1></div>
-        <p class="hero-note">Δημιούργησε προγράμματα με μικρόκυκλο 3–10 ημερών. Το πρόγραμμα με το αστέρι είναι το ενεργό — αυτό ανοίγει στην Καταγραφή.</p>
+        <div><h1>ΤΟ ΠΛΑΝΟ<br><em>ΟΔΗΓΕΙ.</em></h1></div>
+        <button class="info-stamp" type="button" aria-controls="plan-guide" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+        <aside id="plan-guide" class="info-panel hidden">
+          <h3>ΟΔΗΓΙΕΣ</h3>
+          <ol>
+            <li><b>01</b><span>Δημιουργήστε πρόγραμμα με όνομα και μικρόκυκλο 3–10 ημερών.</span></li>
+            <li><b>02</b><span>Προσθέστε προπονήσεις ημέρας με ασκήσεις και working sets.</span></li>
+            <li><b>03</b><span>Το πρόγραμμα με το αστέρι ★ είναι το ενεργό — αυτό ανοίγει στην Καταγραφή.</span></li>
+          </ol>
+        </aside>
       </div>
       <section class="routine-manager" aria-label="Διαχείριση προγραμμάτων">
         <div class="routine-create-panel">
@@ -169,7 +185,7 @@
         </div>
         <div class="routine-carousel">
           <div class="routine-carousel-bar">
-            <span><b id="routine-carousel-count">00</b> TRAINING SPLITS</span>
+            <span><b id="routine-carousel-count">—</b> TRAINING SPLITS</span>
           </div>
           <div class="routine-carousel-stage">
             <div id="routine-list" class="routine-list" tabindex="0" aria-label="Προγράμματα προπόνησης" aria-live="polite"></div>
@@ -188,12 +204,12 @@
             <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
             <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
           </div>
-          <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span><small>Ορίζεις άσκηση, working sets και τεχνικό cue. Κιλά και επαναλήψεις καταγράφονται στην εκτέλεση.</small></div>
+          <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span></div>
           <div id="plan-exercises-container" class="plan-exercise-builder"></div>
-          <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας <span>↗</span></button></div>
+          <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας</button></div>
         </form>
         <aside class="history-panel">
-          <div class="panel-title"><div><h2 id="plan-board-title">ΤΟ ΠΛΑΝΟ ΣΟΥ</h2></div><strong id="plan-count"></strong></div>
+          <div class="panel-title"><div><h2 id="plan-board-title">ΤΟ ΠΛΑΝΟ ΣΑΣ</h2></div><strong id="plan-count"></strong></div>
           <div id="plan-list" class="week-plan"></div>
           <div class="motto-stamp plan-motto" aria-hidden="true"><svg><use href="#flex-icon"/></svg>TRUST THE PROCESS<svg class="flip"><use href="#flex-icon"/></svg></div>
         </aside>
@@ -202,14 +218,20 @@
 
     <section class="view" id="overview-view">
       <div class="overview-hero">
-        <div><p class="eyebrow">TRAINING LOG</p><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
-        <div id="metrics" class="metrics"></div>
+        <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+        <div id="history-counter" class="history-counter-stamp" role="status" aria-live="polite">
+          <div class="history-counter-copy">
+            <strong id="history-session-count">0</strong>
+            <span class="history-counter-label">καταγεγραμμένες προπονήσεις</span>
+          </div>
+        </div>
       </div>
       <div class="overview-content">
-        <div class="rhythm-panel">
-          <div class="section-heading"><div><h2>ΣΥΧΝΟΤΗΤΑ 7 ΗΜΕΡΩΝ</h2></div></div>
+        <nav class="history-week-panel" aria-label="Πλοήγηση στις ημέρες του ιστορικού">
+          <button class="history-week-arrow" type="button" data-history-week-step="1" aria-label="Προηγούμενη ημέρα"><span>←</span></button>
           <div id="week-strip" class="week-strip"></div>
-        </div>
+          <button class="history-week-arrow" type="button" data-history-week-step="-1" aria-label="Επόμενη ημέρα"><span>→</span></button>
+        </nav>
         <div class="overview-grid">
           <section>
             <div class="section-heading"><div><h2>Ιστορικό προπονήσεων</h2></div></div>
@@ -218,7 +240,7 @@
           <aside>
             <div class="section-heading bests-heading"><div><h2>ΚΑΛΥΤΕΡΑ ΣΕΤ</h2><span class="best-sets-badge" aria-hidden="true">PR</span></div></div>
             <div id="personal-bests" class="personal-bests"></div>
-            <div class="motto-stamp bests-motto" aria-hidden="true"><svg><use href="#flex-icon"/></svg>STRONGER EVERY WEEK<svg class="flip"><use href="#flex-icon"/></svg></div>
+            <div class="motto-stamp bests-motto" aria-hidden="true"><svg><use href="#flex-icon"/></svg>STRONGER EVERY SESSION<svg class="flip"><use href="#flex-icon"/></svg></div>
           </aside>
         </div>
       </div>
@@ -226,8 +248,16 @@
 
     <section class="view" id="progress-view">
       <div class="progress-hero">
-        <div><p class="eyebrow">PROGRESSIVE OVERLOAD</p><h1>ΔΕΣ ΤΗΝ<br><em>ΠΟΡΕΙΑ ΣΟΥ.</em></h1></div>
-        <p>Μία μέτρηση δεν ορίζει την πορεία. Το γράφημα δείχνει βάρος και επαναλήψεις ανά σετ, προπόνηση με προπόνηση.</p>
+        <div><h1>Η ΠΟΡΕΙΑ<br><em>ΦΑΙΝΕΤΑΙ.</em></h1></div>
+        <button class="info-stamp" type="button" aria-controls="progress-guide" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+        <aside id="progress-guide" class="info-panel hidden">
+          <h3>ΟΔΗΓΙΕΣ</h3>
+          <ol>
+            <li><b>01</b><span>Διαλέξτε προπόνηση, άσκηση και σετ από τα φίλτρα.</span></li>
+            <li><b>02</b><span>Το γράφημα δείχνει βάρος και επαναλήψεις, προπόνηση με προπόνηση.</span></li>
+            <li><b>03</b><span>Μία μέτρηση δεν ορίζει την πορεία — κοιτάξτε την τάση.</span></li>
+          </ol>
+        </aside>
       </div>
       <div class="progress-content">
         <div class="progress-controls">
@@ -241,8 +271,16 @@
 
     <section class="view" id="profile-view">
       <div class="profile-hero">
-        <div><p class="eyebrow">ATHLETE IDENTITY</p><h1>ΤΟ ΔΙΚΟ ΣΟΥ<br><em>ΑΠΟΤΥΠΩΜΑ.</em></h1></div>
-        <p>Τα βασικά στοιχεία του αθλητή, συγκεντρωμένα σε μία καθαρή κάρτα. Επίλεξε ένα έτοιμο avatar ή ανέβασε τη δική σου εικόνα.</p>
+        <div><h1>ΤΟ ΑΠΟΤΥΠΩΜΑ<br><em>ΜΕΝΕΙ.</em></h1></div>
+        <button class="info-stamp" type="button" aria-controls="profile-guide" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button>
+        <aside id="profile-guide" class="info-panel hidden">
+          <h3>ΟΔΗΓΙΕΣ</h3>
+          <ol>
+            <li><b>01</b><span>Συμπληρώστε όνομα, ημερομηνία γέννησης και βάρος.</span></li>
+            <li><b>02</b><span>Ανεβάστε τη δική σας εικόνα προφίλ.</span></li>
+            <li><b>03</b><span>Η κάρτα αθλητή ενημερώνεται αυτόματα και εμφανίζεται στην Αρχική.</span></li>
+          </ol>
+        </aside>
       </div>
       <div class="profile-workspace">
         <form id="profile-form" class="profile-form">
@@ -250,32 +288,21 @@
           <div class="profile-fields">
             <label>Όνομα<input id="profile-name" type="text" maxlength="50" placeholder="π.χ. Δημήτρης" autocomplete="name" required></label>
             <label>Ημερομηνία γέννησης<input id="profile-birthdate" type="date" autocomplete="bday" required></label>
-            <div class="age-readout" aria-live="polite"><span>ΗΛΙΚΙΑ</span><strong id="profile-age">—</strong><small id="profile-age-label">Συμπλήρωσε ημερομηνία</small></div>
+            <div class="age-readout" aria-live="polite"><span>ΗΛΙΚΙΑ</span><strong id="profile-age">—</strong><small id="profile-age-label">Χωρίς ημερομηνία</small></div>
             <label class="weight-field">Βάρος<div class="weight-control"><input id="profile-weight" type="number" min="1" step="0.1" placeholder="0.0" required><select id="profile-weight-unit" aria-label="Μονάδα βάρους"><option value="kg">kg</option><option value="lbs">lbs</option></select></div></label>
           </div>
 
           <fieldset class="avatar-picker">
-            <legend><span>02</span><strong>ΕΠΙΛΟΓΗ AVATAR</strong></legend>
+            <legend><span>02</span><strong>ΕΙΚΟΝΑ ΠΡΟΦΙΛ</strong></legend>
             <div class="avatar-options">
-              <label class="avatar-option">
-                <input type="radio" name="profile-avatar" value="male" checked>
-                <span class="avatar-figure male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i></span>
-                <span class="avatar-option-label"><strong>AVATAR 01</strong><small>Επιλογή</small></span>
-              </label>
-              <label class="avatar-option">
-                <input type="radio" name="profile-avatar" value="female">
-                <span class="avatar-figure female-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i></span>
-                <span class="avatar-option-label"><strong>AVATAR 02</strong><small>Επιλογή</small></span>
-              </label>
               <div id="custom-avatar-option" class="avatar-upload-option">
-                <input id="profile-custom-avatar" type="radio" name="profile-avatar" value="custom">
                 <span class="custom-avatar-thumb" aria-hidden="true"><img id="custom-avatar-thumb" alt=""><i>+</i></span>
-                <span class="avatar-upload-copy"><strong>ΔΙΚΗ ΣΟΥ ΕΙΚΟΝΑ</strong><small id="avatar-upload-status">JPG, PNG ή WEBP</small><button id="profile-avatar-upload-button" type="button">ΑΝΕΒΑΣΕ ΕΙΚΟΝΑ</button></span>
+                <span class="avatar-upload-copy"><strong>ΕΙΚΟΝΑ</strong><small id="avatar-upload-status">JPG, PNG ή WEBP</small><button id="profile-avatar-upload-button" type="button">ΑΝΕΒΑΣΜΑ ΕΙΚΟΝΑΣ</button></span>
                 <input id="profile-avatar-upload" class="hidden" type="file" accept="image/jpeg,image/png,image/webp">
               </div>
             </div>
           </fieldset>
-          <button class="primary-button profile-save" type="submit">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ <span>✓</span></button>
+          <button class="primary-button profile-save" type="submit">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ</button>
         </form>
 
         <aside class="profile-preview" aria-label="Προεπισκόπηση προφίλ">
@@ -287,7 +314,7 @@
                 <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
               </div>
             </div>
-            <div class="profile-card-copy"><span>ΟΝΟΜΑ ΑΘΛΗΤΗ</span><h2 id="profile-preview-name" data-i18n-user>ΤΟ ΟΝΟΜΑ ΣΟΥ</h2></div>
+            <div class="profile-card-copy"><span>ΟΝΟΜΑ ΑΘΛΗΤΗ</span><h2 id="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</h2></div>
             <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
             <div class="profile-card-foot"><span>TRAIN • RECORD • PROGRESS</span></div>
           </div>
