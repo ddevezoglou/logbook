@@ -11,11 +11,12 @@ const appSource = readFileSync(join(root, 'app.js'), 'utf8');
 
 // Loads the app inside a fresh jsdom window. `seed` pre-populates localStorage
 // (values are JSON-stringified). Returns { window, document, localStorage }.
-export function loadApp(seed = {}) {
+export function loadApp(seed = {}, options = {}) {
   const dom = new JSDOM(html, {
     url: 'http://localhost/',
     runScripts: 'outside-only',
     pretendToBeVisual: true,
+    ...(options.virtualConsole ? { virtualConsole: options.virtualConsole } : {}),
   });
   const { window } = dom;
   window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {} });

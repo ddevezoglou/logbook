@@ -304,7 +304,6 @@
     'ΚΑΤΑΓΡΑΦΗΚΕ':['LOGGED','ENREGISTRÉ','ERFASST'],
     'ΕΠΙΛΟΓΗ':['SELECT','SÉLECTIONNER','AUSWÄHLEN'],
     'ΕΠΕΞΕΡΓΑΣΙΑ':['EDIT','MODIFIER','BEARBEITEN'],
-    'ΑΝΤΙΓΡΑΦΗ':['COPY','COPIER','KOPIEREN'],
     'ΔΙΑΓΡΑΦΗ':['DELETE','SUPPRIMER','LÖSCHEN'],
     'επαναλήψεις':['reps','répétitions','Wiederholungen'],
     'επαν.':['reps','rép.','Wdh.'],
@@ -386,7 +385,6 @@
     'ημέρες προπόνησης':['training days','jours d’entraînement','Trainingstage'],
     'ημέρα προπόνησης':['training day','jour d’entraînement','Trainingstag'],
     'ημέρες':['days','jours','Tage'],
-    'Πώς πήγε συνολικά η σημερινή προπόνηση;':['How did today’s workout go overall?','Comment s’est passée la séance aujourd’hui ?','Wie lief das heutige Training insgesamt?'],
     'π.χ. ώμοι πίσω, σταθερά πόδια':['e.g. shoulders back, feet planted','p. ex. épaules en arrière, pieds stables','z. B. Schultern zurück, Füße stabil'],
     'π.χ. Δημήτρης':['e.g. Alex','p. ex. Alex','z. B. Alex'],
     'π.χ.':['e.g.','p. ex.','z. B.']

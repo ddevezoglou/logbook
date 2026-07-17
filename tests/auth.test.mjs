@@ -9,7 +9,7 @@ const configSource = readFileSync(new URL('../supabase-config.js', import.meta.u
 const authSource = readFileSync(new URL('../auth.js', import.meta.url), 'utf8');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
-async function loadAuth({ initialSession = null, signupSession = null, oauthError = null } = {}) {
+async function loadAuth({ initialSession = null, signupSession = null, oauthError = null, onWindow = null } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
   const calls = { signin:[], signup:[], oauth:[], reset:[], update:[], signout:[] };
@@ -55,6 +55,7 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
       },
     },
   };
+  onWindow?.(window);
   window.eval(authSource);
   await flush();
   return {
@@ -248,4 +249,66 @@ test('local sign out preserves workout data stored in the browser', async () => 
   assert.equal(calls.signout[0].scope, 'local');
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
   assert.equal(document.querySelector('#account-menu-status').textContent, 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ');
+});
+
+test('an initial sync that finishes before the gate arms still loads the app', async () => {
+  const { window, document, emitAuth } = await loadAuth();
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:true },
+  }));
+  assert.equal(document.querySelector('script[data-logbook-app]'), null);
+
+  emitAuth('SIGNED_IN', { user:{ id:'user-a', email:'athlete@example.com' } });
+  await flush();
+
+  assert.ok(document.querySelector('script[data-logbook-app]'));
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'loading');
+});
+
+test('an initial sync that failed before the gate arms surfaces the error state', async () => {
+  const { window, document, emitAuth } = await loadAuth();
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:false },
+  }));
+  emitAuth('SIGNED_IN', { user:{ id:'user-a', email:'athlete@example.com' } });
+  await flush();
+
+  assert.equal(document.querySelector('script[data-logbook-app]'), null);
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
+  assert.ok(!document.querySelector('#auth-gate-retry').classList.contains('hidden'));
+});
+
+test('the sync watchdog turns a hung "syncing" state into a retryable error', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const timers = [];
+  const { document } = await loadAuth({ initialSession, onWindow(window) {
+    const original = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay) => { timers.push({ callback, delay }); return original(() => {}, 0); };
+  } });
+
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
+  const watchdog = timers.find(timer => timer.delay === 25000);
+  assert.ok(watchdog, 'the syncing state must arm a watchdog timer');
+
+  watchdog.callback();
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
+  assert.ok(!document.querySelector('#auth-gate-retry').classList.contains('hidden'));
+});
+
+test('language switches keep translating the gate message from its Greek source', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { document } = await loadAuth({ initialSession });
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
+
+  click(document, '.auth-gate-languages [data-language="en"]');
+  await flush();
+  assert.equal(document.querySelector('#auth-gate-message').textContent, 'Fetching your latest workouts and routines.');
+  assert.equal(document.querySelector('#auth-gate-title').textContent, 'SYNCING DATA');
+
+  click(document, '.auth-gate-languages [data-language="fr"]');
+  await flush();
+  assert.equal(document.querySelector('#auth-gate-message').textContent, 'Récupération de vos dernières séances et programmes.');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
 });
