@@ -32,6 +32,7 @@ test('Supabase browser client uses the public project configuration', () => {
   assert.equal(calls[0][2].auth.persistSession, true);
   assert.equal(calls[0][2].auth.autoRefreshToken, true);
   assert.equal(calls[0][2].auth.detectSessionInUrl, true);
+  assert.equal(dom.window.LogbookSupabaseConfig.siteUrl, 'http://localhost:3000/');
   assert.equal(dom.window.LogbookSupabase, client);
   assert.equal(readyClient, client);
 });
@@ -39,9 +40,11 @@ test('Supabase browser client uses the public project configuration', () => {
 test('Supabase scripts load before the application script', () => {
   const config = htmlSource.indexOf('src="supabase-config.js"');
   const client = htmlSource.indexOf('src="supabase-client.js"');
+  const auth = htmlSource.indexOf('src="auth.js"');
   const app = htmlSource.indexOf('src="app.js"');
 
   assert.match(clientSource, /@supabase\/supabase-js@2/);
   assert.ok(config < client);
-  assert.ok(client < app);
+  assert.ok(client < auth);
+  assert.ok(auth < app);
 });

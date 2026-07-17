@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Λογαριασμός — Προτάσεις Σχεδίασης</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --danger:#7a3325; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:560px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,70px) 5vw 66px; display:grid; justify-items:center; gap:clamp(28px,4vw,48px); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.notes { max-width:640px; width:100%; margin:0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+
+/* shared form primitives (ίδια με το site) */
+.mock { width:min(640px,100%); }
+.eyebrow { font-size:.68rem; letter-spacing:.18em; font-weight:800; color:var(--orange); text-transform:uppercase; }
+.fld { display:block; color:var(--muted); font-size:.68rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.fld input { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--line); background:rgba(255,255,255,.27); color:var(--ink); font:500 1rem "Alegreya Sans"; }
+.fld input:focus { outline:2px solid var(--gold); outline-offset:-1px; }
+.btn { display:block; width:100%; min-height:48px; border:1px solid var(--ink); background:var(--ink); color:var(--gold); cursor:pointer; font:800 .74rem "Alegreya Sans"; letter-spacing:.16em; transition:.2s; }
+.btn:hover { background:transparent; color:var(--ink); }
+.btn2 { display:inline-block; min-height:40px; padding:0 18px; border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer; font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; }
+.btn2:hover { background:var(--ink); color:var(--gold); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 1 — «ΣΥΜΠΥΚΝΩΜΕΝΟ ΔΕΛΤΙΟ» (το τωρινό, καθαρισμένο)
+   ============================================================ */
+.p1 { position:relative; border:1px solid var(--ink); background:var(--paper);
+  background-image:linear-gradient(90deg,transparent 0 47px,rgba(122,51,37,.32) 47px 49px,transparent 49px),repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.095) 27px 28px);
+  padding:0 34px 30px 62px; box-shadow:10px 12px 0 rgba(201,162,39,.38),18px 20px 34px rgba(0,0,0,.18); overflow:hidden; }
+.p1::before { content:""; position:absolute; top:0; bottom:0; left:14px; width:18px; background:radial-gradient(circle at center,rgba(21,19,13,.92) 0 3px,rgba(239,232,216,.9) 3.5px 6px,transparent 6.5px) center 11px/18px 35px repeat-y; opacity:.72; }
+.p1-head { min-height:50px; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid var(--ink); }
+.p1-head>span { font:800 .62rem "Alegreya Sans"; letter-spacing:.2em; }
+.p1-head i { font-style:normal; color:var(--orange); }
+.p1-x { width:34px; height:34px; border:1px solid var(--ink); background:transparent; cursor:pointer; font-size:1.2rem; }
+.p1-x:hover { background:var(--ink); color:var(--gold); }
+.p1-intro { display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:22px 0 18px; border-bottom:1px solid var(--line); }
+.p1-intro h2 { margin:4px 0 0; font:700 clamp(1.7rem,4.4vw,2.5rem)/.92 "Roboto Slab"; letter-spacing:-.04em; text-transform:uppercase; }
+.p1-intro h2 em { color:var(--orange); font-style:normal; }
+.p1-no { flex:none; padding:11px 7px; border:2px solid rgba(138,106,28,.6); border-radius:50%; color:var(--orange); font:700 .6rem/1.3 "Roboto Slab"; letter-spacing:.08em; text-align:center; transform:rotate(-8deg); }
+.p1-sub { margin:14px 0 0; color:var(--muted); line-height:1.5; font-size:.95rem; }
+.p1 .toggle { display:grid; grid-template-columns:1fr 1fr; margin:20px 0 18px; border:1px solid var(--ink); background:rgba(255,255,255,.18); }
+.p1 .toggle button { min-height:42px; border:0; background:transparent; color:var(--muted); cursor:pointer; font:800 .7rem "Alegreya Sans"; letter-spacing:.14em; transition:.2s; }
+.p1 .toggle button+button { border-left:1px solid var(--ink); }
+.p1 .toggle button.on { background:var(--ink); color:var(--gold); }
+.p1 form { display:grid; gap:16px; }
+.p1-foot { display:flex; gap:16px; align-items:baseline; margin-top:22px; padding-top:14px; border-top:2px solid var(--ink); }
+.p1-foot span { flex:none; color:var(--orange); font-size:.58rem; font-weight:800; letter-spacing:.17em; }
+.p1-foot p { margin:0; color:var(--muted); font-size:.82rem; line-height:1.45; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 2 — «ΚΑΡΤΑ ΜΕΛΟΥΣ» (σκούρα κάρτα κλαμπ + φόρμα από κάτω)
+   ============================================================ */
+.p2 { border:1px solid var(--ink); background:var(--paper); box-shadow:8px 10px 0 rgba(21,19,13,.16); }
+.p2-card { position:relative; margin:18px 18px 0; padding:20px 22px 18px; background:var(--ink); color:var(--paper); overflow:hidden; }
+.p2-card::before { content:""; position:absolute; inset:6px; border:1px solid rgba(201,162,39,.45); pointer-events:none; }
+.p2-card::after { content:"LOGBOOK"; position:absolute; right:-14px; bottom:-22px; color:rgba(239,232,216,.06); font:700 4.6rem/.8 "Roboto Slab"; letter-spacing:-.06em; pointer-events:none; }
+.p2-club { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:12px; border-bottom:1px dashed rgba(239,232,216,.28); font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:var(--faded); }
+.p2-club b { color:var(--gold); font-size:.66rem; }
+.p2-name { margin:18px 0 2px; font:700 1.5rem/1.1 "Roboto Slab"; overflow-wrap:anywhere; }
+.p2-role { color:var(--faded); font-size:.6rem; font-weight:800; letter-spacing:.18em; }
+.p2-row { display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px; }
+.p2-since small { display:block; color:var(--faded); font-size:.55rem; font-weight:800; letter-spacing:.16em; }
+.p2-since b { font:700 .95rem "Roboto Slab"; color:var(--gold); }
+.p2-sig { font:600 1.5rem/1 "Caveat"; color:rgba(239,232,216,.75); transform:rotate(-3deg); }
+.p2-stamp { position:absolute; top:16px; right:18px; padding:5px 9px 4px; border:2px solid var(--gold); color:var(--gold); font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(6deg); background:rgba(21,19,13,.5); }
+.p2-body { padding:22px; }
+.p2-body .stat { margin:0 0 16px; padding:10px 12px; border-left:3px solid var(--gold); background:rgba(255,255,255,.3); color:var(--muted); font-weight:700; font-size:.88rem; }
+.p2-acts { display:flex; gap:12px; align-items:center; }
+.p2-note { margin:14px 0 0; color:var(--muted); font-size:.82rem; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 3 — «ΚΑΡΤΕΛΑ ΑΡΧΕΙΟΥ» (folder tabs = ΣΥΝΔΕΣΗ/ΕΓΓΡΑΦΗ)
+   ============================================================ */
+.p3 { filter:drop-shadow(8px 10px 0 rgba(21,19,13,.14)); }
+.p3-tabs { display:flex; gap:6px; padding:0 22px; }
+.p3-tabs button { position:relative; top:1px; min-height:44px; padding:0 26px; border:1px solid var(--ink); border-bottom:0; background:var(--paper-dark); color:var(--muted); cursor:pointer; font:800 .7rem "Alegreya Sans"; letter-spacing:.14em; }
+.p3-tabs button.on { background:var(--paper); color:var(--ink); z-index:2; box-shadow:0 2px 0 var(--paper); }
+.p3-tabs button.on::after { content:""; position:absolute; left:12px; right:12px; top:8px; height:3px; background:var(--gold); }
+.p3-sheet { position:relative; border:1px solid var(--ink); background:var(--paper);
+  background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.095) 27px 28px);
+  padding:26px 30px 26px; }
+.p3-sheet::before { content:"ΦΑΚΕΛΟΣ: ΛΟΓΑΡΙΑΣΜΟΣ"; position:absolute; top:12px; right:16px; color:var(--faded); font:800 .56rem "Alegreya Sans"; letter-spacing:.2em; }
+.p3-title { display:flex; align-items:baseline; gap:14px; margin:0 0 6px; }
+.p3-title h2 { margin:0; font:700 1.9rem/1 "Roboto Slab"; letter-spacing:-.03em; text-transform:uppercase; }
+.p3-title .p3-id { color:var(--orange); font:700 .7rem "Roboto Slab"; letter-spacing:.1em; }
+.p3-sub { margin:0 0 20px; color:var(--muted); font-size:.92rem; line-height:1.5; }
+.p3 form { display:grid; gap:15px; max-width:440px; }
+.p3-clip { position:absolute; top:-12px; left:36px; width:26px; height:44px; border:3px solid #8b8474; border-radius:12px 12px 4px 4px; border-bottom:0; opacity:.8; }
+.p3-foot { margin-top:20px; padding-top:12px; border-top:1px dashed var(--line); color:var(--muted); font-size:.8rem; display:flex; gap:14px; }
+.p3-foot span { color:var(--orange); font-weight:800; font-size:.58rem; letter-spacing:.17em; flex:none; padding-top:2px; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 4 — «ΔΕΛΤΑΡΙΟ» (postcard: αριστερά κείμενο, δεξιά πεδία)
+   ============================================================ */
+.p4 { position:relative; border:1px solid var(--ink); background:var(--paper); padding:26px 26px 22px; box-shadow:8px 10px 0 rgba(201,162,39,.3),14px 16px 28px rgba(0,0,0,.16); }
+.p4::before { content:""; position:absolute; inset:8px; border:2px solid transparent; border-image:repeating-linear-gradient(45deg,var(--danger) 0 9px,transparent 9px 18px,#3a4a63 18px 27px,transparent 27px 36px) 2; opacity:.5; pointer-events:none; }
+.p4-grid { position:relative; display:grid; grid-template-columns:1fr 1px 1.1fr; gap:0 24px; }
+.p4-div { background:var(--ink); opacity:.55; }
+.p4-left h2 { margin:2px 0 0; font:700 1.8rem/.95 "Roboto Slab"; letter-spacing:-.03em; text-transform:uppercase; }
+.p4-left h2 em { color:var(--orange); font-style:normal; }
+.p4-msg { margin:16px 0 0; font:500 1.35rem/1.35 "Caveat"; color:#4b4331; transform:rotate(-.5deg); }
+.p4-left .eyebrow { display:block; margin-top:2px; }
+.p4-stamp { position:absolute; top:0; right:0; width:78px; height:92px; border:1px solid var(--line); background:rgba(255,255,255,.35); display:grid; place-items:center; text-align:center; padding:6px; }
+.p4-stamp b { font:700 .58rem/1.4 "Roboto Slab"; color:var(--orange); letter-spacing:.08em; }
+.p4-stamp::after { content:""; position:absolute; inset:-7px; border:5px dotted var(--paper); }
+.p4-post { position:absolute; top:14px; right:64px; width:86px; height:86px; border:2px solid rgba(122,51,37,.4); border-radius:50%; transform:rotate(-14deg); display:grid; place-items:center; color:rgba(122,51,37,.55); font:700 .5rem/1.3 "Roboto Slab"; letter-spacing:.12em; text-align:center; pointer-events:none; }
+.p4-right { padding-top:104px; display:grid; gap:14px; align-content:start; }
+.p4-right .fld input { background:transparent; border:0; border-bottom:1px solid var(--ink); padding:8px 2px; }
+.p4-right .fld input:focus { outline:0; border-bottom:2px solid var(--gold); }
+.p4-toggle { display:flex; gap:18px; font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); }
+.p4-toggle button { border:0; background:none; padding:2px 0; cursor:pointer; color:inherit; font:inherit; letter-spacing:inherit; }
+.p4-toggle button.on { color:var(--ink); box-shadow:0 2px 0 var(--gold); }
+.p4-foot { margin:18px 0 0; padding-top:12px; border-top:1px dashed var(--line); color:var(--muted); font-size:.8rem; }
+@media (max-width:560px){ .p4-grid { grid-template-columns:1fr; } .p4-div { display:none; } .p4-right { padding-top:14px; } .p4-stamp,.p4-post { display:none; } }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN PROPOSALS / 04</p>
+  <h1>Ο ΛΟΓΑΡΙΑΣΜΟΣ<br><em>ΣΑΣ.</em></h1>
+  <p>Τέσσερις προτάσεις για το account dialog. Στόχος: ίδια vintage γλώσσα, λιγότερος «θόρυβος» στο intro, καθαρότερη ιεραρχία — η φόρμα να είναι ο πρωταγωνιστής. Τα κουμπιά μένουν ως έχουν.</p>
+</header>
+
+<!-- ============ 1 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 1</b><span>«ΣΥΜΠΥΚΝΩΜΕΝΟ ΔΕΛΤΙΟ» — το τωρινό, καθαρισμένο· ελάχιστο ρίσκο</span></div>
+<section class="stage">
+  <div class="mock p1">
+    <header class="p1-head"><span>LOGBOOK / <i>CLOUD ACCESS</i></span><button class="p1-x" type="button">×</button></header>
+    <div class="p1-intro">
+      <div>
+        <span class="eyebrow">ΛΟΓΑΡΙΑΣΜΟΣ</span>
+        <h2>ΣΥΝΔΕΣΗ ΣΤΟ <em>CLOUD.</em></h2>
+      </div>
+      <span class="p1-no">MEMBER<br>001</span>
+    </div>
+    <p class="p1-sub">Η σύνδεση είναι το πρώτο βήμα. Τα δεδομένα σας δεν μεταφέρονται ακόμη στο cloud.</p>
+    <div class="toggle"><button class="on" type="button">ΣΥΝΔΕΣΗ</button><button type="button">ΕΓΓΡΑΦΗ</button></div>
+    <form onsubmit="return false">
+      <label class="fld">Email<input type="email" placeholder="name@example.com"></label>
+      <label class="fld">Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+      <button class="btn" type="submit">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+    </form>
+    <footer class="p1-foot"><span>LOCAL DATA</span><p>Οι προπονήσεις παραμένουν σε αυτή τη συσκευή μέχρι να ενεργοποιηθεί ο συγχρονισμός.</p></footer>
+  </div>
+  <p class="notes"><b>Τι αλλάζει:</b> φεύγει η λοξή κορδέλα «CLOUD / ACCESS» (μπαίνει στο header ως κείμενο), ο τίτλος μικραίνει από 4rem σε ~2.5rem και γίνεται ενέργεια («ΣΥΝΔΕΣΗ ΣΤΟ CLOUD»), το MEMBER 001 μετακομίζει δεξιά του τίτλου, η φόρμα γίνεται μονόστηλη με φαρδιά inputs. Ίδιο DNA, μισός θόρυβος. <b>Ελάχιστες αλλαγές CSS.</b></p>
+</section>
+
+<!-- ============ 2 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 2</b><span>«ΚΑΡΤΑ ΜΕΛΟΥΣ» — συνδεδεμένη κατάσταση σαν κάρτα κλαμπ</span></div>
+<section class="stage">
+  <div class="mock p2">
+    <div class="p2-card">
+      <span class="p2-stamp">ΣΥΝΔΕΔΕΜΕΝΟΣ</span>
+      <div class="p2-club"><b>LOGBOOK ATHLETIC CLUB</b><span>EST. 2025</span></div>
+      <div class="p2-name">name@example.com</div>
+      <span class="p2-role">ΜΕΛΟΣ / CLOUD SYNC</span>
+      <div class="p2-row">
+        <div class="p2-since"><small>ΜΕΛΟΣ ΑΠΟ</small><b>ΙΟΥΛ 2026</b></div>
+        <span class="p2-sig">Logbook</span>
+      </div>
+    </div>
+    <div class="p2-body">
+      <p class="stat">Η σύνδεση είναι ενεργή σε αυτή τη συσκευή.</p>
+      <div class="p2-acts">
+        <button class="btn2" type="button">ΑΠΟΣΥΝΔΕΣΗ</button>
+      </div>
+      <p class="p2-note">Οι προπονήσεις παραμένουν σε αυτή τη συσκευή μέχρι να ενεργοποιηθεί ο συγχρονισμός.</p>
+    </div>
+  </div>
+  <p class="notes"><b>Ιδέα για το member view:</b> όταν συνδεθείς, το πάνω μέρος γίνεται σκούρα «κάρτα μέλους» — email σαν όνομα κατόχου, σφραγίδα ΣΥΝΔΕΔΕΜΕΝΟΣ, ημερομηνία εγγραφής, υπογραφή. Το guest view μπορεί να μείνει όπως η Πρόταση 1. <b>Δίνει «ανταμοιβή» στη σύνδεση</b> — ο λογαριασμός αποκτά αντικείμενο, όχι απλώς ένα κείμενο με email.</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 3</b><span>«ΚΑΡΤΕΛΑ ΑΡΧΕΙΟΥ» — ΣΥΝΔΕΣΗ/ΕΓΓΡΑΦΗ ως αυτιά φακέλου</span></div>
+<section class="stage">
+  <div class="mock p3">
+    <div class="p3-tabs">
+      <button class="on" type="button">ΣΥΝΔΕΣΗ</button>
+      <button type="button">ΕΓΓΡΑΦΗ</button>
+    </div>
+    <div class="p3-sheet">
+      <span class="p3-clip" aria-hidden="true"></span>
+      <div class="p3-title"><h2>ΚΑΡΤΕΛΑ ΜΕΛΟΥΣ</h2><span class="p3-id">Νο 001</span></div>
+      <p class="p3-sub">Συμπληρώστε τα στοιχεία σας για πρόσβαση στο cloud.</p>
+      <form onsubmit="return false">
+        <label class="fld">Email<input type="email" placeholder="name@example.com"></label>
+        <label class="fld">Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+        <button class="btn" type="submit">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+      </form>
+      <div class="p3-foot"><span>LOCAL DATA</span>Οι προπονήσεις παραμένουν σε αυτή τη συσκευή μέχρι να ενεργοποιηθεί ο συγχρονισμός.</div>
+    </div>
+  </div>
+  <p class="notes"><b>Το toggle γίνεται αφήγηση:</b> ΣΥΝΔΕΣΗ/ΕΓΓΡΑΦΗ δεν είναι πια κουμπιά-διακόπτης αλλά αυτιά φακέλου αρχείου — δένει με το «καρτέλα μέλους γυμναστηρίου» θέμα του app. Συνδετήρας πάνω, χρυσή υπογράμμιση στο ενεργό tab. <b>Η πιο θεματική λύση</b>· λίγο περισσότερη δουλειά στο responsive.</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 4</b><span>«ΔΕΛΤΑΡΙΟ» — postcard layout, πεδία σαν γραμμές διεύθυνσης</span></div>
+<section class="stage">
+  <div class="mock p4">
+    <div class="p4-grid">
+      <div class="p4-left">
+        <span class="eyebrow">ΛΟΓΑΡΙΑΣΜΟΣ</span>
+        <h2>ΓΕΙΑ ΣΟΥ,<br><em>ΑΘΛΗΤΗ.</em></h2>
+        <p class="p4-msg">Η σύνδεση είναι το πρώτο βήμα — τα δεδομένα σου μένουν εδώ μέχρι να ανοίξει ο συγχρονισμός.</p>
+      </div>
+      <div class="p4-div" aria-hidden="true"></div>
+      <div class="p4-right">
+        <span class="p4-stamp"><b>LOGBOOK<br>CLOUD<br>POST</b></span>
+        <span class="p4-post" aria-hidden="true">LOCAL<br>MODE</span>
+        <div class="p4-toggle"><button class="on" type="button">ΣΥΝΔΕΣΗ</button><button type="button">ΕΓΓΡΑΦΗ</button></div>
+        <form onsubmit="return false" style="display:grid;gap:14px">
+          <label class="fld">Email<input type="email" placeholder="name@example.com"></label>
+          <label class="fld">Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+          <button class="btn" type="submit">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+        </form>
+      </div>
+    </div>
+    <p class="p4-foot">Οι προπονήσεις παραμένουν σε αυτή τη συσκευή μέχρι να ενεργοποιηθεί ο συγχρονισμός.</p>
+  </div>
+  <p class="notes"><b>Η πιο ατμοσφαιρική:</b> καρτ ποστάλ — αριστερά χειρόγραφο μήνυμα (Caveat), δεξιά τα πεδία σαν γραμμές διεύθυνσης με underline inputs, γραμματόσημο + ταχυδρομική σφραγίδα «LOCAL MODE» που μπορεί να αλλάζει σε «SYNCED». Airmail μπορντούρα. <b>Ρίσκο:</b> τα underline inputs αποκλίνουν από τα boxed inputs του υπόλοιπου app — θέλει απόφαση συνέπειας.</p>
+</section>
+
+</body>
+</html>

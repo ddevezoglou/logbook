@@ -40,6 +40,7 @@
   library.addEventListener('load', initializeClient, { once: true });
   library.addEventListener('error', () => {
     console.warn('Logbook cloud connection is unavailable; local mode remains active.');
+    window.dispatchEvent(new CustomEvent('logbook:supabase-unavailable'));
   }, { once: true });
   document.head.append(library);
 })();

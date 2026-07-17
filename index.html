@@ -40,6 +40,15 @@
       <button class="nav-button" data-view="progress">Επίβλεψη</button>
       <button class="nav-button" data-view="profile">Προφίλ</button>
     </nav>
+    <button id="account-open" class="account-menu-card" type="button" aria-haspopup="dialog" aria-controls="account-dialog">
+      <span class="account-menu-mark" aria-hidden="true"><i></i></span>
+      <span class="account-menu-copy">
+        <small>ΛΟΓΑΡΙΑΣΜΟΣ</small>
+        <strong id="account-menu-status">ΤΟΠΙΚΗ ΛΕΙΤΟΥΡΓΙΑ</strong>
+        <span id="account-menu-email" class="hidden" data-i18n-user></span>
+      </span>
+      <b aria-hidden="true">↗</b>
+    </button>
     <div class="language-picker" role="group" aria-label="Γλώσσα εφαρμογής">
       <span>LANG</span>
       <button type="button" data-language="el" aria-pressed="true">EL</button>
@@ -84,7 +93,7 @@
           </div>
           <ol id="home-routine-days" class="home-routine-days"></ol>
           <button class="home-routine-open" type="button" data-home-action="plan">
-            <span>ΑΝΟΙΓΜΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</span><b aria-hidden="true">↗</b>
+            <span>ΑΝΟΙΓΜΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</span>
           </button>
         </article>
         <div class="home-intro">
@@ -337,11 +346,63 @@
       <button id="confirm-delete-accept" class="confirm-delete-button" type="button">Διαγραφή</button>
     </div>
   </dialog>
+  <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-dialog-title">
+    <div class="account-folder">
+      <div id="account-tabs" class="account-tabs" role="group" aria-label="Επιλογή σύνδεσης ή εγγραφής">
+        <button type="button" data-account-mode="signin" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
+        <button type="button" data-account-mode="signup" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+      </div>
+      <div class="account-sheet">
+      <span class="account-clip" aria-hidden="true"></span>
+      <button id="account-close" type="button" aria-label="Κλείσιμο λογαριασμού">×</button>
+      <h2 id="account-dialog-title">ΚΑΡΤΑ ΜΕΛΟΥΣ</h2>
+
+      <section id="account-guest">
+        <button id="account-google" class="account-provider-button" type="button">
+          <svg class="account-provider-mark" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285f4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/>
+            <path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/>
+            <path fill="#fbbc05" d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/>
+            <path fill="#ea4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/>
+          </svg>
+          <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
+        </button>
+        <div class="account-provider-divider"><span>Ή ΜΕ EMAIL</span></div>
+
+        <form id="account-signin-form" class="account-form">
+          <label>Email<input id="account-signin-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+          <label>Κωδικός<input id="account-signin-password" type="password" autocomplete="current-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+          <button class="primary-button" type="submit">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+        </form>
+
+        <form id="account-signup-form" class="account-form hidden">
+          <label>Email<input id="account-signup-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+          <label>Κωδικός<input id="account-signup-password" type="password" autocomplete="new-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+          <label>Επιβεβαίωση κωδικού<input id="account-signup-confirm" type="password" autocomplete="new-password" minlength="8" required></label>
+          <button class="primary-button" type="submit">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
+        </form>
+      </section>
+
+      <section id="account-member" class="account-member hidden">
+        <div class="account-card">
+          <span class="account-connected-stamp">ΣΥΝΔΕΔΕΜΕΝΟΣ</span>
+          <span class="account-card-club">LOGBOOK MEMBER</span>
+          <strong id="account-member-email" data-i18n-user></strong>
+        </div>
+        <p>Η σύνδεση είναι ενεργή σε αυτή τη συσκευή.</p>
+        <button id="account-signout" class="secondary-button" type="button">ΑΠΟΣΥΝΔΕΣΗ</button>
+      </section>
+
+      <p id="account-form-status" class="account-form-status" role="status" aria-live="polite">Η σύνδεση στο cloud φορτώνει…</p>
+      </div>
+    </div>
+  </dialog>
   <div id="toast" class="toast" role="status"></div>
   <script src="quotes.js"></script>
   <script src="i18n.js"></script>
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -66,8 +66,9 @@ test('booting the app on seeded data grants stage 4 GYMRAT with correct week pro
   });
   assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
   const progress = document.querySelector('#profile-reward-ring').getAttribute('aria-label');
+  const expectedStreak = pastWeeks + (expectedThisWeek === planOffsets.length ? 1 : 0);
   assert.ok(progress.includes('GYMRAT'), progress);
-  assert.ok(progress.includes(`${pastWeeks} συνεχόμενες εβδομάδες`), progress);
+  assert.ok(progress.includes(`${expectedStreak} συνεχόμενες εβδομάδες`), progress);
   assert.ok(progress.includes(`${expectedThisWeek}/4 αυτή την εβδομάδα`), progress);
   const stamp = document.querySelector('#home-reward-stamp');
   assert.ok(!stamp.classList.contains('hidden'));
