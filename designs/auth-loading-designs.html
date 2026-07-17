@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auth Loading — Προτάσεις Γραφικών Συγχρονισμού</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --cover:#211d15; --cover-hi:#2e2a1f; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow-dark { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:640px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(48px,6vw,80px) 5vw 80px; display:grid; justify-items:center; gap:34px; background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:72px 72px; }
+.notes { max-width:660px; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--gold); }
+
+/* ===== notebook page mock (right page of the auth book) ===== */
+.page { position:relative; width:min(520px,100%); min-height:480px; padding:clamp(30px,5vw,46px); color:var(--ink); background-color:var(--paper); border-radius:0 10px 10px 0; background-image:linear-gradient(270deg,rgba(255,253,244,0) 88%,rgba(255,253,244,.55) 94%,rgba(255,253,244,0) 97.5%),linear-gradient(270deg,transparent 0 62%,rgba(21,19,13,.02) 74%,rgba(21,19,13,.05) 84%,rgba(21,19,13,.11) 92%,rgba(21,19,13,.22) 97%,rgba(21,19,13,.36) 100%),repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.09) 27px 28px); box-shadow:0 24px 44px rgba(0,0,0,.55); display:grid; align-content:center; justify-items:start; }
+.page::after { content:"MEMBER"; position:absolute; right:20px; bottom:16px; padding:5px 10px 4px; border:2px solid rgba(138,106,28,.4); color:rgba(138,106,28,.55); font:800 .62rem "Alegreya Sans"; letter-spacing:.16em; transform:rotate(-6deg); mix-blend-mode:multiply; }
+.eyebrow { font-size:.72rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 10px; text-transform:uppercase; }
+.load-title { font:700 clamp(1.5rem,3.2vw,2.15rem)/.95 "Roboto Slab",serif; margin:0; letter-spacing:-.04em; text-transform:uppercase; max-width:100%; }
+.load-msg { max-width:34ch; margin:16px 0 0; color:var(--muted); line-height:1.55; font-size:.98rem; }
+.gfx { height:84px; display:flex; align-items:center; margin-bottom:22px; }
+
+/* ============================================================
+   Π1 — «ΜΠΑΡΑ ΜΕ ΔΙΣΚΟΥΣ»: οι δίσκοι φορτώνονται στη μπάρα
+   ============================================================ */
+.p1-bar { position:relative; width:190px; height:8px; border-radius:4px; background:var(--ink); }
+.p1-bar::before,.p1-bar::after { content:""; position:absolute; top:50%; width:6px; height:26px; transform:translateY(-50%); background:var(--ink); border-radius:2px; }
+.p1-bar::before { left:26px; } .p1-bar::after { right:26px; }
+.p1-bar i { position:absolute; top:50%; width:9px; border-radius:3px; background:var(--orange); transform:translateY(-50%) scaleY(0); transform-origin:center; animation:p1load 2.2s ease-in-out infinite; }
+.p1-bar i:nth-child(1) { left:36px; height:44px; animation-delay:0s; }
+.p1-bar i:nth-child(2) { left:48px; height:34px; animation-delay:.18s; }
+.p1-bar i:nth-child(3) { left:60px; height:24px; animation-delay:.36s; }
+.p1-bar i:nth-child(4) { right:36px; height:44px; animation-delay:.09s; }
+.p1-bar i:nth-child(5) { right:48px; height:34px; animation-delay:.27s; }
+.p1-bar i:nth-child(6) { right:60px; height:24px; animation-delay:.45s; }
+@keyframes p1load { 0%{transform:translateY(-50%) scaleY(0)} 22%,68%{transform:translateY(-50%) scaleY(1)} 90%,100%{transform:translateY(-50%) scaleY(0)} }
+
+/* ============================================================
+   Π2 — «ΜΕΛΑΝΙ ΠΟΥ ΓΡΑΦΕΙ»: χειρόγραφη γραμμή γεμίζει τις σειρές
+   ============================================================ */
+.p2-ink { width:220px; height:80px; }
+.p2-ink path { fill:none; stroke:var(--ink); stroke-width:2.4; stroke-linecap:round; stroke-dasharray:340; stroke-dashoffset:340; animation:p2write 2.8s ease-in-out infinite; }
+.p2-ink path.accent { stroke:var(--orange); animation-delay:.5s; }
+@keyframes p2write { 0%{stroke-dashoffset:340; opacity:1} 62%{stroke-dashoffset:0; opacity:1} 82%{opacity:1} 100%{stroke-dashoffset:0; opacity:0} }
+
+/* ============================================================
+   Π3 — «ΣΕΛΙΔΕΣ ΠΟΥ ΓΥΡΝΟΥΝ»: μικρό τετράδιο ξεφυλλίζει
+   ============================================================ */
+.p3-book { position:relative; width:104px; height:70px; }
+.p3-book .base { position:absolute; inset:0; border:2.4px solid var(--ink); border-radius:4px 8px 8px 4px; background:var(--paper-dark); }
+.p3-book .base::before { content:""; position:absolute; inset:8px 12px; background:repeating-linear-gradient(0deg,rgba(21,19,13,.18) 0 2px,transparent 2px 9px); }
+.p3-book .spine { position:absolute; left:50%; top:-4px; bottom:-4px; width:2.4px; background:var(--ink); transform:translateX(-50%); }
+.p3-book .flip { position:absolute; left:50%; top:2px; bottom:2px; width:calc(50% - 4px); background:var(--paper); border:2px solid var(--ink); border-left:0; border-radius:0 6px 6px 0; transform-origin:left center; animation:p3flip 1.6s cubic-bezier(.55,0,.3,1) infinite; }
+.p3-book .flip::before { content:""; position:absolute; inset:6px 8px; background:repeating-linear-gradient(0deg,rgba(138,106,28,.5) 0 2px,transparent 2px 9px); }
+@keyframes p3flip { 0%{transform:perspective(400px) rotateY(0)} 78%,100%{transform:perspective(400px) rotateY(-178deg)} }
+
+/* ============================================================
+   Π4 — «ΣΦΡΑΓΙΔΑ»: σφραγίδα πατάει SYNC σαν πρωτόκολλο
+   ============================================================ */
+.p4-wrap { position:relative; width:150px; height:84px; display:grid; place-items:center; }
+.p4-stamp { padding:8px 16px 7px; border:3px solid var(--orange); color:var(--orange); font:800 .82rem "Alegreya Sans"; letter-spacing:.2em; transform:rotate(-7deg); border-radius:3px; mix-blend-mode:multiply; animation:p4press 1.9s ease-in-out infinite; }
+@keyframes p4press { 0%,12%{opacity:0; transform:rotate(-7deg) scale(1.7)} 22%,70%{opacity:1; transform:rotate(-7deg) scale(1)} 88%,100%{opacity:0; transform:rotate(-7deg) scale(1)} }
+
+/* ============================================================
+   Π5 — «ΕΓΓΡΑΦΕΣ ΠΟΥ ΕΡΧΟΝΤΑΙ»: σκελετός σημειώσεων στις σειρές
+   ============================================================ */
+.p5-rows { display:grid; gap:13px; width:210px; }
+.p5-rows i { height:9px; border-radius:4px; background:linear-gradient(90deg,rgba(21,19,13,.14) 25%,rgba(138,106,28,.32) 50%,rgba(21,19,13,.14) 75%); background-size:220% 100%; animation:p5shimmer 1.5s linear infinite; }
+.p5-rows i:nth-child(1) { width:78%; }
+.p5-rows i:nth-child(2) { width:100%; animation-delay:.12s; }
+.p5-rows i:nth-child(3) { width:56%; animation-delay:.24s; }
+@keyframes p5shimmer { 0%{background-position:130% 0} 100%{background-position:-90% 0} }
+
+@media(prefers-reduced-motion:reduce){ .p1-bar i{animation:none; transform:translateY(-50%) scaleY(1)} .p2-ink path{animation:none; stroke-dashoffset:0} .p3-book .flip{animation:none} .p4-stamp{animation:none; opacity:1} .p5-rows i{animation:none} }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow-dark">DESIGNS / AUTH GATE</p>
+  <h1>ΓΡΑΦΙΚΑ <em>ΣΥΓΧΡΟΝΙΣΜΟΥ</em></h1>
+  <p>Πέντε προτάσεις για την οθόνη «ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ» μετά το sign-in. Όλες διορθώνουν το ξεχείλωμα του τίτλου (μικρότερο clamp, μένει μέσα στη σελίδα) και αντικαθιστούν τις τρεις απλές μπάρες με γραφικό που δένει με το σημειωματάριο. Ένα accent χρώμα, ένας ρυθμός κίνησης, σεβασμός στο prefers-reduced-motion.</p>
+</header>
+
+<div class="attempt-label"><b>Π1</b><span>ΜΠΑΡΑ ΜΕ ΔΙΣΚΟΥΣ — οι δίσκοι «φορτώνονται» στη μπάρα όσο φορτώνουν τα δεδομένα</span></div>
+<section class="stage">
+  <article class="page">
+    <div class="gfx"><span class="p1-bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+    <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
+    <h2 class="load-title">ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ</h2>
+    <p class="load-msg">Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.</p>
+  </article>
+  <p class="notes"><b>Γιατί:</b> δένει άμεσα με το brand (προπόνηση). Οι δίσκοι εμφανίζονται συμμετρικά από μέσα προς τα έξω και αδειάζουν ξανά — φυσικός «παλμός φόρτωσης» χωρίς ποσοστά.</p>
+</section>
+
+<div class="attempt-label"><b>Π2</b><span>ΜΕΛΑΝΙ ΠΟΥ ΓΡΑΦΕΙ — χειρόγραφη γραμμή γεμίζει τις σειρές του τετραδίου</span></div>
+<section class="stage">
+  <article class="page">
+    <div class="gfx">
+      <svg class="p2-ink" viewBox="0 0 220 80" aria-hidden="true">
+        <path d="M6 22 q14 -10 28 -2 t30 0 t30 -2 t32 2 t30 0 t28 -2"/>
+        <path class="accent" d="M6 50 q16 -8 30 -1 t32 1 t28 -3 t30 3 t26 -1"/>
+        <path d="M6 76 q12 -8 26 -2 t28 1 t26 -2"/>
+      </svg>
+    </div>
+    <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
+    <h2 class="load-title">ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ</h2>
+    <p class="load-msg">Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.</p>
+  </article>
+  <p class="notes"><b>Γιατί:</b> το πιο «σημειωματάριο» απ' όλα — σαν να ξαναγράφονται οι καταχωρήσεις στη σελίδα. Η μεσαία γραμμή σε χρυσό δίνει το accent. Ταιριάζει και με το typewriter της αριστερής σελίδας.</p>
+</section>
+
+<div class="attempt-label"><b>Π3</b><span>ΣΕΛΙΔΕΣ ΠΟΥ ΓΥΡΝΟΥΝ — μικρό τετράδιο ξεφυλλίζει μόνο του</span></div>
+<section class="stage">
+  <article class="page">
+    <div class="gfx">
+      <span class="p3-book" aria-hidden="true"><span class="base"></span><span class="flip"></span><span class="spine"></span></span>
+    </div>
+    <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
+    <h2 class="load-title">ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ</h2>
+    <p class="load-msg">Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.</p>
+  </article>
+  <p class="notes"><b>Γιατί:</b> κυριολεκτικό «ξεφύλλισμα του ιστορικού». Καθαρό, αναγνωρίσιμο loader· η 3D περιστροφή σελίδας δίνει ζωή χωρίς χρώματα ή θόρυβο.</p>
+</section>
+
+<div class="attempt-label"><b>Π4</b><span>ΣΦΡΑΓΙΔΑ — σφραγίδα SYNC πατάει σαν πρωτόκολλο, ταιριάζει με το MEMBER</span></div>
+<section class="stage">
+  <article class="page">
+    <div class="gfx"><span class="p4-wrap" aria-hidden="true"><span class="p4-stamp">SYNC</span></span></div>
+    <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
+    <h2 class="load-title">ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ</h2>
+    <p class="load-msg">Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.</p>
+  </article>
+  <p class="notes"><b>Γιατί:</b> παίζει με το υπάρχον στοιχείο MEMBER κάτω δεξιά — η σελίδα «σφραγίζεται» ξανά και ξανά μέχρι να ολοκληρωθεί ο συγχρονισμός. Ρετρό, γραφειοκρατικό χιούμορ που ταιριάζει στο ύφος.</p>
+</section>
+
+<div class="attempt-label"><b>Π5</b><span>ΕΓΓΡΑΦΕΣ ΠΟΥ ΕΡΧΟΝΤΑΙ — σκελετός σημειώσεων πάνω στις σειρές</span></div>
+<section class="stage">
+  <article class="page">
+    <div class="gfx"><span class="p5-rows" aria-hidden="true"><i></i><i></i><i></i></span></div>
+    <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
+    <h2 class="load-title">ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ</h2>
+    <p class="load-msg">Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.</p>
+  </article>
+  <p class="notes"><b>Γιατί:</b> κλασικό skeleton pattern αλλά «μεταφρασμένο» σε σημειωματάριο: οι γραμμές-placeholder κάθονται πάνω στις ήδη τυπωμένες σειρές, σαν κείμενο που δεν έχει γραφτεί ακόμα. Το πιο διακριτικό από τα πέντε.</p>
+</section>
+
+</body>
+</html>

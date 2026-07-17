@@ -6,7 +6,27 @@ const store = {
   }
 };
 
-window.addEventListener('logbook:cloud-data-applied', () => window.location.reload());
+// A cloud payload was just written into localStorage. A blind reload here would
+// wipe any half-typed workout, plan day or profile edit, so reload only when the
+// screen holds no unsaved work; otherwise defer to the next safe navigation.
+let pendingCloudReload = false;
+function hasUnsavedWork() {
+  if (state.editingSessionId || state.copyingSessionId || state.editingDay) return true;
+  if ($('#free-exercises').children.length) return true;
+  const typedFields = $$('#scheduled-session input[type="number"], #scheduled-session input[type="text"], #plan-exercises-container input[type="text"], #plan-exercises-container textarea');
+  if (typedFields.some(field => String(field.value).trim() !== '')) return true;
+  if ($('#session-comments').value.trim() || $('#workout-name').value.trim() || $('#routine-name').value.trim()) return true;
+  return $('#profile-form').dataset.dirty === 'true';
+}
+window.addEventListener('logbook:cloud-data-applied', () => {
+  if (hasUnsavedWork()) {
+    pendingCloudReload = true;
+    toast('Ήρθαν αλλαγές από άλλη συσκευή. Θα εφαρμοστούν μόλις αποθηκεύσετε.');
+    return;
+  }
+  pendingCloudReload = false;
+  window.location.reload();
+});
 
 function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.') {
   try {
@@ -1072,6 +1092,7 @@ function prepareProfileImage(file) {
 function loadProfile() {
   const profile = state.profile;
   $('#profile-form').reset();
+  $('#profile-form').dataset.dirty = 'false';
   customAvatarData = profile?.customImage || '';
   $('#profile-birthdate').max = localDateInputValue();
   if (profile) {
@@ -1191,6 +1212,7 @@ function loadSessionForCopy(sessionId) {
 }
 
 function showView(view) {
+  if (pendingCloudReload && !hasUnsavedWork()) { window.location.reload(); return; }
   const current = $('.view.active')?.id.replace('-view','');
   const labels = { home:'Αρχική', log:'Καταγραφή', plan:'Πρόγραμμα', overview:'Ιστορικό', progress:'Επίβλεψη', profile:'Προφίλ' };
   closeMenu();
@@ -1353,6 +1375,7 @@ $('#confirm-delete-accept').addEventListener('click', () => {
 $('#exercise-delete-dialog').addEventListener('cancel', () => { pendingConfirmation = null; pendingSecondaryConfirmation = null; });
 const renderProfileDraft = () => {
   $('#profile-status').textContent = 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ';
+  $('#profile-form').dataset.dirty = 'true';
   renderProfilePreview();
 };
 $('#profile-form').addEventListener('input', renderProfileDraft);
@@ -1393,6 +1416,7 @@ $('#profile-form').addEventListener('submit', event => {
     return toast('Δεν υπάρχει αρκετός χώρος για την εικόνα. Χρειάζεται μικρότερο αρχείο.', 'error');
   }
   state.profile = profile;
+  $('#profile-form').dataset.dirty = 'false';
   $('#profile-status').textContent = 'ΑΠΟΘΗΚΕΥΜΕΝΟ';
   renderProfilePreview();
   renderMenuIdentity();

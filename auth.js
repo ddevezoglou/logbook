@@ -13,6 +13,12 @@
   let passwordRecoveryActive = false;
   let pendingSyncUserId = null;
   let appLoaded = false;
+  // The initial-sync event can fire before renderSession() arms pendingSyncUserId
+  // (e.g. offline boot, where cloud-sync completes instantly). Keep the last
+  // result so a late listener can still consume it instead of hanging on "syncing".
+  let lastSyncResult = null;
+  let syncWatchdog = null;
+  const SYNC_WATCHDOG_MS = 25000;
 
   function setStatus(message = '', kind = 'neutral') {
     status.textContent = message ? t(message) : '';
@@ -40,8 +46,10 @@
     setStatus('');
   }
 
+  let gateMessageSource = '';
   function setGateState(state, message = '') {
     gate.dataset.state = state;
+    if (message) gateMessageSource = message;
     const checking = ['checking', 'syncing', 'loading', 'error'].includes(state);
     $('#auth-gate-progress').classList.toggle('hidden', !checking);
     guest.classList.toggle('hidden', state !== 'login');
@@ -89,15 +97,29 @@
     const userId = nextSession?.user?.id;
     if (!userId || document.body.classList.contains('app-ready')) return;
     pendingSyncUserId = userId;
+    if (lastSyncResult && lastSyncResult.userId === userId) {
+      const { success } = lastSyncResult;
+      lastSyncResult = null;
+      if (success) return loadApplication();
+      setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+      return;
+    }
     setGateState('syncing', 'Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.');
+    clearTimeout(syncWatchdog);
+    syncWatchdog = setTimeout(() => {
+      if (pendingSyncUserId === userId && gate.dataset.state === 'syncing') {
+        setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+      }
+    }, SYNC_WATCHDOG_MS);
   }
 
   function loadApplication() {
     setGateState('loading', 'Όλα είναι έτοιμα. Ανοίγουμε το Logbook.');
-    if (appLoaded || document.querySelector('script[data-logbook-app]')) {
+    if (appLoaded) {
       window.location.reload();
       return;
     }
+    if (document.querySelector('script[data-logbook-app]')) return;
     const script = document.createElement('script');
     script.src = 'app.js';
     script.dataset.logbookApp = '';
@@ -314,7 +336,11 @@
 
   window.addEventListener('logbook:initial-sync-complete', event => {
     const { userId, success } = event.detail || {};
+    if (!userId) return;
+    lastSyncResult = { userId, success:Boolean(success) };
     if (!pendingSyncUserId || userId !== pendingSyncUserId) return;
+    clearTimeout(syncWatchdog);
+    lastSyncResult = null;
     if (success) loadApplication();
     else setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
@@ -323,9 +349,11 @@
     setGateState('error', 'Η υπηρεσία σύνδεσης δεν είναι διαθέσιμη. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
   document.addEventListener('logbook:languagechange', () => {
-    renderSession(session);
-    const message = $('#auth-gate-message').textContent;
-    if (message) $('#auth-gate-message').textContent = t(message);
+    // While the gate is mid-flow (checking/syncing/loading/error) re-rendering the
+    // session would yank it to the login form; only re-translate in place there.
+    if (!['checking', 'syncing', 'loading', 'error'].includes(gate.dataset.state)) renderSession(session);
+    setGateState(gate.dataset.state);
+    if (gateMessageSource) $('#auth-gate-message').textContent = t(gateMessageSource);
   });
 
   setMode('signin');
@@ -334,7 +362,7 @@
 
   // Typewriter on the auth gate's left page: types each word, holds, erases, moves on.
   (() => {
-    const WORDS = ['TRAIN.', 'WRITE.', 'REPEAT.'];
+    const WORDS = ['TRAIN.', 'LOG.', 'REPEAT.'];
     const typed = $('#auth-gate-typed');
     if (!typed) return;
     // Static text when the user prefers reduced motion, and under jsdom (tests):
