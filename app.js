@@ -1089,6 +1089,12 @@ function prepareProfileImage(file) {
   });
 }
 
+function setProfileStatus(message) {
+  const status = $('#profile-status');
+  status.textContent = message;
+  status.classList.toggle('hidden', !message);
+}
+
 function loadProfile() {
   const profile = state.profile;
   $('#profile-form').reset();
@@ -1100,9 +1106,9 @@ function loadProfile() {
     $('#profile-birthdate').value = profile.birthdate || '';
     $('#profile-weight').value = profile.weight || '';
     $('#profile-weight-unit').value = profile.weightUnit || 'kg';
-    $('#profile-status').textContent = 'ΑΠΟΘΗΚΕΥΜΕΝΟ';
+    setProfileStatus('');
   } else {
-    $('#profile-status').textContent = 'ΝΕΟ ΠΡΟΦΙΛ';
+    setProfileStatus('ΝΕΟ ΠΡΟΦΙΛ');
   }
   renderProfilePreview();
   renderMenuIdentity();
@@ -1374,7 +1380,7 @@ $('#confirm-delete-accept').addEventListener('click', () => {
 });
 $('#exercise-delete-dialog').addEventListener('cancel', () => { pendingConfirmation = null; pendingSecondaryConfirmation = null; });
 const renderProfileDraft = () => {
-  $('#profile-status').textContent = 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ';
+  setProfileStatus('ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ');
   $('#profile-form').dataset.dirty = 'true';
   renderProfilePreview();
 };
@@ -1417,7 +1423,7 @@ $('#profile-form').addEventListener('submit', event => {
   }
   state.profile = profile;
   $('#profile-form').dataset.dirty = 'false';
-  $('#profile-status').textContent = 'ΑΠΟΘΗΚΕΥΜΕΝΟ';
+  setProfileStatus('');
   renderProfilePreview();
   renderMenuIdentity();
   renderHomeProfileCard();

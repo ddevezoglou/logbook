@@ -33,6 +33,14 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
 
+test('athlete profile card uses the compact labels and keeps its motto on one line', () => {
+  const { document } = loadApp();
+  assert.equal(document.querySelector('.profile-card-top > span').textContent, 'LOGBOOK');
+  assert.equal(document.querySelector('.profile-card-copy > span').textContent, 'ΟΝΟΜΑ');
+  assert.equal(document.querySelector('.profile-card-foot > span').textContent, 'TRAIN . LOG . REPEAT');
+  assert.match(styles, /\.profile-card-foot span\s*\{[^}]*white-space:nowrap;/);
+});
+
 test('home shows the saved profile card and opens the workout log', () => {
   const { document } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
   assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
@@ -1149,7 +1157,8 @@ test('profile form submit persists the profile and updates the menu identity', (
   assert.equal(profile.weight, 80);
   assert.equal(profile.avatar, 'custom');
   assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
-  assert.equal(document.querySelector('#profile-status').textContent, 'ΑΠΟΘΗΚΕΥΜΕΝΟ');
+  assert.equal(document.querySelector('#profile-status').textContent, '');
+  assert.ok(document.querySelector('#profile-status').classList.contains('hidden'));
   assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
   assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('#toast').textContent, 'Το προφίλ αποθηκεύτηκε');
@@ -1173,7 +1182,8 @@ test('profile drafts stay unsaved and are discarded after leaving the profile vi
   assert.equal(document.querySelector('#profile-name').value, 'Δημήτρης');
   assert.equal(document.querySelector('#profile-birthdate').value, '1990-01-01');
   assert.equal(document.querySelector('#profile-weight').value, '80');
-  assert.equal(document.querySelector('#profile-status').textContent, 'ΑΠΟΘΗΚΕΥΜΕΝΟ');
+  assert.equal(document.querySelector('#profile-status').textContent, '');
+  assert.ok(document.querySelector('#profile-status').classList.contains('hidden'));
 });
 
 test('an unfinished new profile is cleared without creating stored profile data', () => {
