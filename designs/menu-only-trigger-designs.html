@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Χωρίς πάνω μπάρα — μόνο ένδειξη μενού</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 90px; }
+  h1 { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:760px; line-height:1.5; margin:0 0 40px; }
+  .variant { margin-bottom:60px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.25rem; margin:0; }
+  .variant-title span { color:var(--orange); font-weight:800; font-size:.7rem; letter-spacing:.12em; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:720px; line-height:1.45; }
+
+  /* ---- mockup σελίδας: home χωρίς topbar ---- */
+  .page-mock { position:relative; height:340px; overflow:hidden; background:var(--paper); border:1px solid var(--line); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:96px 96px; }
+  .page-mock .content { padding:56px 6% 0 12%; }
+  .page-mock .kicker { font:800 .62rem "Alegreya Sans"; letter-spacing:.22em; color:var(--orange); text-transform:uppercase; }
+  .page-mock h3 { margin:10px 0 0; font:700 clamp(2rem,4.5vw,3.4rem)/.92 "Roboto Slab",serif; text-transform:uppercase; letter-spacing:-.03em; }
+  .page-mock h3 em { font-style:italic; color:var(--orange); }
+  .page-mock p { max-width:44ch; margin:16px 0 0; color:var(--muted); line-height:1.5; }
+  .headline-rule { width:120px; height:3px; background:var(--ink); margin-top:18px; box-shadow:0 5px 0 -4px var(--ink); }
+
+  /* ---- κοινό: τρεις γραμμές hamburger ---- */
+  .bars { display:grid; gap:5px; }
+  .bars i { display:block; width:22px; height:2px; background:currentColor; }
+  .bars i:nth-child(2) { width:16px; }
+
+  /* ============ A: γυμνές γραμμές, πάνω δεξιά ============ */
+  .vA .trigger { position:absolute; top:22px; right:26px; padding:12px; border:1px solid transparent; background:transparent; color:var(--ink); cursor:pointer; transition:border-color .2s,background .2s,color .2s; }
+  .vA .trigger:hover { border-color:var(--ink); background:var(--ink); color:var(--paper); }
+
+  /* ============ B: τετράγωνο κουμπί, στιλ υπάρχοντος κουμπιού ============ */
+  .vB .trigger { position:absolute; top:20px; right:26px; width:46px; height:46px; display:grid; place-items:center; border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer; transition:background .2s,color .2s,transform .2s; }
+  .vB .trigger:hover { background:var(--ink); color:var(--paper); transform:translateY(-1px); }
+
+  /* ============ C: μελανί μπλοκ με λογότυπο-γραμμές ============ */
+  .vC .trigger { position:absolute; top:0; right:34px; padding:16px 15px 13px; border:0; border-top:0; background:var(--ink); color:var(--paper); cursor:pointer; display:flex; align-items:flex-end; gap:3px; box-shadow:0 6px 14px rgba(21,19,13,.25); transition:padding .2s; }
+  .vC .trigger i { display:block; width:5px; background:currentColor; }
+  .vC .trigger i:nth-child(1) { height:22px; }
+  .vC .trigger i:nth-child(2) { height:14px; }
+  .vC .trigger i:nth-child(3) { height:18px; background:var(--gold); }
+  .vC .trigger:hover { padding-top:22px; }
+
+  /* ============ D: κορδέλα-σελιδοδείκτης ============ */
+  .vD .trigger { position:absolute; top:0; right:8%; width:44px; padding:18px 0 14px; border:0; background:linear-gradient(180deg,#8f1d1d,#7c1a1a); color:#efe8d8; cursor:pointer; display:grid; justify-items:center; gap:5px; clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 12px),0 100%); box-shadow:0 8px 16px rgba(21,19,13,.3); transition:padding .2s; }
+  .vD .trigger:hover { padding-top:26px; }
+  .vD .trigger i { display:block; width:18px; height:2px; background:currentColor; }
+  .vD .trigger i:nth-child(2) { width:12px; }
+
+  /* ============ E: σφραγίδα-κύκλος, χαμηλά δεξιά (FAB) ============ */
+  .vE .trigger { position:absolute; right:26px; bottom:24px; width:54px; height:54px; border-radius:50%; border:2px solid var(--ink); background:var(--paper); color:var(--ink); display:grid; place-items:center; cursor:pointer; box-shadow:0 10px 20px rgba(21,19,13,.22); transition:background .2s,color .2s,transform .2s; }
+  .vE .trigger:hover { background:var(--ink); color:var(--paper); transform:translateY(-2px); }
+
+  /* demo: μίνι side-menu που ανοίγει με κλικ */
+  .mini-menu { position:absolute; top:0; right:0; bottom:0; width:min(240px,70%); background:var(--ink); color:var(--paper); padding:26px 22px; transform:translateX(100%); transition:transform .3s ease; display:flex; flex-direction:column; gap:4px; z-index:5; }
+  .page-mock.open .mini-menu { transform:none; }
+  .mini-menu strong { font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; color:var(--gold); margin-bottom:10px; }
+  .mini-menu a { color:var(--paper); text-decoration:none; font:700 .95rem "Roboto Slab",serif; text-transform:uppercase; letter-spacing:.06em; padding:8px 0; border-bottom:1px solid rgba(239,232,216,.14); }
+  .mini-menu a:hover { color:var(--gold); }
+  .mini-close { position:absolute; top:10px; right:14px; background:none; border:0; color:var(--paper); font-size:1.3rem; cursor:pointer; }
+  .hint { position:absolute; left:14px; bottom:10px; font:700 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+</style>
+</head>
+<body>
+<h1>Χωρίς πάνω μπάρα</h1>
+<p class="intro">Η topbar (λογότυπο + «Μενού») φεύγει τελείως. Μένει μόνο μια διακριτική ένδειξη μενού πάνω στη σελίδα, χωρίς καθόλου κείμενο. Πέντε εκδοχές — πάτησε την ένδειξη σε κάθε mockup για να δεις το άνοιγμα.</p>
+
+<section class="variant vA">
+  <div class="variant-title"><h2>Α — Γυμνές γραμμές</h2><span>ΜΙΝΙΜΑΛ</span></div>
+  <p class="variant-note">Τρεις γραμμές πάνω δεξιά, χωρίς κουτί. Στο hover γεμίζει μελανί. Το πιο αθόρυβο: η σελίδα δείχνει εντελώς καθαρή.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><span class="bars"><i></i><i></i><i></i></span></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Το περιεχόμενο ξεκινά αμέσως από την κορυφή — κερδίζεις 76px ύψος σε κάθε προβολή.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vB">
+  <div class="variant-title"><h2>Β — Τετράγωνο κουμπί</h2><span>ΣΥΝΕΠΕΙΑ ΜΕ ΚΟΥΜΠΙΑ</span></div>
+  <p class="variant-note">Ίδια γλώσσα με τα υπάρχοντα secondary buttons: τετράγωνο περίγραμμα 1px, γέμισμα μελανί στο hover. Πιο εμφανές «πατήσιμο» από το Α.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><span class="bars"><i></i><i></i><i></i></span></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Καθαρό, οικείο, δεν χρειάζεται εξήγηση. Ασφαλής επιλογή.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vC">
+  <div class="variant-title"><h2>Γ — Μελανί μπλοκ με γραμμές λογοτύπου</h2><span>ΤΑΥΤΟΤΗΤΑ</span></div>
+  <p class="variant-note">Κρέμεται από την κορυφή σαν καρτέλα. Οι κάθετες μπάρες θυμίζουν το brand-mark (μία χρυσή), οπότε κρατάς ίχνος ταυτότητας χωρίς λογότυπο ή κείμενο. Στο hover «κατεβαίνει» λίγο.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><i></i><i></i><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Λειτουργεί και ως υπογραφή: μενού και λογότυπο σε ένα στοιχείο.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vD">
+  <div class="variant-title"><h2>Δ — Κορδέλα-σελιδοδείκτης</h2><span>ΗΜΕΡΟΛΟΓΙΟ</span></div>
+  <p class="variant-note">Κόκκινη κορδέλα που κρέμεται από την κορυφή, όπως οι ribbons που υπάρχουν ήδη στο site. Δένει με το θέμα «τετράδιο προπόνησης». Στο hover μακραίνει.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><i></i><i></i><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η πιο «θεματική» εκδοχή — σαν σελιδοδείκτης στο ημερολόγιο.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vE">
+  <div class="variant-title"><h2>Ε — Στρογγυλό κουμπί κάτω δεξιά</h2><span>MOBILE-FIRST</span></div>
+  <p class="variant-note">Floating κουμπί χαμηλά δεξιά, σαν σφραγίδα. Πάντα κοντά στον αντίχειρα στο κινητό. Προσοχή: στρογγυλό σχήμα σπάει τη «τετράγωνη» γλώσσα του site — εναλλακτικά γίνεται τετράγωνο.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><span class="bars"><i></i><i></i><i></i></span></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η κορυφή μένει εντελώς άδεια — τίποτα δεν καλύπτει τον τίτλο.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.page-mock').forEach(mock=>{
+    mock.querySelector('.trigger').addEventListener('click',()=>mock.classList.add('open'));
+    mock.querySelector('.mini-close').addEventListener('click',()=>mock.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

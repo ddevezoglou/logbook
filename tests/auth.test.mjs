@@ -12,7 +12,7 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 async function loadAuth({ initialSession = null, signupSession = null, oauthError = null } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
-  const calls = { signin:[], signup:[], oauth:[], signout:[] };
+  const calls = { signin:[], signup:[], oauth:[], reset:[], update:[], signout:[] };
   let authListener = null;
 
   window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
@@ -29,7 +29,7 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
       },
       async signInWithPassword(credentials) {
         calls.signin.push(credentials);
-        return { data:{ session:{ user:{ email:credentials.email } } }, error:null };
+        return { data:{ session:{ user:{ id:'user-a', email:credentials.email } } }, error:null };
       },
       async signUp(credentials) {
         calls.signup.push(credentials);
@@ -38,6 +38,15 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
       async signInWithOAuth(credentials) {
         calls.oauth.push(credentials);
         return { data:{ url:'https://accounts.google.com/' }, error:oauthError };
+      },
+      async resetPasswordForEmail(email, options) {
+        calls.reset.push({ email, options });
+        return { data:{}, error:null };
+      },
+      async updateUser(attributes) {
+        calls.update.push(attributes);
+        authListener?.('USER_UPDATED', { user:{ id:'user-a', email:'sync-test@example.com' } });
+        return { data:{ user:{ id:'user-a', email:'sync-test@example.com' } }, error:null };
       },
       async signOut(options) {
         calls.signout.push(options);
@@ -48,7 +57,13 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
   };
   window.eval(authSource);
   await flush();
-  return { window, document:window.document, localStorage:window.localStorage, calls };
+  return {
+    window,
+    document:window.document,
+    localStorage:window.localStorage,
+    calls,
+    emitAuth:(event, session) => authListener?.(event, session),
+  };
 }
 
 function setValue(document, selector, value) {
@@ -64,6 +79,36 @@ function click(document, selector) {
 function submit(document, selector) {
   document.querySelector(selector).dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
 }
+
+test('startup exposes only the login gate when there is no saved session', async () => {
+  const { document } = await loadAuth();
+
+  assert.ok(document.body.classList.contains('auth-required'));
+  assert.ok(!document.querySelector('#account-guest').classList.contains('hidden'));
+  assert.equal(document.querySelector('script[data-logbook-app]'), null);
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'login');
+});
+
+test('an existing session waits for initial sync before loading the application', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { window, document } = await loadAuth({ initialSession });
+
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
+  assert.ok(document.body.classList.contains('app-booting'));
+  assert.equal(document.querySelector('script[data-logbook-app]'), null);
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:true },
+  }));
+  const appScript = document.querySelector('script[data-logbook-app]');
+  assert.ok(appScript);
+  assert.equal(appScript.getAttribute('src'), 'app.js');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'loading');
+
+  appScript.dispatchEvent(new window.Event('load'));
+  assert.ok(document.body.classList.contains('app-ready'));
+  assert.equal(document.querySelector('#auth-gate').getAttribute('aria-hidden'), 'true');
+});
 
 test('account dialog signs in and displays the active email', async () => {
   const { document, calls } = await loadAuth();
@@ -142,6 +187,52 @@ test('Google sign in reports an OAuth startup error and re-enables its button', 
   assert.equal(document.querySelector('#account-form-status').dataset.kind, 'error');
   assert.equal(document.querySelector('#account-google').disabled, false);
   assert.equal(document.querySelector('#account-google').getAttribute('aria-busy'), 'false');
+});
+
+test('forgot password sends a recovery link to the entered email', async () => {
+  const { document, calls } = await loadAuth();
+
+  setValue(document, '#account-signin-email', 'sync-test@example.com');
+  click(document, '#account-forgot-password');
+
+  assert.ok(!document.querySelector('#account-forgot-form').classList.contains('hidden'));
+  assert.ok(document.querySelector('#account-tabs').classList.contains('hidden'));
+  assert.equal(document.querySelector('#account-forgot-email').value, 'sync-test@example.com');
+
+  submit(document, '#account-forgot-form');
+  await flush();
+
+  assert.equal(calls.reset.length, 1);
+  assert.equal(calls.reset[0].email, 'sync-test@example.com');
+  assert.equal(calls.reset[0].options.redirectTo, 'http://localhost:3000/');
+  assert.equal(document.querySelector('#account-form-status').dataset.kind, 'success');
+  assert.equal(document.querySelector('#account-form-status').textContent, 'Αν υπάρχει λογαριασμός με αυτό το email, θα λάβετε σύνδεσμο αλλαγής κωδικού.');
+});
+
+test('password recovery link opens the new-password form and updates the user', async () => {
+  const { document, calls, emitAuth } = await loadAuth();
+  const recoverySession = { user:{ id:'user-a', email:'sync-test@example.com' } };
+
+  emitAuth('PASSWORD_RECOVERY', recoverySession);
+
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'login');
+  assert.ok(!document.querySelector('#account-recovery-form').classList.contains('hidden'));
+  assert.ok(document.querySelector('#account-tabs').classList.contains('hidden'));
+
+  setValue(document, '#account-recovery-password', 'new-strong-pass');
+  setValue(document, '#account-recovery-confirm', 'different-pass');
+  submit(document, '#account-recovery-form');
+  await flush();
+  assert.equal(calls.update.length, 0);
+  assert.equal(document.querySelector('#account-form-status').textContent, 'Οι κωδικοί δεν ταιριάζουν.');
+
+  setValue(document, '#account-recovery-confirm', 'new-strong-pass');
+  submit(document, '#account-recovery-form');
+  await flush();
+
+  assert.equal(calls.update.length, 1);
+  assert.equal(calls.update[0].password, 'new-strong-pass');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
 });
 
 test('local sign out preserves workout data stored in the browser', async () => {

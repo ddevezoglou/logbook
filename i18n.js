@@ -5,6 +5,22 @@
   // Greek remains the stable source language so existing saved plans keep working.
   // Each entry is [English, French, German]. Longer phrases are applied first.
   const p = {
+    'Οι προπονήσεις και τα προγράμματά σου παραμένουν συγχρονισμένα σε κάθε συσκευή.':['Your workouts and routines stay synced on every device.','Vos séances et programmes restent synchronisés sur tous vos appareils.','Ihre Trainings und Pläne bleiben auf allen Geräten synchronisiert.'],
+    'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.':['Checking for an active session on this device.','Vérification d’une session active sur cet appareil.','Auf diesem Gerät wird nach einer aktiven Sitzung gesucht.'],
+    'Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.':['Fetching your latest workouts and routines.','Récupération de vos dernières séances et programmes.','Ihre neuesten Trainings und Pläne werden geladen.'],
+    'Όλα είναι έτοιμα. Ανοίγουμε το Logbook.':['Everything is ready. Opening Logbook.','Tout est prêt. Ouverture de Logbook.','Alles ist bereit. Logbook wird geöffnet.'],
+    'Δεν φορτώθηκε η εφαρμογή. Δοκιμάστε ξανά.':['The application did not load. Try again.','L’application ne s’est pas chargée. Réessayez.','Die Anwendung wurde nicht geladen. Versuchen Sie es erneut.'],
+    'Δεν μπορέσαμε να ελέγξουμε τη σύνδεσή σας. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.':['We could not check your session. Check the network and try again.','Impossible de vérifier votre session. Vérifiez le réseau et réessayez.','Ihre Sitzung konnte nicht geprüft werden. Prüfen Sie das Netzwerk und versuchen Sie es erneut.'],
+    'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.':['Initial sync did not complete. Check the network and try again.','La synchronisation initiale a échoué. Vérifiez le réseau et réessayez.','Die erste Synchronisierung wurde nicht abgeschlossen. Prüfen Sie das Netzwerk und versuchen Sie es erneut.'],
+    'Η υπηρεσία σύνδεσης δεν είναι διαθέσιμη. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.':['The sign-in service is unavailable. Check the network and try again.','Le service de connexion est indisponible. Vérifiez le réseau et réessayez.','Der Anmeldedienst ist nicht verfügbar. Prüfen Sie das Netzwerk und versuchen Sie es erneut.'],
+    'ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK':['PREPARING LOGBOOK','PRÉPARATION DE LOGBOOK','LOGBOOK WIRD VORBEREITET'],
+    'ΕΛΕΓΧΟΣ ΣΥΝΔΕΣΗΣ':['CHECKING SESSION','VÉRIFICATION DE LA SESSION','SITZUNG WIRD GEPRÜFT'],
+    'ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ':['SYNCING DATA','SYNCHRONISATION DES DONNÉES','DATEN WERDEN SYNCHRONISIERT'],
+    'ΦΟΡΤΩΣΗ ΕΦΑΡΜΟΓΗΣ':['LOADING APPLICATION','CHARGEMENT DE L’APPLICATION','ANWENDUNG WIRD GELADEN'],
+    'Η ΣΥΝΔΕΣΗ ΔΙΑΚΟΠΗΚΕ':['CONNECTION INTERRUPTED','CONNEXION INTERROMPUE','VERBINDUNG UNTERBROCHEN'],
+    'ΠΡΟΣΠΑΘΕΙΑ ΞΑΝΑ':['TRY AGAIN','RÉESSAYER','ERNEUT VERSUCHEN'],
+    'ΗΜΕΡΟΛΟΓΙΟ ΠΡΟΠΟΝΗΣΗΣ':['TRAINING JOURNAL','JOURNAL D’ENTRAÎNEMENT','TRAININGSTAGEBUCH'],
+    'ΜΠΕΣ ΣΤΟ':['ENTER THE','ENTREZ DANS','ÖFFNEN SIE'],
     'Logbook — Ημερολόγιο Προπόνησης':['Logbook — Training Journal','Logbook — Journal d’entraînement','Logbook — Trainingstagebuch'],
     'Ημερολόγιο Προπόνησης':['Training Journal','Journal d’entraînement','Trainingstagebuch'],
     'Το σημερινό σας πλάνο σας περιμένει. Καταγράψτε σετ, κιλά και επαναλήψεις — τα νούμερα χτίζουν την πρόοδο.':['Today’s plan is waiting. Log sets, weight and reps — the numbers build progress.','Le programme du jour vous attend. Notez séries, charges et répétitions — les chiffres construisent vos progrès.','Der heutige Plan wartet. Erfassen Sie Sätze, Gewicht und Wiederholungen — Zahlen schaffen Fortschritt.'],
@@ -174,17 +190,37 @@
     'ΕΓΓΡΑΦΗ':['SIGN UP','INSCRIPTION','REGISTRIEREN'],
     'Email':['Email','E-mail','E-Mail'],
     'Κωδικός':['Password','Mot de passe','Passwort'],
+    'Ξεχάσατε τον κωδικό πρόσβασης':['Forgot your password','Mot de passe oublié','Passwort vergessen'],
+    'Γράψτε το email του λογαριασμού σας και θα σας στείλουμε ασφαλή σύνδεσμο αλλαγής κωδικού.':['Enter your account email and we will send you a secure password reset link.','Saisissez l’e-mail de votre compte et nous vous enverrons un lien sécurisé pour changer votre mot de passe.','Geben Sie die E-Mail-Adresse Ihres Kontos ein. Wir senden Ihnen einen sicheren Link zum Ändern Ihres Passworts.'],
+    'ΑΠΟΣΤΟΛΗ ΣΥΝΔΕΣΜΟΥ':['SEND LINK','ENVOYER LE LIEN','LINK SENDEN'],
+    'ΕΠΙΣΤΡΟΦΗ ΣΤΗ ΣΥΝΔΕΣΗ':['BACK TO SIGN IN','RETOUR À LA CONNEXION','ZURÜCK ZUR ANMELDUNG'],
+    'Ορίστε έναν νέο κωδικό πρόσβασης για τον λογαριασμό σας.':['Set a new password for your account.','Définissez un nouveau mot de passe pour votre compte.','Legen Sie ein neues Passwort für Ihr Konto fest.'],
+    'Νέος κωδικός':['New password','Nouveau mot de passe','Neues Passwort'],
+    'Επιβεβαίωση νέου κωδικού':['Confirm new password','Confirmer le nouveau mot de passe','Neues Passwort bestätigen'],
+    'ΑΛΛΑΓΗ ΚΩΔΙΚΟΥ':['CHANGE PASSWORD','CHANGER LE MOT DE PASSE','PASSWORT ÄNDERN'],
     'Τουλάχιστον 8 χαρακτήρες':['At least 8 characters','Au moins 8 caractères','Mindestens 8 Zeichen'],
     'ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ':['SIGN IN TO ACCOUNT','SE CONNECTER AU COMPTE','BEIM KONTO ANMELDEN'],
     'Επιβεβαίωση κωδικού':['Confirm password','Confirmer le mot de passe','Passwort bestätigen'],
     'ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ':['CREATE ACCOUNT','CRÉER LE COMPTE','KONTO ERSTELLEN'],
     'Η σύνδεση είναι ενεργή σε αυτή τη συσκευή.':['Your session is active on this device.','Votre session est active sur cet appareil.','Ihre Sitzung ist auf diesem Gerät aktiv.'],
+    'Τοπική αποθήκευση · συνδεθείτε για συγχρονισμό.':['Local storage · sign in to sync.','Stockage local · connectez-vous pour synchroniser.','Lokale Speicherung · zum Synchronisieren anmelden.'],
+    'Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.':['Offline · changes remain on this device.','Hors ligne · les modifications restent sur cet appareil.','Offline · Änderungen bleiben auf diesem Gerät.'],
+    'Συγχρονισμός δεδομένων…':['Syncing data…','Synchronisation des données…','Daten werden synchronisiert…'],
+    'Συγχρονισμένο σε όλες τις συσκευές.':['Synced across all devices.','Synchronisé sur tous les appareils.','Auf allen Geräten synchronisiert.'],
+    'Δεν ολοκληρώθηκε ο συγχρονισμός. Οι αλλαγές παραμένουν ασφαλείς στη συσκευή.':['Sync did not complete. Changes remain safe on this device.','La synchronisation a échoué. Les modifications restent en sécurité sur cet appareil.','Synchronisierung fehlgeschlagen. Änderungen bleiben sicher auf diesem Gerät.'],
+    'Δεν ήταν δυνατή η εκκίνηση του συγχρονισμού.':['Sync could not be started.','Impossible de démarrer la synchronisation.','Synchronisierung konnte nicht gestartet werden.'],
+    'Cloud εκτός σύνδεσης · τα δεδομένα παραμένουν τοπικά.':['Cloud offline · data remains local.','Cloud hors ligne · les données restent locales.','Cloud offline · Daten bleiben lokal.'],
     'ΑΠΟΣΥΝΔΕΣΗ':['SIGN OUT','DÉCONNEXION','ABMELDEN'],
     'Οι προπονήσεις παραμένουν σε αυτή τη συσκευή μέχρι να ενεργοποιηθεί ο συγχρονισμός.':['Workouts remain on this device until sync is enabled.','Les séances restent sur cet appareil jusqu’à l’activation de la synchronisation.','Trainings bleiben auf diesem Gerät, bis die Synchronisierung aktiviert ist.'],
     'Η σύνδεση στο cloud φορτώνει…':['Cloud connection is loading…','Connexion au cloud en cours…','Cloud-Verbindung wird geladen…'],
     'Το cloud δεν είναι διαθέσιμο. Η τοπική λειτουργία συνεχίζεται.':['Cloud is unavailable. Local mode remains active.','Le cloud est indisponible. Le mode local reste actif.','Die Cloud ist nicht verfügbar. Der lokale Modus bleibt aktiv.'],
     'Δεν ήταν δυνατή η ανάκτηση της σύνδεσης.':['The session could not be restored.','Impossible de restaurer la session.','Die Sitzung konnte nicht wiederhergestellt werden.'],
     'Δεν ήταν δυνατή η σύνδεση. Ελέγξτε email και κωδικό.':['Sign in failed. Check your email and password.','Échec de la connexion. Vérifiez votre e-mail et votre mot de passe.','Anmeldung fehlgeschlagen. Prüfen Sie E-Mail und Passwort.'],
+    'Αποστολή συνδέσμου αλλαγής κωδικού…':['Sending password reset link…','Envoi du lien de changement de mot de passe…','Link zum Ändern des Passworts wird gesendet…'],
+    'Δεν ήταν δυνατή η αποστολή του συνδέσμου. Δοκιμάστε ξανά.':['The link could not be sent. Try again.','Le lien n’a pas pu être envoyé. Réessayez.','Der Link konnte nicht gesendet werden. Versuchen Sie es erneut.'],
+    'Αν υπάρχει λογαριασμός με αυτό το email, θα λάβετε σύνδεσμο αλλαγής κωδικού.':['If an account exists for this email, you will receive a password reset link.','Si un compte existe pour cet e-mail, vous recevrez un lien pour changer votre mot de passe.','Wenn für diese E-Mail ein Konto existiert, erhalten Sie einen Link zum Ändern des Passworts.'],
+    'Αλλαγή κωδικού…':['Changing password…','Modification du mot de passe…','Passwort wird geändert…'],
+    'Δεν ήταν δυνατή η αλλαγή του κωδικού. Ζητήστε νέο σύνδεσμο.':['The password could not be changed. Request a new link.','Le mot de passe n’a pas pu être modifié. Demandez un nouveau lien.','Das Passwort konnte nicht geändert werden. Fordern Sie einen neuen Link an.'],
     'Μεταφορά στη Google…':['Redirecting to Google…','Redirection vers Google…','Weiterleitung zu Google…'],
     'Δεν ήταν δυνατή η σύνδεση με Google.':['Google sign in failed.','Échec de la connexion avec Google.','Google-Anmeldung fehlgeschlagen.'],
     'Δεν ήταν δυνατή η δημιουργία λογαριασμού.':['The account could not be created.','Impossible de créer le compte.','Das Konto konnte nicht erstellt werden.'],
@@ -442,6 +478,7 @@
     if (!languages.includes(next)) return;
     language = next;
     localStorage.setItem('logbookLanguage', next);
+    window.dispatchEvent(new CustomEvent('logbook:local-data-changed', { detail:{ key:'logbookLanguage' } }));
     document.dispatchEvent(new CustomEvent('logbook:languagechange', { detail:{ language:next, locale:locales[next] } }));
     translate(document);
   }

@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.1.0');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.0');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -828,6 +828,31 @@ test('two saved routines flagged active keep only the first as active', () => {
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingRoutines')).map(routine => routine.isActive), [true, false]);
 });
 
+test('sync repair promotes the program that owns workout history over an empty default program', () => {
+  const routines = [
+    { id:'r1', name:'Push Pull Test', isActive:false, plan:rewardPlan() },
+    { id:'placeholder', name:'Το πρόγραμμά μου', isActive:true, plan:[] },
+  ];
+  const thirteenWeeks = Array.from({ length:13 }, (_, index) => index - 12);
+  const { document, localStorage } = loadApp({ trainingRoutines:routines, trainingSessions:rewardSessions(thirteenWeeks) });
+  const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
+  assert.equal(saved.find(routine => routine.id === 'r1').isActive, true);
+  assert.equal(saved.find(routine => routine.id === 'placeholder').isActive, false);
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
+});
+
+test('sync repair rebuilds an emptied plan from the routine workout history so rewards return', () => {
+  const thirteenWeeks = Array.from({ length:13 }, (_, index) => index - 12);
+  const emptied = [{ id:'r1', name:'Push Pull Test', isActive:true, cycleLength:7, plan:[] }];
+  const { document, localStorage } = loadApp({ trainingRoutines:emptied, trainingSessions:rewardSessions(thirteenWeeks) });
+  const repaired = JSON.parse(localStorage.getItem('trainingRoutines')).find(routine => routine.id === 'r1');
+  assert.deepEqual([...new Set(repaired.plan.map(item => item.cycleDay))].sort((a, b) => a - b), [1, 3, 5]);
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
+  assert.ok(!document.querySelector('#home-reward-stamp').classList.contains('hidden'));
+});
+
 test('routine persistence failure is handled without showing a false success', () => {
   const { document, localStorage } = loadApp();
   Object.getPrototypeOf(localStorage).setItem = () => { throw new Error('quota'); };
@@ -1592,6 +1617,40 @@ test('streaks beyond twelve weeks keep GYMRAT and the full streak count', () => 
   assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
   assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('16 συνεχόμενες εβδομάδες'));
   assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '4');
+});
+
+test('synced scheduled sessions without a legacy type still count toward rewards', () => {
+  const sessions = rewardSessions([-3,-2,-1,0]).map(({ type, ...session }) => session);
+  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:sessions });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'NEVER GIVE UP');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-3'));
+});
+
+test('synced workout history repairs reward tracking that started after the workouts', () => {
+  const thirteenWeeks = Array.from({ length: 13 }, (_, index) => index - 12);
+  const staleTracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(0), end:null }] } };
+  const { document, window } = loadApp({
+    trainingRoutines:routineWith(rewardPlan()),
+    trainingSessions:rewardSessions(thirteenWeeks),
+    routineRewardTracking:staleTracking,
+  });
+  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
+  const repaired = JSON.parse(window.localStorage.getItem('routineRewardTracking'));
+  assert.equal(repaired.periods.r1[0].start, rewardDate(-12));
+});
+
+test('synced active routine change keeps a single open reward period', () => {
+  const routines = [
+    { id:'r1', name:'Previous', isActive:false, plan:rewardPlan() },
+    { id:'r2', name:'Current', isActive:true, plan:rewardPlan() },
+  ];
+  const staleTracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-2), end:null }], r2:[] } };
+  const { window } = loadApp({ trainingRoutines:routines, routineRewardTracking:staleTracking });
+  const repaired = JSON.parse(window.localStorage.getItem('routineRewardTracking'));
+  assert.equal(repaired.activeRoutineId, 'r2');
+  assert.equal(repaired.periods.r1.filter(period => period.end === null).length, 0);
+  assert.equal(repaired.periods.r2.filter(period => period.end === null).length, 1);
 });
 
 test('GYMRAT is kept on the same routine even after a missed week past twelve', () => {

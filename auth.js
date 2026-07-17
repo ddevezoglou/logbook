@@ -3,12 +3,16 @@
   const $$ = selector => [...document.querySelectorAll(selector)];
   const t = value => window.LogbookI18n?.t?.(value) || value;
   const dialog = $('#account-dialog');
+  const gate = $('#auth-gate');
   const guest = $('#account-guest');
   const member = $('#account-member');
   const status = $('#account-form-status');
   let client = null;
   let session = null;
   let mode = 'signin';
+  let passwordRecoveryActive = false;
+  let pendingSyncUserId = null;
+  let appLoaded = false;
 
   function setStatus(message = '', kind = 'neutral') {
     status.textContent = message ? t(message) : '';
@@ -22,13 +26,91 @@
   }
 
   function setMode(next) {
-    mode = next === 'signup' ? 'signup' : 'signin';
+    const modes = ['signin', 'signup', 'forgot', 'recovery'];
+    mode = modes.includes(next) ? next : 'signin';
     $$('[data-account-mode]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.accountMode === mode));
     });
     $('#account-signin-form').classList.toggle('hidden', mode !== 'signin');
     $('#account-signup-form').classList.toggle('hidden', mode !== 'signup');
-    setStatus(client ? '' : 'Η σύνδεση στο cloud φορτώνει…');
+    $('#account-forgot-form').classList.toggle('hidden', mode !== 'forgot');
+    $('#account-recovery-form').classList.toggle('hidden', mode !== 'recovery');
+    $('#account-login-options').classList.toggle('hidden', !['signin', 'signup'].includes(mode));
+    $('#account-tabs').classList.toggle('hidden', !['signin', 'signup'].includes(mode));
+    setStatus('');
+  }
+
+  function setGateState(state, message = '') {
+    gate.dataset.state = state;
+    const checking = ['checking', 'syncing', 'loading', 'error'].includes(state);
+    $('#auth-gate-progress').classList.toggle('hidden', !checking);
+    guest.classList.toggle('hidden', state !== 'login');
+    $('#account-tabs').classList.toggle('hidden', state !== 'login' || !['signin', 'signup'].includes(mode));
+    $('#auth-gate-retry').classList.toggle('hidden', state !== 'error');
+    if (message) $('#auth-gate-message').textContent = t(message);
+
+    const titles = {
+      checking:'ΕΛΕΓΧΟΣ ΣΥΝΔΕΣΗΣ',
+      syncing:'ΣΥΓΧΡΟΝΙΣΜΟΣ ΔΕΔΟΜΕΝΩΝ',
+      loading:'ΦΟΡΤΩΣΗ ΕΦΑΡΜΟΓΗΣ',
+      error:'Η ΣΥΝΔΕΣΗ ΔΙΑΚΟΠΗΚΕ',
+    };
+    if (titles[state]) $('#auth-gate-title').textContent = t(titles[state]);
+
+    document.body.classList.toggle('app-ready', state === 'ready');
+    document.body.classList.toggle('auth-required', state === 'login' || state === 'error');
+    document.body.classList.toggle('app-booting', state !== 'ready' && state !== 'login' && state !== 'error');
+    gate.setAttribute('aria-hidden', String(state === 'ready'));
+    if (state === 'error') requestAnimationFrame(() => $('#auth-gate-retry')?.focus());
+  }
+
+  function showLogin() {
+    passwordRecoveryActive = false;
+    pendingSyncUserId = null;
+    if (mode === 'recovery') setMode('signin');
+    setGateState('login');
+    setStatus('');
+    requestAnimationFrame(() => {
+      const target = mode === 'signup' ? $('#account-signup-email') : $('#account-signin-email');
+      target?.focus();
+    });
+  }
+
+  function showPasswordRecovery(nextSession) {
+    passwordRecoveryActive = true;
+    session = nextSession || session;
+    pendingSyncUserId = null;
+    setGateState('login');
+    setMode('recovery');
+    requestAnimationFrame(() => $('#account-recovery-password')?.focus());
+  }
+
+  function waitForInitialSync(nextSession) {
+    const userId = nextSession?.user?.id;
+    if (!userId || document.body.classList.contains('app-ready')) return;
+    pendingSyncUserId = userId;
+    setGateState('syncing', 'Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.');
+  }
+
+  function loadApplication() {
+    setGateState('loading', 'Όλα είναι έτοιμα. Ανοίγουμε το Logbook.');
+    if (appLoaded || document.querySelector('script[data-logbook-app]')) {
+      window.location.reload();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'app.js';
+    script.dataset.logbookApp = '';
+    script.addEventListener('load', () => {
+      appLoaded = true;
+      pendingSyncUserId = null;
+      setGateState('ready');
+      window.dispatchEvent(new CustomEvent('logbook:app-ready'));
+    }, { once:true });
+    script.addEventListener('error', () => {
+      setGateState('error', 'Δεν φορτώθηκε η εφαρμογή. Δοκιμάστε ξανά.');
+    }, { once:true });
+    document.body.append(script);
   }
 
   function renderSession(nextSession) {
@@ -37,35 +119,99 @@
     const signedIn = Boolean(email);
     guest.classList.toggle('hidden', signedIn);
     member.classList.toggle('hidden', !signedIn);
-    $('#account-tabs')?.classList.toggle('hidden', signedIn);
     $('#account-member-email').textContent = email;
     $('#account-menu-email').textContent = email;
     $('#account-menu-email').classList.toggle('hidden', !signedIn);
-    $('#account-menu-status').textContent = signedIn ? 'ΣΥΝΔΕΔΕΜΕΝΟΣ' : client ? 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ' : 'ΤΟΠΙΚΗ ΛΕΙΤΟΥΡΓΙΑ';
+    $('#account-menu-status').textContent = 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ';
+    $('#account-menu-status').classList.toggle('hidden', signedIn);
     $('#account-open').classList.toggle('is-connected', signedIn);
     $('#account-open').setAttribute('aria-label', signedIn ? `${t('ΛΟΓΑΡΙΑΣΜΟΣ')}: ${email}` : t('ΛΟΓΑΡΙΑΣΜΟΣ'));
+    if (signedIn) waitForInitialSync(session);
+    else showLogin();
     window.LogbookI18n?.translate(document);
+  }
+
+  async function checkSession() {
+    if (!client) return;
+    setGateState('checking', 'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.');
+    const { data, error } = await client.auth.getSession();
+    if (error) {
+      setGateState('error', 'Δεν μπορέσαμε να ελέγξουμε τη σύνδεσή σας. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+      return;
+    }
+    if (!passwordRecoveryActive) renderSession(data?.session);
   }
 
   async function bindClient(nextClient) {
     if (!nextClient || client === nextClient) return;
     client = nextClient;
-    setStatus('');
-    const { data, error } = await client.auth.getSession();
-    if (error) setStatus('Δεν ήταν δυνατή η ανάκτηση της σύνδεσης.', 'error');
-    renderSession(data?.session);
-    client.auth.onAuthStateChange((_event, nextSession) => renderSession(nextSession));
+    client.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') return showPasswordRecovery(nextSession);
+      if (passwordRecoveryActive && event === 'USER_UPDATED') return;
+      renderSession(nextSession);
+    });
+    await checkSession();
   }
 
   $('#account-open').addEventListener('click', () => {
     $('#close-menu').click();
     dialog.showModal();
-    const target = session ? $('#account-signout') : mode === 'signup' ? $('#account-signup-email') : $('#account-signin-email');
-    requestAnimationFrame(() => target?.focus());
+    requestAnimationFrame(() => $('#account-signout')?.focus());
   });
   $('#account-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
   $$('[data-account-mode]').forEach(button => button.addEventListener('click', () => setMode(button.dataset.accountMode)));
+  $('#account-forgot-password').addEventListener('click', () => {
+    $('#account-forgot-email').value = $('#account-signin-email').value.trim();
+    setMode('forgot');
+    requestAnimationFrame(() => $('#account-forgot-email')?.focus());
+  });
+  $('[data-account-back]').addEventListener('click', () => {
+    $('#account-signin-email').value = $('#account-forgot-email').value.trim();
+    setMode('signin');
+    requestAnimationFrame(() => $('#account-signin-email')?.focus());
+  });
+
+  $('#auth-gate-retry').addEventListener('click', () => {
+    if (session?.user?.id) {
+      waitForInitialSync(session);
+      window.dispatchEvent(new CustomEvent('logbook:initial-sync-requested'));
+    } else {
+      checkSession();
+    }
+  });
+
+  $$('.account-form input[type="password"]').forEach(input => {
+    const wrap = document.createElement('span');
+    wrap.className = 'password-field';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const eye = document.createElement('button');
+    eye.type = 'button';
+    eye.className = 'password-eye';
+    eye.setAttribute('aria-label', t('Εμφάνιση κωδικού'));
+    eye.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.7"/><line class="eye-slash" x1="4.5" y1="19.5" x2="19.5" y2="4.5"/></svg>';
+    wrap.appendChild(eye);
+    const sync = () => wrap.classList.toggle('has-value', input.value.length > 0);
+    const hide = () => {
+      input.type = 'password';
+      eye.classList.remove('is-on');
+      eye.setAttribute('aria-label', t('Εμφάνιση κωδικού'));
+    };
+    input.addEventListener('input', sync);
+    input.form?.addEventListener('reset', () => setTimeout(() => { sync(); hide(); }, 0));
+    eye.addEventListener('click', () => {
+      const show = input.type === 'password';
+      if (show) {
+        input.type = 'text';
+        eye.classList.add('is-on');
+        eye.setAttribute('aria-label', t('Απόκρυψη κωδικού'));
+      } else {
+        hide();
+      }
+      input.focus();
+    });
+  });
 
   $('#account-google').addEventListener('click', async () => {
     if (!client) return;
@@ -74,8 +220,8 @@
     button.setAttribute('aria-busy', 'true');
     setStatus('Μεταφορά στη Google…');
     const { error } = await client.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.LogbookSupabaseConfig?.siteUrl },
+      provider:'google',
+      options:{ redirectTo:window.LogbookSupabaseConfig?.siteUrl },
     });
     if (!error) return;
     button.disabled = false;
@@ -88,16 +234,15 @@
     const form = event.currentTarget;
     if (!client || !form.reportValidity()) return;
     setBusy(form, true);
-    setStatus('');
+    setStatus('Γίνεται σύνδεση…');
     const { data, error } = await client.auth.signInWithPassword({
-      email: $('#account-signin-email').value.trim(),
-      password: $('#account-signin-password').value,
+      email:$('#account-signin-email').value.trim(),
+      password:$('#account-signin-password').value,
     });
     setBusy(form, false);
     if (error) return setStatus('Δεν ήταν δυνατή η σύνδεση. Ελέγξτε email και κωδικό.', 'error');
-    renderSession(data?.session);
     form.reset();
-    setStatus('Συνδεθήκατε επιτυχώς.', 'success');
+    renderSession(data?.session);
   });
 
   $('#account-signup-form').addEventListener('submit', async event => {
@@ -107,23 +252,53 @@
     const password = $('#account-signup-password').value;
     if (password !== $('#account-signup-confirm').value) return setStatus('Οι κωδικοί δεν ταιριάζουν.', 'error');
     setBusy(form, true);
-    setStatus('');
+    setStatus('Δημιουργία λογαριασμού…');
     const { data, error } = await client.auth.signUp({
-      email: $('#account-signup-email').value.trim(),
+      email:$('#account-signup-email').value.trim(),
       password,
-      options: { emailRedirectTo: window.LogbookSupabaseConfig?.siteUrl },
+      options:{ emailRedirectTo:window.LogbookSupabaseConfig?.siteUrl },
     });
     setBusy(form, false);
     if (error) return setStatus('Δεν ήταν δυνατή η δημιουργία λογαριασμού.', 'error');
     form.reset();
     if (data?.session) {
       renderSession(data.session);
-      setStatus('Συνδεθήκατε επιτυχώς.', 'success');
     } else {
       setMode('signin');
       $('#account-signin-email').value = data?.user?.email || '';
       setStatus('Ελέγξτε το email σας για να επιβεβαιώσετε τον λογαριασμό.', 'success');
     }
+  });
+
+  $('#account-forgot-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!client || !form.reportValidity()) return;
+    const email = $('#account-forgot-email').value.trim();
+    setBusy(form, true);
+    setStatus('Αποστολή συνδέσμου αλλαγής κωδικού…');
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo:window.LogbookSupabaseConfig?.siteUrl,
+    });
+    setBusy(form, false);
+    if (error) return setStatus('Δεν ήταν δυνατή η αποστολή του συνδέσμου. Δοκιμάστε ξανά.', 'error');
+    setStatus('Αν υπάρχει λογαριασμός με αυτό το email, θα λάβετε σύνδεσμο αλλαγής κωδικού.', 'success');
+  });
+
+  $('#account-recovery-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!client || !form.reportValidity()) return;
+    const password = $('#account-recovery-password').value;
+    if (password !== $('#account-recovery-confirm').value) return setStatus('Οι κωδικοί δεν ταιριάζουν.', 'error');
+    setBusy(form, true);
+    setStatus('Αλλαγή κωδικού…');
+    const { error } = await client.auth.updateUser({ password });
+    setBusy(form, false);
+    if (error) return setStatus('Δεν ήταν δυνατή η αλλαγή του κωδικού. Ζητήστε νέο σύνδεσμο.', 'error');
+    form.reset();
+    passwordRecoveryActive = false;
+    renderSession(session);
   });
 
   $('#account-signout').addEventListener('click', async () => {
@@ -132,19 +307,54 @@
     button.disabled = true;
     const { error } = await client.auth.signOut({ scope:'local' });
     button.disabled = false;
-    if (error) return setStatus('Δεν ήταν δυνατή η αποσύνδεση.', 'error');
+    if (error) return;
+    dialog.close();
     renderSession(null);
-    setStatus('Αποσυνδεθήκατε. Τα τοπικά δεδομένα παραμένουν στη συσκευή.', 'success');
   });
 
+  window.addEventListener('logbook:initial-sync-complete', event => {
+    const { userId, success } = event.detail || {};
+    if (!pendingSyncUserId || userId !== pendingSyncUserId) return;
+    if (success) loadApplication();
+    else setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+  });
   window.addEventListener('logbook:supabase-ready', event => bindClient(event.detail.client));
   window.addEventListener('logbook:supabase-unavailable', () => {
-    setStatus('Το cloud δεν είναι διαθέσιμο. Η τοπική λειτουργία συνεχίζεται.', 'error');
-    renderSession(null);
+    setGateState('error', 'Η υπηρεσία σύνδεσης δεν είναι διαθέσιμη. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
-  document.addEventListener('logbook:languagechange', () => renderSession(session));
+  document.addEventListener('logbook:languagechange', () => {
+    renderSession(session);
+    const message = $('#auth-gate-message').textContent;
+    if (message) $('#auth-gate-message').textContent = t(message);
+  });
 
   setMode('signin');
-  renderSession(null);
+  setGateState('checking', 'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.');
   if (window.LogbookSupabase) bindClient(window.LogbookSupabase);
+
+  // Typewriter on the auth gate's left page: types each word, holds, erases, moves on.
+  (() => {
+    const WORDS = ['TRAIN.', 'WRITE.', 'REPEAT.'];
+    const typed = $('#auth-gate-typed');
+    if (!typed) return;
+    // Static text when the user prefers reduced motion, and under jsdom (tests):
+    // the endless setTimeout chain would keep the test process alive forever.
+    const reduceMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion || /jsdom/i.test(window.navigator.userAgent)) {
+      typed.textContent = WORDS.join(' ');
+      return;
+    }
+    let word = 0;
+    let length = 0;
+    let deleting = false;
+    (function tick() {
+      typed.textContent = WORDS[word].slice(0, length);
+      let delay;
+      if (!deleting && length < WORDS[word].length) { length += 1; delay = 90 + Math.random() * 70; }
+      else if (!deleting) { deleting = true; delay = 1300; }
+      else if (length > 0) { length -= 1; delay = 45; }
+      else { deleting = false; word = (word + 1) % WORDS.length; delay = 420; }
+      setTimeout(tick, delay);
+    })();
+  })();
 })();

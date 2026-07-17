@@ -1,7 +1,12 @@
 const store = {
   read(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } },
-  write(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  write(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new CustomEvent('logbook:local-data-changed', { detail:{ key } }));
+  }
 };
+
+window.addEventListener('logbook:cloud-data-applied', () => window.location.reload());
 
 function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.') {
   try {
@@ -81,6 +86,52 @@ const routines = Array.isArray(savedRoutines) && savedRoutines.length
 if (!routines.some(routine => routine.isActive)) routines[0].isActive = true;
 let foundActiveRoutine = false;
 routines.forEach(routine => { if (routine.isActive && !foundActiveRoutine) foundActiveRoutine = true; else if (routine.isActive) routine.isActive = false; });
+// A bad sync merge can strip a routine's plan while its workout history survives;
+// without plan days the reward track and plan board go blank. Rebuild the plan
+// from the logged sessions of that routine.
+let rebuiltPlans = false;
+routines.forEach(routine => {
+  if (routine.plan.length) return;
+  const history = (Array.isArray(savedSessions) ? savedSessions : []).filter(session =>
+    session?.routineId != null && String(session.routineId) === String(routine.id) && session.type !== 'free' && session.date);
+  if (history.length < 3) return;
+  const latestByCycleDay = new Map();
+  [...history].sort((a, b) => String(a.date).localeCompare(String(b.date))).forEach(session => {
+    const cycleDay = validCycleDay(session.cycleDay, routine.cycleLength)
+      || validCycleDay(legacyCycleDay(session.workoutDay), routine.cycleLength);
+    if (cycleDay) latestByCycleDay.set(cycleDay, session);
+  });
+  if (!latestByCycleDay.size) return;
+  routine.plan = [...latestByCycleDay.entries()].sort((a, b) => a[0] - b[0]).flatMap(([cycleDay, session]) =>
+    (session.exercises?.length ? session.exercises : [{ exercise:'Προπόνηση' }]).map(entry => ({
+      id:crypto.randomUUID(),
+      day:routine.usesWeekdays === false ? null : session.workoutDay || null,
+      cycleDay,
+      workoutName:session.workoutName || session.workoutDay || 'Προπόνηση',
+      exercise:entry.exercise || 'Άσκηση',
+      workSets:entry.sets?.length || 3,
+      cues:'',
+    })));
+  rebuiltPlans = true;
+});
+const placeholderRoutineNames = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
+const matchingSessionCount = routine => (Array.isArray(savedSessions) ? savedSessions : []).filter(session =>
+  session?.routineId != null && String(session.routineId) === String(routine.id) && session.type !== 'free'
+).length;
+const staleActiveRoutine = routines.find(routine => routine.isActive
+  && placeholderRoutineNames.has(routine.name)
+  && !routine.plan.length
+  && matchingSessionCount(routine) === 0);
+if (staleActiveRoutine) {
+  const historicalRoutine = routines
+    .filter(routine => routine.id !== staleActiveRoutine.id && routine.plan.length && matchingSessionCount(routine) > 0)
+    .sort((a, b) => matchingSessionCount(b) - matchingSessionCount(a))[0];
+  if (historicalRoutine) {
+    staleActiveRoutine.isActive = false;
+    historicalRoutine.isActive = true;
+  }
+}
+if (rebuiltPlans) safeStoreWrite('trainingRoutines', routines);
 const state = { routines, selectedRoutineId:routines.find(routine => routine.isActive)?.id ?? routines[0]?.id ?? null, editingRoutineId:null, sessions: savedSessions.length ? savedSessions : oldLogs.map(log => ({ id:log.id, date:log.date, type:'free', comments:'', exercises:[{ exercise:log.exercise, comments:log.comments || '', sets:log.sets || [] }] })), profile:(!Array.isArray(savedProfile) && savedProfile) ? savedProfile : null, mode: 'scheduled', editingDay:null, editingSessionId:null, copyingSessionId:null, selectedPlanDay:null, openSessionId:null, selectedHistoryDate:null, historyWeekOffset:0 };
 let customAvatarData = state.profile?.customImage || '';
 let routineCarouselIndex = 0;
@@ -123,6 +174,9 @@ const persistRoutines = () => safeStoreWrite('trainingRoutines', state.routines)
 const persistSessions = sessions => safeStoreWrite('trainingSessions', sessions);
 
 const rewardLabels = ['ΔΗΜΙΟΥΡΓΙΑ ΠΡΟΓΡΑΜΜΑΤΟΣ','PLAN SETUP','KEEP UP THE WORK','NEVER GIVE UP','GYMRAT'];
+const scheduledForRoutine = (session, routine) => session?.routineId != null
+  && String(session.routineId) === String(routine?.id)
+  && session.type !== 'free';
 const shiftCycle = (routine, cycle, amount) => { const date = localDate(cycle); date.setDate(date.getDate() + amount * clampCycleLength(routine?.cycleLength)); return localDateInputValue(date); };
 const cycleStartKey = (routine, value) => {
   const date = localDate(value) || new Date();
@@ -134,13 +188,35 @@ function createRewardTracking() {
   const periods = {};
   state.routines.forEach(routine => {
     const weeks = state.sessions
-      .filter(session => session.type === 'scheduled' && session.routineId === routine.id && session.date)
+      .filter(session => scheduledForRoutine(session, routine) && session.date)
       .map(session => cycleStartKey(routine, session.date)).sort();
     periods[routine.id] = weeks.length ? [{ start:weeks[0], end:routine.isActive ? null : weeks.at(-1) }] : [];
   });
   const active = activeRoutine();
   if (active && !periods[active.id].some(period => period.end === null)) periods[active.id].push({ start:cycleStartKey(active, localDateInputValue()), end:null });
   return { version:1, activeRoutineId:active?.id || null, periods };
+}
+
+function reconcileRewardTracking(tracking) {
+  const activeId = activeRoutine()?.id || null;
+  state.routines.forEach(routine => {
+    const completedCycles = state.sessions
+      .filter(session => scheduledForRoutine(session, routine) && session.date)
+      .map(session => cycleStartKey(routine, session.date))
+      .sort();
+    const periods = tracking.periods[routine.id];
+    if (!periods.length) {
+      if (completedCycles.length) periods.push({ start:completedCycles[0], end:routine.id === activeId ? null : completedCycles.at(-1) });
+      else if (routine.id === activeId) periods.push({ start:cycleStartKey(routine, localDateInputValue()), end:null });
+      return;
+    }
+    periods.sort((a, b) => String(a.start).localeCompare(String(b.start)));
+    if (completedCycles.length && completedCycles[0] < periods[0].start) periods[0].start = completedCycles[0];
+    if (routine.id === activeId && !periods.some(period => period.end === null)) {
+      periods.push({ start:cycleStartKey(routine, localDateInputValue()), end:null });
+    }
+  });
+  return tracking;
 }
 
 function loadRewardTracking() {
@@ -157,6 +233,7 @@ function loadRewardTracking() {
     if (activeId) tracking.periods[activeId].push({ start:cycleStartKey(activeRoutine(), localDateInputValue()), end:null });
     tracking.activeRoutineId = activeId;
   }
+  reconcileRewardTracking(tracking);
   safeStoreWrite('routineRewardTracking', tracking);
   return tracking;
 }
@@ -183,7 +260,7 @@ function routineReward(routine = activeRoutine()) {
   if (!routine || !target) return { stage:0, streak:0, target:0, completedThisWeek:0, label:rewardLabels[0], routine };
   const completions = new Map();
   state.sessions.forEach(session => {
-    if (session.type !== 'scheduled' || session.routineId !== routine.id || !session.date) return;
+    if (!scheduledForRoutine(session, routine) || !session.date) return;
     const cycle = cycleStartKey(routine, session.date);
     if (!completions.has(cycle)) completions.set(cycle, new Set());
     const cycleDay = validCycleDay(session.cycleDay, routine.cycleLength) || legacyCycleDay(session.workoutDay) || cycleDayForDate(routine, session.date);
@@ -213,13 +290,13 @@ function renderRewards() {
   const reward = routineReward();
   const ring = $('#profile-reward-ring');
   if (ring) {
-    ring.className = `profile-reward-ring reward-stage-${reward.stage}`;
     const periodLabel = reward.routine?.cycleLength === 7
       ? (reward.streak === 1 ? 'συνεχόμενη εβδομάδα' : 'συνεχόμενες εβδομάδες')
       : (reward.streak === 1 ? 'συνεχόμενος μικρόκυκλος' : 'συνεχόμενοι μικρόκυκλοι');
     const detail = reward.target
       ? `${reward.routine.name} · ${reward.streak} ${periodLabel} · ${reward.completedThisWeek}/${reward.target} ${reward.routine.cycleLength === 7 ? 'αυτή την εβδομάδα' : 'σε αυτόν τον μικρόκυκλο'}`
       : 'Δηλώστε τις ημέρες του πρώτου σας προγράμματος';
+    ring.className = `profile-reward-ring reward-stage-${reward.stage}`;
     ring.setAttribute('aria-label', `${reward.label} · ${reward.stage} από 4 στάδια επιβράβευσης · ${detail}`);
   }
   const stamp = $('#home-reward-stamp');
@@ -1125,7 +1202,6 @@ function showView(view) {
     $$('.nav-button,.view').forEach(el => el.classList.remove('active'));
     $(`.nav-button[data-view="${view}"]`).classList.add('active');
     $(`#${view}-view`).classList.add('active');
-    $('#current-view-label').textContent = labels[view];
     if (view === 'home') renderHome();
     if (view === 'overview') renderOverview();
     if (view === 'progress') renderProgressSelectors();
@@ -1152,6 +1228,9 @@ function closeMenu() { setMenu(false); }
 
 $$('.nav-button').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
 $('#open-menu').addEventListener('click', () => setMenu(true));
+window.addEventListener('scroll', () => {
+  $('#open-menu').classList.toggle('faded', window.scrollY > 60);
+}, { passive: true });
 $('#close-menu').addEventListener('click', closeMenu);
 $('#menu-backdrop').addEventListener('click', closeMenu);
 $('#routine-list').addEventListener('pointerdown', event => {
@@ -1196,7 +1275,7 @@ $('#progress-set').addEventListener('change', renderProgressChart);
 const raiseChartPoint = target => { const point = target.closest?.('.chart-point'); if (point?.parentNode && point.parentNode.lastElementChild !== point) point.parentNode.appendChild(point); };
 document.addEventListener('mouseover', event => raiseChartPoint(event.target));
 document.addEventListener('focusin', event => raiseChartPoint(event.target));
-$('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
+$('.brand')?.addEventListener('click', event => { event.preventDefault(); showView('home'); });
 document.addEventListener('click', event => { const action = event.target.closest('[data-home-action]'); if (action) showView(action.dataset.homeAction); });
 $$('.mode-button').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
 $('#log-date').addEventListener('change', () => {

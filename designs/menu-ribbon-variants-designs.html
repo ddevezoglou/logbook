@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ένδειξη μενού — παραλλαγές πάνω στο θέμα «σελιδοδείκτης»</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --ribbon:#7c1a1a; --ribbon-light:#8f1d1d; --leather:#4a3420; --leather-light:#5d4329; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 90px; }
+  h1 { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:760px; line-height:1.5; margin:0 0 40px; }
+  .variant { margin-bottom:60px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.25rem; margin:0; }
+  .variant-title span { color:var(--orange); font-weight:800; font-size:.7rem; letter-spacing:.12em; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:720px; line-height:1.45; }
+
+  /* ---- mockup σελίδας χωρίς topbar ---- */
+  .page-mock { position:relative; height:360px; overflow:hidden; background:var(--paper); border:1px solid var(--line); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:96px 96px; }
+  .page-mock .content { padding:56px 6% 0 12%; }
+  .page-mock .kicker { font:800 .62rem "Alegreya Sans"; letter-spacing:.22em; color:var(--orange); text-transform:uppercase; }
+  .page-mock h3 { margin:10px 0 0; font:700 clamp(2rem,4.5vw,3.4rem)/.92 "Roboto Slab",serif; text-transform:uppercase; letter-spacing:-.03em; }
+  .page-mock h3 em { font-style:italic; color:var(--orange); }
+  .page-mock p { max-width:44ch; margin:16px 0 0; color:var(--muted); line-height:1.5; }
+  .headline-rule { width:120px; height:3px; background:var(--ink); margin-top:18px; box-shadow:0 5px 0 -4px var(--ink); }
+  .trigger { border:0; background:none; padding:0; cursor:pointer; color:inherit; }
+
+  /* demo μενού */
+  .mini-menu { position:absolute; top:0; right:0; bottom:0; width:min(240px,70%); background:var(--ink); color:var(--paper); padding:26px 22px; transform:translateX(100%); transition:transform .3s ease; display:flex; flex-direction:column; gap:4px; z-index:9; }
+  .page-mock.open .mini-menu { transform:none; }
+  .mini-menu strong { font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; color:var(--gold); margin-bottom:10px; }
+  .mini-menu a { color:var(--paper); text-decoration:none; font:700 .95rem "Roboto Slab",serif; text-transform:uppercase; letter-spacing:.06em; padding:8px 0; border-bottom:1px solid rgba(239,232,216,.14); }
+  .mini-menu a:hover { color:var(--gold); }
+  .mini-close { position:absolute; top:10px; right:14px; background:none; border:0; color:var(--paper); font-size:1.3rem; cursor:pointer; }
+  .hint { position:absolute; left:14px; bottom:10px; font:700 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+
+  /* ============ Α: μακριά υφασμάτινη κορδέλα με ψαλιδιά ============ */
+  .vA .trigger { position:absolute; top:0; right:9%; width:38px; height:118px; z-index:2; background:linear-gradient(180deg,var(--ribbon-light),var(--ribbon) 70%); color:#efe8d8; clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 16px),0 100%); box-shadow:0 10px 18px rgba(21,19,13,.28); transform-origin:top center; transition:transform .35s ease; }
+  .vA .trigger::before { content:""; position:absolute; inset:5px 5px 24px; border-left:1px dashed rgba(239,232,216,.5); border-right:1px dashed rgba(239,232,216,.5); }
+  .vA .trigger::after { content:""; position:absolute; inset:0; background:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 2px,transparent 2px 6px); }
+  .vA .trigger i { position:absolute; left:50%; top:34px; width:16px; height:2px; background:currentColor; transform:translateX(-50%); box-shadow:0 8px 0 currentColor,0 16px 0 currentColor; }
+  .vA .trigger:hover { transform:rotate(4deg); }
+  @media(prefers-reduced-motion:reduce){ .vA .trigger { transition:none; } }
+
+  /* ============ Β: λάστιχο τετραδίου (moleskine) ============ */
+  .vB .band { position:absolute; top:0; bottom:0; right:12%; width:14px; z-index:2; background:linear-gradient(90deg,#2a2620,#3a352c 45%,#241f18); box-shadow:-3px 0 8px rgba(21,19,13,.3),3px 0 8px rgba(21,19,13,.3); }
+  .vB .trigger { position:absolute; top:50%; right:calc(12% - 15px); transform:translateY(-50%); z-index:3; width:44px; height:64px; background:linear-gradient(120deg,var(--leather-light),var(--leather)); color:#d9cdb4; display:grid; place-items:center; box-shadow:0 6px 14px rgba(21,19,13,.4),inset 0 1px 0 rgba(255,255,255,.15); transition:transform .25s ease; }
+  .vB .trigger::before { content:""; position:absolute; inset:4px; border:1px dashed rgba(217,205,180,.4); }
+  .vB .trigger i { display:block; width:18px; height:2px; background:currentColor; box-shadow:0 7px 0 currentColor,0 14px 0 currentColor; margin-bottom:14px; }
+  .vB .trigger:hover { transform:translateY(-50%) scale(1.06); }
+
+  /* ============ Γ: τσακισμένη γωνία σελίδας (dog-ear) ============ */
+  .vC .trigger { position:absolute; top:0; right:0; width:92px; height:92px; z-index:2; }
+  .vC .fold { position:absolute; inset:0; background:linear-gradient(225deg,transparent 0 50%,var(--paper-dark) 50%); transition:all .3s ease; }
+  .vC .fold::before { content:""; position:absolute; inset:0; background:linear-gradient(225deg,transparent 0 50%,rgba(21,19,13,.18) 50% 52%,transparent 60%); }
+  .vC .fold::after { content:""; position:absolute; top:0; right:0; width:50%; height:50%; background:linear-gradient(225deg,#f7f2e6 0 50%,transparent 50%); box-shadow:-4px 4px 10px rgba(21,19,13,.25); }
+  .vC .trigger i { position:absolute; right:14px; top:14px; width:14px; height:2px; background:var(--orange); transform:rotate(-45deg); box-shadow:0 6px 0 var(--orange),0 12px 0 var(--orange); z-index:2; }
+  .vC .trigger:hover .fold { transform:scale(1.18); transform-origin:top right; }
+
+  /* ============ Δ: δερμάτινο λουρί με μπρούτζινο κουμπί ============ */
+  .vD .trigger { position:absolute; top:0; right:7%; width:52px; height:104px; z-index:2; background:linear-gradient(90deg,var(--leather) 0,var(--leather-light) 45%,var(--leather)); color:#d9cdb4; border-radius:0 0 26px 26px; box-shadow:0 10px 20px rgba(21,19,13,.35),inset 0 -2px 0 rgba(0,0,0,.3); transition:height .25s ease; }
+  .vD .trigger::before { content:""; position:absolute; inset:6px 7px 8px; border:1px dashed rgba(217,205,180,.35); border-radius:0 0 20px 20px; }
+  .vD .stud { position:absolute; left:50%; bottom:16px; width:20px; height:20px; transform:translateX(-50%); border-radius:50%; background:radial-gradient(circle at 35% 30%,#e8c96a,var(--gold) 55%,#8a6a1c); box-shadow:0 2px 4px rgba(0,0,0,.45),inset 0 -1px 2px rgba(0,0,0,.3); }
+  .vD .trigger i { position:absolute; left:50%; top:26px; width:16px; height:2px; background:currentColor; transform:translateX(-50%); box-shadow:0 7px 0 currentColor,0 14px 0 currentColor; }
+  .vD .trigger:hover { height:114px; }
+
+  /* ============ Ε: καρτέλα ευρετηρίου στην πλαϊνή ακμή ============ */
+  .vE .trigger { position:absolute; top:64px; right:0; width:34px; height:88px; z-index:2; background:var(--ink); color:var(--paper); clip-path:polygon(0 10px,10px 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px)); box-shadow:-6px 4px 12px rgba(21,19,13,.25); transition:width .25s ease; }
+  .vE .trigger::before { content:""; position:absolute; inset:4px 0 4px 5px; border-left:1px dashed rgba(239,232,216,.35); }
+  .vE .trigger i { position:absolute; left:50%; top:50%; width:2px; height:16px; background:currentColor; transform:translate(-50%,-50%); box-shadow:6px 0 0 currentColor,-6px 0 0 var(--gold); }
+  .vE .trigger:hover { width:44px; }
+</style>
+</head>
+<body>
+<h1>Παραλλαγές πάνω στο Δ</h1>
+<p class="intro">Ίδια ιδέα — φυσικό αντικείμενο τετραδίου αντί για UI κουμπί — αλλά πέντε πολύ διαφορετικά υλικά και θέσεις: ύφασμα, λάστιχο, χαρτί, δέρμα, καρτέλα. Πάτησε την ένδειξη σε κάθε mockup.</p>
+
+<section class="variant vA">
+  <div class="variant-title"><h2>Α — Μακριά κορδέλα με ψαλιδιά</h2><span>ΥΦΑΣΜΑ</span></div>
+  <p class="variant-note">Το Δ αλλά πιο αληθινό: μακρύτερη, με ραφή στις άκρες, ύφανση, βαθιά ψαλιδιά στην άκρη. Ίδια γλώσσα με τις ribbons που έχει ήδη το site. Στο hover ταλαντεύεται ελαφρά.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η κορδέλα «βγαίνει» μέσα από τη ράχη του τετραδίου.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vB">
+  <div class="variant-title"><h2>Β — Λάστιχο τετραδίου</h2><span>MOLESKINE</span></div>
+  <p class="variant-note">Κάθετο μαύρο λάστιχο σε όλο το ύψος, όπως στα moleskine. Πάνω του δερμάτινη θηλιά που είναι το κουμπί του μενού. Η πιο «αντικείμενο» εκδοχή — το λάστιχο κρατάει τη σελίδα.</p>
+  <div class="page-mock">
+    <span class="band" aria-hidden="true"></span>
+    <button class="trigger" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Το λάστιχο μένει διακοσμητικό — μόνο η θηλιά πατιέται.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vC">
+  <div class="variant-title"><h2>Γ — Τσακισμένη γωνία σελίδας</h2><span>DOG-EAR</span></div>
+  <p class="variant-note">Η πάνω δεξιά γωνία της σελίδας είναι διπλωμένη, με σκιά και πίσω όψη χαρτιού. Τρεις πορτοκαλί γραμμές διαγώνια πάνω στο δίπλωμα. Στο hover το δίπλωμα μεγαλώνει — «ξεφυλλίζεις» προς το μενού.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><span class="fold" aria-hidden="true"></span><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Καμία προσθήκη πάνω στη σελίδα — η ίδια η σελίδα γίνεται το κουμπί.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vD">
+  <div class="variant-title"><h2>Δ2 — Δερμάτινο λουρί με μπρούτζινο κουμπί</h2><span>ΔΕΡΜΑ</span></div>
+  <p class="variant-note">Λουρί από δέρμα με στρογγυλεμένη άκρη, ραφή γύρω-γύρω και μπρούτζινη σούστα (χρυσό accent). Σαν το κλείστρο παλιού ημερολογίου. Στο hover μακραίνει λίγο, σαν να το τραβάς.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><i></i><span class="stud" aria-hidden="true"></span></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η πιο «premium» εκδοχή — δένει με το δερμάτινο θέμα του login.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vE">
+  <div class="variant-title"><h2>Ε — Καρτέλα ευρετηρίου στην ακμή</h2><span>INDEX TAB</span></div>
+  <p class="variant-note">Μελανί καρτέλα που προεξέχει από τη δεξιά ακμή, όπως τα αυτοκόλλητα ευρετήρια σε ντοσιέ. Κάθετες μπάρες (μία χρυσή) σαν μικρό brand-mark. Δείχνει και την κατεύθυνση απ' όπου θα βγει το μενού. Στο hover ξεπροβάλλει περισσότερο.</p>
+  <div class="page-mock">
+    <button class="trigger" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Δεν αγγίζει καθόλου την κορυφή — ο τίτλος μένει ολομόναχος.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.page-mock').forEach(mock=>{
+    mock.querySelector('.trigger').addEventListener('click',()=>mock.classList.add('open'));
+    mock.querySelector('.mini-close').addEventListener('click',()=>mock.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

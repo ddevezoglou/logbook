@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Premium Notebook Προτάσεις</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --cover:#211d15; --cover-hi:#2e2a1f; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:600px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(48px,6vw,80px) 5vw 80px; display:grid; justify-items:center; gap:34px; background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:72px 72px; }
+.notes { max-width:660px; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--gold); }
+
+/* ===== shared form pieces (ink on paper) ===== */
+.sheet-ink { color:var(--ink); }
+.eyebrow { font-size:.72rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 12px; text-transform:uppercase; }
+.login-title { font:700 clamp(2.1rem,4.4vw,3.4rem)/.82 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.login-title em { color:var(--orange); font-style:normal; }
+.login-intro { max-width:42ch; margin:16px 0 0; color:var(--muted); line-height:1.5; font-size:.95rem; }
+.provider { margin-top:22px; width:100%; min-height:52px; display:flex; align-items:center; justify-content:center; gap:12px; border:1px solid var(--ink); background:rgba(255,255,255,.4); color:var(--ink); font:800 .78rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; transition:.22s; }
+.provider:hover { background:var(--ink); color:var(--paper); }
+.provider svg { width:17px; height:17px; flex:none; }
+.divider { display:flex; align-items:center; gap:14px; margin:20px 0 4px; color:var(--muted); font-size:.66rem; font-weight:800; letter-spacing:.18em; }
+.divider::before,.divider::after { content:""; flex:1; border-top:1px dashed var(--line); }
+.fields label { display:block; margin-top:16px; font-size:.68rem; font-weight:800; letter-spacing:.16em; color:var(--ink); text-transform:uppercase; }
+.fields input { width:100%; margin-top:6px; min-height:48px; border:0; border-bottom:1px solid var(--ink); background:rgba(255,255,255,.25); padding:12px 10px; font:500 1rem "Alegreya Sans"; color:var(--ink); outline:none; transition:.2s; }
+.fields input:focus { border-bottom:2px solid var(--orange); background:rgba(255,255,255,.5); }
+.fields input::placeholder { color:var(--faded); }
+.submit { width:100%; margin-top:24px; min-height:54px; border:0; background:var(--ink); color:var(--paper); font:800 .8rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; transition:.22s; box-shadow:4px 4px 0 rgba(21,19,13,.14); }
+.submit:hover { background:var(--cover-hi); color:var(--gold); box-shadow:6px 6px 0 rgba(21,19,13,.18); }
+.tabs { display:flex; gap:0; }
+.tabs button { min-height:46px; padding:0 22px; border:1px solid var(--ink); border-bottom:0; background:var(--paper-dark); color:var(--muted); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.tabs button[aria-pressed="true"] { background:var(--paper); color:var(--ink); box-shadow:inset 0 3px 0 var(--gold); }
+.gmark path:nth-child(1){fill:#4285f4}.gmark path:nth-child(2){fill:#34a853}.gmark path:nth-child(3){fill:#fbbc05}.gmark path:nth-child(4){fill:#ea4335}
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 1 — «ΣΚΛΗΡΟ ΕΞΩΦΥΛΛΟ» (hardcover + λάστιχο)
+   ============================================================ */
+.v1 { position:relative; width:min(560px,100%); background:linear-gradient(120deg,var(--cover-hi),var(--cover) 55%); border-radius:6px 14px 14px 6px; padding:16px 16px 16px 26px; box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 14px 20px 40px rgba(0,0,0,.5), 4px 6px 0 rgba(201,162,39,.22); }
+.v1::before { content:""; position:absolute; inset:6px auto 6px 10px; width:5px; border-radius:4px; background:linear-gradient(#3a3222,#1a1710); box-shadow:1px 0 0 rgba(255,255,255,.05); }
+.v1-page { position:relative; background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.09) 27px 28px); border-radius:2px 8px 8px 2px; padding:clamp(26px,4.5vw,44px); box-shadow:-6px 0 12px rgba(0,0,0,.25) inset; }
+.v1-page::after { content:""; position:absolute; inset:0 auto 0 0; width:14px; background:repeating-linear-gradient(0deg,rgba(21,19,13,.1) 0 1px,transparent 1px 5px); opacity:.5; }
+.v1-band { position:absolute; top:-10px; bottom:-10px; right:56px; width:16px; border-radius:8px; background:linear-gradient(90deg,#8a6a1c,#c9a227 45%,#8a6a1c); box-shadow:3px 4px 8px rgba(0,0,0,.45), 0 0 0 1px rgba(21,19,13,.35); }
+.v1-emboss { position:absolute; right:26px; bottom:18px; color:rgba(21,19,13,.1); font:700 .6rem "Roboto Slab"; letter-spacing:.24em; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 2 — «ΑΝΟΙΧΤΟ ΣΑΛΟΝΙ» (δίφυλλο με ραφή + κορδέλα)
+   ============================================================ */
+.v2 { position:relative; width:min(880px,100%); display:grid; grid-template-columns:1fr 1fr; filter:drop-shadow(0 24px 44px rgba(0,0,0,.55)); }
+.v2-left,.v2-right { position:relative; min-height:480px; padding:clamp(26px,4vw,46px); background-color:var(--paper); }
+.v2-left { border-radius:10px 0 0 10px; background-image:linear-gradient(90deg,transparent 0 82%,rgba(21,19,13,.12)); display:grid; align-content:center; justify-items:start; }
+.v2-right { border-radius:0 10px 10px 0; background-image:linear-gradient(270deg,transparent 0 82%,rgba(21,19,13,.12)),repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.09) 27px 28px); }
+.v2::before { content:""; position:absolute; inset:-8px; z-index:-1; border-radius:16px; background:linear-gradient(120deg,var(--cover-hi),var(--cover)); }
+.v2-stitch { position:absolute; left:50%; top:10px; bottom:10px; width:0; border-left:2px dashed rgba(21,19,13,.3); transform:translateX(-1px); }
+.v2-ribbon { position:absolute; top:-14px; left:50%; width:21px; height:min(68%,340px); z-index:2; pointer-events:none; transform:translateX(-50%) rotate(.8deg); transform-origin:top center; background:linear-gradient(104deg,#6b5518,#463a14 52%,#2e2710); clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 14px),0 100%); filter:drop-shadow(4px 6px 5px rgba(21,19,13,.35)); opacity:.94; }
+.v2-ribbon::before { content:""; position:absolute; inset:6px 4px 22px; border-left:1px dashed rgba(239,232,216,.5); border-right:1px dashed rgba(239,232,216,.5); }
+.v2-ribbon::after { content:""; position:absolute; inset:0; background:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 2px,transparent 2px 6px); }
+.v2-brandmark { display:flex; align-items:center; gap:3px; margin-bottom:22px; }
+.v2-brandmark i { display:block; width:6px; height:26px; background:var(--ink); }
+.v2-brandmark i:first-child,.v2-brandmark i:last-child { width:9px; height:36px; }
+.v2-brandmark i:nth-child(3) { width:54px; height:7px; background:var(--orange); }
+.v2-type { margin-top:34px; min-height:64px; display:flex; align-items:baseline; font:700 clamp(1.7rem,3vw,2.5rem)/1 "Roboto Slab",serif; letter-spacing:-.03em; text-transform:uppercase; color:var(--ink); }
+.v2-type .caret { display:inline-block; width:.55em; height:1em; margin-left:5px; background:var(--orange); transform:translateY(.1em); animation:v2caret 1s steps(1) infinite; }
+@keyframes v2caret { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+@media(prefers-reduced-motion:reduce){ .v2-type .caret{animation:none} }
+.v2 .login-title { font-size:clamp(2rem,3.6vw,3rem); }
+.v2 .tabs { margin-bottom:22px; }
+.hidden { display:none !important; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 3 — «ΚΛΕΙΣΤΟ ΕΞΩΦΥΛΛΟ + ΚΑΡΤΑ ΒΙΒΛΙΟΘΗΚΗΣ»
+   ============================================================ */
+.v3 { position:relative; width:min(520px,100%); min-height:600px; border-radius:8px 16px 16px 8px; background:linear-gradient(115deg,var(--cover-hi) 0%,var(--cover) 60%); box-shadow:0 1px 0 rgba(255,255,255,.07) inset,-10px 0 0 -4px #0d0b07,16px 24px 48px rgba(0,0,0,.55); padding:clamp(30px,5vw,52px); display:grid; align-content:start; gap:0; }
+.v3::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 20% 8%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.v3-embossed { justify-self:center; margin-top:8px; text-align:center; color:transparent; background:linear-gradient(#0e0c08,#332c1d); -webkit-background-clip:text; background-clip:text; text-shadow:0 1px 0 rgba(255,255,255,.045); font:700 clamp(2.4rem,5vw,3.6rem)/0.9 "Roboto Slab"; letter-spacing:-.04em; }
+.v3-embossed small { display:block; margin-top:10px; font:800 .6rem "Alegreya Sans"; letter-spacing:.34em; }
+.v3-foil { justify-self:center; margin-top:14px; color:var(--gold); font-size:.66rem; font-weight:800; letter-spacing:.3em; text-shadow:0 0 8px rgba(201,162,39,.35); }
+.v3-pocket { position:relative; margin-top:44px; background:var(--paper-dark); border-radius:3px; padding:18px 18px 22px; box-shadow:inset 0 -8px 14px rgba(0,0,0,.18); }
+.v3-pocket::before { content:"MEMBER FILE — ΚΑΡΤΑ ΜΕΛΟΥΣ"; position:absolute; top:-24px; left:2px; color:#6b5d3a; font-size:.6rem; font-weight:800; letter-spacing:.22em; }
+.v3-card { position:relative; background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 26px,rgba(77,63,36,.1) 26px 27px); border-radius:2px; padding:24px 22px 26px; box-shadow:0 10px 22px rgba(0,0,0,.35); transform:translateY(-40px) rotate(-.6deg); }
+.v3-card .login-title { font-size:1.9rem; }
+.v3-elastic { position:absolute; top:-14px; bottom:-14px; right:44px; width:14px; border-radius:7px; background:linear-gradient(90deg,#0c0a06,#241f14 50%,#0c0a06); box-shadow:2px 3px 8px rgba(0,0,0,.5); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 4 — «ΠΡΩΤΗ ΣΕΛΙΔΑ / EX LIBRIS»
+   ============================================================ */
+.v4 { position:relative; width:min(600px,100%); background:linear-gradient(120deg,var(--cover-hi),var(--cover)); border-radius:6px 12px 12px 6px; padding:14px 14px 14px 30px; box-shadow:14px 20px 44px rgba(0,0,0,.5); }
+.v4::before { content:""; position:absolute; left:12px; top:8px; bottom:8px; width:8px; background:repeating-linear-gradient(0deg,#3a3222 0 26px,#1a1710 26px 30px); border-radius:4px; }
+.v4-page { position:relative; background:var(--paper); border-radius:2px 6px 6px 2px; padding:clamp(30px,5vw,50px) clamp(26px,4.5vw,46px); }
+.v4-page::after { content:""; position:absolute; right:-4px; top:6px; bottom:6px; width:4px; background:repeating-linear-gradient(0deg,#dcd3bd 0 2px,#c9bfa6 2px 3px); border-radius:0 3px 3px 0; }
+.v4-frame { border:2px solid var(--ink); outline:1px solid var(--ink); outline-offset:5px; padding:clamp(24px,4vw,40px); text-align:center; display:grid; justify-items:center; }
+.v4-frame .eyebrow { letter-spacing:.3em; }
+.v4-belongs { margin:20px 0 0; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; }
+.v4 .fields { width:100%; text-align:left; }
+.v4 .fields input { background:transparent; border-bottom:1px solid var(--line); font-family:"Caveat"; font-size:1.35rem; padding:8px 8px 4px; }
+.v4 .fields input:focus { border-bottom:2px solid var(--orange); }
+.v4 .fields input::placeholder { font-family:"Alegreya Sans"; font-size:.95rem; }
+.v4-no { position:absolute; top:16px; right:20px; color:var(--faded); font:700 .64rem "Roboto Slab"; letter-spacing:.18em; }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN EXPLORATION — AUTH GATE</p>
+  <h1>LOGIN ΣΑΝ <em>ΣΗΜΕΙΩΜΑΤΑΡΙΟ.</em></h1>
+  <p>Τέσσερις κατευθύνσεις για premium αίσθηση «hardcover journal» στη σελίδα σύνδεσης. Το logo και η παλέτα της εφαρμογής μένουν ως έχουν· αλλάζει μόνο το «αντικείμενο» που κρατά τη φόρμα: εξώφυλλο, λάστιχο, ραφή, κορδέλα, πρώτη σελίδα.</p>
+</header>
+
+<!-- ============ 1 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 1</b><span>«ΣΚΛΗΡΟ ΕΞΩΦΥΛΛΟ» — hardcover πλαίσιο, χρυσό λάστιχο, εσωτερική σελίδα με ρίγες</span></div>
+<section class="stage">
+  <div class="v1">
+    <div class="v1-page sheet-ink">
+      <p class="eyebrow">ΗΜΕΡΟΛΟΓΙΟ ΠΡΟΠΟΝΗΣΗΣ</p>
+      <h2 class="login-title">ΜΠΕΣ ΣΤΟ<br><em>LOGBOOK.</em></h2>
+      <p class="login-intro">Οι προπονήσεις και τα προγράμματά σου παραμένουν συγχρονισμένα σε κάθε συσκευή.</p>
+      <button class="provider" type="button">
+        <svg class="gmark" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg>
+        <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
+      </button>
+      <div class="divider"><span>Ή ΜΕ EMAIL</span></div>
+      <div class="fields">
+        <label>Email<input type="email" placeholder="name@example.com"></label>
+        <label>Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+      </div>
+      <button class="submit" type="button">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+      <span class="v1-emboss">MEMBER FILE</span>
+    </div>
+    <span class="v1-band" aria-hidden="true"></span>
+  </div>
+  <p class="notes"><b>Ιδέα:</b> η σημερινή «καρτέλα» γίνεται κλειστό hardcover journal — σκούρο δερμάτινο πλαίσιο γύρω από τη σελίδα, ραχοκοκαλιά αριστερά και το χαρακτηριστικό <b>κατακόρυφο λάστιχο</b> σε χρυσό πάνω από τη δεξιά πλευρά, όπως το Moleskine της αναφοράς. Η φόρμα μένει ακριβώς ως έχει· αλλάζει μόνο το περίβλημα, άρα είναι και το πιο <b>φθηνό σε υλοποίηση</b> (wrapper + 2 pseudo-elements).</p>
+</section>
+
+<!-- ============ 2 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 2</b><span>«ΑΝΟΙΧΤΟ ΔΙΦΥΛΛΟ» — spread με ραφή στη μέση, κορδέλα-σελιδοδείκτη, ex-libris αριστερά</span></div>
+<section class="stage">
+  <div class="v2 sheet-ink">
+    <div class="v2-left">
+      <span class="v2-brandmark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <h2 class="login-title">LOGBOOK<br><em>TRAINING JOURNAL</em></h2>
+      <div class="v2-type" aria-hidden="true"><span id="v2-typed"></span><span class="caret"></span></div>
+    </div>
+    <div class="v2-right">
+      <div class="tabs" role="group" aria-label="Επιλογή σύνδεσης ή εγγραφής">
+        <button type="button" data-mode="signin" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
+        <button type="button" data-mode="signup" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+      </div>
+      <button class="provider" type="button">
+        <svg class="gmark" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg>
+        <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
+      </button>
+      <div class="divider"><span>Ή ΜΕ EMAIL</span></div>
+      <div class="fields" id="v2-signin">
+        <label>Email<input type="email" placeholder="name@example.com"></label>
+        <label>Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+        <button class="submit" type="button">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+      </div>
+      <div class="fields hidden" id="v2-signup">
+        <label>Email<input type="email" placeholder="name@example.com"></label>
+        <label>Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+        <label>Επιβεβαίωση κωδικού<input type="password" placeholder="Ξαναγράψε τον κωδικό"></label>
+        <button class="submit" type="button">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
+      </div>
+    </div>
+    <span class="v2-stitch" aria-hidden="true"></span>
+    <span class="v2-ribbon" aria-hidden="true"></span>
+  </div>
+  <p class="notes"><b>Ιδέα (v2):</b> ανοιχτό δίφυλλο πάνω στο σκούρο εξώφυλλο. Αριστερή σελίδα: brand + <b>typewriter effect</b> — γράφει λέξη-λέξη «TRAIN. WRITE. REPEAT.» με κέρσορα-block, την κρατά, τη σβήνει, επόμενη. Γραμματοσειρά Roboto Slab όπως οι τίτλοι του theme. Δεξιά σελίδα: tabs ΣΥΝΔΕΣΗ/ΕΓΓΡΑΦΗ και οι δύο φόρμες. Ραφή στο κέντρο και κορδέλα-σελιδοδείκτης ίδια με της Αρχικής, κρεμασμένη πάνω στη ραφή. Εναλλακτικά σετ λέξεων: «WORK. AUDIT. LOG.» · «LIFT. LOG. REPEAT.» · «ΓΡΑΨΕ. ΣΗΚΩΣΕ. ΞΑΝΑ.» — άλλαξέ τα στο <b>WORDS</b> array στο τέλος του αρχείου.</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 3</b><span>«ΚΛΕΙΣΤΟ ΕΞΩΦΥΛΛΟ» — blind emboss logo, μαύρο λάστιχο, κάρτα μέλους σε θήκη</span></div>
+<section class="stage">
+  <div class="v3">
+    <div class="v3-embossed">LOGBOOK<small>TRAINING JOURNAL</small></div>
+    <div class="v3-foil">EST. MMXXV — ΗΜΕΡΟΛΟΓΙΟ ΠΡΟΠΟΝΗΣΗΣ</div>
+    <div class="v3-pocket">
+      <div class="v3-card sheet-ink">
+        <p class="eyebrow">ΣΥΝΔΕΣΗ</p>
+        <h2 class="login-title">ΜΠΕΣ ΣΤΟ<br><em>LOGBOOK.</em></h2>
+        <button class="provider" type="button">
+          <svg class="gmark" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg>
+          <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
+        </button>
+        <div class="divider"><span>Ή ΜΕ EMAIL</span></div>
+        <div class="fields">
+          <label>Email<input type="email" placeholder="name@example.com"></label>
+          <label>Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+        </div>
+        <button class="submit" type="button">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+      </div>
+    </div>
+    <span class="v3-elastic" aria-hidden="true"></span>
+  </div>
+  <p class="notes"><b>Ιδέα:</b> πιστό στη φωτογραφία-αναφορά — <b>κλειστό μαύρο notebook</b> γεμίζει τη σκηνή, με blind-embossed LOGBOOK (ανάγλυφο, ίδιο χρώμα με το εξώφυλλο) και μαύρο λάστιχο. Η φόρμα ζει σε «κάρτα μέλους» που ξεπροβάλλει από θήκη βιβλιοθήκης κολλημένη στο εξώφυλλο — δένει με το υπάρχον «MEMBER FILE». Το πιο premium/μινιμαλιστικό· θέλει προσοχή σε contrast και ύψος σελίδας σε μικρές οθόνες.</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 4</b><span>«ΠΡΩΤΗ ΣΕΛΙΔΑ / EX LIBRIS» — τυπογραφικό πλαίσιο, χειρόγραφα πεδία, αρίθμηση σελίδας</span></div>
+<section class="stage">
+  <div class="v4">
+    <div class="v4-page sheet-ink">
+      <span class="v4-no">No. 001</span>
+      <div class="v4-frame">
+        <p class="eyebrow">ΗΜΕΡΟΛΟΓΙΟ ΠΡΟΠΟΝΗΣΗΣ</p>
+        <h2 class="login-title">LOGBOOK<em>.</em></h2>
+        <p class="v4-belongs">Το παρόν ημερολόγιο ανήκει σε:</p>
+        <div class="fields">
+          <label>Email<input type="email" placeholder="name@example.com"></label>
+          <label>Κωδικός<input type="password" placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+        </div>
+        <button class="submit" type="button">ΥΠΟΓΡΑΦΗ &amp; ΣΥΝΔΕΣΗ</button>
+        <div class="divider" style="width:100%"><span>Ή ΜΕ GOOGLE</span></div>
+        <button class="provider" type="button" style="margin-top:6px">
+          <svg class="gmark" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg>
+          <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <p class="notes"><b>Ιδέα:</b> η σύνδεση ως «υπογραφή ιδιοκτησίας» στην πρώτη σελίδα του τετραδίου — διπλό τυπογραφικό πλαίσιο (ex libris), αρίθμηση «No. 001», ραμμένη ράχη αριστερά και deckle edge δεξιά. Τα πεδία δείχνουν <b>χειρόγραφα</b> (Caveat στο πληκτρολόγημα, κανονική γραμματοσειρά στο placeholder). Το κουμπί γίνεται «ΥΠΟΓΡΑΦΗ &amp; ΣΥΝΔΕΣΗ». Πιο αφηγηματικό· ταιριάζει αν θες το signup να μοιάζει με «απόκτηση τετραδίου».</p>
+</section>
+
+<script>
+(function(){
+  /* Πρόταση 2 — typewriter: γράφει κάθε λέξη, παύση, σβήσιμο, επόμενη */
+  var WORDS = ["TRAIN.", "WRITE.", "REPEAT."];
+  var el = document.getElementById("v2-typed");
+  if (!el) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = WORDS.join(" "); return; }
+  var w = 0, i = 0, deleting = false;
+  (function tick(){
+    var word = WORDS[w];
+    el.textContent = word.slice(0, i);
+    var delay;
+    if (!deleting && i < word.length) { i++; delay = 90 + Math.random()*70; }
+    else if (!deleting) { deleting = true; delay = 1300; }
+    else if (i > 0) { i--; delay = 45; }
+    else { deleting = false; w = (w + 1) % WORDS.length; delay = 420; }
+    setTimeout(tick, delay);
+  })();
+
+  /* Πρόταση 2 — tabs σύνδεση/εγγραφή */
+  var tabs = document.querySelectorAll(".v2 .tabs button");
+  tabs.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabs.forEach(function(b){ b.setAttribute("aria-pressed", String(b === btn)); });
+      document.getElementById("v2-signin").classList.toggle("hidden", btn.dataset.mode !== "signin");
+      document.getElementById("v2-signup").classList.toggle("hidden", btn.dataset.mode !== "signup");
+    });
+  });
+})();
+</script>
+</body>
+</html>

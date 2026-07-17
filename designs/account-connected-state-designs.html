@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Συνδεδεμένος Λογαριασμός — Προτάσεις Σχεδίασης</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --ink-line:#3d3828; --ink-muted:#a89f86; --ink-faint:#6f695a; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:560px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,70px) 5vw 66px; display:grid; justify-items:center; gap:clamp(28px,4vw,48px); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.notes { max-width:640px; width:100%; margin:0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+.pair { display:flex; flex-wrap:wrap; gap:32px; justify-content:center; }
+.pair figure { margin:0; display:grid; gap:10px; justify-items:center; }
+.pair figcaption { color:var(--muted); font-size:.62rem; font-weight:800; letter-spacing:.18em; }
+
+/* ===== mock πλαϊνού μενού (ίδιο με το site) ===== */
+.panel { width:300px; padding:22px 24px 20px; display:flex; flex-direction:column; color:var(--paper);
+  background-color:var(--ink);
+  background-image:linear-gradient(115deg,rgba(201,162,39,.04) 25%,transparent 25%,transparent 50%,rgba(201,162,39,.04) 50%,rgba(201,162,39,.04) 75%,transparent 75%);
+  background-size:18px 18px; box-shadow:10px 12px 0 rgba(21,19,13,.16); }
+.panel .nav-btn { padding:14px 0; border:0; border-bottom:1px solid var(--ink-line); background:transparent; color:var(--paper); text-align:left; font:700 1.15rem "Roboto Slab"; letter-spacing:.02em; cursor:pointer; }
+.panel .nav-btn:hover { color:var(--gold); }
+.lang { margin-top:14px; padding-top:13px; border-top:1px solid var(--ink-line); display:flex; align-items:center; gap:6px; }
+.lang span { color:var(--ink-faint); font-size:.55rem; font-weight:800; letter-spacing:.2em; margin-right:6px; }
+.lang b { width:30px; height:24px; display:grid; place-items:center; border:1px solid var(--ink-line); color:var(--ink-muted); font:800 .58rem "Alegreya Sans"; }
+.lang b.on { border-color:var(--gold); color:var(--gold); }
+
+/* βασική δομή κάρτας λογαριασμού (όπως στο styles.css) */
+.acc { width:100%; display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:11px; margin-top:16px; padding:12px 0; border:0; border-top:1px solid var(--ink-line); border-bottom:1px solid var(--ink-line); background:transparent; color:var(--paper); cursor:pointer; text-align:left; font-family:"Alegreya Sans"; transition:color .2s,padding .2s,background .2s; }
+.acc:hover { padding-left:8px; background:rgba(201,162,39,.045); color:var(--gold); }
+.acc-mark { position:relative; width:29px; height:29px; display:grid; place-items:center; border:1px solid #5a5444; border-radius:50%; transform:rotate(-7deg); }
+.acc-mark::before { content:""; width:15px; height:15px; border:1px dashed #71694f; border-radius:50%; }
+.acc-mark i { position:absolute; width:5px; height:5px; border-radius:50%; background:#777164; }
+.acc-copy { min-width:0; display:block; }
+.acc-copy small,.acc-copy strong,.acc-copy>span { display:block; }
+.acc-copy small { margin-bottom:2px; color:#777164; font-size:.55rem; font-weight:800; letter-spacing:.18em; }
+.acc-copy strong { overflow:hidden; color:currentColor; font:700 .72rem "Roboto Slab"; letter-spacing:.08em; text-overflow:ellipsis; white-space:nowrap; }
+.acc-copy>span { margin-top:2px; overflow:hidden; color:var(--ink-muted); font-size:.68rem; text-overflow:ellipsis; white-space:nowrap; }
+.acc>b { color:#777164; font:700 1rem "Roboto Slab"; }
+
+/* τωρινό connected (για σύγκριση) */
+.acc.now .acc-mark { border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,162,39,.1); }
+.acc.now .acc-mark i { background:var(--gold); box-shadow:0 0 9px rgba(201,162,39,.65); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 1 — «ΧΡΥΣΗ ΣΦΡΑΓΙΔΑ»
+   ============================================================ */
+.acc.p1 { border-top-color:rgba(201,162,39,.5); border-bottom-color:rgba(201,162,39,.5); background:linear-gradient(90deg,rgba(201,162,39,.07),transparent 70%); }
+.acc.p1:hover { background:linear-gradient(90deg,rgba(201,162,39,.12),transparent 70%); }
+.acc.p1 .acc-mark { border:0; background:var(--gold); box-shadow:0 0 0 1px rgba(201,162,39,.35),0 0 14px rgba(201,162,39,.28); }
+.acc.p1 .acc-mark::before { border-color:rgba(21,19,13,.55); }
+.acc.p1 .acc-mark i { background:var(--ink); }
+.acc.p1 .acc-copy small { color:var(--orange); }
+.acc.p1 .acc-copy strong { color:var(--gold); }
+.acc.p1 .acc-copy strong::after { content:""; display:inline-block; width:7px; height:12px; margin-left:8px; border-right:2px solid var(--gold); border-bottom:2px solid var(--gold); transform:rotate(40deg) translateY(-2px); }
+.acc.p1>b { color:var(--gold); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 2 — «ΣΤΑΜΠΑ ΑΡΧΕΙΟΥ»
+   ============================================================ */
+.acc.p2 { grid-template-columns:minmax(0,1fr) auto; }
+.acc.p2 .acc-copy strong { display:inline-block; margin-top:1px; padding:4px 9px 3px; border:2px solid var(--gold); border-radius:3px; color:var(--gold); font-size:.62rem; letter-spacing:.14em; transform:rotate(-2.5deg); box-shadow:inset 0 0 0 1px rgba(21,19,13,.9),inset 0 0 0 2px rgba(201,162,39,.4); background:rgba(201,162,39,.06);
+  mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.92'/%3E%3C/svg%3E"); mask-size:130px; }
+.acc.p2 .acc-copy>span { margin-top:5px; }
+.acc.p2>b { color:var(--gold); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 3 — «ΕΙΣΙΤΗΡΙΟ ΜΕΛΟΥΣ»
+   ============================================================ */
+.acc.p3 { position:relative; margin-left:-24px; margin-right:-24px; width:calc(100% + 48px); padding:12px 24px 12px 34px; border-top:1px solid rgba(201,162,39,.4); border-bottom:1px solid rgba(201,162,39,.4); background:rgba(201,162,39,.08); overflow:hidden; }
+.acc.p3::before { content:""; position:absolute; top:0; bottom:0; left:0; width:6px; background:var(--gold); }
+.acc.p3::after { content:""; position:absolute; top:50%; left:-7px; width:14px; height:14px; border-radius:50%; background:var(--ink); transform:translateY(-50%); box-shadow:0 0 0 1px rgba(201,162,39,.4); }
+.acc.p3:hover { padding-left:40px; background:rgba(201,162,39,.13); }
+.acc.p3 .acc-mark { border-color:var(--gold); }
+.acc.p3 .acc-mark::before { border-color:rgba(201,162,39,.6); }
+.acc.p3 .acc-mark i { background:var(--gold); }
+.acc.p3 .acc-copy strong { color:var(--gold); }
+.acc.p3 .acc-copy>span { color:var(--paper); opacity:.75; }
+.acc.p3>b { color:var(--gold); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 4 — «ΖΩΝΤΑΝΟ ΣΗΜΑ + ΥΠΟΓΡΑΦΗ»
+   ============================================================ */
+.acc.p4 .acc-mark { border-color:var(--gold); }
+.acc.p4 .acc-mark::before { border:0; width:9px; height:9px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px rgba(201,162,39,.7); }
+.acc.p4 .acc-mark i { display:none; }
+.acc.p4 .acc-mark::after { content:""; position:absolute; inset:-1px; border:1px solid var(--gold); border-radius:50%; opacity:0; animation:ping 2.6s ease-out infinite; }
+@keyframes ping { 0%{ transform:scale(.6); opacity:.7; } 70%,100%{ transform:scale(1.5); opacity:0; } }
+@media (prefers-reduced-motion:reduce){ .acc.p4 .acc-mark::after { animation:none; } }
+.acc.p4 .acc-copy strong { display:inline-block; color:var(--gold); border-bottom:2px solid rgba(201,162,39,.55); padding-bottom:2px; }
+.acc.p4 .acc-copy>span { font:600 .95rem/1.1 "Caveat"; color:var(--paper); opacity:.8; transform:rotate(-1deg); transform-origin:left; }
+.acc.p4>b { color:var(--gold); }
+
+/* ============================================================
+   ΤΕΛΙΚΟ — Π4 παλμός + email με γραμματοσειρά Π1, τίποτα άλλο
+   ============================================================ */
+.acc.final { grid-template-columns:34px minmax(0,1fr); }
+.acc.final .acc-mark { border-color:var(--gold); }
+.acc.final .acc-mark::before { width:9px; height:9px; border:0; border-radius:50%; background:var(--gold); box-shadow:0 0 10px rgba(201,162,39,.7); }
+.acc.final .acc-mark i { display:none; }
+.acc.final .acc-mark::after { content:""; position:absolute; inset:-1px; border:1px solid var(--gold); border-radius:50%; opacity:0; animation:ping 2.6s ease-out infinite; }
+@media (prefers-reduced-motion:reduce){ .acc.final .acc-mark::after { animation:none; } }
+.acc.final .acc-copy>span { margin-top:0; color:var(--gold); font:700 .72rem "Roboto Slab"; letter-spacing:.08em; }
+.acc.off { grid-template-columns:34px minmax(0,1fr); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 5 — «ΜΟΝΟΓΡΑΜΜΑ ΜΕΛΟΥΣ»
+   ============================================================ */
+.acc.p5 .acc-mark { border:1px solid var(--gold); background:radial-gradient(circle at 34% 30%,rgba(201,162,39,.28),rgba(201,162,39,.06) 65%); transform:rotate(0); }
+.acc.p5 .acc-mark::before { width:23px; height:23px; border:1px solid rgba(201,162,39,.45); }
+.acc.p5 .acc-mark i { all:unset; position:absolute; color:var(--gold); font:700 .8rem/1 "Roboto Slab"; }
+.acc.p5 .acc-mark i::after { content:attr(data-initial); }
+.acc.p5 .acc-copy small { color:var(--orange); }
+.acc.p5 .acc-copy strong { color:var(--gold); }
+.acc.p5>b { color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">LOGBOOK — DESIGN PROPOSALS</p>
+  <h1>ΣΥΝΔΕΔΕΜΕΝΟΣ <em>ΛΟΓΑΡΙΑΣΜΟΣ</em></h1>
+  <p>Πέντε προτάσεις για την κάρτα λογαριασμού στο πλαϊνό μενού όταν ο χρήστης είναι συνδεδεμένος. Στόχος: η σύνδεση να «φαίνεται» με μια ματιά — όχι μόνο από μια χρυσή κουκκίδα. Ένα accent (χρυσό), ίδιες γραμματοσειρές, ίδια γεωμετρία με το site.</p>
+</header>
+
+<!-- ΤΩΡΙΝΟ -->
+<div class="attempt-label"><b>ΤΩΡΙΝΟ</b><span>Η υπάρχουσα κατάσταση — για σύγκριση</span></div>
+<section class="stage">
+  <div class="pair">
+    <figure>
+      <div class="panel">
+        <button class="nav-btn">Πρόγραμμα</button>
+        <button class="nav-btn">Ιστορικό</button>
+        <button class="acc"><span class="acc-mark"><i></i></span><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</strong></span><b>↗</b></button>
+        <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+      </div>
+      <figcaption>ΑΠΟΣΥΝΔΕΔΕΜΕΝΟΣ</figcaption>
+    </figure>
+    <figure>
+      <div class="panel">
+        <button class="nav-btn">Πρόγραμμα</button>
+        <button class="nav-btn">Ιστορικό</button>
+        <button class="acc now"><span class="acc-mark"><i></i></span><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΣΥΝΔΕΔΕΜΕΝΟΣ</strong><span>dimitris.devetzoglou@gmail.com</span></span><b>↗</b></button>
+        <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+      </div>
+      <figcaption>ΣΥΝΔΕΔΕΜΕΝΟΣ (ΤΩΡΑ)</figcaption>
+    </figure>
+  </div>
+  <p class="notes"><b>Το πρόβλημα:</b> η μόνη διαφορά είναι το χρυσό δαχτυλίδι και η κουκκίδα στο μικρό σήμα. Το κείμενο μένει λευκό, η κάρτα ίδια — από απόσταση οι δύο καταστάσεις μοιάζουν πανομοιότυπες.</p>
+</section>
+
+<!-- ΠΡΟΤΑΣΗ 1 -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 1</b><span>«Χρυσή σφραγίδα» — γεμάτο σήμα + χρυσό κείμενο + τσεκ</span></div>
+<section class="stage">
+  <div class="panel">
+    <button class="nav-btn">Πρόγραμμα</button>
+    <button class="nav-btn">Ιστορικό</button>
+    <button class="acc p1"><span class="acc-mark"><i></i></span><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΣΥΝΔΕΔΕΜΕΝΟΣ</strong><span>dimitris.devetzoglou@gmail.com</span></span><b>↗</b></button>
+    <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+  </div>
+  <p class="notes"><b>Τι αλλάζει:</b> το σήμα γίνεται συμπαγής χρυσή σφραγίδα (αντιστροφή: χρυσό σώμα, μελανό κέντρο), το «ΣΥΝΔΕΔΕΜΕΝΟΣ» γίνεται χρυσό με μικρό τσεκ, και οι γραμμές πάνω/κάτω παίρνουν χρυσή απόχρωση με απαλό gradient. <b>Γιατί:</b> η μικρότερη δυνατή αλλαγή που κάνει τη σύνδεση ορατή από απόσταση, χωρίς νέο στοιχείο. Ασφαλής επιλογή.</p>
+</section>
+
+<!-- ΠΡΟΤΑΣΗ 2 -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 2</b><span>«Στάμπα αρχείου» — το status ως σφραγίδα μελανιού</span></div>
+<section class="stage">
+  <div class="panel">
+    <button class="nav-btn">Πρόγραμμα</button>
+    <button class="nav-btn">Ιστορικό</button>
+    <button class="acc p2"><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΣΥΝΔΕΔΕΜΕΝΟΣ</strong><span>dimitris.devetzoglou@gmail.com</span></span><b>↗</b></button>
+    <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+  </div>
+  <p class="notes"><b>Τι αλλάζει:</b> το «ΣΥΝΔΕΔΕΜΕΝΟΣ» γίνεται ελαφρώς στραβή σφραγίδα με διπλό χρυσό περίγραμμα και φθαρμένο μελάνι (noise mask) — ίδια γλώσσα με τη στάμπα της κάρτας μέλους στο dialog. Το στρογγυλό σήμα φεύγει· η στάμπα είναι πλέον το σήμα. <b>Γιατί:</b> δένει με την αισθητική «ημερολογίου/αρχείου» του site και επαναχρησιμοποιεί το ίδιο μοτίβο με το <i>account-connected-stamp</i> — συνέπεια μεταξύ μενού και dialog.</p>
+</section>
+
+<!-- ΠΡΟΤΑΣΗ 3 -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 3</b><span>«Εισιτήριο μέλους» — full-bleed λωρίδα με χρυσή ράχη</span></div>
+<section class="stage">
+  <div class="panel">
+    <button class="nav-btn">Πρόγραμμα</button>
+    <button class="nav-btn">Ιστορικό</button>
+    <button class="acc p3"><span class="acc-mark"><i></i></span><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΣΥΝΔΕΔΕΜΕΝΟΣ</strong><span>dimitris.devetzoglou@gmail.com</span></span><b>↗</b></button>
+    <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+  </div>
+  <p class="notes"><b>Τι αλλάζει:</b> η κάρτα απλώνεται σε όλο το πλάτος του μενού σαν κομμένο εισιτήριο: χρυσή ράχη αριστερά, τρύπα διατρήσεως στη μέση, απαλό χρυσό φόντο. <b>Γιατί:</b> η πιο «δυνατή» εκδοχή — η σύνδεση γίνεται ξεχωριστή ζώνη μέσα στο μενού, αδύνατο να τη χάσεις. Ταιριάζει αν θέλεις ο λογαριασμός να έχει βάρος ίσο με τα nav items.</p>
+</section>
+
+<!-- ΠΡΟΤΑΣΗ 4 -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 4</b><span>«Ζωντανό σήμα + υπογραφή» — παλμός και χειρόγραφο email</span></div>
+<section class="stage">
+  <div class="panel">
+    <button class="nav-btn">Πρόγραμμα</button>
+    <button class="nav-btn">Ιστορικό</button>
+    <button class="acc p4"><span class="acc-mark"><i></i></span><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΣΥΝΔΕΔΕΜΕΝΟΣ</strong><span>dimitris.devetzoglou@gmail.com</span></span><b>↗</b></button>
+    <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+  </div>
+  <p class="notes"><b>Τι αλλάζει:</b> το σήμα γίνεται «ζωντανός» δείκτης — χρυσή κουκκίδα με αργό δαχτυλίδι-παλμό (σέβεται το <i>prefers-reduced-motion</i>), το status υπογραμμίζεται με χρυσό, και το email γράφεται χειρόγραφα (Caveat) σαν υπογραφή στο ημερολόγιο. <b>Γιατί:</b> «συνδεδεμένος» = ενεργή, ζωντανή κατάσταση· ο παλμός το λέει χωρίς λέξεις, και η υπογραφή δένει με τη γραφική ταυτότητα του logbook.</p>
+</section>
+
+<!-- ΠΡΟΤΑΣΗ 5 -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 5</b><span>«Μονόγραμμα μέλους» — το αρχικό του χρήστη σε μετάλλιο</span></div>
+<section class="stage">
+  <div class="panel">
+    <button class="nav-btn">Πρόγραμμα</button>
+    <button class="nav-btn">Ιστορικό</button>
+    <button class="acc p5"><span class="acc-mark"><i data-initial="D"></i></span><span class="acc-copy"><small>ΛΟΓΑΡΙΑΣΜΟΣ</small><strong>ΣΥΝΔΕΔΕΜΕΝΟΣ</strong><span>dimitris.devetzoglou@gmail.com</span></span><b>↗</b></button>
+    <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+  </div>
+  <p class="notes"><b>Τι αλλάζει:</b> το σήμα γίνεται χρυσό μετάλλιο με το αρχικό γράμμα του email (εδώ «D») και διπλό δαχτυλίδι — προσωπικό avatar χωρίς εικόνα. <b>Γιατί:</b> εκτός από «συνδεδεμένος», απαντά και στο «ποιος» — η κάρτα γίνεται δική σου. Το αρχικό βγαίνει από το email με μία γραμμή JS.</p>
+</section>
+
+<!-- ΤΕΛΙΚΟ -->
+<div class="attempt-label"><b>ΤΕΛΙΚΟ</b><span>Η επιλογή που μπήκε στο site — Π4 παλμός, μόνο email (γραμματοσειρά Π1)</span></div>
+<section class="stage">
+  <div class="pair">
+    <figure>
+      <div class="panel">
+        <button class="nav-btn">Πρόγραμμα</button>
+        <button class="nav-btn">Ιστορικό</button>
+        <button class="acc off"><span class="acc-mark"><i></i></span><span class="acc-copy"><strong>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</strong></span></button>
+        <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+      </div>
+      <figcaption>ΑΠΟΣΥΝΔΕΔΕΜΕΝΟΣ</figcaption>
+    </figure>
+    <figure>
+      <div class="panel">
+        <button class="nav-btn">Πρόγραμμα</button>
+        <button class="nav-btn">Ιστορικό</button>
+        <button class="acc final"><span class="acc-mark"><i></i></span><span class="acc-copy"><span>dimitris.devetzoglou@gmail.com</span></span></button>
+        <div class="lang"><span>LANG</span><b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b></div>
+      </div>
+      <figcaption>ΣΥΝΔΕΔΕΜΕΝΟΣ</figcaption>
+    </figure>
+  </div>
+  <p class="notes"><b>Τι μπήκε:</b> παλμός από την Πρόταση 4, email σε χρυσό Roboto Slab (γραμματοσειρά Πρότασης 1). Χωρίς «ΛΟΓΑΡΙΑΣΜΟΣ», χωρίς «ΣΥΝΔΕΔΕΜΕΝΟΣ», χωρίς βελάκι. Αποσυνδεδεμένος: μόνο «ΧΩΡΙΣ ΣΥΝΔΕΣΗ».</p>
+</section>
+
+</body>
+</html>

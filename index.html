@@ -11,14 +11,86 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="app-booting">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="flex-icon" viewBox="0 0 24 24"><path d="M3 18.34C3 18.34 4 7.09 7 3L12 4L11 7.09H9V14.25H10C12 11.18 16.14 10.06 18.64 11.18C21.94 12.71 21.64 17.32 18.64 19.36C16.24 21 9 22.43 3 18.34Z"/></symbol><symbol id="dumbbell-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L8.43 7L12 3.43L10.57 2L9.14 3.43L7.71 2L5.57 4.14L4.14 2.71L2.71 4.14L4.14 5.57L2 7.71L3.43 9.14L2 10.57L3.43 12L7 8.43L15.57 17L12 20.57L13.43 22L14.86 20.57L16.29 22L18.43 19.86L19.86 21.29L21.29 19.86L19.86 18.43L22 16.29L20.57 14.86Z"/></symbol><filter id="press-light" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".09 .07" numOctaves="4" seed="11" result="noise"/><feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -.55" result="holes"/><feComposite in="SourceGraphic" in2="holes" operator="in"/></filter></svg>
+  <section id="auth-gate" class="auth-gate" data-state="checking" aria-labelledby="auth-gate-title">
+    <div class="auth-gate-book">
+      <div class="auth-gate-page auth-gate-page-left" aria-hidden="true">
+        <span class="brand-mark"><i></i><i></i><i></i><i></i><i></i></span>
+        <p class="auth-gate-brand-title">LOGBOOK<br><em>TRAINING JOURNAL</em></p>
+        <div class="auth-gate-type"><span id="auth-gate-typed"></span><span class="caret"></span></div>
+      </div>
+      <div class="auth-gate-page auth-gate-page-right">
+        <div id="account-tabs" class="account-tabs" role="group" aria-label="Επιλογή σύνδεσης ή εγγραφής">
+          <button type="button" data-account-mode="signin" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
+          <button type="button" data-account-mode="signup" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+        </div>
+        <div id="auth-gate-progress" class="auth-gate-progress" role="status" aria-live="polite">
+          <span class="auth-gate-loader" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
+          <h1 id="auth-gate-title">ΕΛΕΓΧΟΣ ΣΥΝΔΕΣΗΣ</h1>
+          <p id="auth-gate-message">Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.</p>
+          <button id="auth-gate-retry" class="secondary-button hidden" type="button">ΠΡΟΣΠΑΘΕΙΑ ΞΑΝΑ</button>
+        </div>
+
+        <section id="account-guest" class="auth-gate-login hidden">
+          <div id="account-login-options">
+            <button id="account-google" class="account-provider-button" type="button">
+              <svg class="account-provider-mark" viewBox="0 0 18 18" aria-hidden="true">
+                <path fill="#4285f4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/>
+                <path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/>
+                <path fill="#fbbc05" d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/>
+                <path fill="#ea4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/>
+              </svg>
+              <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
+            </button>
+            <div class="account-provider-divider"><span>Ή ΜΕ EMAIL</span></div>
+          </div>
+
+          <form id="account-signin-form" class="account-form">
+            <label>Email<input id="account-signin-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+            <label>Κωδικός<input id="account-signin-password" type="password" autocomplete="current-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+            <button id="account-forgot-password" class="account-text-button" type="button">Ξεχάσατε τον κωδικό πρόσβασης</button>
+            <button class="primary-button" type="submit">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
+          </form>
+
+          <form id="account-signup-form" class="account-form hidden">
+            <label>Email<input id="account-signup-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+            <label>Κωδικός<input id="account-signup-password" type="password" autocomplete="new-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+            <label>Επιβεβαίωση κωδικού<input id="account-signup-confirm" type="password" autocomplete="new-password" minlength="8" required></label>
+            <button class="primary-button" type="submit">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
+          </form>
+
+          <form id="account-forgot-form" class="account-form hidden">
+            <p class="account-form-intro">Γράψτε το email του λογαριασμού σας και θα σας στείλουμε ασφαλή σύνδεσμο αλλαγής κωδικού.</p>
+            <label>Email<input id="account-forgot-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+            <button class="primary-button" type="submit">ΑΠΟΣΤΟΛΗ ΣΥΝΔΕΣΜΟΥ</button>
+            <button class="account-text-button" data-account-back type="button">ΕΠΙΣΤΡΟΦΗ ΣΤΗ ΣΥΝΔΕΣΗ</button>
+          </form>
+
+          <form id="account-recovery-form" class="account-form hidden">
+            <p class="account-form-intro">Ορίστε έναν νέο κωδικό πρόσβασης για τον λογαριασμό σας.</p>
+            <label>Νέος κωδικός<input id="account-recovery-password" type="password" autocomplete="new-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
+            <label>Επιβεβαίωση νέου κωδικού<input id="account-recovery-confirm" type="password" autocomplete="new-password" minlength="8" required></label>
+            <button class="primary-button" type="submit">ΑΛΛΑΓΗ ΚΩΔΙΚΟΥ</button>
+          </form>
+          <p id="account-form-status" class="account-form-status hidden" role="status" aria-live="polite"></p>
+        </section>
+      </div>
+      <span class="auth-gate-stitch" aria-hidden="true"></span>
+      <span class="auth-gate-ribbon" aria-hidden="true"></span>
+    </div>
+    <div class="auth-gate-languages language-picker" role="group" aria-label="Γλώσσα εφαρμογής">
+      <span>LANG</span>
+      <button type="button" data-language="el" aria-pressed="true">EL</button>
+      <button type="button" data-language="en" aria-pressed="false">EN</button>
+      <button type="button" data-language="fr" aria-pressed="false">FR</button>
+      <button type="button" data-language="de" aria-pressed="false">DE</button>
+    </div>
+  </section>
   <div class="grain"></div>
   <div id="view-transition" class="view-transition" aria-hidden="true"><span></span></div>
-  <header class="topbar">
-    <a class="brand" href="#home" aria-label="Μετάβαση στην Αρχική"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="brand-name">LOGBOOK<small>training journal</small></span></a>
-    <div class="menu-trigger-wrap"><span id="current-view-label">Αρχική</span><button id="open-menu" class="menu-trigger" type="button" aria-expanded="false" aria-controls="side-menu">Μενού <span aria-hidden="true"><i></i><i></i><i></i></span></button></div>
-  </header>
+  <button id="open-menu" class="menu-ribbon" type="button" aria-expanded="false" aria-controls="side-menu" aria-label="Μενού"><i></i></button>
   <div id="menu-backdrop" class="menu-backdrop"></div>
   <aside id="side-menu" class="side-menu" aria-hidden="true">
     <div class="side-menu-head">
@@ -43,11 +115,9 @@
     <button id="account-open" class="account-menu-card" type="button" aria-haspopup="dialog" aria-controls="account-dialog">
       <span class="account-menu-mark" aria-hidden="true"><i></i></span>
       <span class="account-menu-copy">
-        <small>ΛΟΓΑΡΙΑΣΜΟΣ</small>
-        <strong id="account-menu-status">ΤΟΠΙΚΗ ΛΕΙΤΟΥΡΓΙΑ</strong>
+        <strong id="account-menu-status">ΧΩΡΙΣ ΣΥΝΔΕΣΗ</strong>
         <span id="account-menu-email" class="hidden" data-i18n-user></span>
       </span>
-      <b aria-hidden="true">↗</b>
     </button>
     <div class="language-picker" role="group" aria-label="Γλώσσα εφαρμογής">
       <span>LANG</span>
@@ -58,8 +128,8 @@
     </div>
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-      <small>LOGBOOK — TRAINING JOURNAL</small>
-      <span class="app-version" aria-label="Application version 0.1.0"><i>VERSION</i><b>0.1.0</b></span>
+      <small>LOGBOOK</small>
+      <span class="app-version" aria-label="Application version 0.2.0"><i>VERSION</i><b>0.2.0</b></span>
     </div>
   </aside>
 
@@ -315,20 +385,21 @@
         </form>
 
         <aside class="profile-preview" aria-label="Προεπισκόπηση προφίλ">
-          <div class="profile-card">
-            <div class="profile-card-top"><span>LOGBOOK / ATHLETE</span><small id="profile-status">ΝΕΟ ΠΡΟΦΙΛ</small></div>
-            <div class="profile-card-avatar">
-              <div id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
-                <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
-                <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
+            <div class="profile-card">
+              <div class="profile-card-top"><span>LOGBOOK / ATHLETE</span><small id="profile-status">ΝΕΟ ΠΡΟΦΙΛ</small></div>
+              <div class="profile-card-avatar">
+                <div id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
+                  <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
+                  <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
+                </div>
               </div>
+              <div class="profile-card-copy"><span>ΟΝΟΜΑ ΑΘΛΗΤΗ</span><h2 id="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</h2></div>
+              <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
+              <div class="profile-card-foot"><span>TRAIN • RECORD • PROGRESS</span></div>
             </div>
-            <div class="profile-card-copy"><span>ΟΝΟΜΑ ΑΘΛΗΤΗ</span><h2 id="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</h2></div>
-            <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
-            <div class="profile-card-foot"><span>TRAIN • RECORD • PROGRESS</span></div>
-          </div>
-        </aside>
-      </div>
+          </aside>
+
+        </div>
     </section>
   </main>
   <dialog id="session-detail-dialog" class="session-detail-dialog" aria-label="Λεπτομέρειες προπόνησης">
@@ -348,40 +419,10 @@
   </dialog>
   <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-dialog-title">
     <div class="account-folder">
-      <div id="account-tabs" class="account-tabs" role="group" aria-label="Επιλογή σύνδεσης ή εγγραφής">
-        <button type="button" data-account-mode="signin" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
-        <button type="button" data-account-mode="signup" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
-      </div>
       <div class="account-sheet">
       <span class="account-clip" aria-hidden="true"></span>
       <button id="account-close" type="button" aria-label="Κλείσιμο λογαριασμού">×</button>
       <h2 id="account-dialog-title">ΚΑΡΤΑ ΜΕΛΟΥΣ</h2>
-
-      <section id="account-guest">
-        <button id="account-google" class="account-provider-button" type="button">
-          <svg class="account-provider-mark" viewBox="0 0 18 18" aria-hidden="true">
-            <path fill="#4285f4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/>
-            <path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/>
-            <path fill="#fbbc05" d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/>
-            <path fill="#ea4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/>
-          </svg>
-          <span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span>
-        </button>
-        <div class="account-provider-divider"><span>Ή ΜΕ EMAIL</span></div>
-
-        <form id="account-signin-form" class="account-form">
-          <label>Email<input id="account-signin-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-          <label>Κωδικός<input id="account-signin-password" type="password" autocomplete="current-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
-          <button class="primary-button" type="submit">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</button>
-        </form>
-
-        <form id="account-signup-form" class="account-form hidden">
-          <label>Email<input id="account-signup-email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-          <label>Κωδικός<input id="account-signup-password" type="password" autocomplete="new-password" minlength="8" required placeholder="Τουλάχιστον 8 χαρακτήρες"></label>
-          <label>Επιβεβαίωση κωδικού<input id="account-signup-confirm" type="password" autocomplete="new-password" minlength="8" required></label>
-          <button class="primary-button" type="submit">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
-        </form>
-      </section>
 
       <section id="account-member" class="account-member hidden">
         <div class="account-card">
@@ -393,7 +434,6 @@
         <button id="account-signout" class="secondary-button" type="button">ΑΠΟΣΥΝΔΕΣΗ</button>
       </section>
 
-      <p id="account-form-status" class="account-form-status" role="status" aria-live="polite">Η σύνδεση στο cloud φορτώνει…</p>
       </div>
     </div>
   </dialog>
@@ -403,6 +443,6 @@
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
-  <script src="app.js"></script>
+  <script src="cloud-sync.js"></script>
 </body>
 </html>

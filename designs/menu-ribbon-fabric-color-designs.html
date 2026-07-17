@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Κορδέλα μενού — υφασμάτινη, αχνά χρώματα</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 90px; }
+  h1 { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:760px; line-height:1.5; margin:0 0 40px; }
+  .variant { margin-bottom:60px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.25rem; margin:0; }
+  .variant-title span { color:var(--orange); font-weight:800; font-size:.7rem; letter-spacing:.12em; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:720px; line-height:1.45; }
+
+  /* ---- mockup σελίδας χωρίς topbar ---- */
+  .page-mock { position:relative; height:340px; overflow:hidden; background:var(--paper); border:1px solid var(--line); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:96px 96px; }
+  .page-mock .content { padding:56px 6% 0 12%; }
+  .page-mock .kicker { font:800 .62rem "Alegreya Sans"; letter-spacing:.22em; color:var(--orange); text-transform:uppercase; }
+  .page-mock h3 { margin:10px 0 0; font:700 clamp(2rem,4.5vw,3.4rem)/.92 "Roboto Slab",serif; text-transform:uppercase; letter-spacing:-.03em; }
+  .page-mock h3 em { font-style:italic; color:var(--orange); }
+  .page-mock p { max-width:44ch; margin:16px 0 0; color:var(--muted); line-height:1.5; }
+  .headline-rule { width:120px; height:3px; background:var(--ink); margin-top:18px; box-shadow:0 5px 0 -4px var(--ink); }
+  .hint { position:absolute; left:14px; bottom:10px; font:700 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+
+  /* ---- κοινή υφασμάτινη κορδέλα (βάση: εκδοχή Α) ----
+     Αχνή αίσθηση: ξεθωριασμένο χρώμα + πλέξη υφάσματος + η σελίδα
+     «περνάει» ελαφρά από μέσα (χαμηλό opacity στο σώμα).           */
+  .ribbon { position:absolute; top:0; right:9%; width:38px; height:118px; z-index:2; border:0; padding:0; cursor:pointer; clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 16px),0 100%); box-shadow:0 8px 16px rgba(21,19,13,.18); transform-origin:top center; transition:transform .35s ease,opacity .25s ease; opacity:.82; }
+  .ribbon:hover { transform:rotate(4deg); opacity:1; }
+  @media(prefers-reduced-motion:reduce){ .ribbon { transition:none; } }
+  /* ραφή στις άκρες */
+  .ribbon::before { content:""; position:absolute; inset:5px 5px 24px; border-left:1px dashed rgba(239,232,216,.55); border-right:1px dashed rgba(239,232,216,.55); }
+  /* πλέξη: οριζόντιο νήμα + κάθετο νήμα + ξεθώριασμα ήλιου προς τα κάτω */
+  .ribbon::after { content:""; position:absolute; inset:0; background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.09) 0 2px,transparent 2px 5px),
+    repeating-linear-gradient(90deg,rgba(21,19,13,.06) 0 1px,transparent 1px 4px),
+    linear-gradient(180deg,transparent 30%,rgba(239,232,216,.22)); }
+  .ribbon i { position:absolute; left:50%; top:34px; width:16px; height:2px; background:rgba(239,232,216,.85); transform:translateX(-50%); box-shadow:0 8px 0 rgba(239,232,216,.85),0 16px 0 rgba(239,232,216,.85); z-index:1; }
+  .ribbon.dark-bars i { background:rgba(21,19,13,.55); box-shadow:0 8px 0 rgba(21,19,13,.55),0 16px 0 rgba(21,19,13,.55); }
+
+  /* demo μενού */
+  .mini-menu { position:absolute; top:0; right:0; bottom:0; width:min(240px,70%); background:var(--ink); color:var(--paper); padding:26px 22px; transform:translateX(100%); transition:transform .3s ease; display:flex; flex-direction:column; gap:4px; z-index:9; }
+  .page-mock.open .mini-menu { transform:none; }
+  .mini-menu strong { font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; color:var(--gold); margin-bottom:10px; }
+  .mini-menu a { color:var(--paper); text-decoration:none; font:700 .95rem "Roboto Slab",serif; text-transform:uppercase; letter-spacing:.06em; padding:8px 0; border-bottom:1px solid rgba(239,232,216,.14); }
+  .mini-menu a:hover { color:var(--gold); }
+  .mini-close { position:absolute; top:10px; right:14px; background:none; border:0; color:var(--paper); font-size:1.3rem; cursor:pointer; }
+
+  /* ============ χρώματα ============ */
+  /* Α: ξεθωριασμένη ελιά — γήινο, δένει με paper/gold */
+  .vA .ribbon { background:linear-gradient(180deg,#6e6a4a,#5d5940 70%); }
+  /* Β: αχνό λαδί-χρυσό — ξεβαμμένη ώχρα, συγγενής του --gold */
+  .vB .ribbon { background:linear-gradient(180deg,#a9915a,#96804d 70%); }
+  /* Γ: ξεθωριασμένο μπλε-γκρι — παλιό ναυτικό ύφασμα */
+  .vC .ribbon { background:linear-gradient(180deg,#5d6a72,#4e5a62 70%); }
+  /* Δ: σκονισμένο μπορντό — το αρχικό κόκκινο αλλά ξεπλυμένο */
+  .vD .ribbon { background:linear-gradient(180deg,#8a5a52,#7a4d46 70%); }
+  /* Ε: αχνό γκρι-μπεζ — σχεδόν ουδέτερο, ίδια οικογένεια με το χαρτί */
+  .vE .ribbon { background:linear-gradient(180deg,#a49a83,#948a73 70%); opacity:.7; }
+</style>
+</head>
+<body>
+<h1>Υφασμάτινη κορδέλα — αχνά χρώματα</h1>
+<p class="intro">Η εκδοχή Α με πιο έντονη αίσθηση υφάσματος: πλέξη δύο κατευθύνσεων, ραφή στις άκρες, ξεθώριασμα ήλιου προς την άκρη, και ελαφριά διαφάνεια ώστε να «κάθεται» αχνά πάνω στη σελίδα. Στο hover ζωντανεύει (πλήρες χρώμα + ταλάντευση). Πέντε χρωματικές δοκιμές.</p>
+
+<section class="variant vA">
+  <div class="variant-title"><h2>Α — Ξεθωριασμένη ελιά</h2><span>ΓΗΙΝΟ</span></div>
+  <p class="variant-note">Λαδοπράσινο σαν παλιό στρατιωτικό ύφασμα. Δένει με το χαρτί χωρίς να φωνάζει.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Ήρεμο, δεν ανταγωνίζεται το πορτοκαλί accent.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vB">
+  <div class="variant-title"><h2>Β — Αχνή ώχρα</h2><span>ΣΥΓΓΕΝΗΣ ΤΟΥ GOLD</span></div>
+  <p class="variant-note">Ξεπλυμένο χρυσαφί-λαδί, ίδια οικογένεια με το --gold του site. Η πιο «συντονισμένη» επιλογή με την υπάρχουσα παλέτα.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Κρατάει τη χρυσή ταυτότητα χωρίς γυαλάδα.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vC">
+  <div class="variant-title"><h2>Γ — Ξεθωριασμένο μπλε-γκρι</h2><span>ΝΑΥΤΙΚΟ</span></div>
+  <p class="variant-note">Σαν κορδέλα παλιού ναυτικού ημερολογίου. Ψυχρή νότα σε θερμή σελίδα — ξεχωρίζει διακριτικά ακριβώς επειδή είναι το μόνο ψυχρό στοιχείο.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η πιο ορατή από τις αχνές επιλογές.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vD">
+  <div class="variant-title"><h2>Δ — Σκονισμένο μπορντό</h2><span>ΞΕΠΛΥΜΕΝΟ ΚΟΚΚΙΝΟ</span></div>
+  <p class="variant-note">Το αρχικό κόκκινο της πρώτης εκδοχής, αλλά σαν να έχει ξεβάψει από τα χρόνια. Κρατάει τη «σελιδοδείκτης» ανάγνωση, χάνει την ένταση.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η πιο κλασική ανάγνωση «κορδέλα βιβλίου».</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vE">
+  <div class="variant-title"><h2>Ε — Αχνό γκρι-μπεζ</h2><span>ΣΧΕΔΟΝ ΑΟΡΑΤΟ</span></div>
+  <p class="variant-note">Ίδια οικογένεια με το χαρτί, ένα τόνο πιο σκούρο, με έξτρα διαφάνεια και σκούρες γραμμές αντί για ανοιχτές. Η πιο διακριτική εκδοχή — φαίνεται μόνο αν την ψάξεις. Στο hover παίρνει πλήρες σώμα.</p>
+  <div class="page-mock">
+    <button class="ribbon dark-bars" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Όριο διακριτικότητας — ίσως πολύ αχνό για νέο χρήστη.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.page-mock').forEach(mock=>{
+    mock.querySelector('.ribbon').addEventListener('click',()=>mock.classList.add('open'));
+    mock.querySelector('.mini-close').addEventListener('click',()=>mock.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

@@ -37,14 +37,16 @@ test('Supabase browser client uses the public project configuration', () => {
   assert.equal(readyClient, client);
 });
 
-test('Supabase scripts load before the application script', () => {
+test('Supabase scripts load before the application is dynamically bootstrapped', () => {
   const config = htmlSource.indexOf('src="supabase-config.js"');
   const client = htmlSource.indexOf('src="supabase-client.js"');
   const auth = htmlSource.indexOf('src="auth.js"');
-  const app = htmlSource.indexOf('src="app.js"');
+  const sync = htmlSource.indexOf('src="cloud-sync.js"');
 
   assert.match(clientSource, /@supabase\/supabase-js@2/);
   assert.ok(config < client);
   assert.ok(client < auth);
-  assert.ok(auth < app);
+  assert.ok(auth < sync);
+  assert.equal(htmlSource.includes('<script src="app.js"></script>'), false);
+  assert.match(readFileSync(new URL('../auth.js', import.meta.url), 'utf8'), /script\.src = 'app\.js'/);
 });

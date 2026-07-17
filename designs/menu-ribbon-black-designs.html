@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Κορδέλα μενού — μαύρη</title>
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 90px; }
+  h1 { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:760px; line-height:1.5; margin:0 0 40px; }
+  .variant { margin-bottom:60px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.25rem; margin:0; }
+  .variant-title span { color:var(--orange); font-weight:800; font-size:.7rem; letter-spacing:.12em; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:720px; line-height:1.45; }
+
+  .page-mock { position:relative; height:340px; overflow:hidden; background:var(--paper); border:1px solid var(--line); background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:96px 96px; }
+  .page-mock .content { padding:56px 6% 0 12%; }
+  .page-mock .kicker { font:800 .62rem "Alegreya Sans"; letter-spacing:.22em; color:var(--orange); text-transform:uppercase; }
+  .page-mock h3 { margin:10px 0 0; font:700 clamp(2rem,4.5vw,3.4rem)/.92 "Roboto Slab",serif; text-transform:uppercase; letter-spacing:-.03em; }
+  .page-mock h3 em { font-style:italic; color:var(--orange); }
+  .page-mock p { max-width:44ch; margin:16px 0 0; color:var(--muted); line-height:1.5; }
+  .headline-rule { width:120px; height:3px; background:var(--ink); margin-top:18px; box-shadow:0 5px 0 -4px var(--ink); }
+  .hint { position:absolute; left:14px; bottom:10px; font:700 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+
+  /* ---- υφασμάτινη κορδέλα, μαύρη ---- */
+  .ribbon { position:absolute; top:0; right:9%; width:38px; height:118px; z-index:2; border:0; padding:0; cursor:pointer; clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 16px),0 100%); box-shadow:0 10px 18px rgba(21,19,13,.3); transform-origin:top center; transition:transform .35s ease,opacity .25s ease; }
+  .ribbon:hover { transform:rotate(4deg); opacity:1; }
+  @media(prefers-reduced-motion:reduce){ .ribbon { transition:none; } }
+  .ribbon::before { content:""; position:absolute; inset:5px 5px 24px; border-left:1px dashed rgba(239,232,216,.4); border-right:1px dashed rgba(239,232,216,.4); }
+  .ribbon::after { content:""; position:absolute; inset:0; background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 2px,transparent 2px 5px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 4px); }
+  .ribbon i { position:absolute; left:50%; top:34px; width:16px; height:2px; background:rgba(239,232,216,.85); transform:translateX(-50%); box-shadow:0 8px 0 rgba(239,232,216,.85),0 16px 0 rgba(239,232,216,.85); z-index:1; }
+
+  .mini-menu { position:absolute; top:0; right:0; bottom:0; width:min(240px,70%); background:var(--ink); color:var(--paper); padding:26px 22px; transform:translateX(100%); transition:transform .3s ease; display:flex; flex-direction:column; gap:4px; z-index:9; }
+  .page-mock.open .mini-menu { transform:none; }
+  .mini-menu strong { font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; color:var(--gold); margin-bottom:10px; }
+  .mini-menu a { color:var(--paper); text-decoration:none; font:700 .95rem "Roboto Slab",serif; text-transform:uppercase; letter-spacing:.06em; padding:8px 0; border-bottom:1px solid rgba(239,232,216,.14); }
+  .mini-menu a:hover { color:var(--gold); }
+  .mini-close { position:absolute; top:10px; right:14px; background:none; border:0; color:var(--paper); font-size:1.3rem; cursor:pointer; }
+
+  /* ============ εκδοχές μαύρου ============ */
+  /* Α: μελανί του site (--ink), πλήρες — δένει 1:1 με το μενού που ανοίγει */
+  .vA .ribbon { background:linear-gradient(180deg,#1c1a12,#15130d 70%); }
+  /* Β: ίδιο μελανί αλλά ελαφρά αχνό (88%) — το ύφασμα «ανασαίνει» */
+  .vB .ribbon { background:linear-gradient(180deg,#1c1a12,#15130d 70%); opacity:.88; }
+  /* Γ: βαθύ μαύρο σαν σατέν — πιο ψυχρό, πιο γυαλιστερή αίσθηση */
+  .vC .ribbon { background:linear-gradient(180deg,#26262a,#0f0f12 55%,#1d1d21); }
+  /* Δ: μελανί με χρυσή ραφή αντί για ανοιχτή — υπογραφή πολυτέλειας */
+  .vD .ribbon { background:linear-gradient(180deg,#1c1a12,#15130d 70%); }
+  .vD .ribbon::before { border-left-color:rgba(201,162,39,.55); border-right-color:rgba(201,162,39,.55); }
+  .vD .ribbon i { background:rgba(201,162,39,.9); box-shadow:0 8px 0 rgba(201,162,39,.9),0 16px 0 rgba(201,162,39,.9); }
+</style>
+</head>
+<body>
+<h1>Μαύρη υφασμάτινη κορδέλα</h1>
+<p class="intro">Ίδια κορδέλα — πλέξη, ραφή, ψαλιδιά, ταλάντευση στο hover — σε τέσσερις μαύρες εκδοχές.</p>
+
+<section class="variant vA">
+  <div class="variant-title"><h2>Α — Μελανί του site</h2><span>--INK · 100%</span></div>
+  <p class="variant-note">Ακριβώς το μαύρο του site (#15130d, θερμό μελανί). Όταν ανοίγει το μενού, κορδέλα και panel είναι ένα σώμα — σαν η κορδέλα να τραβάει το μενού.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Η πιο συνεπής επιλογή με την παλέτα.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vB">
+  <div class="variant-title"><h2>Β — Μελανί, ελαφρά αχνό</h2><span>--INK · 88%</span></div>
+  <p class="variant-note">Ίδιο μαύρο με μια ιδέα διαφάνειας — κρατάει κάτι από το «αχνό» που ζήτησες πριν, χωρίς να χάνει βάρος. Στο hover γίνεται πλήρες.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Μαύρο αλλά όχι βαρύ.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vC">
+  <div class="variant-title"><h2>Γ — Μαύρο σατέν</h2><span>ΨΥΧΡΟ · ΓΥΑΛΑΔΑ</span></div>
+  <p class="variant-note">Πιο ψυχρό μαύρο με ανταύγεια στην κορυφή, σαν σατέν κορδέλα βιβλίου. Πιο «πολυτελές» αλλά ξεφεύγει λίγο από το θερμό μελάνι του site.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Διακριτή υλικότητα, ελαφρώς ξένη παλέτα.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<section class="variant vD">
+  <div class="variant-title"><h2>Δ — Μελανί με χρυσή ραφή</h2><span>--INK + GOLD</span></div>
+  <p class="variant-note">Το Α αλλά ραφή και γραμμές μενού σε χρυσό αντί για ανοιχτό. Μικρή υπογραφή — ίδιο χρυσό με το brand-mark και το «LOGBOOK» του μενού.</p>
+  <div class="page-mock">
+    <button class="ribbon" aria-label="Μενού"><i></i></button>
+    <div class="content"><span class="kicker">LOGBOOK / TODAY</span><h3>Σημερινη <em>προπονηση</em></h3><div class="headline-rule"></div><p>Μαύρο με ταυτότητα.</p></div>
+    <aside class="mini-menu"><button class="mini-close" aria-label="Κλείσιμο">×</button><strong>LOGBOOK</strong><a href="#">Αρχική</a><a href="#">Καταγραφή</a><a href="#">Πρόγραμμα</a><a href="#">Ιστορικό</a><a href="#">Επίβλεψη</a><a href="#">Προφίλ</a></aside>
+    <span class="hint">κλικ στην ένδειξη → μενού</span>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.page-mock').forEach(mock=>{
+    mock.querySelector('.ribbon').addEventListener('click',()=>mock.classList.add('open'));
+    mock.querySelector('.mini-close').addEventListener('click',()=>mock.classList.remove('open'));
+  });
+</script>
+</body>
+</html>
