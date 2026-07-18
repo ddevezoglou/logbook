@@ -132,6 +132,11 @@ test('account dialog signs in and displays the active email', async () => {
   assert.ok(document.querySelector('#account-guest').classList.contains('hidden'));
   assert.ok(!document.querySelector('#account-member').classList.contains('hidden'));
   assert.equal(document.querySelector('#account-member-email').textContent, 'athlete@example.com');
+  assert.equal(document.querySelector('#account-dialog').getAttribute('aria-label'), 'Λογαριασμός');
+  assert.equal(document.querySelector('#account-dialog-title'), null);
+  assert.equal(document.querySelector('.account-connected-stamp').textContent, 'MEMBER');
+  assert.equal(document.querySelector('.account-card-club'), null);
+  assert.equal(document.querySelector('.account-member > p'), null);
   assert.ok(document.querySelector('#account-open').classList.contains('is-connected'));
 });
 

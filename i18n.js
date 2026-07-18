@@ -177,6 +177,7 @@
     'Επίβλεψη':['Progress','Progression','Fortschritt'],
     'Προφίλ':['Profile','Profil','Profil'],
     'ΛΟΓΑΡΙΑΣΜΟΣ':['ACCOUNT','COMPTE','KONTO'],
+    'Λογαριασμός':['Account','Compte','Konto'],
     'ΤΟΠΙΚΗ ΛΕΙΤΟΥΡΓΙΑ':['LOCAL MODE','MODE LOCAL','LOKALER MODUS'],
     'ΧΩΡΙΣ ΣΥΝΔΕΣΗ':['SIGNED OUT','DÉCONNECTÉ','ABGEMELDET'],
     'ΣΥΝΔΕΔΕΜΕΝΟΣ':['SIGNED IN','CONNECTÉ','ANGEMELDET'],
