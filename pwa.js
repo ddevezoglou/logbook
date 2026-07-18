@@ -2,6 +2,7 @@
   if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
 
   const localDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+  const localWorkerEnabled = sessionStorage.getItem('logbookLocalWorkerEnabled') === 'true';
 
   async function clearLocalDevelopmentWorker() {
     const scope = new URL('./', document.baseURI).href;
@@ -23,7 +24,7 @@
     // Development must always load one coherent set of HTML/CSS/JS files from
     // the no-store server. A previously installed worker can otherwise combine
     // the old profile markup with the new app.js and break desktop navigation.
-    if (localDevelopment) {
+    if (localDevelopment && !localWorkerEnabled) {
       clearLocalDevelopmentWorker().catch(error => {
         console.warn('Logbook local service worker cleanup failed.', error);
       });

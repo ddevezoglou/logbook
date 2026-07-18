@@ -192,10 +192,12 @@ test('workout sets use a mobile card hierarchy and keep completion reachable', a
 
 test('an installed PWA boots from its cached session without a network', async ({ page, context, browserName }) => {
   test.skip(browserName !== 'chromium', 'The offline service-worker boot is exercised once in Chromium.');
+  await page.addInitScript(() => sessionStorage.setItem('logbookLocalWorkerEnabled', 'true'));
   await installAuthenticatedStub(page, { onlineOnly:true });
   await page.goto('/');
   await expect(page.locator('body')).toHaveClass(/app-ready/);
   await page.evaluate(async () => {
+    await navigator.serviceWorker.register('/service-worker.js', { scope:'/' });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once:true }));
     for (const key of await caches.keys()) await (await caches.open(key)).delete('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');

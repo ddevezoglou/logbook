@@ -1,6 +1,6 @@
 # Logbook — Development Guide
 
-Το αρχείο αυτό συγκεντρώνει τις τεχνικές πληροφορίες ανάπτυξης και διάθεσης του Logbook. Η τρέχουσα έκδοση του interface είναι η **0.4.2**.
+Το αρχείο αυτό συγκεντρώνει τις τεχνικές πληροφορίες ανάπτυξης και διάθεσης του Logbook. Η τρέχουσα έκδοση του interface είναι η **0.5.1**.
 
 ## Αρχιτεκτονική
 
@@ -79,7 +79,7 @@ https://hixnqtjsjcndeatxhpgd.supabase.co/auth/v1/callback
 
 Το manifest, τα app icons, οι self-hosted γραμματοσειρές και το offline shell είναι ρυθμισμένα για τη διαδρομή `/logbook/`.
 
-Κάθε pull request, production deployment και tagged release περνά από το ίδιο quality gate: release metadata, unit tests, mobile Chromium/WebKit end-to-end tests και WCAG accessibility scan. Ένα tag της μορφής `v0.4.2` πρέπει να συμφωνεί με την έκδοση του `package.json` και δημιουργεί αυτόματα GitHub Release.
+Κάθε pull request, production deployment και tagged release περνά από το ίδιο quality gate: release metadata, unit tests, mobile Chromium/WebKit end-to-end tests και WCAG accessibility scan. Ένα tag της μορφής `v0.5.1` πρέπει να συμφωνεί με την έκδοση του `package.json` και δημιουργεί αυτόματα GitHub Release.
 
 ## Tests
 
@@ -117,7 +117,7 @@ npm.cmd run check
 
 Η πρώτη online φόρτωση απαιτεί επιβεβαιωμένη συνεδρία και επιτυχημένο αρχικό sync. Μετά τη φόρτωση, οι αλλαγές γράφονται πρώτα τοπικά και συγχρονίζονται όταν υπάρχει δίκτυο. Σε offline επανεκκίνηση χρησιμοποιούνται η cached συνεδρία και τα δεδομένα της συσκευής. Το UI εμφανίζει την κατάσταση του sync και παρέχει χειροκίνητο **Συγχρονισμό τώρα**.
 
-## Γνωστοί περιορισμοί της έκδοσης 0.4.2
+## Γνωστοί περιορισμοί της έκδοσης 0.5.1
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry, αλλά όχι ακόμη UI χειροκίνητης επίλυσης αλλαγών στο ίδιο αντικείμενο.
 - Δεν υπάρχει ακόμη ασφαλές export/import ή αυτόματο backup δεδομένων από το UI.
