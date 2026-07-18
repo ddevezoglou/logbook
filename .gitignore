@@ -1,3 +1,38 @@
+# Dependencies
+/node_modules/
+
+# Private agent tooling (synced through logbook-dev-tools)
+/.claude/
+/.codex/
+/.agents/
+/skills-lock.json
+
+# Environment and credentials
+.env
+.env.*
+!.env.example
+
+# Temporary and generated files
+/.tmp-fonts/
+/.playwright-cli/
+/output/playwright/
+/playwright-report/
+/test-results/
+/coverage/
+/_site/
+*.log
+npm-debug.log*
+
+# Local Supabase state
+/.supabase/
+/supabase/.temp/
+
+# IDE and operating system files
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db
+
 # Claude Design local artifacts
 /.design-sync/
 /ds-bundle/

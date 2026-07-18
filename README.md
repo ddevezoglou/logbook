@@ -20,7 +20,7 @@
 2. Πάτησε **Κοινοποίηση** (το τετράγωνο με το επάνω βέλος).
 3. Επίλεξε **Προσθήκη στην οθόνη Αφετηρίας** και μετά **Προσθήκη**.
 
-> Η εγκατάσταση θα είναι διαθέσιμη μετά το πρώτο επιτυχημένο deployment στο GitHub Pages.
+> Η εφαρμογή έχει δημοσιευτεί στο GitHub Pages. Για Google login άνοιξέ τη σε κανονικό Chrome, Edge ή Safari και όχι σε embedded browser εφαρμογής.
 
 ## Τρέχουσα κατάσταση
 
@@ -46,18 +46,50 @@
 Δεν απαιτείται build. Επειδή όμως η σύνδεση λογαριασμού χρησιμοποιεί ασφαλή authentication callbacks, μην ανοίγεις το `index.html` απευθείας ως `file://`. Τρέξε μέσα από τον φάκελο:
 
 ```powershell
-npx.cmd serve . -l 3000
+npx.cmd serve . -l 3001
 ```
 
-και άνοιξε το `http://localhost:3000/` όσο το terminal παραμένει ανοιχτό. Έτσι οι ροές Google login, επιβεβαίωσης email και αλλαγής κωδικού επιστρέφουν στη σωστή σελίδα αντί να καταλήγουν σε ανενεργό `localhost`.
+και άνοιξε το `http://localhost:3001/` όσο το terminal παραμένει ανοιχτό. Η θύρα `3000` είναι επίσης επιτρεπόμενη και μπορεί να χρησιμοποιηθεί όταν είναι διαθέσιμη. Έτσι οι ροές Google login, επιβεβαίωσης email και αλλαγής κωδικού επιστρέφουν στη σωστή σελίδα αντί να καταλήγουν σε ανενεργό `localhost`.
 
 ## GitHub Pages και PWA
 
 Το production deployment ορίζεται στο `.github/workflows/pages.yml` και δημοσιεύει μόνο τα runtime αρχεία της εφαρμογής στο GitHub Pages. Μετά την ενεργοποίηση του GitHub Pages με source **GitHub Actions**, κάθε push στο `main` δημιουργεί νέο production artifact. Τα tests, τα designs, τα scripts και τα seed εργαλεία δεν συμπεριλαμβάνονται σε αυτό.
 
-Για το repository `ddevezoglou/logbook`, η αναμενόμενη διεύθυνση είναι `https://ddevezoglou.github.io/logbook/`. Η ίδια ακριβώς διεύθυνση πρέπει να προστεθεί στα επιτρεπόμενα Redirect URLs του Supabase Auth πριν δοκιμαστούν Google login, επιβεβαίωση email ή ανάκτηση κωδικού από το δημοσιευμένο app.
+Για το repository `ddevezoglou/logbook`, η production διεύθυνση είναι `https://ddevezoglou.github.io/logbook/`. Η ίδια ακριβώς διεύθυνση χρησιμοποιείται ως Site URL και επιτρεπόμενο Redirect URL του Supabase Auth.
 
-Το manifest, τα app icons, οι self-hosted γραμματοσειρές και το offline shell είναι έτοιμα για τη διαδρομή `/logbook/`. Το TODO του installable PWA παραμένει ανοικτό μέχρι να ολοκληρωθεί η πρώτη δημοσίευση και να επιβεβαιωθεί η εγκατάσταση σε πραγματικές συσκευές Android και iOS.
+Το manifest, τα app icons, οι self-hosted γραμματοσειρές και το offline shell έχουν δημοσιευτεί για τη διαδρομή `/logbook/`. Απομένουν το mobile hardening και οι έλεγχοι των βασικών ροών σε πραγματικές συσκευές Android και iOS.
+
+### Canonical deployment και authentication URLs
+
+**Production app και Supabase Site URL**
+
+```text
+https://ddevezoglou.github.io/logbook/
+```
+
+**Supabase Auth Redirect URLs**
+
+```text
+https://ddevezoglou.github.io/logbook/
+http://localhost:3000/**
+http://localhost:3001/**
+```
+
+**Google OAuth Authorized JavaScript origins**
+
+```text
+https://ddevezoglou.github.io
+http://localhost:3000
+http://localhost:3001
+```
+
+**Google OAuth Authorized redirect URI**
+
+```text
+https://hixnqtjsjcndeatxhpgd.supabase.co/auth/v1/callback
+```
+
+Το Google redirect URI οδηγεί πρώτα στο Supabase Auth callback· μετά το Supabase επιστρέφει τον χρήστη σε ένα από τα επιτρεπόμενα app Redirect URLs.
 
 ## Tests
 
@@ -78,7 +110,7 @@ npm.cmd test
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Σε ταυτόχρονες αλλαγές από δύο offline συσκευές διατηρούνται οι μοναδικές προπονήσεις/ρουτίνες και εφαρμόζεται optimistic conflict retry, αλλά δεν υπάρχει ακόμη οθόνη χειροκίνητης επίλυσης αλλαγών στο ίδιο αντικείμενο.
 - Δεν υπάρχει ακόμη ασφαλές export/import ή αυτόματο backup των δεδομένων.
-- Η υποδομή εγκατάστασης PWA είναι έτοιμη, αλλά δεν έχει ακόμη δημοσιευτεί και επιβεβαιωθεί σε πραγματικές συσκευές Android/iOS. Native mobile app δεν υπάρχει ακόμη.
+- Η PWA έκδοση έχει δημοσιευτεί, αλλά χρειάζεται ακόμη mobile-specific QA και διόρθωση layout/interaction conflicts σε πραγματικές συσκευές Android/iOS. Native mobile app δεν υπάρχει ακόμη.
 - Οι ασκήσεις καταχωρίζονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
 ## TODO / Roadmap
@@ -96,7 +128,8 @@ npm.cmd test
 
 ### Mobile και διάθεση
 
-- [ ] **Installable PWA.** Manifest, service worker, offline shell, εικονίδια και self-hosted γραμματοσειρές έχουν υλοποιηθεί. Απομένουν η πρώτη δημοσίευση στο GitHub Pages και η επιβεβαίωση εγκατάστασης/εκκίνησης σε πραγματικές συσκευές Android και iOS.
+- [x] **Δημοσίευση installable PWA.** Manifest, service worker, offline shell, εικονίδια και self-hosted γραμματοσειρές έχουν δημοσιευτεί στο GitHub Pages.
+- [ ] **Mobile hardening.** Καταγραφή και διόρθωση layout, viewport, touch και interaction conflicts σε πραγματικές συσκευές Android και iOS, χωρίς regression στο ολοκληρωμένο desktop UI.
 - [ ] **Offline boot με αποθηκευμένη συνεδρία.** Όταν δεν υπάρχει δίκτυο αλλά υπάρχει έγκυρη συνεδρία και τοπικά δεδομένα, το app να φορτώνει κατευθείαν με ένδειξη «Εκτός σύνδεσης» αντί για error στο gate· ο συγχρονισμός να εκτελείται αυτόματα όταν επανέλθει το δίκτυο (ο μηχανισμός `online` υπάρχει ήδη στο `cloud-sync.js`).
 - [ ] **Μετατροπή σε mobile app.** Αξιολόγηση PWA έναντι native wrapper ή ξεχωριστού client και κυκλοφορία εφαρμογής με ασφαλή σύνδεση στο Supabase.
 - [ ] **Ποιότητα έκδοσης.** End-to-end έλεγχοι των βασικών ροών σε πραγματικά mobile viewports, accessibility audit και ενιαία διαχείριση version/release notes.
