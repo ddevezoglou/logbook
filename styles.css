@@ -310,15 +310,38 @@ body { background-color:var(--paper); background-image:linear-gradient(90deg,rgb
 /* Athlete profile */
 .profile-hero { padding:70px 5vw 55px; background:var(--ink); color:var(--paper); display:grid; grid-template-columns:1.15fr .85fr; align-items:end; gap:50px; background-image:linear-gradient(115deg,rgba(201,162,39,.04) 25%,transparent 25%,transparent 50%,rgba(201,162,39,.04) 50%,rgba(201,162,39,.04) 75%,transparent 75%); background-size:18px 18px; }
 .profile-hero h1 { font-size:clamp(3rem,6vw,6rem); }.profile-hero h1 em,.profile-hero .eyebrow { color:var(--gold); }.profile-hero>p { max-width:440px; margin:0 0 8px; padding-left:18px; border-left:3px solid var(--gold); color:#cfc6ac; font-size:1.1rem; line-height:1.5; }
-.profile-workspace { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr); max-width:1320px; margin:0 auto; }.profile-form { padding:58px 5vw 90px; border-right:1px solid var(--line); }.profile-preview { padding:58px 5vw 90px; }
+.profile-workspace { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(420px,.8fr); max-width:1320px; margin:0 auto; }.profile-form { padding:58px 5vw 90px; border-right:1px solid var(--line); }.profile-preview { padding:58px 5vw 90px; }
 .profile-section-title { display:flex; gap:16px; align-items:flex-start; padding-bottom:20px; border-bottom:2px solid var(--ink); }.profile-section-title>span { color:var(--orange); font:700 1.2rem "Roboto Slab"; }.profile-section-title p { margin:0 0 4px; color:var(--orange); font-size:.68rem; font-weight:800; letter-spacing:.15em; }.profile-section-title h2 { text-transform:none; }
 .profile-fields { display:grid; grid-template-columns:1fr 1fr; gap:24px 18px; margin-top:30px; }.weight-field { grid-column:1 / -1; max-width:360px; }.weight-control { display:grid; grid-template-columns:1fr 86px; }.weight-control select { border-left:1px solid var(--line); font-weight:800; text-transform:uppercase; }
 .age-readout { min-height:76px; padding:10px 14px; border-left:3px solid var(--gold); background:rgba(201,162,39,.08); display:grid; grid-template-columns:1fr auto; align-items:center; }.age-readout span { color:var(--muted); font-size:.68rem; font-weight:800; letter-spacing:.15em; }.age-readout strong { grid-row:1 / 3; grid-column:2; font:700 2.5rem "Roboto Slab"; }.age-readout small { color:var(--orange); font-weight:700; }
 .avatar-picker { margin:45px 0 0; padding:0; border:0; }.avatar-picker legend { width:100%; padding:0 0 15px; border-bottom:2px solid var(--ink); display:flex; gap:16px; align-items:center; color:var(--orange); font-size:.72rem; letter-spacing:.13em; }.avatar-picker legend span { font:700 1.2rem "Roboto Slab"; }.avatar-options { display:grid; margin-top:18px; }.avatar-option { position:relative; border:1px solid var(--line); cursor:pointer; align-items:center; transition:.25s; }.avatar-option:hover { border-color:var(--ink); }.avatar-option:has(input:checked) { border-color:var(--ink); }.avatar-option input { position:absolute; opacity:0; pointer-events:none; }.avatar-option-label { padding-top:14px; border-top:1px solid currentColor; justify-content:space-between; align-items:end; }.avatar-option-label strong { font:700 1rem "Roboto Slab"; }.avatar-option-label small { text-transform:none; letter-spacing:0; }.avatar-option:has(input:checked) .avatar-option-label small { color:var(--ink-muted); }
 .avatar-figure { position:relative; display:block; color:var(--ink); }.avatar-option:has(input:checked) .avatar-figure { color:var(--gold); }.profile-save { max-width:480px; }
-.profile-card { background:var(--ink); color:var(--paper); position:sticky; top:105px; overflow:hidden; }.profile-card::before { content:""; position:absolute; }.profile-card-top,.profile-card-foot { display:flex; justify-content:space-between; align-items:center; color:var(--gold); font-size:.6rem; font-weight:800; letter-spacing:.18em; position:relative; z-index:1; }.profile-card-top small { color:var(--ink-muted); }.profile-card-avatar { display:grid; place-items:center; position:relative; }.avatar-large { width:112px; height:158px; color:var(--gold); transform:scale(1.45); transform-origin:center; }.profile-card-copy { position:relative; z-index:1; }.profile-card-copy>span,.profile-card-stats span { color:var(--ink-muted); font-size:.58rem; font-weight:800; letter-spacing:.16em; }.profile-card-copy h2 { margin-top:5px; color:var(--paper); font-size:clamp(1.5rem,3vw,2.4rem); overflow-wrap:anywhere; }.profile-card-stats { display:grid; grid-template-columns:1fr 1fr; }.profile-card-stats strong { display:block; margin-top:4px; color:var(--gold); font:700 1.4rem "Roboto Slab"; }.profile-card-foot { padding-top:16px; border-top:1px solid var(--ink-line); justify-content:center; gap:14px; }.profile-card-foot::before,.profile-card-foot::after { content:""; flex:0 0 26px; height:1px; background:var(--gold); opacity:.55; }.profile-card-foot span { letter-spacing:.24em; text-align:center; }
-.profile-card-foot::before,.profile-card-foot::after { flex:1 1 34px; }
+.profile-card { position:sticky; top:105px; color:var(--paper); width:min(470px,100%); min-height:440px; margin-inline:auto; padding:20px 26px 44px; border-radius:8px 16px 16px 8px; background:linear-gradient(118deg,#1b1913 0%,#0d0c09 58%); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, -9px 0 0 -4px #060504, 16px 24px 48px rgba(21,19,13,.45); display:grid; align-content:start; }
+.profile-card::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 18% 6%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.profile-card::after { content:""; position:absolute; left:9px; top:10px; bottom:10px; width:4px; border-radius:3px; background:linear-gradient(rgba(38,34,23,.01),rgba(0,0,0,.33)); box-shadow:1px 0 0 rgba(255,255,255,.04); }
+.profile-card-top { position:relative; z-index:2; display:flex; justify-content:space-between; align-items:flex-start; }
+.profile-card-top small { display:none; }
+.profile-brand-mark { display:flex; align-items:center; gap:2px; }
+.profile-brand-mark i { display:block; width:4px; height:17px; border-radius:.5px; background:linear-gradient(180deg,#211f18,#3d392c 65%,#302c22); box-shadow:0 1px 0 rgba(255,255,255,.09), 0 2px 3px rgba(0,0,0,.9) inset, 0 -1px 1px rgba(0,0,0,.6) inset; }
+.profile-brand-mark i:first-child,.profile-brand-mark i:last-child { width:6px; height:24px; }
+.profile-brand-mark i:nth-child(3) { width:36px; height:5px; background:linear-gradient(180deg,#33280a,#5f4a12 65%,#453510); }
+.profile-polaroid { position:relative; z-index:2; margin:26px auto 0; width:148px; background:var(--paper); padding:7px 7px 9px; transform:rotate(-1.5deg); box-shadow:0 9px 18px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.35); }
+.profile-tape { position:absolute; z-index:6; top:-8px; left:50%; transform:translateX(-50%) rotate(2deg); width:52px; height:16px; background:rgba(239,232,216,.26); box-shadow:0 1px 3px rgba(0,0,0,.35); backdrop-filter:blur(1px); }
+.profile-polaroid-photo { position:relative; width:100%; height:124px; border-radius:2px; background:var(--paper); display:grid; place-items:center; overflow:hidden; }
+.profile-polaroid-photo .profile-reward-ring { transform:scale(.8); }
+.profile-polaroid .reward-ring-track { stroke:rgba(21,19,13,.14); }
+.profile-polaroid .reward-ring-segment { stroke:rgba(21,19,13,.28); }
+.profile-polaroid .reward-stage-1 .reward-ring-1,.profile-polaroid .reward-stage-2 .reward-ring-1,.profile-polaroid .reward-stage-2 .reward-ring-2,.profile-polaroid .reward-stage-3 .reward-ring-1,.profile-polaroid .reward-stage-3 .reward-ring-2,.profile-polaroid .reward-stage-3 .reward-ring-3,.profile-polaroid .reward-stage-4 .reward-ring-segment { stroke:#d9b02e; filter:drop-shadow(0 0 3px rgba(217,176,46,.95)) drop-shadow(0 0 8px rgba(217,176,46,.4)); }
+.profile-polaroid figcaption h2 { margin:7px 0 0; text-align:center; color:var(--ink); font:700 .98rem/1.2 "Roboto Slab"; text-transform:uppercase; letter-spacing:.02em; overflow-wrap:anywhere; }
+.profile-card-stats { margin-top:7px; padding-top:7px; border-top:1px solid rgba(21,19,13,.16); display:flex; justify-content:space-around; }
+.profile-card-stats>div { display:grid; gap:2px; justify-items:center; }
+.profile-card-stats span { color:var(--muted); font-size:.44rem; font-weight:800; letter-spacing:.18em; }
+.profile-card-stats strong { color:var(--ink); font:700 .8rem/1 "Roboto Slab"; }
+.profile-card-foot { position:absolute; z-index:2; left:0; right:0; bottom:15px; display:flex; justify-content:center; font-size:.58rem; font-weight:800; letter-spacing:.4em; color:rgba(239,232,216,.5); text-shadow:0 -1px 1px rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.05); }
 .profile-card-foot span { flex:0 0 auto; white-space:nowrap; }
+.profile-elastic { position:absolute; z-index:5; top:-4px; bottom:-4px; right:16%; width:12px; border-radius:3px 3px 4px 4px; transform:rotate(.55deg) translateX(1px); background:linear-gradient(90deg,#050403 0%,#181408 22%,#242012 46%,#2a2413 52%,#1c170b 68%,#0a0805 88%,#030202), repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px), repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 5px); }
+.profile-elastic::before { content:""; position:absolute; top:22px; bottom:22px; left:-9px; right:-5px; z-index:-1; border-radius:10px; background:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 40%,rgba(0,0,0,.3) 78%,transparent); filter:blur(4px); }
+.profile-elastic::after { content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(180deg,rgba(0,0,0,.7) 0,rgba(0,0,0,.25) 10px,transparent 30px,transparent calc(100% - 30px),rgba(0,0,0,.25) calc(100% - 10px),rgba(0,0,0,.7)),linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 2px 24%,rgba(255,255,255,.1) 42%,rgba(255,255,255,.03) 58%,transparent 76%,rgba(0,0,0,.35) calc(100% - 1px)); }
 @media(max-width:900px){.profile-hero,.profile-workspace{grid-template-columns:1fr}.profile-hero>p{margin-top:30px}.profile-form{border-right:0;border-bottom:1px solid var(--line)}.profile-card{position:relative;top:auto;max-width:520px;margin:auto}}
 @media(max-width:600px){.profile-hero,.profile-form,.profile-preview{padding-left:22px;padding-right:22px}.profile-fields,.avatar-options{grid-template-columns:1fr}.weight-field{grid-column:auto}}
 
@@ -350,22 +373,9 @@ body { background-color:var(--paper); background-image:linear-gradient(90deg,rgb
 .side-menu .language-picker+.side-menu-footer { margin-top:0; }
 @media(max-width:430px){.side-menu-footer{gap:8px}.side-menu-footer small{font-size:.58rem;letter-spacing:.11em}.app-version i{font-size:.55rem}.app-version b{font-size:.62rem}.menu-profile-copy strong{max-width:145px}}
 
-/* Profile card refinement — membership-card polish */
-.profile-card { min-height:0; padding:26px 26px 22px; border:1px solid #4a4335; box-shadow:9px 9px 0 rgba(201,162,39,.32); background-image:linear-gradient(115deg,rgba(201,162,39,.035) 25%,transparent 25%,transparent 50%,rgba(201,162,39,.035) 50%,rgba(201,162,39,.035) 75%,transparent 75%); background-size:18px 18px; }
-.profile-card::before { inset:9px; width:auto; height:auto; top:9px; left:9px; transform:none; border:1px solid rgba(201,162,39,.22); pointer-events:none; }
-.profile-card-top { padding-bottom:14px; border-bottom:1px solid var(--ink-line); }
-
-.profile-card-copy { border-top:0; padding-top:6px; }
-.profile-card-copy>span::after { content:""; display:block; width:26px; height:2px; margin-top:6px; background:var(--gold); opacity:.6; }
-.profile-card-copy h2 { letter-spacing:-.02em; }
-.profile-card-stats { gap:10px; margin-top:18px; }
-.profile-card-stats>div { padding:12px 14px; background:rgba(255,255,255,.03); border:1px solid var(--ink-line); border-top:2px solid rgba(201,162,39,.55); }
-.profile-card-foot { margin-top:20px; }
-.profile-card-foot::before,.profile-card-foot::after { flex-basis:34px; }
-@media(max-width:600px){.profile-card{padding:20px 18px 18px;box-shadow:6px 6px 0 rgba(201,162,39,.32)}}
+@media(max-width:600px){.profile-card{padding:18px 18px 42px}}
 
 /* Four-stage routine rewards */
-.profile-card-avatar { height:160px; align-content:start; padding-top:12px; }
 .profile-reward-ring { position:relative; width:120px; height:120px; display:grid; place-items:center; z-index:2; }
 .profile-reward-ring svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; transform:rotate(-90deg); filter:drop-shadow(0 0 4px rgba(201,162,39,.08)); }
 .reward-ring-track,.reward-ring-segment { fill:none; stroke-width:4; }
@@ -381,7 +391,6 @@ body { background-color:var(--paper); background-image:linear-gradient(90deg,rgb
 .home-reward-stamp svg.flip { transform:scaleX(-1); }
 .home-reward-stamp b { font:inherit; letter-spacing:inherit; }
 .home-reward-stamp[data-stage="4"] { border-color:rgba(201,162,39,.55); color:rgba(201,162,39,.75); box-shadow:0 0 10px rgba(201,162,39,.2); }
-@media(max-width:600px){.profile-card-avatar{height:155px}}
 
 /* Home view alignment with Golden Era system */
 .daily-quote { border:2px solid rgba(138,106,28,.45); box-shadow:7px 7px 0 rgba(21,19,13,.12); }
@@ -828,10 +837,18 @@ button:disabled { cursor:not-allowed; opacity:.42; filter:saturate(.55); }
 .account-card-club { display:block; padding:2px 90px 12px 0; border-bottom:1px dashed rgba(239,232,216,.28); color:var(--gold); font:800 .62rem "Alegreya Sans"; letter-spacing:.2em; }
 .account-member strong { position:relative; display:block; margin:18px 0 4px; overflow-wrap:anywhere; font:700 clamp(1.15rem,3vw,1.5rem)/1.15 "Roboto Slab"; }
 .account-member p { margin:16px 0 0; color:var(--muted); }
-.account-member .secondary-button { margin-top:12px; }
+.account-member-actions { display:flex; align-items:stretch; gap:10px; margin-top:12px; }
+.account-member-actions .secondary-button { margin-top:0; }
+.account-delete-button { min-height:var(--control-height); padding:0 16px; border:1px solid var(--danger); background:transparent; color:var(--danger); cursor:pointer; font:800 .72rem "Alegreya Sans"; letter-spacing:.08em; text-transform:uppercase; transition:background var(--control-speed),color var(--control-speed),transform var(--control-speed),box-shadow var(--control-speed); }
+.account-delete-button:hover { background:var(--danger); color:#fff; transform:translate(-2px,-2px); box-shadow:var(--control-shadow); }
+.account-delete-button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
+.account-delete-button:disabled { cursor:wait; opacity:.6; transform:none; box-shadow:none; }
+.account-delete-dialog .confirm-dialog-mark { background:var(--danger); }
+.account-delete-status { margin:-12px 0 24px; padding:10px 12px; border-left:3px solid var(--line); background:rgba(255,255,255,.2); color:var(--muted); font-weight:700; }
+.account-delete-status[data-kind="error"] { border-color:var(--danger); color:var(--danger); }
 .account-form-status { min-height:20px; margin:18px 0 0; padding:10px 12px; border-left:3px solid var(--line); background:rgba(255,255,255,.18); color:var(--muted); font-weight:700; }
 .account-form-status[data-kind="error"] { border-color:var(--danger); color:var(--danger); }
 .account-form-status[data-kind="success"] { border-color:var(--recovery); color:#44503d; }
 @keyframes accountPassIn { from { opacity:0; transform:translateY(18px) rotate(-.7deg) scale(.98); } to { opacity:1; transform:none; } }
-@media(max-width:600px){.account-dialog{width:calc(100% - 14px);max-height:calc(100dvh - 14px)}.account-folder{margin:10px 8px 8px;filter:drop-shadow(5px 6px 0 rgba(201,162,39,.36)) drop-shadow(8px 10px 16px rgba(0,0,0,.26))}.account-tabs{padding:0 14px}.account-tabs button{flex:1;padding:0}.account-sheet{padding:24px 18px 22px}.account-clip{left:24px}.account-card{padding:18px 16px 16px}.account-connected-stamp{position:static;display:inline-block;margin-bottom:14px;transform:rotate(-2deg)}}
+@media(max-width:600px){.account-dialog{width:calc(100% - 14px);max-height:calc(100dvh - 14px)}.account-folder{margin:10px 8px 8px;filter:drop-shadow(5px 6px 0 rgba(201,162,39,.36)) drop-shadow(8px 10px 16px rgba(0,0,0,.26))}.account-tabs{padding:0 14px}.account-tabs button{flex:1;padding:0}.account-sheet{padding:24px 18px 22px}.account-clip{left:24px}.account-card{padding:18px 16px 16px}.account-connected-stamp{position:static;display:inline-block;margin-bottom:14px;transform:rotate(-2deg)}.account-member-actions{flex-direction:column}.account-member-actions button{width:100%}.account-delete-dialog .confirm-dialog-actions{flex-direction:column}}
 @media(max-height:760px){.side-menu .nav-button{padding-top:13px;padding-bottom:13px;font-size:1.2rem}.side-menu>p{margin-top:17px}.account-menu-card{margin-top:10px;padding-top:9px;padding-bottom:9px}}

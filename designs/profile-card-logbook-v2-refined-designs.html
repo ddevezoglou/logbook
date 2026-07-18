@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Card — Logbook Πρόταση 2, Refinements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --cover-black:#0d0c09; --cover-black-hi:#1b1913; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:620px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(48px,6vw,80px) 5vw 80px; display:grid; justify-items:center; gap:34px; background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:72px 72px; }
+.notes { max-width:660px; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--gold); }
+
+/* ===== shared: black hardcover shell ===== */
+.book { position:relative; width:min(400px,100%); min-height:620px; border-radius:8px 16px 16px 8px; padding:clamp(22px,4.5vw,32px) clamp(22px,4.5vw,32px) 54px; background:linear-gradient(118deg,var(--cover-black-hi) 0%,var(--cover-black) 58%); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, -9px 0 0 -4px #060504, 16px 24px 48px rgba(0,0,0,.55); display:grid; align-content:start; }
+.book::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 18% 6%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.book::after { content:""; position:absolute; left:9px; top:10px; bottom:10px; width:4px; border-radius:3px; background:linear-gradient(#26221703,#00000055); box-shadow:1px 0 0 rgba(255,255,255,.04); }
+
+/* app brand mark (5 bars, inverse) */
+.brand-mark { position:relative; z-index:2; display:flex; align-items:center; gap:3px; }
+.brand-mark i { display:block; width:6px; height:26px; background:var(--paper); }
+.brand-mark i:first-child,.brand-mark i:last-child { width:9px; height:36px; }
+.brand-mark i:nth-child(3) { width:54px; height:7px; background:var(--gold); }
+
+/* motto flush at very bottom edge */
+.book-foot { position:absolute; z-index:2; left:0; right:0; bottom:16px; text-align:center; color:rgba(239,232,216,.38); font:800 .6rem "Alegreya Sans"; letter-spacing:.34em; }
+
+/* ===== natural elastic band ===== */
+.elastic { position:absolute; z-index:5; top:-2px; bottom:-2px; right:15%; width:12px; border-radius:2px; transform:rotate(.35deg); background:linear-gradient(90deg,#070604,#211d12 38%,#2b2517 52%,#191509 72%,#050403), repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px); background-blend-mode:normal,overlay; box-shadow:1px 1px 2px rgba(0,0,0,.5); }
+.elastic::before { content:""; position:absolute; inset:-2px -7px; z-index:-1; border-radius:6px; background:radial-gradient(9px 55% at 50% 4%,rgba(0,0,0,.55),transparent 70%),radial-gradient(9px 55% at 50% 96%,rgba(0,0,0,.55),transparent 70%),linear-gradient(90deg,transparent,rgba(0,0,0,.4) 30%,rgba(0,0,0,.45) 70%,transparent); filter:blur(2px); }
+.elastic::after { content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(180deg,rgba(0,0,0,.55) 0,transparent 16px,transparent calc(100% - 16px),rgba(0,0,0,.55)),linear-gradient(90deg,transparent 30%,rgba(255,255,255,.07) 46%,transparent 60%); }
+
+/* ===== shared: photo + tape + paper ===== */
+.tape { position:absolute; z-index:6; width:66px; height:20px; background:rgba(239,232,216,.3); box-shadow:0 1px 3px rgba(0,0,0,.35); backdrop-filter:blur(1px); }
+.avatar-slot { border-radius:2px; background:radial-gradient(circle at 35% 30%,#4b5f8a,#232c42 70%); display:grid; place-items:center; color:rgba(239,232,216,.75); font:800 .56rem "Alegreya Sans"; letter-spacing:.18em; }
+.stat-label { font-size:.52rem; font-weight:800; letter-spacing:.22em; color:var(--muted); }
+.stat-value { font:700 1.05rem/1 "Roboto Slab"; color:var(--ink); }
+.stat-value small { font:700 .68rem "Roboto Slab"; color:var(--muted); margin-left:1px; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ Α — «POLAROID + ΧΑΡΤΑΚΙ» (φωτο μεγάλη, ένα μικρό ενιαίο χαρτάκι από κάτω)
+   ============================================================ */
+.va-photo { position:relative; z-index:2; margin-top:56px; justify-self:center; width:168px; background:var(--paper); padding:9px 9px 26px; transform:rotate(-1.8deg); box-shadow:0 12px 22px rgba(0,0,0,.5); }
+.va-photo .tape { top:-9px; left:50%; transform:translateX(-50%) rotate(1.5deg); }
+.va-photo .avatar-slot { width:100%; height:148px; }
+.va-photo figcaption { margin-top:8px; text-align:center; font:600 1.3rem "Caveat"; color:var(--ink); }
+.va-slip { position:relative; z-index:2; margin-top:34px; justify-self:center; width:196px; background:var(--paper-dark); padding:9px 12px 10px; transform:rotate(1deg); box-shadow:0 8px 16px rgba(0,0,0,.45); display:flex; align-items:baseline; justify-content:space-around; gap:10px; }
+.va-slip .tape { top:-9px; left:50%; transform:translateX(-50%) rotate(-2deg); width:54px; height:17px; }
+.va-slip>div { display:grid; gap:3px; justify-items:center; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ Β — «ΟΛΑ ΣΕ ΕΝΑ POLAROID» (ένα μόνο χαρτί: φωτο + όνομα + στοιχεία)
+   ============================================================ */
+.vb-card { position:relative; z-index:2; margin-top:70px; justify-self:center; width:186px; background:var(--paper); padding:9px 9px 12px; transform:rotate(-1.5deg); box-shadow:0 12px 22px rgba(0,0,0,.5); }
+.vb-card .tape { top:-9px; left:50%; transform:translateX(-50%) rotate(2deg); }
+.vb-card .avatar-slot { width:100%; height:160px; }
+.vb-card figcaption { margin-top:9px; text-align:center; font:600 1.35rem "Caveat"; color:var(--ink); }
+.vb-stats { margin-top:8px; padding-top:8px; border-top:1px solid rgba(21,19,13,.2); display:flex; justify-content:space-around; }
+.vb-stats>div { display:grid; gap:3px; justify-items:center; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ Γ — «ΧΑΡΤΑΚΙ ΣΤΟ ΠΛΑΪ» (φωτο αριστερά, μικρό χαρτάκι δεξιά κάτω απ' το λάστιχο)
+   ============================================================ */
+.vc-wrap { position:relative; z-index:2; margin-top:60px; min-height:330px; }
+.vc-photo { position:absolute; left:6%; top:0; width:160px; background:var(--paper); padding:9px 9px 26px; transform:rotate(-2.2deg); box-shadow:0 12px 22px rgba(0,0,0,.5); }
+.vc-photo .tape { top:-9px; left:50%; transform:translateX(-50%) rotate(1.5deg); }
+.vc-photo .avatar-slot { width:100%; height:140px; }
+.vc-photo figcaption { margin-top:8px; text-align:center; font:600 1.25rem "Caveat"; color:var(--ink); }
+.vc-slip { position:absolute; right:2%; top:200px; z-index:4; width:150px; background:var(--paper-dark); padding:10px 12px 11px; transform:rotate(2deg); box-shadow:0 8px 16px rgba(0,0,0,.45); display:grid; gap:8px; }
+.vc-slip .tape { top:-8px; left:16px; transform:rotate(-3deg); width:48px; height:16px; }
+.vc-slip>div { display:flex; align-items:baseline; justify-content:space-between; }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN EXPLORATION — PROFILE CARD · ROUND 2</p>
+  <h1>ΠΡΟΤΑΣΗ 2, <em>ΡΑΦΙΝΑΡΙΣΜΕΝΗ.</em></h1>
+  <p>Βάση η «ΚΑΤΩ ΑΠΟ ΤΟ ΛΑΣΤΙΧΟ» με τις 4 αλλαγές: (1) σήμα εφαρμογής αντί για «LOGBOOK» πάνω αριστερά, (2) μότο στο τέρμα κάτω άκρο του εξωφύλλου, (3) φυσικό λάστιχο — σκιά που ρίχνει στο δέρμα, τύλιγμα στις άκρες, ύφανση, γυαλάδα, (4) τα στοιχεία σε ένα μικρό, διακριτικό, ενιαίο χαρτάκι κολλημένο με tape όπως η φωτογραφία. Τρεις εκδοχές του χαρτιού.</p>
+</header>
+
+<!-- ============ Α ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ Α</b><span>«POLAROID + ΧΑΡΤΑΚΙ» — φωτο με όνομα, από κάτω ένα μικρό ενιαίο χαρτάκι ηλικία·βάρος</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <figure class="va-photo">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="avatar-slot">ΦΩΤΟ</div>
+      <figcaption>Δημήτρης</figcaption>
+    </figure>
+    <div class="va-slip">
+      <span class="tape" aria-hidden="true"></span>
+      <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+      <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+    </div>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> δύο αντικείμενα, ίδια «κόλληση»: polaroid με το όνομα χειρόγραφο, και από κάτω <b>ένα</b> μικρό kraft χαρτάκι με ηλικία·βάρος μαζί — μισό μέγεθος από πριν, μία σειρά, ένα tape. Καθαρή ιεραρχία: πρώτα πρόσωπο/όνομα, μετά μετρικά.</p>
+</section>
+
+<!-- ============ Β ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ Β</b><span>«ΟΛΑ ΣΕ ΕΝΑ» — ένα μόνο χαρτί: φωτο, όνομα και στοιχεία στο κάτω περιθώριο</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <figure class="vb-card">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="avatar-slot">ΦΩΤΟ</div>
+      <figcaption>Δημήτρης</figcaption>
+      <div class="vb-stats">
+        <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+        <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+      </div>
+    </figure>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> το πιο κυριολεκτικά «ενιαίο»: ένα polaroid-καρτελάκι, ένα tape. Φωτο πάνω, όνομα χειρόγραφο, και τα δύο μετρικά σε λεπτή γραμμή στο κάτω περιθώριο του ίδιου χαρτιού. Το εξώφυλλο μένει σχεδόν άδειο — το πιο <b>διακριτικό</b> αποτέλεσμα, και το απλούστερο σε DOM (ένα στοιχείο).</p>
+</section>
+
+<!-- ============ Γ ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ Γ</b><span>«ΧΑΡΤΑΚΙ ΣΤΟ ΠΛΑΪ» — φωτο αριστερά, μικρό χαρτάκι δεξιά να πιάνεται και από το λάστιχο</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <div class="vc-wrap">
+      <figure class="vc-photo">
+        <span class="tape" aria-hidden="true"></span>
+        <div class="avatar-slot">ΦΩΤΟ</div>
+        <figcaption>Δημήτρης</figcaption>
+      </figure>
+      <div class="vc-slip">
+        <span class="tape" aria-hidden="true"></span>
+        <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+        <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+      </div>
+    </div>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> ασύμμετρη σύνθεση σαν αληθινό σημειωματάριο: φωτο ψηλά αριστερά, και το ενιαίο χαρτάκι χαμηλά δεξιά, με tape αλλά χωμένο και <b>κάτω από το λάστιχο</b> — το λάστιχο περνά από πάνω του και «δουλεύει» οπτικά. Πιο ζωντανό στήσιμο, λίγο πιο απαιτητικό σε responsive.</p>
+</section>
+
+</body>
+</html>

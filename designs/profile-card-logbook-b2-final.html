@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Card — Logbook Β2, Τελικό</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --cover-black:#0d0c09; --cover-black-hi:#1b1913; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:620px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(48px,6vw,80px) 5vw 80px; display:grid; justify-items:center; gap:34px; background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:72px 72px; }
+.notes { max-width:660px; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--gold); }
+
+/* ===== black hardcover shell ===== */
+.book { position:relative; width:min(470px,100%); min-height:520px; border-radius:8px 16px 16px 8px; padding:24px 28px 50px; background:linear-gradient(118deg,var(--cover-black-hi) 0%,var(--cover-black) 58%); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, -9px 0 0 -4px #060504, 16px 24px 48px rgba(0,0,0,.55); display:grid; align-content:start; }
+.book::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 18% 6%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.book::after { content:""; position:absolute; left:9px; top:10px; bottom:10px; width:4px; border-radius:3px; background:linear-gradient(#26221703,#00000055); box-shadow:1px 0 0 rgba(255,255,255,.04); }
+
+/* ===== σήμα: χαραγμένο ΜΕ τα χρώματα (πατημένο μελάνι σε βάθος) ===== */
+.brand-press { position:relative; z-index:2; display:flex; align-items:center; gap:2px; }
+.brand-press i { display:block; width:4px; height:17px; border-radius:.5px; background:linear-gradient(180deg,#3a372c,#57523f 60%,#454033); box-shadow:0 1px 0 rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.75) inset; }
+.brand-press i:first-child,.brand-press i:last-child { width:6px; height:24px; }
+.brand-press i:nth-child(3) { width:36px; height:5px; background:linear-gradient(180deg,#4a3b0e,#7a5e18 60%,#5c4712); }
+
+/* ===== μότο: χαραγμένο, τέρμα κάτω ===== */
+.book-foot { position:absolute; z-index:2; left:0; right:0; bottom:14px; text-align:center; font:800 .58rem "Alegreya Sans"; letter-spacing:.34em; color:transparent; background:linear-gradient(180deg,#070604,#332d1e); -webkit-background-clip:text; background-clip:text; text-shadow:0 1px 0 rgba(255,255,255,.055); }
+
+/* ===== λάστιχο, round 4 ===== */
+.elastic { position:absolute; z-index:5; top:-4px; bottom:-4px; right:16%; width:12px; border-radius:3px 3px 4px 4px; transform:rotate(.55deg) translateX(1px); background:linear-gradient(90deg,#050403 0%,#181408 22%,#242012 46%,#2a2413 52%,#1c170b 68%,#0a0805 88%,#030202), repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px), repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 5px); }
+.elastic::before { content:""; position:absolute; top:22px; bottom:22px; left:-9px; right:-5px; z-index:-1; border-radius:10px; background:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 40%,rgba(0,0,0,.3) 78%,transparent); filter:blur(4px); }
+.elastic::after { content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(180deg,rgba(0,0,0,.7) 0,rgba(0,0,0,.25) 10px,transparent 30px,transparent calc(100% - 30px),rgba(0,0,0,.25) calc(100% - 10px),rgba(0,0,0,.7)),linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 2px 24%,rgba(255,255,255,.1) 42%,rgba(255,255,255,.03) 58%,transparent 76%,rgba(0,0,0,.35) calc(100% - 1px)); }
+
+/* ===== polaroid — μικρότερο, ψηλότερα, ίδιο κόλλημα ===== */
+.tape { position:absolute; z-index:6; width:50px; height:15px; background:rgba(239,232,216,.26); box-shadow:0 1px 3px rgba(0,0,0,.35); backdrop-filter:blur(1px); }
+.avatar-slot { border-radius:2px; background:radial-gradient(circle at 35% 30%,#4b5f8a,#232c42 70%); display:grid; place-items:center; color:rgba(239,232,216,.75); font:800 .5rem "Alegreya Sans"; letter-spacing:.18em; }
+.stat-label { font-size:.44rem; font-weight:800; letter-spacing:.2em; color:var(--muted); }
+.stat-value { font:700 .85rem/1 "Roboto Slab"; color:var(--ink); }
+.stat-value small { font:700 .56rem "Roboto Slab"; color:var(--muted); margin-left:1px; }
+.pcard { position:relative; z-index:2; margin-top:38px; justify-self:center; width:134px; background:var(--paper); padding:7px 7px 9px; transform:rotate(-1.5deg); box-shadow:0 9px 18px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.35); }
+.pcard .tape { top:-8px; left:50%; transform:translateX(-50%) rotate(2deg); }
+.pcard .avatar-slot { width:100%; height:110px; }
+.pcard figcaption { margin-top:6px; text-align:center; font:600 1.05rem/1.1 "Caveat"; color:var(--ink); }
+.pcard-stats { margin-top:6px; padding-top:6px; border-top:1px solid rgba(21,19,13,.16); display:flex; justify-content:space-around; }
+.pcard-stats>div { display:grid; gap:2px; justify-items:center; }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN EXPLORATION — PROFILE CARD · ROUND 4</p>
+  <h1>Β2, <em>ΤΕΛΙΚΟ.</em></h1>
+  <p>Σήμα χαραγμένο αλλά με τα χρώματα της ταυτότητας (πατημένο «μελάνι» μέσα στη χάραξη — σκούρο μπεζ στις μπάρες, σκούρο χρυσό στη μεσαία), μότο επίσης χαραγμένο στο κάτω άκρο, polaroid μικρότερο και ψηλότερα, λάστιχο με ύφανση, ανασήκωμα στη μέση και σφίξιμο στις άκρες.</p>
+</header>
+
+<div class="attempt-label"><b>ΤΕΛΙΚΟ</b><span>ΧΑΡΑΓΜΕΝΟ ΣΗΜΑ ΜΕ ΧΡΩΜΑ · ΧΑΡΑΓΜΕΝΟ ΜΟΤΟ · ΜΙΚΡΟΤΕΡΟ POLAROID · ΦΥΣΙΚΟΤΕΡΟ ΛΑΣΤΙΧΟ</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="brand-press" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <figure class="pcard">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="avatar-slot">ΦΩΤΟ</div>
+      <figcaption>Δημήτρης</figcaption>
+      <div class="pcard-stats">
+        <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+        <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+      </div>
+    </figure>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Τι άλλαξε:</b> (1) το σήμα κρατά μπεζ/χρυσό αλλά σε «πατημένους» σκούρους τόνους με εσωτερική σκιά και φωτεινό κάτω χείλος — σαν foil χωρίς γυαλάδα· (2) το μότο χαραγμένο με την ίδια τεχνική (σκοτεινό μελάνι, ανταύγεια 1px)· (3) polaroid 134px, tape μικρότερο, 18px ψηλότερα· (4) το λάστιχο: κάθετη ύφανση + εγκάρσιες ίνες, η σκιά επαφής κόβεται 22px πριν τις άκρες ώστε να δείχνει ότι <b>ανασηκώνεται στη μέση</b> και σφίγγει εκεί που τυλίγει, σκληρή σκιά μόνο στα σημεία τυλίγματος.</p>
+</section>
+
+</body>
+</html>

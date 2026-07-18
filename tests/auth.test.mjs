@@ -9,10 +9,10 @@ const configSource = readFileSync(new URL('../supabase-config.js', import.meta.u
 const authSource = readFileSync(new URL('../auth.js', import.meta.url), 'utf8');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
-async function loadAuth({ initialSession = null, signupSession = null, oauthError = null, onWindow = null } = {}) {
+async function loadAuth({ initialSession = null, signupSession = null, oauthError = null, deleteError = null, onWindow = null } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
-  const calls = { signin:[], signup:[], oauth:[], reset:[], update:[], signout:[] };
+  const calls = { signin:[], signup:[], oauth:[], reset:[], update:[], signout:[], rpc:[] };
   let authListener = null;
 
   window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
@@ -21,6 +21,10 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
   window.eval(i18nSource);
   window.eval(configSource);
   window.LogbookSupabase = {
+    async rpc(name, params) {
+      calls.rpc.push({ name, params });
+      return { data:null, error:deleteError };
+    },
     auth: {
       async getSession() { return { data:{ session:initialSession }, error:null }; },
       onAuthStateChange(callback) {
@@ -190,6 +194,37 @@ test('Google sign in reports an OAuth startup error and re-enables its button', 
   assert.equal(document.querySelector('#account-google').getAttribute('aria-busy'), 'false');
 });
 
+test('direct-file mode blocks redirect-based auth instead of falling back to localhost', async () => {
+  const { document, calls } = await loadAuth({
+    onWindow(window) {
+      window.LogbookSupabaseConfig = Object.freeze({
+        ...window.LogbookSupabaseConfig,
+        siteUrl:null,
+      });
+    },
+  });
+
+  click(document, '#account-google');
+  click(document, '[data-account-mode="signup"]');
+  setValue(document, '#account-signup-email', 'new@example.com');
+  setValue(document, '#account-signup-password', 'strong-pass');
+  setValue(document, '#account-signup-confirm', 'strong-pass');
+  submit(document, '#account-signup-form');
+  click(document, '#account-forgot-password');
+  setValue(document, '#account-forgot-email', 'new@example.com');
+  submit(document, '#account-forgot-form');
+  await flush();
+
+  assert.equal(calls.oauth.length, 0);
+  assert.equal(calls.signup.length, 0);
+  assert.equal(calls.reset.length, 0);
+  assert.equal(
+    document.querySelector('#account-form-status').textContent,
+    'Ξεκινήστε πρώτα τον τοπικό server και ανοίξτε το Logbook από http://localhost:3000/.',
+  );
+  assert.equal(document.querySelector('#account-form-status').dataset.kind, 'error');
+});
+
 test('forgot password sends a recovery link to the entered email', async () => {
   const { document, calls } = await loadAuth();
 
@@ -249,6 +284,58 @@ test('local sign out preserves workout data stored in the browser', async () => 
   assert.equal(calls.signout[0].scope, 'local');
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
   assert.equal(document.querySelector('#account-menu-status').textContent, 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ');
+});
+
+test('account deletion requires explicit confirmation and cancellation makes no request', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { document, calls } = await loadAuth({ initialSession });
+
+  click(document, '#account-delete');
+
+  assert.equal(document.querySelector('#account-delete-dialog').open, true);
+  assert.match(document.querySelector('#account-delete-message').textContent, /^Είστε σίγουροι/);
+  assert.match(document.querySelector('#account-delete-message').textContent, /δεν θα μπορούν να ανακτηθούν/);
+
+  click(document, '#account-delete-cancel');
+
+  assert.equal(document.querySelector('#account-delete-dialog').open, false);
+  assert.equal(calls.rpc.length, 0);
+});
+
+test('confirmed account deletion removes the cloud account and preserves local device data', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { document, localStorage, calls } = await loadAuth({ initialSession });
+  const sessions = [{ id:'s1', date:'2026-07-17' }];
+  localStorage.setItem('trainingSessions', JSON.stringify(sessions));
+
+  click(document, '#account-delete');
+  click(document, '#account-delete-accept');
+  await flush();
+  await flush();
+
+  assert.deepEqual(calls.rpc, [{ name:'delete_own_account', params:undefined }]);
+  assert.equal(calls.signout.at(-1).scope, 'local');
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
+  assert.equal(document.querySelector('#account-delete-dialog').open, false);
+  assert.equal(document.querySelector('#account-dialog').open, false);
+  assert.equal(document.querySelector('#account-menu-status').textContent, 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ');
+});
+
+test('failed account deletion keeps the confirmation open and allows retry', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { document, calls } = await loadAuth({ initialSession, deleteError:new Error('rpc failed') });
+
+  click(document, '#account-delete');
+  click(document, '#account-delete-accept');
+  await flush();
+
+  assert.equal(calls.rpc.length, 1);
+  assert.equal(calls.signout.length, 0);
+  assert.equal(document.querySelector('#account-delete-dialog').open, true);
+  assert.equal(document.querySelector('#account-delete-accept').disabled, false);
+  assert.equal(document.querySelector('#account-delete-cancel').disabled, false);
+  assert.equal(document.querySelector('#account-delete-status').dataset.kind, 'error');
+  assert.equal(document.querySelector('#account-delete-status').textContent, 'Δεν ήταν δυνατή η διαγραφή του λογαριασμού. Δοκιμάστε ξανά.');
 });
 
 test('an initial sync that finishes before the gate arms still loads the app', async () => {

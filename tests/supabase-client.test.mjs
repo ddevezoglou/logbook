@@ -37,6 +37,14 @@ test('Supabase browser client uses the public project configuration', () => {
   assert.equal(readyClient, client);
 });
 
+test('opening index.html directly never advertises localhost as its auth callback', () => {
+  const dom = new JSDOM('', { runScripts:'outside-only', url:'file:///C:/Users/Dimitris/logbook/index.html' });
+
+  dom.window.eval(configSource);
+
+  assert.equal(dom.window.LogbookSupabaseConfig.siteUrl, null);
+});
+
 test('Supabase scripts load before the application is dynamically bootstrapped', () => {
   const config = htmlSource.indexOf('src="supabase-config.js"');
   const client = htmlSource.indexOf('src="supabase-client.js"');

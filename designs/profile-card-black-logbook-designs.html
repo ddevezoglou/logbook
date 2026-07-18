@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Card — Μαύρο Logbook Προτάσεις</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --cover:#131108; --cover-hi:#221e14; --cover-black:#0d0c09; --cover-black-hi:#1b1913; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:620px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(48px,6vw,80px) 5vw 80px; display:grid; justify-items:center; gap:34px; background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:72px 72px; }
+.notes { max-width:660px; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--gold); }
+
+/* ===== shared: black hardcover shell ===== */
+.book { position:relative; width:min(420px,100%); min-height:600px; border-radius:8px 16px 16px 8px; padding:clamp(24px,4.5vw,36px); background:linear-gradient(118deg,var(--cover-black-hi) 0%,var(--cover-black) 58%); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, -9px 0 0 -4px #060504, 16px 24px 48px rgba(0,0,0,.55); display:grid; align-content:start; }
+.book::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 18% 6%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.book::after { content:""; position:absolute; left:9px; top:10px; bottom:10px; width:4px; border-radius:3px; background:linear-gradient(#26221703,#00000055); box-shadow:1px 0 0 rgba(255,255,255,.04); }
+.book-brand { position:relative; z-index:2; color:var(--gold); font:800 .68rem "Alegreya Sans"; letter-spacing:.3em; }
+.book-foot { position:relative; z-index:2; margin-top:auto; padding-top:26px; text-align:center; color:rgba(239,232,216,.42); font:800 .62rem "Alegreya Sans"; letter-spacing:.3em; }
+.book-foot::before { content:""; display:block; margin:0 auto 14px; width:100%; border-top:1px solid rgba(239,232,216,.12); }
+.elastic { position:absolute; z-index:3; top:-12px; bottom:-12px; right:44px; width:13px; border-radius:7px; background:linear-gradient(90deg,#050403,#211d12 48%,#050403); box-shadow:2px 3px 8px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04) inset; }
+.avatar-slot { width:104px; height:104px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 35% 30%,#4b5f8a,#232c42 70%); display:grid; place-items:center; color:rgba(239,232,216,.75); font:800 .58rem "Alegreya Sans"; letter-spacing:.18em; }
+.stat-label { font-size:.58rem; font-weight:800; letter-spacing:.24em; color:var(--muted); }
+.stat-value { font:700 1.7rem/1 "Roboto Slab"; color:var(--ink); }
+.stat-value small { font:700 .85rem "Roboto Slab"; color:var(--muted); margin-left:2px; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 1 — «ΚΑΡΦΙΤΣΩΜΕΝΗ ΚΑΡΤΕΛΑ» (μία χάρτινη κάρτα, μία καρφίτσα)
+   ============================================================ */
+.v1-note { position:relative; z-index:2; margin-top:46px; justify-self:center; width:min(300px,92%); background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 25px,rgba(77,63,36,.09) 25px 26px); border-radius:2px; padding:34px 24px 24px; transform:rotate(-1.2deg); box-shadow:0 12px 24px rgba(0,0,0,.5), 0 2px 5px rgba(0,0,0,.4); color:var(--ink); display:grid; justify-items:center; gap:0; }
+.v1-pin { position:absolute; top:-9px; left:50%; transform:translateX(-50%); width:17px; height:17px; border-radius:50%; background:radial-gradient(circle at 32% 30%,#e8c96a,#8a6a1c 70%); box-shadow:0 3px 5px rgba(0,0,0,.5), 0 0 0 1px rgba(21,19,13,.4) inset; }
+.v1-pin::after { content:""; position:absolute; left:50%; top:100%; width:1.5px; height:9px; background:linear-gradient(#5c542f,transparent); transform:translateX(-50%) rotate(8deg); }
+.v1-note .avatar-slot { width:88px; height:88px; box-shadow:0 0 0 3px var(--paper), 0 0 0 4px rgba(21,19,13,.35); }
+.v1-name-label { margin-top:18px; }
+.v1-name { margin:4px 0 0; font:700 clamp(1.7rem,4vw,2.1rem)/1 "Roboto Slab"; letter-spacing:-.02em; }
+.v1-stats { margin-top:20px; width:100%; display:grid; grid-template-columns:1fr 1fr; }
+.v1-stats>div { display:grid; gap:6px; justify-items:center; padding:12px 6px 4px; border-top:1px solid rgba(21,19,13,.25); }
+.v1-stats>div+div { border-left:1px dashed rgba(21,19,13,.25); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 2 — «ΚΑΤΩ ΑΠΟ ΤΟ ΛΑΣΤΙΧΟ» (φωτο + δύο tags στερεωμένα στο λάστιχο)
+   ============================================================ */
+.v2-photo { position:relative; z-index:2; margin-top:44px; justify-self:center; width:172px; background:var(--paper); padding:10px 10px 30px; transform:rotate(-2deg); box-shadow:0 12px 22px rgba(0,0,0,.5); }
+.v2-photo .avatar-slot { width:100%; height:150px; border-radius:2px; }
+.v2-photo figcaption { margin-top:10px; text-align:center; font:600 1.25rem "Caveat"; color:var(--ink); }
+.v2-tape { position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(1.5deg); width:74px; height:22px; background:rgba(239,232,216,.32); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.v2-tags { position:relative; z-index:4; margin-top:34px; display:grid; gap:14px; justify-items:end; padding-right:8px; }
+.v2-tag { position:relative; width:min(220px,80%); background:var(--paper-dark); border-radius:2px 4px 4px 2px; padding:10px 16px 12px 26px; transform:rotate(.8deg); box-shadow:0 8px 16px rgba(0,0,0,.45); color:var(--ink); display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.v2-tag:last-child { transform:rotate(-1deg); }
+.v2-tag::before { content:""; position:absolute; left:9px; top:50%; transform:translateY(-50%); width:8px; height:8px; border-radius:50%; background:var(--ink); box-shadow:0 0 0 3px var(--paper-dark), 0 0 0 4px rgba(21,19,13,.3); }
+.v2-tag .stat-value { font-size:1.45rem; }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 3 — «ΧΑΡΑΓΜΕΝΟ ΕΞΩΦΥΛΛΟ» (deboss στο δέρμα, καθόλου χαρτί)
+   ============================================================ */
+.v3-emboss-name { margin-top:64px; text-align:center; color:transparent; background:linear-gradient(#080704,#2c2618); -webkit-background-clip:text; background-clip:text; text-shadow:0 1px 0 rgba(255,255,255,.05); font:700 clamp(2.1rem,5vw,2.8rem)/0.95 "Roboto Slab"; letter-spacing:-.02em; }
+.v3-emboss-label { margin-top:44px; text-align:center; color:rgba(239,232,216,.32); font-size:.58rem; font-weight:800; letter-spacing:.3em; }
+.v3-avatar-wrap { justify-self:center; margin-top:40px; position:relative; z-index:2; }
+.v3-avatar-wrap .avatar-slot { box-shadow:0 0 0 1px rgba(201,162,39,.5), 0 0 0 6px rgba(0,0,0,.35), 0 10px 20px rgba(0,0,0,.5); }
+.v3-stats { position:relative; z-index:2; margin-top:40px; display:grid; grid-template-columns:1fr 1fr; }
+.v3-stats>div { display:grid; gap:8px; justify-items:center; padding:16px 6px 4px; border-top:1px solid rgba(239,232,216,.14); }
+.v3-stats>div+div { border-left:1px solid rgba(239,232,216,.1); }
+.v3-stats .stat-label { color:rgba(239,232,216,.4); }
+.v3-stats .stat-value { color:var(--paper); }
+.v3-stats .stat-value small { color:rgba(239,232,216,.5); }
+
+/* ============================================================
+   ΠΡΟΤΑΣΗ 4 — «ΤΣΕΠΗ ΑΡΧΕΙΟΥ» (kraft τσέπη + μισοβγαλμένη καρτέλα μέλους)
+   ============================================================ */
+.v4-avatar { justify-self:center; margin-top:40px; position:relative; z-index:2; }
+.v4-avatar .avatar-slot { box-shadow:0 0 0 5px rgba(0,0,0,.4), 0 10px 20px rgba(0,0,0,.5); }
+.v4-pocket { position:relative; z-index:2; margin-top:78px; background:var(--paper-dark); border-radius:3px; padding:16px 16px 20px; box-shadow:inset 0 -8px 14px rgba(0,0,0,.18); }
+.v4-pocket::before { content:"MEMBER FILE"; position:absolute; top:-22px; left:2px; color:rgba(239,232,216,.35); font-size:.56rem; font-weight:800; letter-spacing:.24em; }
+.v4-card { position:relative; background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 24px,rgba(77,63,36,.1) 24px 25px); border-radius:2px; padding:20px 20px 22px; box-shadow:0 10px 22px rgba(0,0,0,.35); transform:translateY(-42px) rotate(-.7deg); color:var(--ink); }
+.v4-card .stat-label { display:block; }
+.v4-name { margin:4px 0 0; font:700 1.75rem/1 "Roboto Slab"; letter-spacing:-.02em; }
+.v4-row { margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.v4-row>div { border-top:1px solid rgba(21,19,13,.3); padding-top:8px; }
+.v4-row .stat-value { font-size:1.4rem; }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN EXPLORATION — PROFILE CARD</p>
+  <h1>ΚΑΡΤΑ ΠΡΟΦΙΛ ΣΑΝ <em>ΜΑΥΡΟ LOGBOOK.</em></h1>
+  <p>Τέσσερις κατευθύνσεις: η κάρτα προεπισκόπησης του προφίλ γίνεται κλειστό μαύρο hardcover σημειωματάριο — συνέχεια του login. Πάνω αριστερά μόνο το «LOGBOOK», στο κάτω μέρος το «TRAIN . LOG . REPEAT». Τα στοιχεία (Όνομα, Ηλικία, Βάρος) στερεώνονται πάνω του διακριτικά: καρφίτσα, λάστιχο, χάραγμα ή τσέπη.</p>
+</header>
+
+<!-- ============ 1 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 1</b><span>«ΚΑΡΦΙΤΣΩΜΕΝΗ ΚΑΡΤΕΛΑ» — μία χάρτινη κάρτα με χρυσή καρφίτσα, όλα τα στοιχεία μαζί</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="book-brand">LOGBOOK</span>
+    <div class="v1-note">
+      <span class="v1-pin" aria-hidden="true"></span>
+      <div class="avatar-slot">ΦΩΤΟ</div>
+      <span class="stat-label v1-name-label">ΟΝΟΜΑ</span>
+      <h2 class="v1-name">ΔΗΜΗΤΡΗΣ</h2>
+      <div class="v1-stats">
+        <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+        <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+      </div>
+    </div>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> ένα μόνο «αντικείμενο» πάνω στο εξώφυλλο — χάρτινη καρτέλα με ρίγες, ελαφρώς στραβή, καρφιτσωμένη με χρυσή πινέζα. Κρατά όλη τη σημερινή πληροφορία (avatar, όνομα, ηλικία, βάρος) σε μία ενότητα, οπότε η ανάγνωση μένει ίδια με τη σημερινή κάρτα. Το πιο <b>ασφαλές upgrade</b>: ίδια δομή DOM, αλλάζει μόνο το περίβλημα.</p>
+</section>
+
+<!-- ============ 2 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 2</b><span>«ΚΑΤΩ ΑΠΟ ΤΟ ΛΑΣΤΙΧΟ» — φωτογραφία με ταινία + καρτελάκια στοιχείων περασμένα στο λάστιχο</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="book-brand">LOGBOOK</span>
+    <figure class="v2-photo" style="margin-block:44px 0;">
+      <span class="v2-tape" aria-hidden="true"></span>
+      <div class="avatar-slot">ΦΩΤΟ</div>
+      <figcaption>Δημήτρης</figcaption>
+    </figure>
+    <div class="v2-tags">
+      <div class="v2-tag"><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+      <div class="v2-tag"><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+    </div>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> πιο «προσωπικό αντικείμενο»: η φωτογραφία του αθλητή σαν polaroid κολλημένη με ταινία, με το όνομα χειρόγραφο από κάτω, και δύο μικρά kraft καρτελάκια (ηλικία, βάρος) δεμένα δεξιά ώστε να φαίνονται περασμένα κάτω από το λάστιχο. Το πιο scrapbook αποτέλεσμα — ταιριάζει με το ύφος του history/instructions.</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 3</b><span>«ΧΑΡΑΓΜΕΝΟ ΕΞΩΦΥΛΛΟ» — deboss στο δέρμα, κανένα χαρτί, το πιο διακριτικό</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="book-brand">LOGBOOK</span>
+    <div class="v3-avatar-wrap"><div class="avatar-slot">ΦΩΤΟ</div></div>
+    <p class="v3-emboss-label">ΟΝΟΜΑ</p>
+    <h2 class="v3-emboss-name" style="margin-top:10px;">ΔΗΜΗΤΡΗΣ</h2>
+    <div class="v3-stats">
+      <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+      <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+    </div>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> τίποτα «κολλημένο» — τα στοιχεία είναι μέρος του ίδιου του εξωφύλλου. Το όνομα χαραγμένο (deboss) στο δέρμα όπως το «LOGBOOK» του login (Πρόταση 3 εκεί), ηλικία/βάρος σε λεπτές χαραγμένες στήλες, avatar σε χρυσό δαχτυλίδι. Το πιο <b>premium και διακριτικό</b>· λιγότερο παιχνιδιάρικο από τα 1-2.</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 4</b><span>«ΤΣΕΠΗ ΑΡΧΕΙΟΥ» — καρτέλα μέλους μισοβγαλμένη από τσέπη, δένει με το login ΠΡΟΤΑΣΗ 3</span></div>
+<section class="stage">
+  <article class="book">
+    <span class="book-brand">LOGBOOK</span>
+    <div class="v4-avatar"><div class="avatar-slot">ΦΩΤΟ</div></div>
+    <div class="v4-pocket">
+      <div class="v4-card">
+        <span class="stat-label">ΟΝΟΜΑ</span>
+        <h2 class="v4-name">ΔΗΜΗΤΡΗΣ</h2>
+        <div class="v4-row">
+          <div><span class="stat-label">ΗΛΙΚΙΑ</span><strong class="stat-value">30</strong></div>
+          <div><span class="stat-label">ΒΑΡΟΣ</span><strong class="stat-value">74,5<small>kg</small></strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+  <p class="notes"><b>Ιδέα:</b> συνέχεια της «ΚΑΡΤΑΣ ΒΙΒΛΙΟΘΗΚΗΣ» του login — ίδια kraft τσέπη «MEMBER FILE», μόνο που εδώ η μισοβγαλμένη καρτέλα δείχνει τα στοιχεία του μέλους αντί για τη φόρμα. Το πιο <b>συνεπές αφήγημα</b>: στο login «βγάζεις» την κάρτα σου, στο προφίλ τη βλέπεις συμπληρωμένη.</p>
+</section>
+
+</body>
+</html>

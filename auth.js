@@ -3,6 +3,7 @@
   const $$ = selector => [...document.querySelectorAll(selector)];
   const t = value => window.LogbookI18n?.t?.(value) || value;
   const dialog = $('#account-dialog');
+  const deleteDialog = $('#account-delete-dialog');
   const gate = $('#auth-gate');
   const guest = $('#account-guest');
   const member = $('#account-member');
@@ -26,9 +27,23 @@
     status.classList.toggle('hidden', !message);
   }
 
+  function setDeleteStatus(message = '', kind = 'neutral') {
+    const deleteStatus = $('#account-delete-status');
+    deleteStatus.textContent = message ? t(message) : '';
+    deleteStatus.dataset.kind = kind;
+    deleteStatus.classList.toggle('hidden', !message);
+  }
+
   function setBusy(form, busy) {
     [...form.elements].forEach(control => { control.disabled = busy; });
     form.setAttribute('aria-busy', String(busy));
+  }
+
+  function getAuthRedirectUrl() {
+    const redirectUrl = window.LogbookSupabaseConfig?.siteUrl;
+    if (redirectUrl) return redirectUrl;
+    setStatus('Ξεκινήστε πρώτα τον τοπικό server και ανοίξτε το Logbook από http://localhost:3000/.', 'error');
+    return null;
   }
 
   function setMode(next) {
@@ -148,6 +163,7 @@
     $('#account-menu-status').classList.toggle('hidden', signedIn);
     $('#account-open').classList.toggle('is-connected', signedIn);
     $('#account-open').setAttribute('aria-label', signedIn ? `${t('ΛΟΓΑΡΙΑΣΜΟΣ')}: ${email}` : t('ΛΟΓΑΡΙΑΣΜΟΣ'));
+    if (!signedIn && deleteDialog.open) deleteDialog.close();
     if (signedIn) waitForInitialSync(session);
     else showLogin();
     window.LogbookI18n?.translate(document);
@@ -182,6 +198,15 @@
   });
   $('#account-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  $('#account-delete').addEventListener('click', () => {
+    setDeleteStatus('');
+    deleteDialog.showModal();
+    requestAnimationFrame(() => $('#account-delete-cancel')?.focus());
+  });
+  $('#account-delete-cancel').addEventListener('click', () => deleteDialog.close());
+  deleteDialog.addEventListener('click', event => {
+    if (event.target === deleteDialog && !$('#account-delete-accept').disabled) deleteDialog.close();
+  });
   $$('[data-account-mode]').forEach(button => button.addEventListener('click', () => setMode(button.dataset.accountMode)));
   $('#account-forgot-password').addEventListener('click', () => {
     $('#account-forgot-email').value = $('#account-signin-email').value.trim();
@@ -237,13 +262,15 @@
 
   $('#account-google').addEventListener('click', async () => {
     if (!client) return;
+    const redirectTo = getAuthRedirectUrl();
+    if (!redirectTo) return;
     const button = $('#account-google');
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');
     setStatus('Μεταφορά στη Google…');
     const { error } = await client.auth.signInWithOAuth({
       provider:'google',
-      options:{ redirectTo:window.LogbookSupabaseConfig?.siteUrl },
+      options:{ redirectTo },
     });
     if (!error) return;
     button.disabled = false;
@@ -273,12 +300,14 @@
     if (!client || !form.reportValidity()) return;
     const password = $('#account-signup-password').value;
     if (password !== $('#account-signup-confirm').value) return setStatus('Οι κωδικοί δεν ταιριάζουν.', 'error');
+    const emailRedirectTo = getAuthRedirectUrl();
+    if (!emailRedirectTo) return;
     setBusy(form, true);
     setStatus('Δημιουργία λογαριασμού…');
     const { data, error } = await client.auth.signUp({
       email:$('#account-signup-email').value.trim(),
       password,
-      options:{ emailRedirectTo:window.LogbookSupabaseConfig?.siteUrl },
+      options:{ emailRedirectTo },
     });
     setBusy(form, false);
     if (error) return setStatus('Δεν ήταν δυνατή η δημιουργία λογαριασμού.', 'error');
@@ -297,10 +326,12 @@
     const form = event.currentTarget;
     if (!client || !form.reportValidity()) return;
     const email = $('#account-forgot-email').value.trim();
+    const redirectTo = getAuthRedirectUrl();
+    if (!redirectTo) return;
     setBusy(form, true);
     setStatus('Αποστολή συνδέσμου αλλαγής κωδικού…');
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo:window.LogbookSupabaseConfig?.siteUrl,
+      redirectTo,
     });
     setBusy(form, false);
     if (error) return setStatus('Δεν ήταν δυνατή η αποστολή του συνδέσμου. Δοκιμάστε ξανά.', 'error');
@@ -331,6 +362,36 @@
     button.disabled = false;
     if (error) return;
     dialog.close();
+    renderSession(null);
+  });
+
+  $('#account-delete-accept').addEventListener('click', async () => {
+    if (!client) return;
+    const acceptButton = $('#account-delete-accept');
+    const cancelButton = $('#account-delete-cancel');
+    acceptButton.disabled = true;
+    cancelButton.disabled = true;
+    setDeleteStatus('Γίνεται οριστική διαγραφή του λογαριασμού σας…');
+
+    let error = null;
+    try {
+      ({ error } = await client.rpc('delete_own_account'));
+    } catch (requestError) {
+      error = requestError;
+    }
+
+    if (error) {
+      acceptButton.disabled = false;
+      cancelButton.disabled = false;
+      setDeleteStatus('Δεν ήταν δυνατή η διαγραφή του λογαριασμού. Δοκιμάστε ξανά.', 'error');
+      return;
+    }
+
+    try { await client.auth.signOut({ scope:'local' }); } catch { /* The account is already deleted. */ }
+    acceptButton.disabled = false;
+    cancelButton.disabled = false;
+    if (deleteDialog.open) deleteDialog.close();
+    if (dialog.open) dialog.close();
     renderSession(null);
   });
 

@@ -33,11 +33,14 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
 
-test('athlete profile card uses the compact labels and keeps its motto on one line', () => {
+test('athlete profile card shows the notebook cover with brand mark, polaroid and motto', () => {
   const { document } = loadApp();
-  assert.equal(document.querySelector('.profile-card-top > span').textContent, 'LOGBOOK');
-  assert.equal(document.querySelector('.profile-card-copy > span').textContent, 'ΟΝΟΜΑ');
+  assert.equal(document.querySelectorAll('.profile-card-top .profile-brand-mark i').length, 5);
+  assert.ok(document.querySelector('.profile-polaroid .profile-tape'));
+  assert.ok(document.querySelector('.profile-polaroid-photo #profile-reward-ring'));
+  assert.equal(document.querySelector('#profile-preview-name').textContent, 'ΟΝΟΜΑ');
   assert.equal(document.querySelector('.profile-card-foot > span').textContent, 'TRAIN . LOG . REPEAT');
+  assert.ok(document.querySelector('.profile-card > .profile-elastic'));
   assert.match(styles, /\.profile-card-foot span\s*\{[^}]*white-space:nowrap;/);
 });
 

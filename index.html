@@ -386,16 +386,20 @@
 
         <aside class="profile-preview" aria-label="Προεπισκόπηση προφίλ">
             <div class="profile-card">
-              <div class="profile-card-top"><span>LOGBOOK</span><small id="profile-status">ΝΕΟ ΠΡΟΦΙΛ</small></div>
-              <div class="profile-card-avatar">
-                <div id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
-                  <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
-                  <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
+              <div class="profile-card-top"><span class="profile-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><small id="profile-status">ΝΕΟ ΠΡΟΦΙΛ</small></div>
+              <figure class="profile-polaroid">
+                <span class="profile-tape" aria-hidden="true"></span>
+                <div class="profile-polaroid-photo">
+                  <div id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
+                    <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
+                    <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
+                  </div>
                 </div>
-              </div>
-              <div class="profile-card-copy"><span>ΟΝΟΜΑ</span><h2 id="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</h2></div>
-              <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
+                <figcaption><h2 id="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</h2></figcaption>
+                <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
+              </figure>
               <div class="profile-card-foot"><span>TRAIN . LOG . REPEAT</span></div>
+              <span class="profile-elastic" aria-hidden="true"></span>
             </div>
           </aside>
 
@@ -431,10 +435,24 @@
           <strong id="account-member-email" data-i18n-user></strong>
         </div>
         <p>Η σύνδεση είναι ενεργή σε αυτή τη συσκευή.</p>
-        <button id="account-signout" class="secondary-button" type="button">ΑΠΟΣΥΝΔΕΣΗ</button>
+        <div class="account-member-actions">
+          <button id="account-signout" class="secondary-button" type="button">ΑΠΟΣΥΝΔΕΣΗ</button>
+          <button id="account-delete" class="account-delete-button" type="button">ΔΙΑΓΡΑΦΗ ΛΟΓΑΡΙΑΣΜΟΥ</button>
+        </div>
       </section>
 
       </div>
+    </div>
+  </dialog>
+  <dialog id="account-delete-dialog" class="confirm-dialog account-delete-dialog" aria-labelledby="account-delete-title" aria-describedby="account-delete-message">
+    <div class="confirm-dialog-mark">!</div>
+    <p class="eyebrow">ΜΗ ΑΝΑΣΤΡΕΨΙΜΗ ΕΝΕΡΓΕΙΑ</p>
+    <h2 id="account-delete-title">Οριστική διαγραφή λογαριασμού</h2>
+    <p id="account-delete-message" class="confirm-dialog-message">Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά τον λογαριασμό σας; Όλα τα συγχρονισμένα δεδομένα σας θα διαγραφούν από τη βάση και δεν θα μπορούν να ανακτηθούν. Τα τοπικά δεδομένα θα παραμείνουν σε αυτή τη συσκευή.</p>
+    <p id="account-delete-status" class="account-delete-status hidden" role="status" aria-live="polite"></p>
+    <div class="confirm-dialog-actions">
+      <button id="account-delete-cancel" class="secondary-button" type="button">ΑΚΥΡΩΣΗ</button>
+      <button id="account-delete-accept" class="confirm-delete-button" type="button">ΝΑΙ, ΔΙΑΓΡΑΦΗ</button>
     </div>
   </dialog>
   <div id="toast" class="toast" role="status"></div>
