@@ -177,6 +177,8 @@ function renderHome() {
   $('#daily-quote-text').textContent = quote?.text || '—';
   $('#daily-quote-author').textContent = quote?.author || 'Logbook';
   $('#quote-index').textContent = dailyQuotes.length ? `${String(quoteIndex + 1).padStart(2, '0')} / ${String(dailyQuotes.length).padStart(2, '0')}` : '00 / 00';
+  const loggedToday = state.sessions.some(session => session.date === localDateInputValue());
+  $('#home-rest-stamp')?.classList.toggle('hidden', !loggedToday);
   renderHomeProfileCard();
   renderHomeRoutineCard();
 }
@@ -521,7 +523,7 @@ function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) 
       <form class="routine-inline-form" data-routine-rename-form="${esc(routine.id)}"><label>Όνομα προγράμματος<input class="routine-inline-name" type="text" maxlength="50" value="${esc(routine.name)}" required></label><div><button class="routine-inline-save" type="submit" aria-label="Αποθήκευση ονόματος">✓</button><button class="routine-inline-cancel" data-cancel-routine-edit type="button" aria-label="Ακύρωση μετονομασίας">×</button></div></form>
     </article>`;
     return `<article class="routine-card ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <div class="routine-topline"><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
+      <div class="routine-topline"><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-view" data-view-routine="${esc(routine.id)}" type="button" aria-label="Προβολή πλάνου"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button><button class="routine-add-workout" data-add-routine-workout="${esc(routine.id)}" type="button" aria-label="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="routine-duplicate" data-duplicate-routine="${esc(routine.id)}" type="button" aria-label="Αντιγραφή προγράμματος"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
       <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><strong data-i18n-user>${esc(routine.name)}</strong><small class="routine-day-count">${dayCount} ${dayCount === 1 ? 'ημέρα προπόνησης' : 'ημέρες προπόνησης'}</small></button>
       <span class="routine-stub"><span>ΔΙΑΡΚΕΙΑ: ${routine.cycleLength || 7} ΗΜΕΡΕΣ</span></span>
     </article>`;
@@ -533,6 +535,68 @@ function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) 
 
 function scrollRoutineTickets(direction) {
   updateRoutineCarousel(routineCarouselIndex + direction);
+}
+
+function selectRoutineForPlan(routineId) {
+  const routine = state.routines.find(item => item.id === routineId);
+  if (!routine) return null;
+  state.selectedRoutineId = routine.id;
+  resetPlanForm();
+  renderRoutines({ centerRoutineId:routine.id });
+  renderPlan();
+  return routine;
+}
+
+function showPlanDialog(dialog) {
+  window.LogbookI18n?.translate(dialog);
+  if (!dialog.open) dialog.showModal();
+}
+
+function openPlanOverview(routineId) {
+  if (!selectRoutineForPlan(routineId)) return;
+  showPlanDialog($('#plan-overview-dialog'));
+}
+
+function openPlanWorkout(routineId) {
+  if (!selectRoutineForPlan(routineId)) return;
+  showPlanDialog($('#plan-workout-dialog'));
+}
+
+function duplicateRoutineName(name) {
+  const base = String(name || 'Πρόγραμμα').replace(/\s+\(\d+\)$/, '').trim() || 'Πρόγραμμα';
+  const names = new Set(state.routines.map(routine => routine.name));
+  let copyNumber = 1;
+  let candidate = '';
+  do {
+    const suffix = ` (${copyNumber})`;
+    candidate = `${base.slice(0, Math.max(1, 50 - suffix.length)).trimEnd()}${suffix}`;
+    copyNumber += 1;
+  } while (names.has(candidate));
+  return candidate;
+}
+
+function duplicateRoutine(routineId) {
+  const source = state.routines.find(routine => routine.id === routineId);
+  if (!source) return;
+  const duplicate = {
+    ...source,
+    id:id(),
+    name:duplicateRoutineName(source.name),
+    isActive:false,
+    plan:(source.plan || []).map(item => ({
+      ...item,
+      id:id(),
+      sets:Array.isArray(item.sets) ? item.sets.map(set => ({ ...set })) : [],
+    })),
+  };
+  const nextRoutines = [...state.routines, duplicate];
+  if (!safeStoreWrite('trainingRoutines', nextRoutines)) return;
+  state.routines = nextRoutines;
+  state.selectedRoutineId = duplicate.id;
+  resetPlanForm();
+  renderRoutines({ centerRoutineId:duplicate.id });
+  renderPlan();
+  toast(`Το «${duplicate.name}» δημιουργήθηκε`);
 }
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
@@ -610,7 +674,8 @@ function loadDayForEdit(day) {
   $('#plan-form-title').textContent = `Επεξεργασία · ${cycleDayLabel(routine, cycleDay)}`;
   $('#plan-submit').innerHTML = `${routine.usesWeekdays === false ? 'Ενημέρωση προπόνησης' : 'Ενημέρωση ημέρας'}`;
   $('#cancel-plan-edit').classList.remove('hidden');
-  $('#plan-form').scrollIntoView({ behavior:'smooth', block:'start' });
+  if ($('#plan-overview-dialog').open) $('#plan-overview-dialog').close();
+  showPlanDialog($('#plan-workout-dialog'));
 }
 
 function resetPlanForm() {
@@ -861,7 +926,7 @@ function renderProgressChart() {
   const comparableGroup = Object.entries(groupCounts).sort((a,b) => b[1] - a[1])[0]?.[0];
   const points = records.filter(item => item.group === comparableGroup).sort((a,b) => a.session.date.localeCompare(b.session.date));
   const excluded = records.filter(item => !item.group || item.group !== comparableGroup);
-  if (!comparableGroup || points.length < 2) { panel.innerHTML = '<div class="recording-warning"><strong>Δεν υπάρχει ασφαλής σύγκριση.</strong><p>Χρειάζονται τουλάχιστον δύο καταγραφές της άσκησης με συγκρίσιμη μονάδα βάρους. Οι Πλάκες συγκρίνονται με τις Πλάκες + Κιλά και το Σωματικό βάρος με το Σωματικό βάρος + kg.</p></div>'; return; }
+  if (!comparableGroup || points.length < 2) { panel.innerHTML = '<div class="recording-warning"><p>Χρειάζονται τουλάχιστον δύο καταγραφές της άσκησης με συγκρίσιμη μονάδα βάρους.</p></div>'; return; }
   const height=340, left=64, right=28, top=28, bottom=76, panelWidth=panel.clientWidth || 900;
   const width=Math.max(panelWidth, 320);
   // Plates chart on one line: extra kg counts as a fraction of a plate (assumed 5 kg step, capped just
@@ -1427,6 +1492,16 @@ $('#session-detail-dialog').addEventListener('click', event => {
 $('#session-detail-dialog').addEventListener('close', () => {
   state.openSessionId = null;
 });
+$$('[data-close-plan-dialog]').forEach(button => button.addEventListener('click', () => {
+  const dialog = button.closest('dialog');
+  if (dialog?.open) dialog.close();
+}));
+[$('#plan-overview-dialog'), $('#plan-workout-dialog')].forEach(dialog => {
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) dialog.close();
+  });
+});
+$('#plan-workout-dialog').addEventListener('close', () => resetPlanForm());
 document.addEventListener('keydown', event => {
   const sessionSummary = event.target.closest?.('.session-summary[data-view-session]');
   const routineList = event.target.closest?.('#routine-list');
@@ -1640,6 +1715,7 @@ $('#plan-form').addEventListener('submit', event => {
     if (!persistRoutines()) { routine.plan = plan; return; }
     if (updateHistory && !syncPlanChangesToHistory(routine.id, sourceDay, day, previousItems, exercises)) return;
     resetPlanForm(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview();
+    if ($('#plan-workout-dialog').open) $('#plan-workout-dialog').close();
     toast(updateHistory ? 'Το Πρόγραμμα και το Ιστορικό ενημερώθηκαν ✓' : sourceDay ? 'Ενημερώθηκε μόνο το Πρόγραμμα' : `Η προπόνηση για ${cycleDayLabel(routine, day)} αποθηκεύτηκε`);
   };
   const renamedWorkout = previousItems.length && previousItems[0].workoutName !== workoutName;
@@ -1750,10 +1826,16 @@ document.addEventListener('click', event => {
   const selectRoutineButton = event.target.closest('[data-select-routine]');
   const scrollRoutineButton = event.target.closest('[data-routine-scroll]');
   const activateRoutineButton = event.target.closest('[data-activate-routine]');
+  const viewRoutineButton = event.target.closest('[data-view-routine]');
+  const addRoutineWorkoutButton = event.target.closest('[data-add-routine-workout]');
+  const duplicateRoutineButton = event.target.closest('[data-duplicate-routine]');
   const renameRoutineButton = event.target.closest('[data-rename-routine]');
   const deleteRoutineButton = event.target.closest('[data-delete-routine]');
   const cancelRoutineEditButton = event.target.closest('[data-cancel-routine-edit]');
   if (scrollRoutineButton) scrollRoutineTickets(Number(scrollRoutineButton.dataset.routineScroll));
+  if (viewRoutineButton) openPlanOverview(viewRoutineButton.dataset.viewRoutine);
+  if (addRoutineWorkoutButton) openPlanWorkout(addRoutineWorkoutButton.dataset.addRoutineWorkout);
+  if (duplicateRoutineButton) duplicateRoutine(duplicateRoutineButton.dataset.duplicateRoutine);
   if (selectRoutineButton) {
     state.selectedRoutineId = selectRoutineButton.dataset.selectRoutine;
     resetPlanForm();

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Σφραγίδα «GROWTH COMES WITH REST» — προπόνηση καταγράφηκε</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --stamp:rgba(66,64,54,.82); --rule:rgba(21,19,13,.05); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 100px; }
+  h1.page { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; letter-spacing:-.02em; }
+  .intro { color:var(--muted); max-width:820px; line-height:1.55; margin:0 0 44px; }
+  .intro b { color:var(--orange); }
+
+  .variant { margin-bottom:60px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; }
+  .variant-title b { font-family:"Roboto Slab",serif; font-weight:700; color:var(--orange); font-size:1.05rem; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.2rem; margin:0; }
+  .variant-note { color:var(--muted); margin:0 0 18px; max-width:760px; line-height:1.5; }
+
+  /* ---- context: a logged training page the stamp lands on ---- */
+  .page-mock { position:relative; background:var(--paper); border:1px solid var(--line);
+    background-image:linear-gradient(90deg,var(--rule) 1px,transparent 1px); background-size:34px 34px;
+    padding:34px clamp(24px,4vw,56px) 40px; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); }
+  .page-mock .date { margin:0 0 6px; color:var(--muted); font-size:.68rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; }
+  .page-mock .done { margin:0 0 22px; font-family:"Roboto Slab",serif; font-weight:700; font-size:clamp(1.5rem,3vw,2.2rem); text-transform:uppercase; letter-spacing:-.02em; }
+  .page-mock .done em { font-style:normal; color:var(--orange); }
+  .logrow { display:flex; justify-content:space-between; align-items:baseline; max-width:420px; padding:9px 0; border-bottom:1px solid var(--rule); font-size:.95rem; }
+  .logrow span:first-child { font-weight:700; }
+  .logrow span:last-child { font-family:"Roboto Slab",serif; color:var(--muted); font-size:.85rem; letter-spacing:.02em; }
+  .logrow.faint { opacity:.5; }
+
+  /* the stamp gets absolutely slapped onto the lower-right of the page */
+  .slap { position:absolute; z-index:3; pointer-events:none; }
+
+  /* ============================================================
+     Shared stamp ink treatment
+     ============================================================ */
+  .ink { color:var(--stamp); mix-blend-mode:multiply; }
+  .seal text { fill:currentColor; }
+  .seal-ring { fill:none; stroke:currentColor; }
+  .fig { fill:currentColor; }
+
+  /* ---------- A: circular seal ---------- */
+  .seal-a { width:200px; height:200px; filter:url(#press-med); }
+  .seal-a .arc { font:800 15.5px/1 "Alegreya Sans",sans-serif; letter-spacing:.34em; }
+  .seal-a .center-word { font:700 15px "Roboto Slab",serif; letter-spacing:.12em; text-transform:uppercase; text-anchor:middle; }
+  .slap-a { right:5%; bottom:8%; transform:rotate(-13deg); }
+
+  /* ---------- B: horizontal badge (matches history stamp) ---------- */
+  .badge-b { display:flex; align-items:center; gap:16px; padding:14px 20px; color:var(--stamp);
+    border:2.5px solid currentColor; filter:url(#press-med); mix-blend-mode:multiply; }
+  .badge-b .word { font:700 clamp(2.4rem,4vw,3.2rem)/.82 "Roboto Slab",serif; letter-spacing:-.05em; }
+  .badge-b .stack { display:flex; flex-direction:column; gap:3px; }
+  .badge-b .stack em { font-style:normal; font:800 .62rem/1 "Alegreya Sans",sans-serif; letter-spacing:.22em; }
+  .badge-b .stack em.sub { color:currentColor; opacity:.72; letter-spacing:.14em; font-weight:700; }
+  .badge-b svg { width:46px; height:46px; flex:none; }
+  .slap-b { right:4%; bottom:12%; transform:rotate(-6deg); }
+
+  /* ---------- C: postmark oval ---------- */
+  .oval-c { width:230px; height:150px; filter:url(#press-light); }
+  .oval-c .arc { font:800 12.5px/1 "Alegreya Sans",sans-serif; letter-spacing:.26em; }
+  .oval-c .bars line { stroke:currentColor; stroke-width:2; opacity:.55; }
+  .oval-c .grow { font:700 26px "Roboto Slab",serif; letter-spacing:.04em; text-anchor:middle; text-transform:uppercase; }
+  .slap-c { right:3%; bottom:6%; transform:rotate(-8deg); }
+
+  /* ---------- D: stacked block ---------- */
+  .block-d { display:flex; align-items:center; gap:18px; padding:16px 22px; color:var(--stamp);
+    border:2.5px solid currentColor; border-style:double; filter:url(#press-light); mix-blend-mode:multiply; }
+  .block-d .lines { display:flex; flex-direction:column; line-height:.92; font-family:"Roboto Slab",serif; font-weight:700; }
+  .block-d .lines span { font-size:clamp(1.5rem,2.6vw,2rem); letter-spacing:-.03em; text-transform:uppercase; }
+  .block-d .lines span em { font-style:normal; color:currentColor; }
+  .block-d .tag { font:800 .58rem/1.4 "Alegreya Sans",sans-serif; letter-spacing:.16em; text-transform:uppercase; opacity:.72; margin-top:6px; }
+  .block-d svg { width:58px; height:58px; flex:none; }
+  .slap-d { right:5%; bottom:9%; transform:rotate(-7deg); }
+
+  /* ---------- E: diagonal ribbon banner ---------- */
+  .ribbon-e { width:260px; filter:url(#press-med); }
+  .ribbon-e .band { fill:none; stroke:currentColor; stroke-width:2.5; }
+  .ribbon-e .txt { font:700 17px "Roboto Slab",serif; letter-spacing:.02em; text-anchor:middle; fill:currentColor; text-transform:uppercase; }
+  .ribbon-e .sub { font:800 8.5px "Alegreya Sans",sans-serif; letter-spacing:.24em; text-anchor:middle; fill:currentColor; }
+  .slap-e { right:2%; bottom:14%; transform:rotate(-9deg); }
+
+  /* ---------- isolated swatch row for the two motifs ---------- */
+  .motif-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-top:8px; }
+  .motif-cell { background:var(--paper); border:1px solid var(--line); padding:22px 10px 14px; display:grid; place-items:center; gap:10px; }
+  .motif-cell svg { width:110px; height:110px; color:var(--stamp); }
+  .motif-cell figcaption { color:var(--muted); font:800 .66rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; }
+
+  @media(max-width:640px){
+    .slap { position:static; display:block; margin:26px auto 0; transform:none !important; }
+    .page-mock { text-align:left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ shared SVG defs: ink filters + the sleep/food motifs ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="press-light" x="-12%" y="-12%" width="124%" height="124%">
+    <feTurbulence type="fractalNoise" baseFrequency=".09 .07" numOctaves="4" seed="11" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.1 -.5" result="holes"/>
+    <feComposite in="SourceGraphic" in2="holes" operator="in"/>
+  </filter>
+  <filter id="press-med" x="-14%" y="-14%" width="128%" height="128%">
+    <feTurbulence type="fractalNoise" baseFrequency=".11 .09" numOctaves="4" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.5" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.5 -.72" result="holes"/>
+    <feComposite in="rough" in2="holes" operator="in"/>
+  </filter>
+
+  <!-- combined nightstand scene: crescent moon + Zzz (sleep) over a steaming bowl (food) -->
+  <symbol id="motif-scene" viewBox="0 0 120 120">
+    <!-- moon -->
+    <path class="fig" d="M34 18a20 20 0 1 0 15 33 16 16 0 1 1-15-33Z"/>
+    <!-- Zzz -->
+    <path class="fig" d="M78 20h13l-13 13h13v4H72v-4l13-13H78zM94 38h10l-10 10h10v3H88v-3l10-10h-6zM104 52h8l-8 8h8v3H98v-3l8-8h-4z"/>
+    <!-- steam -->
+    <path class="fig" d="M50 60c-5-6 3-9-2-16l3-1c6 8-3 11 2 17zM68 60c-5-6 3-9-2-16l3-1c6 8-3 11 2 17z" opacity=".85"/>
+    <!-- bowl -->
+    <path class="fig" d="M26 68h68a34 22 0 0 1-68 0Z"/>
+    <ellipse class="fig" cx="60" cy="68" rx="34" ry="6"/>
+    <path class="fig" d="M46 92h28l-4 8H50Z"/>
+  </symbol>
+
+  <!-- fork + knife crossed -->
+  <symbol id="motif-cutlery" viewBox="0 0 120 120">
+    <g transform="rotate(-18 60 60)">
+      <path class="fig" d="M40 16h4v18a6 6 0 0 1-4 5.6V104h-4V39.6a6 6 0 0 1-4-5.6V16h4v16h4V16h4v16h0Z"/>
+    </g>
+    <g transform="rotate(18 60 60)">
+      <path class="fig" d="M82 16c9 0 12 22 4 40l-2 4v44h-4V52h-6c0-20 3-36 8-36Z"/>
+    </g>
+  </symbol>
+
+  <!-- moon + Zzz only -->
+  <symbol id="motif-sleep" viewBox="0 0 120 120">
+    <path class="fig" d="M40 24a30 30 0 1 0 22 50 24 24 0 1 1-22-50Z"/>
+    <path class="fig" d="M84 26h16l-16 16h16v5H78v-5l16-16h-10zM104 48h12l-12 12h12v4H98v-4l12-12h-6z"/>
+  </symbol>
+</defs></svg>
+
+<h1 class="page">Σφραγίδα ξεκούρασης — «GROWTH COMES WITH REST»</h1>
+<p class="intro">Όταν ο χρήστης <b>έχει καταγράψει την προπόνηση της ημέρας</b>, η σελίδα του «σφραγίζεται»: η δουλειά έγινε, τώρα χτίζεται στην ξεκούραση. Πέντε παραλλαγές σφραγίδας στο ύφος που ήδη έχουμε (πατημένο μελάνι, multiply, ελαφριά κλίση), με σύντομο <b>gym-community μότο</b> — η ανάπτυξη έρχεται με την ξεκούραση — και ένα σχεδιάκι που δηλώνει <b>ύπνο</b> (μισοφέγγαρο + Zzz) και <b>φαγητό</b> (μπολ που αχνίζει). Όλα τα εικονίδια είναι δικά μας SVG σε currentColor — κανένα emoji, μία μόνο μελανιά.</p>
+
+<!-- ================= A ================= -->
+<section class="variant">
+  <div class="variant-title"><b>A</b><h2>Στρογγυλή σφραγίδα — το κλασικό «πάτημα»</h2></div>
+  <p class="variant-note">Η υπογραφή της πρότασης: κυκλική σφραγίδα με το μότο καμπυλωτό στο δαχτυλίδι («GROWTH COMES» πάνω, «WITH REST» κάτω) και στο κέντρο τη μικρή σκηνή ύπνου+φαγητού. Πέφτει πλάγια στην κάτω-δεξιά γωνία της καταγραμμένης σελίδας, σαν σφραγίδα σε τιμολόγιο.</p>
+  <div class="page-mock">
+    <p class="date">ΠΕΜΠΤΗ · 18 ΙΟΥΛΙΟΥ 2026</p>
+    <p class="done">Η ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ <em>ΚΑΤΑΓΡΑΦΗΚΕ</em></p>
+    <div class="logrow"><span>Squat</span><span>5 × 5 · 110 kg</span></div>
+    <div class="logrow"><span>Bench Press</span><span>5 × 5 · 82.5 kg</span></div>
+    <div class="logrow"><span>Barbell Row</span><span>5 × 5 · 75 kg</span></div>
+    <div class="logrow faint"><span>Σύνολο όγκου</span><span>7.480 kg</span></div>
+    <div class="slap slap-a">
+      <svg class="seal seal-a ink" viewBox="0 0 200 200" role="img" aria-label="Growth comes with rest">
+        <defs>
+          <path id="arcTopA" d="M100 100 m-78 0 a78 78 0 0 1 156 0"/>
+          <path id="arcBotA" d="M100 100 m78 0 a78 78 0 0 1 -156 0"/>
+        </defs>
+        <circle class="seal-ring" cx="100" cy="100" r="94" stroke-width="3"/>
+        <circle class="seal-ring" cx="100" cy="100" r="84" stroke-width="1.4"/>
+        <text class="arc"><textPath href="#arcTopA" startOffset="50%" text-anchor="middle">GROWTH COMES</textPath></text>
+        <text class="arc"><textPath href="#arcBotA" startOffset="50%" text-anchor="middle">WITH REST</textPath></text>
+        <use href="#motif-scene" x="55" y="46" width="90" height="90"/>
+        <circle class="fig" cx="30" cy="100" r="2.6"/>
+        <circle class="fig" cx="170" cy="100" r="2.6"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="variant">
+  <div class="variant-title"><b>B</b><h2>Οριζόντιο badge — «REST»</h2></div>
+  <p class="variant-note">Στο ύφος της σφραγίδας ιστορικού: μία μεγάλη λέξη <b>REST</b> και δίπλα το μότο σε δύο σειρές. Το εικονίδιο ύπνου+φαγητού μπαίνει αριστερά. Πιο «τυπογραφικό», κάθεται καλά και σε στενό πλάτος.</p>
+  <div class="page-mock">
+    <p class="date">ΠΕΜΠΤΗ · 18 ΙΟΥΛΙΟΥ 2026</p>
+    <p class="done">Η ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ <em>ΚΑΤΑΓΡΑΦΗΚΕ</em></p>
+    <div class="logrow"><span>Deadlift</span><span>3 × 5 · 140 kg</span></div>
+    <div class="logrow"><span>Overhead Press</span><span>5 × 5 · 50 kg</span></div>
+    <div class="logrow"><span>Pull-ups</span><span>4 × 8 · BW</span></div>
+    <div class="slap slap-b">
+      <div class="badge-b">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><use href="#motif-scene" width="120" height="120"/></svg>
+        <div class="word">REST</div>
+        <div class="stack">
+          <em>GROWTH LIVES HERE</em>
+          <em class="sub">EAT · SLEEP · REPEAT</em>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="variant">
+  <div class="variant-title"><b>C</b><h2>Postmark — «RECOVERY LOGGED»</h2></div>
+  <p class="variant-note">Οβάλ σφραγίδα ταχυδρομείου: «RECOVERY LOGGED» πάνω, «EAT · SLEEP · GROW» κάτω, και στο κέντρο η λέξη <b>GROW</b> με τις χαρακτηριστικές γραμμές ακύρωσης του γραμματοσήμου. Η πιο «documentary» εκδοχή — μοιάζει με σφραγίδα αρχείου.</p>
+  <div class="page-mock">
+    <p class="date">ΠΕΜΠΤΗ · 18 ΙΟΥΛΙΟΥ 2026</p>
+    <p class="done">Η ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ <em>ΚΑΤΑΓΡΑΦΗΚΕ</em></p>
+    <div class="logrow"><span>Front Squat</span><span>4 × 6 · 90 kg</span></div>
+    <div class="logrow"><span>Incline DB Press</span><span>3 × 10 · 30 kg</span></div>
+    <div class="logrow"><span>Leg Curl</span><span>3 × 12 · 45 kg</span></div>
+    <div class="slap slap-c">
+      <svg class="seal oval-c ink" viewBox="0 0 230 150" role="img" aria-label="Recovery logged — eat sleep grow">
+        <defs>
+          <path id="arcTopC" d="M115 75 m-96 0 a96 62 0 0 1 192 0"/>
+          <path id="arcBotC" d="M115 75 m96 0 a96 62 0 0 1 -192 0"/>
+        </defs>
+        <ellipse class="seal-ring" cx="115" cy="75" rx="104" ry="68" stroke-width="2.6"/>
+        <ellipse class="seal-ring" cx="115" cy="75" rx="96" ry="61" stroke-width="1.2"/>
+        <text class="arc"><textPath href="#arcTopC" startOffset="50%" text-anchor="middle">RECOVERY LOGGED</textPath></text>
+        <text class="arc"><textPath href="#arcBotC" startOffset="50%" text-anchor="middle">EAT · SLEEP · GROW</textPath></text>
+        <g class="bars">
+          <line x1="55" y1="60" x2="175" y2="60"/><line x1="55" y1="90" x2="175" y2="90"/>
+        </g>
+        <text class="grow" x="115" y="84">GROW</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ================= D ================= -->
+<section class="variant">
+  <div class="variant-title"><b>D</b><h2>Στοιβαγμένο — «EAT / SLEEP / GROW»</h2></div>
+  <p class="variant-note">Το θρυλικό gym μότο σε τρεις σειρές, με διπλό περίγραμμα και τα δύο εικονίδια (ύπνος αριστερά, φαγητό στη σκηνή). Κάτω μικρή σημείωση: «η δουλειά έγινε — τώρα μεγαλώνεις». Καθαρό, ευανάγνωστο ακόμα και μικρό.</p>
+  <div class="page-mock">
+    <p class="date">ΠΕΜΠΤΗ · 18 ΙΟΥΛΙΟΥ 2026</p>
+    <p class="done">Η ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ <em>ΚΑΤΑΓΡΑΦΗΚΕ</em></p>
+    <div class="logrow"><span>Hip Thrust</span><span>4 × 8 · 100 kg</span></div>
+    <div class="logrow"><span>Lat Pulldown</span><span>3 × 12 · 60 kg</span></div>
+    <div class="logrow"><span>Plank</span><span>3 × 60 s</span></div>
+    <div class="slap slap-d">
+      <div class="block-d">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><use href="#motif-sleep" width="120" height="120"/></svg>
+        <div>
+          <div class="lines"><span>EAT</span><span>SLEEP</span><span><em>GROW</em></span></div>
+          <div class="tag">η δουλειά έγινε — τώρα μεγαλώνεις</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= E ================= -->
+<section class="variant">
+  <div class="variant-title"><b>E</b><h2>Κορδέλα — «GROWTH HAPPENS AT REST»</h2></div>
+  <p class="variant-note">Σφραγίδα-μπάνερ: το πλήρες μότο σε κορδέλα, με τα εικονίδια ύπνου και φαγητού στα δύο άκρα. Πιο «award / seal of the day» αίσθηση — δίνει μια μικρή τελετουργική επιβράβευση στο κλείσιμο της ημέρας.</p>
+  <div class="page-mock">
+    <p class="date">ΠΕΜΠΤΗ · 18 ΙΟΥΛΙΟΥ 2026</p>
+    <p class="done">Η ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ <em>ΚΑΤΑΓΡΑΦΗΚΕ</em></p>
+    <div class="logrow"><span>Romanian Deadlift</span><span>4 × 8 · 90 kg</span></div>
+    <div class="logrow"><span>Dips</span><span>4 × 10 · BW+10</span></div>
+    <div class="logrow"><span>Face Pull</span><span>3 × 15 · 25 kg</span></div>
+    <div class="slap slap-e">
+      <svg class="seal ribbon-e ink" viewBox="0 0 260 120" role="img" aria-label="Growth happens at rest">
+        <path class="band" d="M20 34h220v40H20Z"/>
+        <path class="band" d="M20 34l-14 20 14 20M240 34l14 20-14 20"/>
+        <use href="#motif-sleep" x="26" y="30" width="48" height="48"/>
+        <use href="#motif-scene" x="186" y="30" width="48" height="48"/>
+        <text class="txt" x="130" y="52">GROWTH HAPPENS</text>
+        <text class="txt" x="130" y="70">AT REST</text>
+        <text class="sub" x="130" y="98">EARNED TODAY · BUILT TONIGHT</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ================= motif check ================= -->
+<section class="variant">
+  <div class="variant-title"><b>·</b><h2>Τα μοτίβα σε πλήρες μελάνι (έλεγχος σχήματος)</h2></div>
+  <p class="variant-note">Τα εικονίδια χωρίς φθορά, για να κριθεί το σχέδιο. Ό,τι επιλεγεί μπαίνει μέσα στη σφραγίδα με το πατημένο μελάνι.</p>
+  <div class="motif-row">
+    <figure class="motif-cell"><svg viewBox="0 0 120 120"><use href="#motif-scene" width="120" height="120"/></svg><figcaption>Ύπνος + Φαΐ (σκηνή)</figcaption></figure>
+    <figure class="motif-cell"><svg viewBox="0 0 120 120"><use href="#motif-sleep" width="120" height="120"/></svg><figcaption>Ύπνος — μισοφέγγαρο + Zzz</figcaption></figure>
+    <figure class="motif-cell"><svg viewBox="0 0 120 120"><use href="#motif-cutlery" width="120" height="120"/></svg><figcaption>Φαΐ — πιρούνι + μαχαίρι</figcaption></figure>
+  </div>
+</section>
+
+</body>
+</html>

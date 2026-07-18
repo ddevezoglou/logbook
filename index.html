@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="app-booting">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="flex-icon" viewBox="0 0 24 24"><path d="M3 18.34C3 18.34 4 7.09 7 3L12 4L11 7.09H9V14.25H10C12 11.18 16.14 10.06 18.64 11.18C21.94 12.71 21.64 17.32 18.64 19.36C16.24 21 9 22.43 3 18.34Z"/></symbol><symbol id="dumbbell-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L8.43 7L12 3.43L10.57 2L9.14 3.43L7.71 2L5.57 4.14L4.14 2.71L2.71 4.14L4.14 5.57L2 7.71L3.43 9.14L2 10.57L3.43 12L7 8.43L15.57 17L12 20.57L13.43 22L14.86 20.57L16.29 22L18.43 19.86L19.86 21.29L21.29 19.86L19.86 18.43L22 16.29L20.57 14.86Z"/></symbol><filter id="press-light" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".09 .07" numOctaves="4" seed="11" result="noise"/><feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -.55" result="holes"/><feComposite in="SourceGraphic" in2="holes" operator="in"/></filter></svg>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="flex-icon" viewBox="0 0 24 24"><path d="M3 18.34C3 18.34 4 7.09 7 3L12 4L11 7.09H9V14.25H10C12 11.18 16.14 10.06 18.64 11.18C21.94 12.71 21.64 17.32 18.64 19.36C16.24 21 9 22.43 3 18.34Z"/></symbol><symbol id="dumbbell-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L8.43 7L12 3.43L10.57 2L9.14 3.43L7.71 2L5.57 4.14L4.14 2.71L2.71 4.14L4.14 5.57L2 7.71L3.43 9.14L2 10.57L3.43 12L7 8.43L15.57 17L12 20.57L13.43 22L14.86 20.57L16.29 22L18.43 19.86L19.86 21.29L21.29 19.86L19.86 18.43L22 16.29L20.57 14.86Z"/></symbol><symbol id="bed-icon" viewBox="0 0 24 24"><path d="M19,7H11V14H3V5H1V20H3V17H21V20H23V11A4,4 0 0,0 19,7M7,13A3,3 0 0,0 10,10A3,3 0 0,0 7,7A3,3 0 0,0 4,10A3,3 0 0,0 7,13Z"/></symbol><symbol id="cutlery-icon" viewBox="0 0 24 24"><path d="M11,9H9V2H7V9H5V2H3V9C3,11.12 4.66,12.84 6.75,12.97V22H9.25V12.97C11.34,12.84 13,11.12 13,9V2H11V9M16,6V14H18.5V22H21V2C18.24,2 16,4.24 16,6Z"/></symbol><filter id="press-light" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".09 .07" numOctaves="4" seed="11" result="noise"/><feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -.55" result="holes"/><feComposite in="SourceGraphic" in2="holes" operator="in"/></filter></svg>
   <section id="auth-gate" class="auth-gate" data-state="checking" aria-labelledby="auth-gate-title">
     <div class="auth-gate-book">
       <div class="auth-gate-page auth-gate-page-left" aria-hidden="true">
@@ -133,7 +133,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version" aria-label="Application version 0.5.1"><i>VERSION</i><b>0.5.1</b></span>
+      <span class="app-version" aria-label="Application version 0.6.0"><i>VERSION</i><b>0.6.0</b></span>
     </div>
   </aside>
 
@@ -176,6 +176,7 @@
             <button type="button" data-home-action="plan"><span>ΠΡΟΓΡΑΜΜΑ</span></button>
             <button type="button" data-home-action="overview"><span>ΙΣΤΟΡΙΚΟ</span></button>
           </div>
+          <span id="home-rest-stamp" class="home-rest-stamp hidden" role="status" aria-label="Η σημερινή προπόνηση καταγράφηκε — η ανάπτυξη έρχεται με την ξεκούραση"><svg aria-hidden="true"><use href="#bed-icon"/></svg><span class="txt">GROWTH HAPPENS IN THE REST, NOT THE DOING</span><svg aria-hidden="true"><use href="#cutlery-icon"/></svg></span>
         </div>
 
         <article class="daily-quote" aria-labelledby="daily-quote-label">
@@ -279,24 +280,6 @@
           </div>
         </div>
       </section>
-      <div class="workspace">
-        <form id="plan-form" class="sheet">
-          <div class="sheet-heading"><div><span id="selected-routine-label"></span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div></div>
-          <div class="field-grid two">
-            <label id="plan-day-field"><span id="plan-day-label">Ημέρα</span><select id="plan-day" required></select></label>
-            <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
-            <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
-          </div>
-          <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span></div>
-          <div id="plan-exercises-container" class="plan-exercise-builder"></div>
-          <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας</button></div>
-        </form>
-        <aside class="history-panel">
-          <div class="panel-title"><div><h2 id="plan-board-title">ΤΟ ΠΛΑΝΟ ΣΑΣ</h2></div><strong id="plan-count"></strong></div>
-          <div id="plan-list" class="week-plan"></div>
-          <div class="motto-stamp plan-motto" aria-hidden="true"><svg><use href="#flex-icon"/></svg>TRUST THE PROCESS<svg class="flip"><use href="#flex-icon"/></svg></div>
-        </aside>
-      </div>
     </section>
 
     <section class="view" id="overview-view">
@@ -406,7 +389,6 @@
               <button id="profile-avatar-upload-button" class="profile-photo-upload" type="button"><span class="plus" aria-hidden="true">+</span>ΑΝΕΒΑΣΜΑ ΝΕΑΣ<small id="avatar-upload-status">JPG, PNG ή WEBP</small></button>
             </div>
             <input id="profile-avatar-upload" class="hidden" type="file" accept="image/jpeg,image/png,image/webp">
-            <p class="profile-photo-note">Ό,τι ανεβάζετε μένει εδώ για να το ξαναδιαλέξετε αργότερα.</p>
           </aside>
 
           <aside id="profile-date-slip" class="profile-slip hidden" aria-label="Ημερομηνία γέννησης">
@@ -425,6 +407,32 @@
       </div>
     </section>
   </main>
+  <dialog id="plan-overview-dialog" class="plan-dialog plan-overview-dialog" aria-labelledby="plan-board-title">
+    <div class="plan-dialog-paper">
+      <button class="plan-dialog-close" type="button" data-close-plan-dialog="overview" aria-label="Κλείσιμο πλάνου">×</button>
+      <aside class="history-panel">
+        <div class="panel-title"><div><h2 id="plan-board-title">ΤΟ ΠΛΑΝΟ ΣΑΣ</h2></div><strong id="plan-count"></strong></div>
+        <div id="plan-list" class="week-plan"></div>
+        <div class="motto-stamp plan-motto" aria-hidden="true"><svg><use href="#flex-icon"/></svg>TRUST THE PROCESS<svg class="flip"><use href="#flex-icon"/></svg></div>
+      </aside>
+    </div>
+  </dialog>
+  <dialog id="plan-workout-dialog" class="plan-dialog plan-workout-dialog" aria-labelledby="plan-form-title">
+    <div class="plan-dialog-paper">
+      <button class="plan-dialog-close" type="button" data-close-plan-dialog="workout" aria-label="Κλείσιμο προπόνησης">×</button>
+      <form id="plan-form" class="sheet">
+        <div class="sheet-heading"><div><span id="selected-routine-label"></span><h2 id="plan-form-title">Νέα προπόνηση ημέρας</h2></div></div>
+        <div class="field-grid two">
+          <label id="plan-day-field"><span id="plan-day-label">Ημέρα</span><select id="plan-day" required></select></label>
+          <label>Όνομα προπόνησης<input id="workout-name" type="text" placeholder="π.χ. Push, Upper A" required></label>
+          <label>Αριθμός ασκήσεων<input id="exercise-count" type="number" min="1" max="15" value="3" required></label>
+        </div>
+        <div class="exercise-builder-heading"><span>ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ</span></div>
+        <div id="plan-exercises-container" class="plan-exercise-builder"></div>
+        <div class="plan-form-actions"><button id="cancel-plan-edit" class="secondary-button hidden" type="button">Ακύρωση επεξεργασίας</button><button id="plan-submit" class="primary-button" type="submit">Αποθήκευση ημέρας</button></div>
+      </form>
+    </div>
+  </dialog>
   <dialog id="session-detail-dialog" class="session-detail-dialog" aria-label="Λεπτομέρειες προπόνησης">
     <button id="session-detail-close" class="session-detail-close" type="button" aria-label="Κλείσιμο προπόνησης">×</button>
     <div id="session-detail-content"></div>

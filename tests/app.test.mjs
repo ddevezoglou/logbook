@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.5.1');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.6.0');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -236,6 +236,41 @@ test('activating a program moves its ticket to the first position', () => {
   assert.equal(document.querySelector('#routine-carousel-count').textContent, '01 / 02');
 });
 
+test('program tickets expose plan and workout popups while the main section stays compact', () => {
+  const plan = [
+    planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Upper A' }),
+    planDay('Τρίτη', 'Squat', { cycleDay:2, workoutName:'Lower A' }),
+  ];
+  const { document } = loadApp({ trainingRoutines:routineWith(plan) });
+  const actionLabels = [...document.querySelector('.routine-actions').querySelectorAll('button')].map(button => button.getAttribute('aria-label'));
+  assert.deepEqual(actionLabels, ['Ενεργό πρόγραμμα', 'Προβολή πλάνου', 'Προσθήκη προπόνησης', 'Αντιγραφή προγράμματος', 'Μετονομασία προγράμματος', 'Διαγραφή προγράμματος']);
+  assert.equal(document.querySelector('#plan-view .workspace'), null, 'the old scroll-down workspace is removed from the page');
+  assert.ok(document.querySelector('#plan-form').closest('#plan-workout-dialog'));
+  assert.ok(document.querySelector('#plan-list').closest('#plan-overview-dialog'));
+
+  click(document, '[data-view-routine="r1"]');
+  assert.equal(document.querySelector('#plan-overview-dialog').open, true);
+  assert.deepEqual([...document.querySelectorAll('#plan-list .active-day h3')].map(heading => heading.textContent), ['Δευτέρα', 'Τρίτη']);
+  click(document, '[data-close-plan-dialog="overview"]');
+  click(document, '[data-add-routine-workout="r1"]');
+  assert.equal(document.querySelector('#plan-workout-dialog').open, true);
+  assert.equal(document.querySelector('#plan-form-title').textContent, 'Νέα προπόνηση ημέρας');
+});
+
+test('duplicating a program copies its plan with fresh ids and sequential names', () => {
+  const sourcePlan = [planDay('Δευτέρα', 'Bench Press', { id:'source-exercise', cycleDay:1 })];
+  const { document, localStorage } = loadApp({ trainingRoutines:routineWith(sourcePlan) });
+  click(document, '[data-duplicate-routine="r1"]');
+  click(document, '[data-duplicate-routine="r1"]');
+  const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
+  assert.deepEqual(saved.map(routine => routine.name), ['Test Routine', 'Test Routine (1)', 'Test Routine (2)']);
+  assert.deepEqual(saved.map(routine => routine.isActive), [true, false, false]);
+  assert.equal(saved[1].plan[0].exercise, 'Bench Press');
+  assert.notEqual(saved[1].id, saved[0].id);
+  assert.notEqual(saved[1].plan[0].id, saved[0].plan[0].id);
+  assert.notEqual(saved[2].plan[0].id, saved[1].plan[0].id);
+});
+
 test('home routine ticket drag stays bounded and persists independently', () => {
   const { document, localStorage } = loadApp();
   const shell = document.querySelector('.home-shell');
@@ -318,6 +353,24 @@ test('mobile home styling keeps quote rotation, compact athlete card and bounded
   assert.match(styles, /\.home-profile-card\s*\{[^}]*width:min\(76vw,280px\);[^}]*padding:12px;/);
   assert.match(styles, /\.home-routine-card\s*\{[^}]*max-height:min\(68vh,560px\);/);
   assert.match(styles, /\.home-routine-days\s*\{\s*max-height:min\(var\(--routine-list-height,49px\),42vh,294px\);/);
+  assert.match(styles, /\.home-intro\s*\{\s*display:contents;\s*\}/);
+  assert.match(styles, /\.home-start,\.home-quick\s*\{\s*display:none;\s*\}/);
+  assert.match(styles, /\.home-rest-stamp\s*\{[^}]*order:4;[^}]*align-self:center;/);
+});
+
+test('home rest stamp appears after a workout is logged today', () => {
+  const today = new Date();
+  const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const session = {
+    id:'rest-today', date, type:'free', comments:'',
+    exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg', plates:null }] }],
+  };
+  const withoutWorkout = loadApp().document.querySelector('#home-rest-stamp');
+  const withWorkout = loadApp({ trainingSessions:[session] }).document.querySelector('#home-rest-stamp');
+
+  assert.ok(withoutWorkout.classList.contains('hidden'));
+  assert.ok(!withWorkout.classList.contains('hidden'));
+  assert.equal(withWorkout.closest('.home-intro')?.className, 'home-intro');
 });
 
 test('desktop home program paper grows with its workout list without an internal scrollbar', () => {
@@ -790,7 +843,9 @@ test('progress chart with a single-point mode still guards against division issu
     trainingSessions: [mkSession('s1', '2026-07-01', 60)],
   });
   click(document, '.nav-button[data-view="progress"]');
-  assert.ok(document.querySelector('#progress-panel').innerHTML.includes('recording-warning') || document.querySelector('#progress-panel').innerHTML.includes('Δεν υπάρχει ασφαλής σύγκριση'));
+  const warning = document.querySelector('#progress-panel .recording-warning');
+  assert.equal(warning.textContent.trim(), 'Χρειάζονται τουλάχιστον δύο καταγραφές της άσκησης με συγκρίσιμη μονάδα βάρους.');
+  assert.equal(warning.querySelector('strong'), null);
 });
 
 test('deleting the active routine promotes another to active', () => {
@@ -1339,6 +1394,12 @@ test('the photo slip lists uploaded images and selecting one updates the saved c
   const saved = JSON.parse(localStorage.getItem('userProfile'));
   assert.equal(saved.customImage, gallery[1]);
   assert.deepEqual(saved.imageGallery, gallery);
+});
+
+test('the profile photo picker omits the upload-retention message', () => {
+  const { document } = loadApp();
+  assert.equal(document.querySelector('.profile-photo-note'), null);
+  assert.equal(document.querySelector('#profile-photo-slip').textContent.includes('Ό,τι ανεβάζετε μένει εδώ'), false);
 });
 
 test('the unsaved profile status follows the selected interface language', () => {

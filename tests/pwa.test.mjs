@@ -74,7 +74,7 @@ test('service worker precaches the complete local shell without development seed
   ]) {
     assert.ok(serviceWorker.includes(`'${path}'`), `${path} is in the app shell`);
   }
-  assert.match(serviceWorker, /CACHE_VERSION = 'logbook-0\.5\.1'/);
+  assert.match(serviceWorker, /CACHE_VERSION = 'logbook-0\.6\.0'/);
   assert.match(serviceWorker, /SUPABASE_LIBRARY = 'https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2'/);
   assert.doesNotMatch(serviceWorker, /seed(-week)?\.html|seed-week\.js/);
   assert.doesNotMatch(serviceWorker, /event\.waitUntil\(refresh\)/, 'navigation must not refresh index.html independently from the cached JS shell');
