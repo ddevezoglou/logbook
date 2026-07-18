@@ -4,11 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#15130d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Logbook">
   <title>Logbook — Ημερολόγιο Προπόνησης</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="app-booting">
@@ -129,7 +133,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version" aria-label="Application version 0.3.1"><i>VERSION</i><b>0.3.1</b></span>
+      <span class="app-version" aria-label="Application version 0.3.2"><i>VERSION</i><b>0.3.2</b></span>
     </div>
   </aside>
 
@@ -363,7 +367,7 @@
       </div>
       <div class="profile-workspace">
         <form id="profile-form" class="profile-form">
-          <div class="profile-section-title"><span>01</span><div><h2>ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ ΑΘΛΗΤΗ</h2></div></div>
+          <div class="profile-section-title"><span>01</span><strong>ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ</strong></div>
           <div class="profile-fields">
             <label>Όνομα<input id="profile-name" type="text" maxlength="50" placeholder="π.χ. Δημήτρης" autocomplete="name" required></label>
             <label>Ημερομηνία γέννησης<input id="profile-birthdate" type="date" autocomplete="bday" required></label>
@@ -458,5 +462,6 @@
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script src="cloud-sync.js"></script>
+  <script src="pwa.js"></script>
 </body>
 </html>

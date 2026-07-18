@@ -138,7 +138,7 @@
     'Δεν καταγράφηκαν σετ.':['No sets were logged.','Aucune série n’a été saisie.','Keine Sätze wurden erfasst.'],
     'Σωματικό βάρος':['Bodyweight','Poids du corps','Körpergewicht'],
     'ΚΑΛΥΤΕΡΑ ΣΕΤ':['BEST SETS','MEILLEURES SÉRIES','BESTE SÄTZE'],
-    'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ ΑΘΛΗΤΗ':['ATHLETE DETAILS','INFORMATIONS DE L’ATHLÈTE','ATHLETENDATEN'],
+    'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ':['BASIC DETAILS','INFORMATIONS DE BASE','GRUNDDATEN'],
     'ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ':['SAVE PROFILE','ENREGISTRER LE PROFIL','PROFIL SPEICHERN'],
     'ΟΝΟΜΑ':['NAME','NOM','NAME'],
     'ΝΕΟ ΠΡΟΦΙΛ':['NEW PROFILE','NOUVEAU PROFIL','NEUES PROFIL'],
