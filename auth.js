@@ -19,6 +19,7 @@
   // result so a late listener can still consume it instead of hanging on "syncing".
   let lastSyncResult = null;
   let syncWatchdog = null;
+  let offlineSessionActive = false;
   const SYNC_WATCHDOG_MS = 25000;
 
   function setStatus(message = '', kind = 'neutral') {
@@ -150,6 +151,35 @@
     document.body.append(script);
   }
 
+  function updateSyncStatus(message, kind = 'neutral') {
+    const state = $('#account-sync-state');
+    if (!state) return;
+    state.dataset.kind = kind;
+    $('#account-sync-message').textContent = t(message);
+  }
+
+  function renderOfflineSession(nextSession) {
+    if (!nextSession?.user?.id) return;
+    const alreadyReady = document.body.classList.contains('app-ready');
+    offlineSessionActive = true;
+    session = nextSession;
+    const email = session.user.email || '';
+    guest.classList.add('hidden');
+    member.classList.remove('hidden');
+    $('#account-member-email').textContent = email;
+    $('#account-menu-email').textContent = email;
+    $('#account-menu-email').classList.toggle('hidden', !email);
+    $('#account-menu-status').classList.add('hidden');
+    $('#account-open').classList.add('is-connected');
+    $('#account-open').setAttribute('aria-label', `${t('ΛΟΓΑΡΙΑΣΜΟΣ')}: ${email || t('Εκτός σύνδεσης')}`);
+    $('#account-signout').disabled = true;
+    $('#account-delete').disabled = true;
+    updateSyncStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline');
+    if (alreadyReady) return;
+    setGateState('loading', 'Εκκίνηση εκτός σύνδεσης με τα δεδομένα αυτής της συσκευής.');
+    loadApplication();
+  }
+
   function renderSession(nextSession) {
     session = nextSession || null;
     const email = session?.user?.email || '';
@@ -183,6 +213,9 @@
   async function bindClient(nextClient) {
     if (!nextClient || client === nextClient) return;
     client = nextClient;
+    offlineSessionActive = false;
+    $('#account-signout').disabled = false;
+    $('#account-delete').disabled = false;
     client.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') return showPasswordRecovery(nextSession);
       if (passwordRecoveryActive && event === 'USER_UPDATED') return;
@@ -194,7 +227,7 @@
   $('#account-open').addEventListener('click', () => {
     $('#close-menu').click();
     dialog.showModal();
-    requestAnimationFrame(() => $('#account-signout')?.focus());
+    requestAnimationFrame(() => $(offlineSessionActive ? '#account-close' : '#account-signout')?.focus());
   });
   $('#account-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
@@ -406,6 +439,11 @@
     else setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
   window.addEventListener('logbook:supabase-ready', event => bindClient(event.detail.client));
+  window.addEventListener('logbook:offline-session', event => renderOfflineSession(event.detail?.session));
+  window.addEventListener('logbook:sync-status', event => {
+    const { message, kind } = event.detail || {};
+    if (message) updateSyncStatus(message, kind);
+  });
   window.addEventListener('logbook:supabase-unavailable', () => {
     setGateState('error', 'Η υπηρεσία σύνδεσης δεν είναι διαθέσιμη. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
@@ -420,6 +458,7 @@
   setMode('signin');
   setGateState('checking', 'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.');
   if (window.LogbookSupabase) bindClient(window.LogbookSupabase);
+  else if (window.LogbookOfflineSession) renderOfflineSession(window.LogbookOfflineSession);
 
   // Typewriter on the auth gate's left page: types each word, holds, erases, moves on.
   (() => {

@@ -1,12 +1,19 @@
 {
   "name": "logbook",
-  "version": "0.3.2",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test \"tests/**/*.test.mjs\""
+    "dev": "node scripts/serve-static.mjs --port 3001",
+    "test": "npm run test:unit",
+    "test:unit": "node --test \"tests/**/*.test.mjs\"",
+    "test:e2e": "playwright test",
+    "verify:release": "node scripts/verify-release.mjs",
+    "check": "npm run verify:release && npm run test:unit && npm run test:e2e"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "jsdom": "^26.0.0"
   }
 }

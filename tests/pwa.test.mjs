@@ -11,6 +11,8 @@ const fonts = read('fonts.css');
 const serviceWorker = read('service-worker.js');
 const pwa = read('pwa.js');
 const workflow = read('.github/workflows/pages.yml');
+const ciWorkflow = read('.github/workflows/ci.yml');
+const releaseWorkflow = read('.github/workflows/release.yml');
 
 function pngSize(path) {
   const buffer = readFileSync(new URL(path, root));
@@ -72,16 +74,22 @@ test('service worker precaches the complete local shell without development seed
   ]) {
     assert.ok(serviceWorker.includes(`'${path}'`), `${path} is in the app shell`);
   }
-  assert.match(serviceWorker, /CACHE_VERSION = 'logbook-0\.3\.2'/);
+  assert.match(serviceWorker, /CACHE_VERSION = 'logbook-0\.4\.2-r2'/);
+  assert.match(serviceWorker, /SUPABASE_LIBRARY = 'https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2'/);
   assert.doesNotMatch(serviceWorker, /seed(-week)?\.html|seed-week\.js/);
+  assert.doesNotMatch(serviceWorker, /event\.waitUntil\(refresh\)/, 'navigation must not refresh index.html independently from the cached JS shell');
   assert.match(pwa, /new URL\('\.\/service-worker\.js', document\.baseURI\)/);
   assert.match(pwa, /scope:'\.\/'/);
+  assert.match(pwa, /\['localhost', '127\.0\.0\.1', '\[::1\]'\]/);
+  assert.match(pwa, /registration\.unregister\(\)/, 'local development removes stale workers');
+  assert.match(pwa, /name\.startsWith\('logbook-'\)/, 'local development removes stale Logbook shell caches');
 });
 
 test('GitHub Pages workflow publishes a production-only artifact', () => {
   assert.match(workflow, /actions\/setup-node@v6/);
   assert.match(workflow, /run: npm ci/);
-  assert.match(workflow, /run: npm test/);
+  assert.match(workflow, /npx playwright install --with-deps chromium webkit/);
+  assert.match(workflow, /run: npm run check/);
   assert.match(workflow, /actions\/configure-pages@v5/);
   assert.match(workflow, /actions\/upload-pages-artifact@v4/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
@@ -89,4 +97,12 @@ test('GitHub Pages workflow publishes a production-only artifact', () => {
   assert.doesNotMatch(workflow, /cp .*seed/);
   assert.doesNotMatch(workflow, /cp .*tests/);
   assert.doesNotMatch(workflow, /cp .*designs/);
+});
+
+test('pull requests, deployment and tagged releases share the full quality gate', () => {
+  assert.match(ciWorkflow, /pull_request:/);
+  assert.match(ciWorkflow, /run: npm run check/);
+  assert.match(releaseWorkflow, /tags: \['v\*\.\*\.\*'\]/);
+  assert.match(releaseWorkflow, /run: npm run check/);
+  assert.match(releaseWorkflow, /gh release create/);
 });

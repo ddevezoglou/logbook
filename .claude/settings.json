@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test *)",
+      "Bash(node -e \"new Function\\(require\\('fs'\\).readFileSync\\('i18n.js','utf8'\\)\\); console.log\\('i18n ok'\\)\")",
+      "PowerShell(npm test)",
+      "PowerShell($chrome = @\\(\"$env:ProgramFiles\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\",\"${env:ProgramFiles\\(x86\\)}\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\",\"$env:LOCALAPPDATA\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\",\"$env:ProgramFiles\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\",\"${env:ProgramFiles\\(x86\\)}\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\"\\) | Where-Object { Test-Path $_ }; Write-Output \"found: $chrome\")",
+      "Read(//c/Users/dimitris.devetzoglou/AppData/Local/Temp/claude/c--Users-dimitris-devetzoglou-logbook/f16cba33-d94c-4bc7-a154-70c45b7944a4/scratchpad/**)",
+      "Bash(node --test tests/)",
+      "Bash(node --test tests/app.test.mjs)",
+      "Bash(git stash *)",
+      "Bash(node -e ' *)",
+      "Bash(python -)",
+      "PowerShell(node --test tests/app.test.mjs 2>$null)",
+      "Bash(node \"C:\\\\Users\\\\DIMITR~1.DEV\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-dimitris-devetzoglou-logbook\\\\785239d4-8a64-4d10-9996-88d1a3e2d5d4\\\\scratchpad\\\\pluralize.mjs\")",
+      "Bash(node \"C:\\\\Users\\\\DIMITR~1.DEV\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-dimitris-devetzoglou-logbook\\\\785239d4-8a64-4d10-9996-88d1a3e2d5d4\\\\scratchpad\\\\neutralize.mjs\")",
+      "PowerShell(\\(Get-Content styles.css -TotalCount 1\\) -split ';' | Select-String 'ink|paper|gold|muted|line')",
+      "Bash(node --test tests/*.test.mjs)",
+      "PowerShell(npm test 2>$null)",
+      "PowerShell(node \"C:\\\\Users\\\\DIMITR~1.DEV\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-dimitris-devetzoglou-logbook\\\\7a5383fa-191c-4fcc-b012-1235171b4b7b\\\\scratchpad\\\\sync-repro.mjs\")",
+      "PowerShell(node \"C:\\\\Users\\\\DIMITR~1.DEV\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-dimitris-devetzoglou-logbook\\\\7a5383fa-191c-4fcc-b012-1235171b4b7b\\\\scratchpad\\\\sync-repro2.mjs\")",
+      "PowerShell(node --test --test-name-pattern \"plan-less copy|rebuilds an emptied plan\" tests/cloud-sync.test.mjs tests/app.test.mjs 2>$null)",
+      "PowerShell(node \"C:\\\\Users\\\\DIMITR~1.DEV\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-dimitris-devetzoglou-logbook\\\\7a5383fa-191c-4fcc-b012-1235171b4b7b\\\\scratchpad\\\\sync-repro2.mjs\" 2>$null)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
+  }
+}

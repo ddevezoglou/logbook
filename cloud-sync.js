@@ -234,6 +234,15 @@
     let remote = await fetchRemote(id);
     let applied = false;
 
+    // A completely empty cloud snapshot is never a valid replacement for a
+    // device that still has workouts, a profile or a configured program. This
+    // can happen after a stale web client or a partial account bootstrap writes
+    // an empty payload. Recover by merging the device's last meaningful copy
+    // back into the cloud before anything is applied locally.
+    if (remote && hasMeaningfulData(local) && !hasMeaningfulData(remote.payload)) {
+      remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, local), remote);
+    }
+
     if (!remote) {
       remote = await saveWithConflictRetry(id, local, null);
       if (switchingUser) {
@@ -323,6 +332,13 @@
   function startInitialSync(id, force = false) {
     if (!id || (!force && initialSyncUserId === id)) return;
     initialSyncUserId = id;
+    if (!navigator.onLine) {
+      setStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline');
+      window.dispatchEvent(new CustomEvent('logbook:initial-sync-complete', {
+        detail:{ userId:id, success:true, offline:true },
+      }));
+      return;
+    }
     synchronize().then(success => {
       if (userId !== id) return;
       if (!success) initialSyncUserId = null;
@@ -352,7 +368,10 @@
   window.addEventListener('logbook:local-data-changed', event => {
     if (DATA_KEYS.includes(event.detail?.key) && userId) synchronize({ immediate:false });
   });
-  window.addEventListener('online', () => synchronize());
+  window.addEventListener('online', () => {
+    setStatus('Η σύνδεση επανήλθε · συγχρονισμός δεδομένων…', 'syncing');
+    synchronize();
+  });
   window.addEventListener('offline', () => setStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline'));
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') synchronize(); });
   window.LogbookCloudSync = Object.freeze({

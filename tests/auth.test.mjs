@@ -137,7 +137,38 @@ test('account dialog signs in and displays the active email', async () => {
   assert.equal(document.querySelector('.account-connected-stamp').textContent, 'MEMBER');
   assert.equal(document.querySelector('.account-card-club'), null);
   assert.equal(document.querySelector('.account-member > p'), null);
+  assert.equal(document.querySelector('#account-sync-state'), null);
   assert.ok(document.querySelector('#account-open').classList.contains('is-connected'));
+});
+
+test('a cached session boots the local application when cloud code is unavailable', async () => {
+  const offlineSession = {
+    access_token:'cached-token',
+    user:{ id:'user-offline', email:'offline@example.com' },
+  };
+  const { document } = await loadAuth({
+    onWindow(window) {
+      delete window.LogbookSupabase;
+      window.LogbookOfflineSession = offlineSession;
+    },
+  });
+
+  const appScript = document.querySelector('script[data-logbook-app]');
+  assert.ok(appScript);
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'loading');
+  assert.equal(document.querySelector('#account-member-email').textContent, 'offline@example.com');
+  assert.equal(document.querySelector('#account-sync-state'), null);
+  assert.equal(document.querySelector('#account-sync-now'), null);
+  assert.equal(document.querySelector('#account-signout').disabled, true);
+
+  appScript.dispatchEvent(new document.defaultView.Event('load'));
+  assert.ok(document.body.classList.contains('app-ready'));
+
+  document.defaultView.dispatchEvent(new document.defaultView.CustomEvent('logbook:offline-session', {
+    detail:{ session:offlineSession },
+  }));
+  assert.equal(document.querySelectorAll('script[data-logbook-app]').length, 1);
+  assert.ok(document.body.classList.contains('app-ready'));
 });
 
 test('account signup rejects mismatched passwords before calling Supabase', async () => {

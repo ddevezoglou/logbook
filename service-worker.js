@@ -1,5 +1,6 @@
-const CACHE_VERSION = 'logbook-0.3.2';
+const CACHE_VERSION = 'logbook-0.4.2-r2';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
+const SUPABASE_LIBRARY = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -55,19 +56,20 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || request.headers.has('range')) return;
 
   const url = new URL(request.url);
+  if (request.url === SUPABASE_LIBRARY) {
+    event.respondWith(
+      caches.match(request).then(cached => cached || fetch(request).then(response => {
+        if (response.ok) caches.open(CACHE_VERSION).then(cache => cache.put(request, response.clone()));
+        return response;
+      }))
+    );
+    return;
+  }
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    const refresh = fetch(request)
-      .then(response => {
-        if (response.ok) return caches.open(CACHE_VERSION).then(cache => cache.put(OFFLINE_PAGE, response.clone())).then(() => response);
-        return response;
-      })
-      .catch(() => null);
-
-    event.waitUntil(refresh);
     event.respondWith(
-      caches.match(OFFLINE_PAGE).then(cached => cached || refresh).then(response => response || Response.error())
+      caches.match(OFFLINE_PAGE).then(cached => cached || fetch(request)).catch(() => Response.error())
     );
     return;
   }

@@ -30,11 +30,14 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install test dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      - name: Install mobile browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run release, unit, mobile and accessibility checks
+        run: npm run check
 
       - name: Prepare production files
         run: |

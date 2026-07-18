@@ -335,10 +335,27 @@ function setRows(count, values = [], prefix = '', options = {}) {
     const mode = value.weightMode || (value.plates !== undefined && value.plates !== '' ? (value.weight !== undefined && value.weight !== '' ? 'mixed' : 'plates') : 'kg');
     const setPosition = startIndex + i + 1;
     return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(setPosition).padStart(2,'0')}</span>
-      <input class="${prefix}reps set-reps" type="number" min="0" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${setPosition}" required>
-      <select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες + Κιλά</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + Extra Βάρος</option></select>
-      <div class="weight-entry"><input class="${prefix}plates set-plates" type="number" min="0" step="1" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" placeholder="${mode === 'bodyweight_extra' ? 'extra kg' : 'kg'}" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></div>${extra ? '<button class="remove-extra-set" type="button" aria-label="Διαγραφή extra σετ">×</button>' : ''}</div>`;
+      <label class="set-control set-reps-control"><span class="set-control-label">Επαναλήψεις</span><input class="${prefix}reps set-reps" type="number" min="0" inputmode="numeric" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${setPosition}" required></label>
+      <label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες + Κιλά</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + Extra Βάρος</option></select></label>
+      <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (kg)</span><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" inputmode="decimal" placeholder="0" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div><button class="remove-set${extra ? ' remove-extra-set' : ''}" type="button" aria-label="Αφαίρεση εργάσιμου σετ">−</button></div>`;
   }).join('');
+}
+
+function renumberSetRows(card) {
+  const rows = [...card.querySelectorAll('.exercise-sets [data-set]')];
+  rows.forEach((row, index) => {
+    const setPosition = index + 1;
+    row.querySelector('.set-number').textContent = String(setPosition).padStart(2,'0');
+    row.querySelector('.set-reps').setAttribute('aria-label', `Επαναλήψεις σετ ${setPosition}`);
+    row.querySelector('.weight-mode').setAttribute('aria-label', `Τρόπος καταγραφής βάρους για το σετ ${setPosition}`);
+    row.querySelector('.set-plates').setAttribute('aria-label', `Πλάκες σετ ${setPosition}`);
+    row.querySelector('.set-weight').setAttribute('aria-label', `Κιλά σετ ${setPosition}`);
+  });
+  const freeSetCount = card.querySelector('.free-set-count');
+  if (freeSetCount) freeSetCount.value = rows.length;
+  const plannedTag = card.querySelector('.planned-tag');
+  if (plannedTag) plannedTag.textContent = `${rows.length} σετ`;
+  refreshCopySetButton(card);
 }
 
 function configureWeightMode(row, mode) {
@@ -909,22 +926,91 @@ function renderProfilePreview() {
   const name = $('#profile-name').value.trim();
   const birthdate = $('#profile-birthdate').value;
   const age = profileAge(birthdate);
-  const weight = $('#profile-weight').value;
-  const unit = $('#profile-weight-unit').value;
   const hasCustomImage = Boolean(customAvatarData);
   $('#profile-age').textContent = age ?? '—';
   $('#profile-age-label').textContent = age === null ? 'Χωρίς ημερομηνία' : age === 1 ? 'έτος' : 'έτη';
   $('#profile-preview-name').textContent = name || 'ΟΝΟΜΑ';
   $('#profile-preview-age').textContent = age === null ? '—' : `${age}`;
-  $('#profile-preview-weight').textContent = weight ? `${Number(weight).toLocaleString('el-GR', { maximumFractionDigits:1 })} ${unit}` : '—';
+  $('#profile-preview-age-unit').textContent = age === null ? '' : age === 1 ? 'έτος' : 'έτη';
+  $('#profile-card-stats').classList.toggle('hidden', $('#profile-hide-age').checked);
   $('#profile-preview-avatar').classList.toggle('male-avatar', !hasCustomImage);
   $('#profile-preview-avatar').classList.remove('female-avatar');
   $('#profile-preview-avatar').classList.toggle('custom-avatar', hasCustomImage);
   $('#profile-preview-image').src = customAvatarData;
-  $('#custom-avatar-thumb').src = customAvatarData;
-  $('#custom-avatar-option').classList.toggle('has-image', Boolean(customAvatarData));
-  $('#avatar-upload-status').textContent = customAvatarData ? 'Η εικόνα είναι έτοιμη' : 'JPG, PNG ή WEBP';
+  renderProfileGallery();
   renderRewards();
+}
+
+const PROFILE_GALLERY_LIMIT = 6;
+let profileGalleryDraft = [];
+
+function comparableProfile(profile = {}) {
+  profile ||= {};
+  const customImage = typeof profile.customImage === 'string' ? profile.customImage : '';
+  const imageGallery = Array.isArray(profile.imageGallery)
+    ? profile.imageGallery.filter(image => typeof image === 'string' && image)
+    : [];
+  if (customImage && !imageGallery.includes(customImage)) imageGallery.unshift(customImage);
+  return {
+    name:String(profile.name || '').trim(),
+    birthdate:profile.birthdate || '',
+    hideAge:Boolean(profile.hideAge),
+    customImage,
+    imageGallery:imageGallery.slice(0, PROFILE_GALLERY_LIMIT)
+  };
+}
+
+function currentProfileDraft() {
+  return comparableProfile({
+    name:$('#profile-name').value,
+    birthdate:$('#profile-birthdate').value,
+    hideAge:$('#profile-hide-age').checked,
+    customImage:customAvatarData,
+    imageGallery:profileGalleryDraft
+  });
+}
+
+function updateProfileDraftState() {
+  const dirty = JSON.stringify(currentProfileDraft()) !== JSON.stringify(comparableProfile(state.profile));
+  $('#profile-form').dataset.dirty = String(dirty);
+  $('#profile-save').classList.toggle('hidden', !dirty);
+  setProfileStatus(dirty ? 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ' : state.profile ? '' : 'ΝΕΟ ΠΡΟΦΙΛ');
+  renderProfilePreview();
+}
+
+function renderProfileGallery() {
+  $$('#profile-photo-grid .profile-photo-cell').forEach(cell => cell.remove());
+  profileGalleryDraft.forEach((image, index) => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'profile-photo-cell';
+    cell.dataset.galleryIndex = String(index);
+    const selected = image === customAvatarData;
+    cell.classList.toggle('selected', selected);
+    const thumb = document.createElement('img');
+    thumb.src = image;
+    thumb.alt = '';
+    const label = document.createElement('small');
+    label.textContent = selected ? 'ΣΕ ΧΡΗΣΗ' : 'ΕΠΙΛΟΓΗ';
+    cell.setAttribute('aria-label', selected ? 'Φωτογραφία σε χρήση' : 'Χρήση αυτής της φωτογραφίας');
+    cell.append(thumb, label);
+    $('#profile-photo-grid').append(cell);
+  });
+}
+
+const profileSlips = { name:'#profile-name-slip', photo:'#profile-photo-slip', date:'#profile-date-slip' };
+const profileSlipButtons = { name:'#profile-name-button', photo:'#profile-photo-button', date:'#profile-age-button' };
+
+function setProfileSlip(slip, open) {
+  Object.keys(profileSlips).forEach(key => {
+    const isOpen = key === slip ? open : false;
+    $(profileSlips[key]).classList.toggle('hidden', !isOpen);
+    $(profileSlipButtons[key]).setAttribute('aria-expanded', String(isOpen));
+  });
+}
+
+function toggleProfileSlip(slip) {
+  setProfileSlip(slip, $(profileSlips[slip]).classList.contains('hidden'));
 }
 
 function renderMenuIdentity() {
@@ -941,24 +1027,59 @@ function renderMenuIdentity() {
   $('#menu-profile-image').src = hasCustomImage ? profile.customImage : '';
 }
 
+function mobileHomeLayout() {
+  return window.innerWidth <= 700;
+}
+
+function homeCardStorageKey(storageKey) {
+  return mobileHomeLayout() ? `${storageKey}Mobile` : storageKey;
+}
+
 function readHomeCardPosition(storageKey = 'homeProfileCardPosition') {
-  const saved = store.read(storageKey);
+  const saved = store.read(homeCardStorageKey(storageKey));
   return !Array.isArray(saved) && Number.isFinite(saved?.x) && Number.isFinite(saved?.y) ? saved : null;
 }
 
 function homeCardBounds(card = $('#home-profile-card')) {
   const shell = $('.home-shell');
+  if (mobileHomeLayout()) {
+    const gutter = 16;
+    const shellRect = shell.getBoundingClientRect();
+    // The active mobile view slides in from the right. Using its transient
+    // bounding rect here would bake that animation offset into the saved card
+    // position and leave the card outside the viewport when the animation ends.
+    const baseLeft = card.offsetLeft;
+    const baseTop = shellRect.top + card.offsetTop;
+    const minX = gutter - baseLeft;
+    const minY = gutter - baseTop;
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    return {
+      minX,
+      minY,
+      maxX:Math.max(minX, viewportWidth - gutter - baseLeft - card.offsetWidth),
+      maxY:Math.max(minY, viewportHeight - gutter - baseTop - card.offsetHeight)
+    };
+  }
+  const minX = -card.offsetLeft;
+  const minY = -card.offsetTop;
   return {
-    maxX:Math.max(0, shell.clientWidth - card.offsetWidth),
-    maxY:Math.max(0, shell.scrollHeight - card.offsetHeight)
+    minX,
+    minY,
+    maxX:Math.max(minX, shell.clientWidth - card.offsetLeft - card.offsetWidth),
+    maxY:Math.max(minY, shell.scrollHeight - card.offsetTop - card.offsetHeight)
   };
 }
 
 function placeHomeCard(card, position, fallback) {
   if (card.classList.contains('hidden')) return;
-  const { maxX, maxY } = homeCardBounds(card);
-  const x = Math.max(0, Math.min(maxX, position ? position.x * maxX : fallback.x(maxX)));
-  const y = Math.max(0, Math.min(maxY, position ? position.y * maxY : fallback.y(maxY)));
+  const { minX, minY, maxX, maxY } = homeCardBounds(card);
+  const rangeX = maxX - minX, rangeY = maxY - minY;
+  const mobile = mobileHomeLayout();
+  const fallbackX = mobile ? 0 : fallback.x(maxX);
+  const fallbackY = mobile ? 0 : fallback.y(maxY);
+  const x = Math.max(minX, Math.min(maxX, position ? minX + position.x * rangeX : fallbackX));
+  const y = Math.max(minY, Math.min(maxY, position ? minY + position.y * rangeY : fallbackY));
   card.dataset.x = String(x);
   card.dataset.y = String(y);
   card.style.setProperty('--card-x', `${x}px`);
@@ -1005,6 +1126,9 @@ function renderHomeRoutineCard() {
       return `<li${marker ? '' : ' class="no-marker"'}>${marker}<div><strong data-i18n-user>${esc(workoutName)}</strong>${declaredDay ? `<small>${declaredDay}</small>` : ''}</div></li>`;
     }).join('')
     : '<li class="home-routine-empty"><span>—</span><div><strong>Κενό πρόγραμμα</strong><small>Προσθέστε την πρώτη ημέρα προπόνησης</small></div></li>';
+  const routineRowCount = Math.max(1, plannedDays.length);
+  card.dataset.routineSize = String(routineRowCount);
+  card.style.setProperty('--routine-list-height', `${routineRowCount * 49}px`);
   requestAnimationFrame(() => placeHomeRoutineCard());
 }
 
@@ -1012,14 +1136,17 @@ function enableHomeCardDrag(card, storageKey, placeCard) {
   let drag = null;
   const finish = event => {
     if (!drag || (event.pointerId !== undefined && event.pointerId !== drag.pointerId)) return;
-    const { maxX, maxY } = homeCardBounds(card);
+    const { minX, minY, maxX, maxY } = homeCardBounds(card);
+    const rangeX = maxX - minX, rangeY = maxY - minY;
     const x = Number(card.dataset.x) || 0, y = Number(card.dataset.y) || 0;
-    safeStoreWrite(storageKey, { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
+    safeStoreWrite(homeCardStorageKey(storageKey), { x:rangeX ? (x - minX) / rangeX : 0, y:rangeY ? (y - minY) / rangeY : 0 });
     card.classList.remove('is-dragging');
     drag = null;
   };
   card.addEventListener('pointerdown', event => {
     if ((event.button !== undefined && event.button !== 0) || event.target.closest('button,a,input,select,textarea')) return;
+    const coarsePointer = event.pointerType === 'touch' || (event.pointerType && event.pointerType !== 'mouse' && window.matchMedia?.('(pointer:coarse)').matches);
+    if (coarsePointer && card.id === 'home-routine-card' && !event.target.closest('.home-routine-head,.home-routine-title')) return;
     drag = { pointerId:event.pointerId, startX:event.clientX, startY:event.clientY, x:Number(card.dataset.x) || 0, y:Number(card.dataset.y) || 0 };
     card.setPointerCapture?.(event.pointerId);
     card.classList.add('is-dragging');
@@ -1027,9 +1154,9 @@ function enableHomeCardDrag(card, storageKey, placeCard) {
   });
   card.addEventListener('pointermove', event => {
     if (!drag || event.pointerId !== drag.pointerId) return;
-    const { maxX, maxY } = homeCardBounds(card);
-    const x = Math.max(0, Math.min(maxX, drag.x + event.clientX - drag.startX));
-    const y = Math.max(0, Math.min(maxY, drag.y + event.clientY - drag.startY));
+    const { minX, minY, maxX, maxY } = homeCardBounds(card);
+    const x = Math.max(minX, Math.min(maxX, drag.x + event.clientX - drag.startX));
+    const y = Math.max(minY, Math.min(maxY, drag.y + event.clientY - drag.startY));
     card.dataset.x = String(x); card.dataset.y = String(y);
     card.style.setProperty('--card-x', `${x}px`); card.style.setProperty('--card-y', `${y}px`);
   });
@@ -1040,12 +1167,13 @@ function enableHomeCardDrag(card, storageKey, placeCard) {
     const movement = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[event.key];
     if (!movement) return;
     event.preventDefault();
-    const step = event.shiftKey ? 30 : 8, { maxX, maxY } = homeCardBounds(card);
-    const x = Math.max(0, Math.min(maxX, (Number(card.dataset.x) || 0) + movement[0] * step));
-    const y = Math.max(0, Math.min(maxY, (Number(card.dataset.y) || 0) + movement[1] * step));
+    const step = event.shiftKey ? 30 : 8, { minX, minY, maxX, maxY } = homeCardBounds(card);
+    const rangeX = maxX - minX, rangeY = maxY - minY;
+    const x = Math.max(minX, Math.min(maxX, (Number(card.dataset.x) || 0) + movement[0] * step));
+    const y = Math.max(minY, Math.min(maxY, (Number(card.dataset.y) || 0) + movement[1] * step));
     card.dataset.x = String(x); card.dataset.y = String(y);
     card.style.setProperty('--card-x', `${x}px`); card.style.setProperty('--card-y', `${y}px`);
-    safeStoreWrite(storageKey, { x:maxX ? x / maxX : 0, y:maxY ? y / maxY : 0 });
+    safeStoreWrite(homeCardStorageKey(storageKey), { x:rangeX ? (x - minX) / rangeX : 0, y:rangeY ? (y - minY) / rangeY : 0 });
   });
   let resizeFrame;
   window.addEventListener('resize', () => {
@@ -1100,25 +1228,26 @@ function loadProfile() {
   $('#profile-form').reset();
   $('#profile-form').dataset.dirty = 'false';
   customAvatarData = profile?.customImage || '';
+  profileGalleryDraft = Array.isArray(profile?.imageGallery) ? profile.imageGallery.filter(image => typeof image === 'string' && image) : [];
+  // Προφίλ πριν το gallery: η ήδη αποθηκευμένη εικόνα γίνεται η πρώτη καταχώρηση.
+  if (customAvatarData && !profileGalleryDraft.includes(customAvatarData)) profileGalleryDraft.unshift(customAvatarData);
+  profileGalleryDraft = profileGalleryDraft.slice(0, PROFILE_GALLERY_LIMIT);
   $('#profile-birthdate').max = localDateInputValue();
+  setProfileSlip('name', false);
   if (profile) {
     $('#profile-name').value = profile.name || '';
     $('#profile-birthdate').value = profile.birthdate || '';
-    $('#profile-weight').value = profile.weight || '';
-    $('#profile-weight-unit').value = profile.weightUnit || 'kg';
-    setProfileStatus('');
-  } else {
-    setProfileStatus('ΝΕΟ ΠΡΟΦΙΛ');
+    $('#profile-hide-age').checked = Boolean(profile.hideAge);
   }
-  renderProfilePreview();
+  updateProfileDraftState();
   renderMenuIdentity();
 }
 let pendingConfirmation = null;
 let pendingSecondaryConfirmation = null;
-function askToConfirm(title, message, onConfirm) {
+function askToConfirm(title, message, onConfirm, confirmLabel = 'Διαγραφή') {
   $('#exercise-delete-title').textContent = title;
   $('#exercise-delete-message').textContent = message;
-  $('#confirm-delete-accept').textContent = 'Διαγραφή';
+  $('#confirm-delete-accept').textContent = confirmLabel;
   $('#confirm-delete-secondary').classList.add('hidden');
   pendingConfirmation = onConfirm;
   pendingSecondaryConfirmation = null;
@@ -1136,6 +1265,7 @@ function askToChoose(title, message, primaryLabel, secondaryLabel, onPrimary, on
   $('#exercise-delete-dialog').showModal();
 }
 function askToDeleteExercise(exerciseName, onConfirm) { askToConfirm('Διαγραφή άσκησης', `Είστε σίγουροι για την διαγραφή της άσκησης "${exerciseName}" από την δήλωση της προπόνησης;`, onConfirm); }
+function askToRemoveSet(onConfirm) { askToConfirm('Αφαίρεση σετ', 'Είστε σίγουροι ότι θέλετε να πραγματοποιηθεί αφαίρεση του εργάσιμου σετ ;', onConfirm, 'Αφαίρεση'); }
 
 function setMode(mode) {
   state.mode = mode; $$('.mode-button').forEach(b => { const active = b.dataset.mode === mode; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active)); });
@@ -1224,18 +1354,18 @@ function showView(view) {
   closeMenu();
   if (!labels[view]) return;
   history.replaceState(null, '', `#${view}`);
-  if (current === view) return;
+  if (current === view) { syncNavigation(view); return; }
   if (current === 'profile') loadProfile();
   const swap = () => {
-    $$('.nav-button,.view').forEach(el => el.classList.remove('active'));
-    $(`.nav-button[data-view="${view}"]`).classList.add('active');
+    $$('.view').forEach(el => el.classList.remove('active'));
+    syncNavigation(view);
     $(`#${view}-view`).classList.add('active');
     if (view === 'home') renderHome();
     if (view === 'overview') renderOverview();
     if (view === 'progress') renderProgressSelectors();
     if (view === 'profile') renderProfilePreview();
   };
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { swap(); return; }
+  if (window.matchMedia('(max-width:700px), (prefers-reduced-motion: reduce)').matches) { swap(); return; }
   const transition = $('#view-transition');
   transition.querySelector('span').textContent = labels[view];
   transition.classList.remove('running');
@@ -1245,12 +1375,26 @@ function showView(view) {
   setTimeout(() => transition.classList.remove('running'), 780);
 }
 
+function syncNavigation(view) {
+  $$('.nav-button').forEach(button => {
+    const active = button.dataset.view === view;
+    button.classList.toggle('active', active);
+    if (active) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+}
+
 function setMenu(open) {
-  $('#side-menu').classList.toggle('open', open);
+  const menu = $('#side-menu');
+  const wasOpen = menu.classList.contains('open');
+  menu.classList.toggle('open', open);
   $('#menu-backdrop').classList.toggle('open', open);
-  $('#side-menu').setAttribute('aria-hidden', String(!open));
+  menu.setAttribute('aria-hidden', String(!open));
+  menu.toggleAttribute('inert', !open);
   $('#open-menu').setAttribute('aria-expanded', String(open));
   document.body.style.overflow = open ? 'hidden' : '';
+  if (open) requestAnimationFrame(() => $('#close-menu').focus());
+  else if (wasOpen) $('#open-menu').focus();
 }
 function closeMenu() { setMenu(false); }
 
@@ -1379,42 +1523,63 @@ $('#confirm-delete-accept').addEventListener('click', () => {
   if (deletion) deletion();
 });
 $('#exercise-delete-dialog').addEventListener('cancel', () => { pendingConfirmation = null; pendingSecondaryConfirmation = null; });
-const renderProfileDraft = () => {
-  setProfileStatus('ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ');
-  $('#profile-form').dataset.dirty = 'true';
-  renderProfilePreview();
-};
+const renderProfileDraft = () => updateProfileDraftState();
 $('#profile-form').addEventListener('input', renderProfileDraft);
 $('#profile-form').addEventListener('change', renderProfileDraft);
+$('#profile-photo-button').addEventListener('click', () => toggleProfileSlip('photo'));
+$('#profile-name-button').addEventListener('click', () => {
+  toggleProfileSlip('name');
+  if (!$('#profile-name-slip').classList.contains('hidden')) $('#profile-name').focus();
+});
+$('#profile-age-button').addEventListener('click', () => toggleProfileSlip('date'));
+$$('.profile-slip-close').forEach(button => button.addEventListener('click', () => setProfileSlip(button.dataset.closeSlip, false)));
+$('#profile-photo-grid').addEventListener('click', event => {
+  const cell = event.target.closest('.profile-photo-cell');
+  if (!cell) return;
+  customAvatarData = profileGalleryDraft[Number(cell.dataset.galleryIndex)] || '';
+  renderProfileDraft();
+});
 $('#profile-avatar-upload-button').addEventListener('click', () => $('#profile-avatar-upload').click());
 $('#profile-avatar-upload').addEventListener('change', async event => {
   const file = event.target.files[0];
   if (!file) return;
   const button = $('#profile-avatar-upload-button');
   button.disabled = true;
-  button.textContent = 'ΕΠΕΞΕΡΓΑΣΙΑ…';
+  $('#avatar-upload-status').textContent = 'ΕΠΕΞΕΡΓΑΣΙΑ…';
   try {
     customAvatarData = await prepareProfileImage(file);
-    renderProfilePreview();
+    profileGalleryDraft = [customAvatarData, ...profileGalleryDraft.filter(image => image !== customAvatarData)].slice(0, PROFILE_GALLERY_LIMIT);
+    renderProfileDraft();
     toast('Η εικόνα προστέθηκε στο προφίλ');
   } catch (error) {
     toast(error.message, 'error');
   } finally {
     button.disabled = false;
-    button.textContent = customAvatarData ? 'ΑΛΛΑΓΗ ΕΙΚΟΝΑΣ' : 'ΑΝΕΒΑΣΜΑ ΕΙΚΟΝΑΣ';
+    $('#avatar-upload-status').textContent = 'JPG, PNG ή WEBP';
     event.target.value = '';
   }
 });
 $('#profile-form').addEventListener('submit', event => {
   event.preventDefault();
-  if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
+  const name = $('#profile-name').value.trim();
+  if (!name) {
+    setProfileSlip('name', true);
+    $('#profile-name').focus();
+    return toast('Συμπληρώστε όνομα για την κάρτα.', 'error');
+  }
+  const birthdate = $('#profile-birthdate').value;
+  if (!birthdate || profileAge(birthdate) === null) {
+    setProfileSlip('date', true);
+    $('#profile-birthdate').focus();
+    return toast('Συμπληρώστε έγκυρη ημερομηνία γέννησης.', 'error');
+  }
   const profile = {
-    name:$('#profile-name').value.trim(),
-    birthdate:$('#profile-birthdate').value,
-    weight:Number($('#profile-weight').value),
-    weightUnit:$('#profile-weight-unit').value,
+    name,
+    birthdate,
+    hideAge:$('#profile-hide-age').checked,
     avatar:'custom',
-    customImage:customAvatarData
+    customImage:customAvatarData,
+    imageGallery:profileGalleryDraft
   };
   try {
     store.write('userProfile', profile);
@@ -1422,9 +1587,8 @@ $('#profile-form').addEventListener('submit', event => {
     return toast('Δεν υπάρχει αρκετός χώρος για την εικόνα. Χρειάζεται μικρότερο αρχείο.', 'error');
   }
   state.profile = profile;
-  $('#profile-form').dataset.dirty = 'false';
-  setProfileStatus('');
-  renderProfilePreview();
+  setProfileSlip('name', false);
+  updateProfileDraftState();
   renderMenuIdentity();
   renderHomeProfileCard();
   toast('Το προφίλ αποθηκεύτηκε');
@@ -1572,7 +1736,17 @@ document.addEventListener('click', event => {
     });
   }
   if (event.target.matches('.add-extra-set')) { const card = event.target.closest('[data-exercise]'), rows = card.querySelector('.exercise-sets'); rows.insertAdjacentHTML('beforeend', setRows(1, [{}], '', { extra:true, startIndex:rows.children.length })); refreshCopySetButton(card); }
-  if (event.target.matches('.remove-extra-set')) { const card = event.target.closest('[data-exercise]'), rows = event.target.closest('.exercise-sets'); event.target.closest('[data-set]').remove(); [...rows.children].forEach((row, index) => row.querySelector('.set-number').textContent = String(index + 1).padStart(2,'0')); refreshCopySetButton(card); }
+  if (event.target.matches('.remove-set')) {
+    const card = event.target.closest('[data-exercise]');
+    const row = event.target.closest('[data-set]');
+    const rows = card.querySelectorAll('.exercise-sets [data-set]');
+    if (rows.length === 1) return toast('Χρειάζεται να υπάρχει τουλάχιστον ένα εργάσιμο σετ', 'error');
+    askToRemoveSet(() => {
+      row.remove();
+      renumberSetRows(card);
+      toast('Το εργάσιμο σετ αφαιρέθηκε');
+    });
+  }
   const selectRoutineButton = event.target.closest('[data-select-routine]');
   const scrollRoutineButton = event.target.closest('[data-routine-scroll]');
   const activateRoutineButton = event.target.closest('[data-activate-routine]');

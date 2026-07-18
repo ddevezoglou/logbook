@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#15130d">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -96,7 +96,7 @@
   <div id="view-transition" class="view-transition" aria-hidden="true"><span></span></div>
   <button id="open-menu" class="menu-ribbon" type="button" aria-expanded="false" aria-controls="side-menu" aria-label="Μενού"><i></i></button>
   <div id="menu-backdrop" class="menu-backdrop"></div>
-  <aside id="side-menu" class="side-menu" aria-hidden="true">
+  <aside id="side-menu" class="side-menu" aria-hidden="true" inert>
     <div class="side-menu-head">
       <div id="menu-identity" class="menu-identity">
         <span id="menu-brand-mark" class="brand-mark inverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
@@ -133,7 +133,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version" aria-label="Application version 0.3.2"><i>VERSION</i><b>0.3.2</b></span>
+      <span class="app-version" aria-label="Application version 0.4.2"><i>VERSION</i><b>0.4.2</b></span>
     </div>
   </aside>
 
@@ -359,55 +359,70 @@
         <aside id="profile-guide" class="info-panel hidden">
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
-            <li><b>01</b><span>Συμπληρώστε όνομα, ημερομηνία γέννησης και βάρος.</span></li>
-            <li><b>02</b><span>Ανεβάστε τη δική σας εικόνα προφίλ.</span></li>
-            <li><b>03</b><span>Η κάρτα αθλητή ενημερώνεται αυτόματα και εμφανίζεται στην Αρχική.</span></li>
+            <li><b>01</b><span>Πατήστε τη φωτογραφία, το όνομα ή την ηλικία πάνω στην κάρτα.</span></li>
+            <li><b>02</b><span>Ανεβάστε ή επιλέξτε την εικόνα προφίλ σας.</span></li>
+            <li><b>03</b><span>Αποθηκεύστε τις αλλαγές για να ενημερωθεί η κάρτα στην Αρχική.</span></li>
           </ol>
         </aside>
       </div>
-      <div class="profile-workspace">
-        <form id="profile-form" class="profile-form">
-          <div class="profile-section-title"><span>01</span><strong>ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ</strong></div>
-          <div class="profile-fields">
-            <label>Όνομα<input id="profile-name" type="text" maxlength="50" placeholder="π.χ. Δημήτρης" autocomplete="name" required></label>
-            <label>Ημερομηνία γέννησης<input id="profile-birthdate" type="date" autocomplete="bday" required></label>
-            <div class="age-readout" aria-live="polite"><span>ΗΛΙΚΙΑ</span><strong id="profile-age">—</strong><small id="profile-age-label">Χωρίς ημερομηνία</small></div>
-            <label class="weight-field">Βάρος<div class="weight-control"><input id="profile-weight" type="number" min="1" step="0.1" placeholder="0.0" required><select id="profile-weight-unit" aria-label="Μονάδα βάρους"><option value="kg">kg</option><option value="lbs">lbs</option></select></div></label>
-          </div>
-
-          <fieldset class="avatar-picker">
-            <legend><span>02</span><strong>ΕΙΚΟΝΑ ΠΡΟΦΙΛ</strong></legend>
-            <div class="avatar-options">
-              <div id="custom-avatar-option" class="avatar-upload-option">
-                <span class="custom-avatar-thumb" aria-hidden="true"><img id="custom-avatar-thumb" alt=""><i>+</i></span>
-                <span class="avatar-upload-copy"><strong>ΕΙΚΟΝΑ</strong><small id="avatar-upload-status">JPG, PNG ή WEBP</small><button id="profile-avatar-upload-button" type="button">ΑΝΕΒΑΣΜΑ ΕΙΚΟΝΑΣ</button></span>
-                <input id="profile-avatar-upload" class="hidden" type="file" accept="image/jpeg,image/png,image/webp">
-              </div>
-            </div>
-          </fieldset>
-          <button class="primary-button profile-save" type="submit">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ</button>
-        </form>
-
-        <aside class="profile-preview" aria-label="Προεπισκόπηση προφίλ">
+      <div class="profile-stage">
+        <form id="profile-form" class="profile-form" novalidate>
             <div class="profile-card">
               <div class="profile-card-top"><span class="profile-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><small id="profile-status">ΝΕΟ ΠΡΟΦΙΛ</small></div>
               <figure class="profile-polaroid">
                 <span class="profile-tape" aria-hidden="true"></span>
-                <div class="profile-polaroid-photo">
-                  <div id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
-                    <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
-                    <div id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></div>
-                  </div>
+                <button id="profile-photo-button" class="profile-photo-button" type="button" aria-expanded="false" aria-controls="profile-photo-slip" aria-label="Αλλαγή φωτογραφίας">
+                  <span class="profile-polaroid-photo">
+                    <span id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
+                      <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
+                      <span id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></span>
+                    </span>
+                  </span>
+                  <span class="profile-photo-tag" aria-hidden="true">ΑΛΛΑΓΗ ΦΩΤΟΓΡΑΦΙΑΣ</span>
+                </button>
+                <figcaption>
+                  <button id="profile-name-button" class="profile-name-button" type="button" aria-expanded="false" aria-controls="profile-name-slip" aria-label="Αλλαγή ονόματος">
+                    <span id="profile-preview-name" class="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</span>
+                  </button>
+                </figcaption>
+                <div class="profile-card-stats" id="profile-card-stats">
+                  <button id="profile-age-button" class="profile-age-button" type="button" aria-expanded="false" aria-controls="profile-date-slip" aria-label="Ημερομηνία γέννησης">
+                    <span>ΗΛΙΚΙΑ</span><span class="profile-age-value"><strong id="profile-preview-age">—</strong><small id="profile-preview-age-unit"></small></span>
+                  </button>
                 </div>
-                <figcaption><h2 id="profile-preview-name" data-i18n-user>ΟΝΟΜΑ</h2></figcaption>
-                <div class="profile-card-stats"><div><span>ΗΛΙΚΙΑ</span><strong id="profile-preview-age">—</strong></div><div><span>ΒΑΡΟΣ</span><strong id="profile-preview-weight">—</strong></div></div>
               </figure>
               <div class="profile-card-foot"><span>TRAIN . LOG . REPEAT</span></div>
               <span class="profile-elastic" aria-hidden="true"></span>
             </div>
+
+          <aside id="profile-name-slip" class="profile-slip hidden" aria-label="Όνομα">
+            <div class="profile-slip-head"><strong>ΟΝΟΜΑ</strong><button class="profile-slip-close" type="button" data-close-slip="name">ΚΛΕΙΣΙΜΟ</button></div>
+            <label class="profile-slip-field">Όνομα<input id="profile-name" type="text" maxlength="50" placeholder="π.χ. Δημήτρης" autocomplete="name"></label>
           </aside>
 
-        </div>
+          <aside id="profile-photo-slip" class="profile-slip hidden" aria-label="Φωτογραφίες προφίλ">
+            <div class="profile-slip-head"><strong>ΦΩΤΟΓΡΑΦΙΕΣ ΠΡΟΦΙΛ</strong><button class="profile-slip-close" type="button" data-close-slip="photo">ΚΛΕΙΣΙΜΟ</button></div>
+            <div id="profile-photo-grid" class="profile-photo-grid">
+              <button id="profile-avatar-upload-button" class="profile-photo-upload" type="button"><span class="plus" aria-hidden="true">+</span>ΑΝΕΒΑΣΜΑ ΝΕΑΣ<small id="avatar-upload-status">JPG, PNG ή WEBP</small></button>
+            </div>
+            <input id="profile-avatar-upload" class="hidden" type="file" accept="image/jpeg,image/png,image/webp">
+            <p class="profile-photo-note">Ό,τι ανεβάζετε μένει εδώ για να το ξαναδιαλέξετε αργότερα.</p>
+          </aside>
+
+          <aside id="profile-date-slip" class="profile-slip hidden" aria-label="Ημερομηνία γέννησης">
+            <div class="profile-slip-head"><strong>ΗΜΕΡΟΜΗΝΙΑ ΓΕΝΝΗΣΗΣ</strong><button class="profile-slip-close" type="button" data-close-slip="date">ΚΛΕΙΣΙΜΟ</button></div>
+            <div class="profile-date-row">
+              <label class="profile-slip-field">Ημερομηνία<input id="profile-birthdate" type="date" autocomplete="bday"></label>
+              <div class="age-readout" aria-live="polite"><span>ΗΛΙΚΙΑ</span><strong id="profile-age">—</strong><small id="profile-age-label">Χωρίς ημερομηνία</small></div>
+            </div>
+            <label class="profile-hide-age"><input id="profile-hide-age" type="checkbox">
+              <span>Απόκρυψη ηλικίας από την κάρτα</span>
+            </label>
+          </aside>
+
+          <button id="profile-save" class="primary-button profile-save hidden" type="submit">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ</button>
+        </form>
+      </div>
     </section>
   </main>
   <dialog id="session-detail-dialog" class="session-detail-dialog" aria-label="Λεπτομέρειες προπόνησης">

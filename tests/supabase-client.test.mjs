@@ -45,6 +45,43 @@ test('opening index.html directly never advertises localhost as its auth callbac
   assert.equal(dom.window.LogbookSupabaseConfig.siteUrl, null);
 });
 
+test('a cached Supabase session is exposed when the CDN is unavailable offline', () => {
+  const dom = new JSDOM('', { runScripts:'outside-only', url:'http://localhost:3000/' });
+  const session = {
+    access_token:'cached-token',
+    refresh_token:'cached-refresh',
+    user:{ id:'user-offline', email:'offline@example.com' },
+  };
+  let offlineSession = null;
+  dom.window.addEventListener('logbook:offline-session', event => { offlineSession = event.detail.session; });
+  dom.window.eval(configSource);
+  dom.window.localStorage.setItem('sb-hixnqtjsjcndeatxhpgd-auth-token', JSON.stringify(session));
+  dom.window.eval(clientSource);
+
+  const script = dom.window.document.querySelector('script[data-logbook-supabase-library]');
+  assert.ok(script);
+  script.dispatchEvent(new dom.window.Event('error'));
+
+  assert.deepEqual(JSON.parse(JSON.stringify(offlineSession)), session);
+  assert.deepEqual(JSON.parse(JSON.stringify(dom.window.LogbookOfflineSession)), session);
+});
+
+test('the Supabase client retries initialization when the network returns', () => {
+  const dom = new JSDOM('', { runScripts:'outside-only', url:'http://localhost:3000/' });
+  const client = { auth:{} };
+  let readyClient = null;
+  dom.window.addEventListener('logbook:supabase-ready', event => { readyClient = event.detail.client; });
+  dom.window.eval(configSource);
+  dom.window.eval(clientSource);
+  dom.window.document.querySelector('script[data-logbook-supabase-library]').dispatchEvent(new dom.window.Event('error'));
+  dom.window.supabase = { createClient:() => client };
+
+  dom.window.dispatchEvent(new dom.window.Event('online'));
+
+  assert.equal(dom.window.LogbookSupabase, client);
+  assert.equal(readyClient, client);
+});
+
 test('Supabase scripts load before the application is dynamically bootstrapped', () => {
   const config = htmlSource.indexOf('src="supabase-config.js"');
   const client = htmlSource.indexOf('src="supabase-client.js"');

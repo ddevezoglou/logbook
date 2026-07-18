@@ -61,9 +61,10 @@ function createClient({ session = null, row = null } = {}) {
   };
 }
 
-async function loadSync({ seed = {}, session = null, row = null } = {}) {
+async function loadSync({ seed = {}, session = null, row = null, online = true } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
+  Object.defineProperty(window.navigator, 'onLine', { configurable:true, value:online });
   for (const [key, value] of Object.entries(seed)) {
     window.localStorage.setItem(key, ['logbookLanguage', 'logbookCloudOwner'].includes(key) ? value : JSON.stringify(value));
   }
@@ -96,6 +97,17 @@ test('first connected device uploads existing local data and records its cloud r
   assert.equal(initialSyncEvents.at(-1)?.success, true);
 });
 
+test('initial sync allows local boot while offline and waits to contact the cloud', async () => {
+  const session = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { client, initialSyncEvents } = await loadSync({ session, online:false });
+
+  assert.equal(client.calls.select, 0);
+  assert.equal(client.calls.insert, 0);
+  assert.equal(initialSyncEvents.at(-1)?.userId, 'user-a');
+  assert.equal(initialSyncEvents.at(-1)?.success, true);
+  assert.equal(initialSyncEvents.at(-1)?.offline, true);
+});
+
 test('fresh device downloads an existing cloud snapshot without overwriting it with empty local state', async () => {
   const session = { user:{ id:'user-a', email:'athlete@example.com' } };
   const payload = {
@@ -115,6 +127,53 @@ test('fresh device downloads an existing cloud snapshot without overwriting it w
   assert.deepEqual(JSON.parse(localStorage.getItem('userProfile')), payload.userProfile);
   assert.equal(localStorage.getItem('logbookLanguage'), 'en');
   assert.equal(JSON.parse(localStorage.getItem('logbookCloudMeta:user-a')).revision, 4);
+});
+
+test('an empty newer cloud snapshot cannot erase meaningful device data', async () => {
+  const session = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const routines = [{ id:'r1', name:'Strength', isActive:true, cycleLength:7, plan:[{ id:'p1' }] }];
+  const sessions = [{ id:'s1', date:'2026-07-17', exercises:[] }];
+  const profile = { name:'Local athlete', birthdate:'1990-01-01' };
+  const localPayload = {
+    trainingRoutines:routines,
+    trainingSessions:sessions,
+    userProfile:profile,
+    routineRewardTracking:null,
+    homeProfileCardPosition:null,
+    homeRoutineCardPosition:null,
+    logbookLanguage:'el',
+  };
+  const probe = await loadSync();
+  const localHash = probe.window.LogbookCloudSync.payloadHash(localPayload);
+  probe.window.close();
+  const emptyPayload = {
+    trainingRoutines:[],
+    trainingSessions:[],
+    userProfile:null,
+    routineRewardTracking:null,
+    homeProfileCardPosition:null,
+    homeRoutineCardPosition:null,
+    logbookLanguage:'el',
+  };
+  const row = { user_id:'user-a', revision:5, payload:emptyPayload, updated_at:'2026-07-18T12:00:00Z' };
+  const { localStorage, client } = await loadSync({
+    session,
+    row,
+    seed:{
+      trainingRoutines:routines,
+      trainingSessions:sessions,
+      userProfile:profile,
+      logbookLanguage:'el',
+      'logbookCloudMeta:user-a':{ revision:4, hash:localHash, syncedAt:'2026-07-17T12:00:00Z' },
+    },
+  });
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingRoutines')), routines);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
+  assert.deepEqual(JSON.parse(localStorage.getItem('userProfile')), profile);
+  assert.deepEqual(client.row.payload.trainingSessions, sessions);
+  assert.deepEqual(client.row.payload.userProfile, profile);
+  assert.ok(client.calls.update >= 1);
 });
 
 test('merge keeps unique routines and sessions from both devices', async () => {

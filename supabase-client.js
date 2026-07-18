@@ -1,6 +1,8 @@
 (() => {
   const config = window.LogbookSupabaseConfig;
   const libraryUrl = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  let library = null;
+  let initialized = false;
 
   if (!config?.url || !config?.publishableKey) {
     console.warn('Logbook cloud connection is not configured.');
@@ -8,14 +10,37 @@
     return;
   }
 
+  function cachedSession() {
+    try {
+      const projectRef = new URL(config.url).hostname.split('.')[0];
+      const value = JSON.parse(localStorage.getItem(`sb-${projectRef}-auth-token`) || 'null');
+      const session = value?.currentSession || value;
+      return session?.user?.id && session?.access_token ? session : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function reportUnavailable() {
+    const session = cachedSession();
+    if (session) {
+      window.LogbookOfflineSession = session;
+      window.dispatchEvent(new CustomEvent('logbook:offline-session', { detail:{ session } }));
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('logbook:supabase-unavailable'));
+  }
+
   function initializeClient() {
+    if (initialized) return;
     const createClient = window.supabase?.createClient;
     if (typeof createClient !== 'function') {
       console.warn('Supabase JavaScript client did not load.');
-      window.dispatchEvent(new CustomEvent('logbook:supabase-unavailable'));
+      reportUnavailable();
       return;
     }
 
+    initialized = true;
     window.LogbookSupabase = createClient(config.url, config.publishableKey, {
       db: { schema: 'public' },
       auth: {
@@ -30,19 +55,23 @@
     }));
   }
 
-  if (window.supabase?.createClient) {
-    initializeClient();
-    return;
+  function loadLibrary() {
+    if (window.supabase?.createClient) return initializeClient();
+    if (library?.isConnected) return;
+
+    library = document.createElement('script');
+    library.src = libraryUrl;
+    library.async = true;
+    library.dataset.logbookSupabaseLibrary = '';
+    library.addEventListener('load', initializeClient, { once: true });
+    library.addEventListener('error', () => {
+      library = null;
+      console.warn('Logbook cloud connection is unavailable.');
+      reportUnavailable();
+    }, { once: true });
+    document.head.append(library);
   }
 
-  const library = document.createElement('script');
-  library.src = libraryUrl;
-  library.async = true;
-  library.dataset.logbookSupabaseLibrary = '';
-  library.addEventListener('load', initializeClient, { once: true });
-  library.addEventListener('error', () => {
-    console.warn('Logbook cloud connection is unavailable.');
-    window.dispatchEvent(new CustomEvent('logbook:supabase-unavailable'));
-  }, { once: true });
-  document.head.append(library);
+  window.addEventListener('online', loadLibrary);
+  loadLibrary();
 })();

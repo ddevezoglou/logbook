@@ -1,12 +1,12 @@
 # Logbook — Development Guide
 
-Το αρχείο αυτό συγκεντρώνει τις τεχνικές πληροφορίες ανάπτυξης και διάθεσης του Logbook. Η τρέχουσα έκδοση του interface είναι η **0.3.2**.
+Το αρχείο αυτό συγκεντρώνει τις τεχνικές πληροφορίες ανάπτυξης και διάθεσης του Logbook. Η τρέχουσα έκδοση του interface είναι η **0.4.2**.
 
 ## Αρχιτεκτονική
 
 Το Logbook είναι μια local-first web εφαρμογή χωρίς build step. Το `localStorage` χρησιμοποιείται για άμεση τοπική αποθήκευση, ενώ τα προγράμματα, οι προπονήσεις, το προφίλ και οι ρυθμίσεις συγχρονίζονται μέσω Supabase σε versioned cloud snapshot ανά λογαριασμό.
 
-Κατά την εκκίνηση ελέγχεται πρώτα η συνεδρία του χρήστη. Χωρίς ενεργό login εμφανίζεται μόνο η οθόνη σύνδεσης και το κύριο UI φορτώνεται μετά τον αρχικό συγχρονισμό.
+Κατά την εκκίνηση ελέγχεται πρώτα η συνεδρία του χρήστη. Χωρίς ενεργό login εμφανίζεται μόνο η οθόνη σύνδεσης. Με ενεργό δίκτυο το κύριο UI φορτώνεται μετά τον αρχικό συγχρονισμό· offline, μια αποθηκευμένη συνεδρία ανοίγει αμέσως τα τοπικά δεδομένα και ο συγχρονισμός ξεκινά αυτόματα όταν επιστρέψει η σύνδεση.
 
 Βασικά χαρακτηριστικά της τρέχουσας υλοποίησης:
 
@@ -26,7 +26,7 @@
 Από τον φάκελο του repository εκτέλεσε:
 
 ```powershell
-npx.cmd serve . -l 3001
+npm.cmd run dev
 ```
 
 και άνοιξε το:
@@ -34,6 +34,8 @@ npx.cmd serve . -l 3001
 ```text
 http://localhost:3001/
 ```
+
+Ο development server στέλνει όλα τα αρχεία με `Cache-Control: no-store`. Για άμεση εμφάνιση αλλαγών όσο είναι ανοιχτά τα DevTools, ενεργοποίησε επίσης **Application → Service Workers → Bypass for network**.
 
 Η θύρα `3000` είναι επίσης επιτρεπόμενη και μπορεί να χρησιμοποιηθεί όταν είναι διαθέσιμη.
 
@@ -77,6 +79,8 @@ https://hixnqtjsjcndeatxhpgd.supabase.co/auth/v1/callback
 
 Το manifest, τα app icons, οι self-hosted γραμματοσειρές και το offline shell είναι ρυθμισμένα για τη διαδρομή `/logbook/`.
 
+Κάθε pull request, production deployment και tagged release περνά από το ίδιο quality gate: release metadata, unit tests, mobile Chromium/WebKit end-to-end tests και WCAG accessibility scan. Ένα tag της μορφής `v0.4.2` πρέπει να συμφωνεί με την έκδοση του `package.json` και δημιουργεί αυτόματα GitHub Release.
+
 ## Tests
 
 Την πρώτη φορά εγκατέστησε τις εξαρτήσεις:
@@ -85,10 +89,16 @@ https://hixnqtjsjcndeatxhpgd.supabase.co/auth/v1/callback
 npm.cmd install
 ```
 
-Για να εκτελέσεις ολόκληρη τη σουίτα ελέγχων:
+Για τους γρήγορους unit/integration ελέγχους:
 
 ```powershell
 npm.cmd test
+```
+
+Για το πλήρες release gate, αφού εγκατασταθούν μία φορά οι Playwright browsers με `npx.cmd playwright install chromium webkit`:
+
+```powershell
+npm.cmd run check
 ```
 
 Το `package-lock.json` παραμένει versioned, ενώ το `node_modules/` δημιουργείται τοπικά και δεν αποθηκεύεται στο repository.
@@ -105,14 +115,13 @@ npm.cmd test
 
 Οι migrations δημιουργούν τους πίνακες `profiles`, `routines`, `sessions` και το versioned `user_sync_state`. Ενεργοποιούν Row Level Security και περιορίζουν κάθε εγγραφή στον συνδεδεμένο χρήστη.
 
-Η πρώτη φόρτωση απαιτεί επιβεβαιωμένη συνεδρία και επιτυχημένο αρχικό sync. Μετά τη φόρτωση, οι αλλαγές γράφονται πρώτα τοπικά και συγχρονίζονται όταν υπάρχει δίκτυο. Το UI εμφανίζει την κατάσταση του sync και παρέχει χειροκίνητο **Συγχρονισμό τώρα**.
+Η πρώτη online φόρτωση απαιτεί επιβεβαιωμένη συνεδρία και επιτυχημένο αρχικό sync. Μετά τη φόρτωση, οι αλλαγές γράφονται πρώτα τοπικά και συγχρονίζονται όταν υπάρχει δίκτυο. Σε offline επανεκκίνηση χρησιμοποιούνται η cached συνεδρία και τα δεδομένα της συσκευής. Το UI εμφανίζει την κατάσταση του sync και παρέχει χειροκίνητο **Συγχρονισμό τώρα**.
 
-## Γνωστοί περιορισμοί της έκδοσης 0.3.2
+## Γνωστοί περιορισμοί της έκδοσης 0.4.2
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry, αλλά όχι ακόμη UI χειροκίνητης επίλυσης αλλαγών στο ίδιο αντικείμενο.
 - Δεν υπάρχει ακόμη ασφαλές export/import ή αυτόματο backup δεδομένων από το UI.
-- Η PWA έχει δημοσιευτεί, αλλά χρειάζεται mobile-specific QA και διόρθωση layout, viewport, touch και interaction conflicts σε πραγματικές συσκευές Android και iOS.
-- Το offline shell υπάρχει, αλλά το πλήρες offline boot με αποθηκευμένη συνεδρία χρειάζεται περαιτέρω σκλήρυνση.
+- Η PWA έχει automated mobile Chromium/WebKit κάλυψη, αλλά χρειάζεται ακόμη τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
 ## Roadmap
@@ -132,10 +141,18 @@ npm.cmd test
 ### Mobile και διάθεση
 
 - [x] Installable PWA με manifest, service worker, offline shell και app icons.
+- [x] Adaptive mobile layout με ξεχωριστή ιεραρχία περιεχομένου αντί για συμπίεση του desktop UI.
+  - [x] Κοινό responsive ribbon/side menu σε web και mobile, με πλήρη πρόσβαση σε όλα τα sections.
+  - [x] Mobile-first κάρτες σετ με ορατές ετικέτες, μεγάλα πεδία αφής και sticky ολοκλήρωση πάνω από το navigation.
+  - [x] Συμπαγή section heroes, mobile Αρχική με τις web κάρτες σε στατική κατακόρυφη ροή χωρίς section-navigation buttons και οριζόντιο swipe/snap στο ημερολόγιο Ιστορικού.
+  - [x] Σύντομες native-like μεταβάσεις σελίδων με υποστήριξη reduced motion.
 - [ ] Mobile hardening σε πραγματικές συσκευές Android και iOS χωρίς regression στο desktop UI.
-- [ ] Πλήρες offline boot με αποθηκευμένη συνεδρία και αυτόματο sync μετά την επαναφορά του δικτύου.
-- [ ] Αξιολόγηση PWA έναντι native wrapper ή ξεχωριστού mobile client.
-- [ ] End-to-end mobile tests, accessibility audit και ενιαία διαχείριση releases.
+  - [x] Viewport, safe-area, virtual keyboard, touch-target και interaction hardening στον web client.
+  - [x] Automated Android Chromium και iOS WebKit regression coverage.
+  - [ ] Physical-device pass σε τουλάχιστον ένα πρόσφατο Android και ένα iPhone.
+- [x] Πλήρες offline boot με αποθηκευμένη συνεδρία και αυτόματο sync μετά την επαναφορά του δικτύου.
+- [x] Αξιολόγηση PWA έναντι native wrapper ή ξεχωριστού mobile client — απόφαση στο `docs/mobile-distribution.md`.
+- [x] End-to-end mobile tests, accessibility audit και ενιαία διαχείριση releases.
 
 ### Τεχνικό χρέος και υποδομή
 

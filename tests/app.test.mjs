@@ -28,20 +28,31 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.3.2');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.4.2');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
 
 test('athlete profile card shows the notebook cover with brand mark, polaroid and motto', () => {
   const { document } = loadApp();
+  assert.equal(document.querySelector('#profile-view .profile-hero h1').textContent.replace(/\s+/g, ''), 'ΤΟΑΠΟΤΥΠΩΜΑΜΕΝΕΙ.');
+  assert.equal(document.querySelectorAll('#profile-guide li').length, 3);
   assert.equal(document.querySelectorAll('.profile-card-top .profile-brand-mark i').length, 5);
   assert.ok(document.querySelector('.profile-polaroid .profile-tape'));
   assert.ok(document.querySelector('.profile-polaroid-photo #profile-reward-ring'));
   assert.equal(document.querySelector('#profile-preview-name').textContent, 'ΟΝΟΜΑ');
   assert.equal(document.querySelector('.profile-card-foot > span').textContent, 'TRAIN . LOG . REPEAT');
   assert.ok(document.querySelector('.profile-card > .profile-elastic'));
+  assert.equal(document.querySelector('.profile-hide-age').textContent.trim(), 'Απόκρυψη ηλικίας από την κάρτα');
+  assert.equal(document.querySelector('.profile-hide-age small'), null);
+  assert.match(styles, /\.profile-hide-age\s*\{[^}]*flex-direction:row;/);
   assert.match(styles, /\.profile-card-foot span\s*\{[^}]*white-space:nowrap;/);
+  assert.match(styles, /@media\(min-width:701px\)\s*\{[\s\S]*?\.profile-card\s*\{\s*min-height:610px;/);
+  assert.match(styles, /@media\(max-width:700px\)\s*\{[\s\S]*?#profile-view \.profile-hero\s*\{\s*display:grid;\s*min-height:164px;/);
+  assert.match(styles, /#profile-view #profile-preview-age-unit\s*\{\s*display:none;/);
+  assert.match(styles, /#profile-view \.profile-card\s*\{[^}]*width:min\(100%,360px\);[^}]*min-height:clamp\(430px,120vw,475px\);/);
+  assert.match(styles, /\.profile-hero \.info-panel\s*\{\s*top:calc\(76px \+ env\(safe-area-inset-top\)\);\s*\}/);
+  assert.match(styles, /\.hero \.info-panel,\.progress-hero \.info-panel,\.profile-hero \.info-panel\s*\{\s*width:min\(300px,78vw\);\s*left:auto;\s*\}/);
 });
 
 test('home shows the saved profile card and opens the workout log', () => {
@@ -65,6 +76,8 @@ test('home shows the active routine as a movable program ticket', () => {
   assert.equal(document.querySelector('#home-routine-cycle'), null);
   assert.deepEqual([...document.querySelectorAll('#home-routine-days strong')].map(node => node.textContent), ['Push Day', 'Pull Day']);
   assert.deepEqual([...document.querySelectorAll('#home-routine-days small')].map(node => node.textContent), ['Δευτέρα', 'Τετάρτη']);
+  assert.equal(card.dataset.routineSize, '2');
+  assert.equal(card.style.getPropertyValue('--routine-list-height'), '98px');
   assert.doesNotMatch(card.textContent, /ACTIVE PROGRAM|DAYS|Ημέρα 1|ασκήσεις/);
   click(document, '.home-routine-open');
   assert.ok(document.querySelector('#plan-view').classList.contains('active'));
@@ -140,16 +153,14 @@ test('internal section heroes share one compact light visual system', () => {
   const style = document.createElement('style');
   style.textContent = styles;
   document.head.append(style);
-  const heroes = ['#log-view .hero', '#plan-view .hero', '.overview-hero', '.progress-hero', '.profile-hero']
+  const heroes = ['#log-view .hero', '#plan-view .hero', '.overview-hero', '.progress-hero']
     .map(selector => document.querySelector(selector));
   const titleSizes = heroes.map(hero => window.getComputedStyle(hero.querySelector('h1')).fontSize);
   assert.equal(new Set(titleSizes).size, 1, 'all internal hero headings use the same type scale');
   const logStyle = window.getComputedStyle(heroes[0]);
-  [heroes[3], heroes[4]].forEach(hero => {
-    const computed = window.getComputedStyle(hero);
-    assert.equal(computed.backgroundColor, logStyle.backgroundColor, 'progress and profile use the same light surface as log');
-    assert.equal(computed.color, logStyle.color, 'progress and profile use the same text color as log');
-  });
+  const progressStyle = window.getComputedStyle(heroes[3]);
+  assert.equal(progressStyle.backgroundColor, logStyle.backgroundColor, 'progress uses the same light surface as log');
+  assert.equal(progressStyle.color, logStyle.color, 'progress uses the same text color as log');
   assert.match(styles, /font-size:clamp\(2\.8rem,5\.2vw,5\.5rem\)/, 'desktop hero headings use the compact shared scale');
 });
 
@@ -259,6 +270,58 @@ test('home athlete card drag stays bounded and persists its relative position', 
   pointer('pointerup', 5000, 5000);
   const position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
   assert.deepEqual(position, { x:1, y:1 });
+});
+
+test('mobile touch can move both home cards while keeping mobile positions bounded and separate', () => {
+  const { window, document, localStorage } = loadApp({ userProfile:{ name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'' } });
+  Object.defineProperty(window, 'innerWidth', { value:390, configurable:true });
+  Object.defineProperty(window, 'innerHeight', { value:640, configurable:true });
+  const shell = document.querySelector('.home-shell');
+  const profileCard = document.querySelector('#home-profile-card');
+  const routineCard = document.querySelector('#home-routine-card');
+  Object.defineProperties(shell, { clientWidth:{ value:390 }, scrollHeight:{ value:844 } });
+  shell.getBoundingClientRect = () => ({ left:0, top:0 });
+  Object.defineProperties(profileCard, { offsetLeft:{ value:90 }, offsetTop:{ value:500 }, offsetWidth:{ value:280 }, offsetHeight:{ value:100 } });
+  Object.defineProperties(routineCard, { offsetLeft:{ value:25 }, offsetTop:{ value:80 }, offsetWidth:{ value:340 }, offsetHeight:{ value:300 } });
+  const touch = (target, type, pointerId, x, y) => {
+    const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
+    Object.defineProperties(event, {
+      pointerId:{ value:pointerId }, pointerType:{ value:'touch' }, button:{ value:0 },
+      clientX:{ value:x }, clientY:{ value:y }
+    });
+    target.dispatchEvent(event);
+  };
+
+  touch(profileCard, 'pointerdown', 11, 20, 20);
+  touch(profileCard, 'pointermove', 11, 2000, 2000);
+  touch(profileCard, 'pointerup', 11, 2000, 2000);
+  touch(routineCard.querySelector('.home-routine-head'), 'pointerdown', 12, 20, 20);
+  touch(routineCard, 'pointermove', 12, 2000, 2000);
+  touch(routineCard, 'pointerup', 12, 2000, 2000);
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('homeProfileCardPositionMobile')), { x:1, y:1 });
+  assert.deepEqual(JSON.parse(localStorage.getItem('homeRoutineCardPositionMobile')), { x:1, y:1 });
+  assert.equal(Number(profileCard.dataset.x), 4);
+  assert.equal(Number(profileCard.dataset.y), 24);
+  assert.equal(Number(routineCard.dataset.x), 9);
+  assert.equal(Number(routineCard.dataset.y), 244);
+  assert.equal(localStorage.getItem('homeProfileCardPosition'), null);
+  assert.equal(localStorage.getItem('homeRoutineCardPosition'), null);
+});
+
+test('mobile home styling keeps quote rotation, compact athlete card and bounded routine growth', () => {
+  assert.match(styles, /html\s*\{[^}]*overflow-x:clip;/);
+  assert.match(styles, /html:has\(#home-view\.active\),body:has\(#home-view\.active\)\s*\{\s*scrollbar-width:none;/);
+  assert.match(styles, /html:has\(#home-view\.active\)::\-webkit-scrollbar,body:has\(#home-view\.active\)::\-webkit-scrollbar\s*\{\s*width:0;\s*height:0;/);
+  assert.match(styles, /\.home-shell\s*\{[^}]*max-width:100vw;[^}]*overflow-x:clip;[^}]*overflow-y:visible;/);
+  assert.match(styles, /\.daily-quote\s*\{[^}]*width:calc\(100% - 8px\);[^}]*transform:rotate\(\.8deg\);/);
+  assert.match(styles, /\.home-profile-card\s*\{[^}]*width:min\(76vw,280px\);[^}]*padding:12px;/);
+  assert.match(styles, /\.home-routine-card\s*\{[^}]*max-height:min\(68vh,560px\);/);
+  assert.match(styles, /\.home-routine-days\s*\{\s*max-height:min\(var\(--routine-list-height,49px\),42vh,294px\);/);
+});
+
+test('desktop home program paper grows with its workout list without an internal scrollbar', () => {
+  assert.match(styles, /@media\(min-width:701px\)\s*\{\.home-routine-days\s*\{max-height:none;overflow:visible\}\}/);
 });
 
 test('home page number counts unique logged days plus one', () => {
@@ -1050,7 +1113,7 @@ test('copy-first-set fills the remaining rows with the first set values', () => 
   assert.equal(rows[2].querySelector('.set-weight').value, '60');
 });
 
-test('extra set is added, saved with the session, and removable with renumbering', () => {
+test('working sets are removable after confirmation and renumbered', () => {
   const { document, localStorage } = loadApp({ trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]) });
   setValue(document, '#log-date', '2026-07-06');
   click(document, '.add-extra-set');
@@ -1068,8 +1131,33 @@ test('extra set is added, saved with the session, and removable with renumbering
   setValue(document, '#log-date', '2026-07-06');
   click(document, '.add-extra-set');
   click(document, '.remove-extra-set');
+  assert.equal(document.querySelector('#exercise-delete-message').textContent, 'Είστε σίγουροι ότι θέλετε να πραγματοποιηθεί αφαίρεση του εργάσιμου σετ ;');
+  assert.equal(document.querySelectorAll('#scheduled-session [data-set]').length, 4, 'set remains until confirmation');
+  click(document, '#confirm-delete-accept');
   numbers = [...document.querySelectorAll('#scheduled-session .set-number')].map(el => el.textContent);
   assert.deepEqual(numbers, ['01', '02', '03']);
+
+  click(document, '#scheduled-session [data-set] .remove-set');
+  click(document, '#confirm-delete-accept');
+  numbers = [...document.querySelectorAll('#scheduled-session .set-number')].map(el => el.textContent);
+  assert.deepEqual(numbers, ['01', '02']);
+  assert.equal(document.querySelector('#scheduled-session .planned-tag').textContent, '2 σετ');
+  assert.equal(document.querySelector('#scheduled-session [data-set] .set-reps').getAttribute('aria-label'), 'Επαναλήψεις σετ 1');
+});
+
+test('free-session set removal updates its set counter and keeps one minimum set', () => {
+  const { document } = loadApp();
+  click(document, '[data-mode="free"]');
+  const card = document.querySelector('#free-exercises [data-exercise]');
+  click(document, card.querySelector('.remove-set'));
+  click(document, '#confirm-delete-accept');
+  assert.equal(card.querySelectorAll('[data-set]').length, 2);
+  assert.equal(card.querySelector('.free-set-count').value, '2');
+  click(document, card.querySelector('.remove-set'));
+  click(document, '#confirm-delete-accept');
+  click(document, card.querySelector('.remove-set'));
+  assert.equal(card.querySelectorAll('[data-set]').length, 1);
+  assert.equal(document.querySelector('#exercise-delete-dialog').open, false, 'last set is protected without opening confirmation');
 });
 
 test('saving a plan day through the form stores exercises on the selected routine', () => {
@@ -1147,24 +1235,42 @@ test('activating another routine switches the scheduled workout', () => {
 
 test('profile form submit persists the profile and updates the menu identity', () => {
   const { document, localStorage } = loadApp();
+  assert.ok(document.querySelector('#profile-save').classList.contains('hidden'));
   assert.equal(document.querySelectorAll('[name="profile-avatar"]').length, 0);
   assert.equal(document.querySelectorAll('.avatar-option').length, 0);
   assert.ok(document.querySelector('#profile-avatar-upload'));
-  assert.equal(document.querySelector('.avatar-picker legend strong').textContent, 'ΕΙΚΟΝΑ ΠΡΟΦΙΛ');
+  assert.equal(document.querySelector('#profile-weight'), null);
+  assert.equal(document.querySelector('#profile-preview-weight'), null);
   setValue(document, '#profile-name', 'Δημήτρης', 'input');
   setValue(document, '#profile-birthdate', '1990-01-01', 'input');
-  setValue(document, '#profile-weight', '80', 'input');
+  assert.ok(!document.querySelector('#profile-save').classList.contains('hidden'));
   document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles: true, cancelable: true }));
   const profile = JSON.parse(localStorage.getItem('userProfile'));
   assert.equal(profile.name, 'Δημήτρης');
-  assert.equal(profile.weight, 80);
+  assert.equal(profile.weight, undefined);
+  assert.equal(profile.hideAge, false);
+  assert.deepEqual(profile.imageGallery, []);
   assert.equal(profile.avatar, 'custom');
   assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
   assert.equal(document.querySelector('#profile-status').textContent, '');
   assert.ok(document.querySelector('#profile-status').classList.contains('hidden'));
+  assert.ok(document.querySelector('#profile-save').classList.contains('hidden'));
   assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
   assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('#toast').textContent, 'Το προφίλ αποθηκεύτηκε');
+});
+
+test('profile save appears only while the draft differs from the saved profile', () => {
+  const profile = { name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[] };
+  const { document } = loadApp({ userProfile:profile });
+  const save = document.querySelector('#profile-save');
+
+  assert.ok(save.classList.contains('hidden'));
+  setValue(document, '#profile-birthdate', '2000-02-02', 'input');
+  assert.ok(!save.classList.contains('hidden'));
+  setValue(document, '#profile-birthdate', profile.birthdate, 'input');
+  assert.ok(save.classList.contains('hidden'));
+  assert.equal(document.querySelector('#profile-form').dataset.dirty, 'false');
 });
 
 test('profile drafts stay unsaved and are discarded after leaving the profile view', () => {
@@ -1173,7 +1279,6 @@ test('profile drafts stay unsaved and are discarded after leaving the profile vi
   click(document, '.nav-button[data-view="profile"]');
   setValue(document, '#profile-name', 'Πρόχειρο όνομα', 'input');
   setValue(document, '#profile-birthdate', '2000-02-02', 'input');
-  setValue(document, '#profile-weight', '95', 'input');
 
   assert.deepEqual(JSON.parse(localStorage.getItem('userProfile')), savedProfile);
   assert.equal(document.querySelector('#profile-status').textContent, 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ');
@@ -1184,7 +1289,6 @@ test('profile drafts stay unsaved and are discarded after leaving the profile vi
   click(document, '.nav-button[data-view="profile"]');
   assert.equal(document.querySelector('#profile-name').value, 'Δημήτρης');
   assert.equal(document.querySelector('#profile-birthdate').value, '1990-01-01');
-  assert.equal(document.querySelector('#profile-weight').value, '80');
   assert.equal(document.querySelector('#profile-status').textContent, '');
   assert.ok(document.querySelector('#profile-status').classList.contains('hidden'));
 });
@@ -1194,15 +1298,47 @@ test('an unfinished new profile is cleared without creating stored profile data'
   click(document, '.nav-button[data-view="profile"]');
   setValue(document, '#profile-name', 'Πρόχειρο όνομα', 'input');
   setValue(document, '#profile-birthdate', '2000-02-02', 'input');
-  setValue(document, '#profile-weight', '75', 'input');
   click(document, '.nav-button[data-view="home"]');
   click(document, '.nav-button[data-view="profile"]');
 
   assert.equal(localStorage.getItem('userProfile'), null);
   assert.equal(document.querySelector('#profile-name').value, '');
   assert.equal(document.querySelector('#profile-birthdate').value, '');
-  assert.equal(document.querySelector('#profile-weight').value, '');
   assert.equal(document.querySelector('#profile-status').textContent, 'ΝΕΟ ΠΡΟΦΙΛ');
+});
+
+test('hiding the age removes the stat from the card and persists with the profile', () => {
+  const { document, localStorage } = loadApp({ userProfile:{ name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[] } });
+  click(document, '.nav-button[data-view="profile"]');
+  assert.ok(!document.querySelector('#profile-card-stats').classList.contains('hidden'));
+  assert.equal(document.querySelector('#profile-preview-age-unit').textContent, 'έτη');
+  click(document, '#profile-age-button');
+  assert.ok(!document.querySelector('#profile-date-slip').classList.contains('hidden'));
+  const hide = document.querySelector('#profile-hide-age');
+  hide.checked = true;
+  hide.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
+  assert.ok(document.querySelector('#profile-card-stats').classList.contains('hidden'));
+  document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles:true, cancelable:true }));
+  assert.equal(JSON.parse(localStorage.getItem('userProfile')).hideAge, true);
+  assert.equal(JSON.parse(localStorage.getItem('userProfile')).birthdate, '1990-01-01');
+});
+
+test('the photo slip lists uploaded images and selecting one updates the saved card', () => {
+  const gallery = ['data:image/jpeg;base64,AAA', 'data:image/jpeg;base64,BBB'];
+  const { document, localStorage } = loadApp({ userProfile:{ name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:gallery[0], imageGallery:gallery } });
+  click(document, '.nav-button[data-view="profile"]');
+  click(document, '#profile-photo-button');
+  assert.ok(!document.querySelector('#profile-photo-slip').classList.contains('hidden'));
+  const cells = [...document.querySelectorAll('.profile-photo-cell')];
+  assert.equal(cells.length, 2);
+  assert.ok(cells[0].classList.contains('selected'));
+  click(document, '.profile-photo-cell[data-gallery-index="1"]');
+  assert.equal(document.querySelector('#profile-preview-image').getAttribute('src'), gallery[1]);
+  assert.equal(document.querySelector('#profile-status').textContent, 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ');
+  document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles:true, cancelable:true }));
+  const saved = JSON.parse(localStorage.getItem('userProfile'));
+  assert.equal(saved.customImage, gallery[1]);
+  assert.deepEqual(saved.imageGallery, gallery);
 });
 
 test('the unsaved profile status follows the selected interface language', () => {

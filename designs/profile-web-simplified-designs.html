@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Προφίλ Web — Μόνο το Logbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --cover-black:#0d0c09; --cover-black-hi:#1b1913; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+button { font-family:inherit; }
+button:focus-visible, input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (μοτίβο των design files) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:640px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.notes { max-width:660px; margin:0 auto; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--gold); }
+.notes-wrap { padding:0 5vw 80px; background:var(--ink); }
+
+/* ===== η "σελίδα" της εφαρμογής: χαρτί, όπως το προφίλ στο app ===== */
+.app-page { padding:clamp(48px,6vw,80px) 5vw; background:var(--paper); background-image:linear-gradient(rgba(21,19,13,.045) 1px,transparent 1px); background-size:100% 30px; color:var(--ink); display:grid; justify-items:center; gap:26px; }
+.page-hint { font-size:.72rem; font-weight:800; letter-spacing:.18em; color:var(--muted); text-align:center; }
+.page-hint b { color:var(--orange); }
+
+/* ===== black hardcover shell (Β2 τελικό) ===== */
+.book { position:relative; width:min(470px,100%); min-height:520px; border-radius:8px 16px 16px 8px; padding:24px 28px 50px; background:linear-gradient(118deg,var(--cover-black-hi) 0%,var(--cover-black) 58%); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, -9px 0 0 -4px #060504, 16px 24px 48px rgba(0,0,0,.35); display:grid; align-content:start; }
+.book::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 18% 6%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.book::after { content:""; position:absolute; left:9px; top:10px; bottom:10px; width:4px; border-radius:3px; background:linear-gradient(#26221703,#00000055); box-shadow:1px 0 0 rgba(255,255,255,.04); }
+.brand-press { position:relative; z-index:2; display:flex; align-items:center; gap:2px; }
+.brand-press i { display:block; width:4px; height:17px; border-radius:.5px; background:linear-gradient(180deg,#3a372c,#57523f 60%,#454033); box-shadow:0 1px 0 rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.75) inset; }
+.brand-press i:first-child,.brand-press i:last-child { width:6px; height:24px; }
+.brand-press i:nth-child(3) { width:36px; height:5px; background:linear-gradient(180deg,#4a3b0e,#7a5e18 60%,#5c4712); }
+.book-foot { position:absolute; z-index:2; left:0; right:0; bottom:14px; text-align:center; font:800 .58rem "Alegreya Sans"; letter-spacing:.34em; color:transparent; background:linear-gradient(180deg,#070604,#332d1e); -webkit-background-clip:text; background-clip:text; text-shadow:0 1px 0 rgba(255,255,255,.055); }
+.elastic { position:absolute; z-index:5; top:-4px; bottom:-4px; right:16%; width:12px; border-radius:3px 3px 4px 4px; transform:rotate(.55deg) translateX(1px); background:linear-gradient(90deg,#050403 0%,#181408 22%,#242012 46%,#2a2413 52%,#1c170b 68%,#0a0805 88%,#030202), repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px), repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 5px); }
+.elastic::before { content:""; position:absolute; top:22px; bottom:22px; left:-9px; right:-5px; z-index:-1; border-radius:10px; background:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 40%,rgba(0,0,0,.3) 78%,transparent); filter:blur(4px); }
+.elastic::after { content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(180deg,rgba(0,0,0,.7) 0,rgba(0,0,0,.25) 10px,transparent 30px,transparent calc(100% - 30px),rgba(0,0,0,.25) calc(100% - 10px),rgba(0,0,0,.7)),linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 2px 24%,rgba(255,255,255,.1) 42%,rgba(255,255,255,.03) 58%,transparent 76%,rgba(0,0,0,.35) calc(100% - 1px)); }
+
+/* ===== polaroid — τώρα interactive ===== */
+.tape { position:absolute; z-index:6; width:50px; height:15px; background:rgba(239,232,216,.26); box-shadow:0 1px 3px rgba(0,0,0,.35); backdrop-filter:blur(1px); }
+.pcard { position:relative; z-index:2; margin-top:38px; justify-self:center; width:170px; background:var(--paper); padding:8px 8px 10px; transform:rotate(-1.5deg); box-shadow:0 9px 18px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.35); }
+.pcard .tape { top:-8px; left:50%; transform:translateX(-50%) rotate(2deg); }
+.photo-btn { display:block; width:100%; height:140px; padding:0; border:0; border-radius:2px; cursor:pointer; position:relative; overflow:hidden; background:radial-gradient(circle at 35% 30%,#4b5f8a,#232c42 70%); color:rgba(239,232,216,.85); }
+.photo-btn .photo-face { position:absolute; inset:0; display:grid; place-items:center; font:800 .5rem "Alegreya Sans"; letter-spacing:.18em; }
+.photo-btn .photo-edit-tag { position:absolute; left:0; right:0; bottom:0; padding:4px 0 3px; background:rgba(13,12,9,.72); color:var(--paper); font:800 .5rem "Alegreya Sans"; letter-spacing:.22em; text-align:center; opacity:0; transform:translateY(100%); transition:.2s; }
+.photo-btn:hover .photo-edit-tag, .photo-btn:focus-visible .photo-edit-tag, .photo-btn[aria-expanded="true"] .photo-edit-tag { opacity:1; transform:none; }
+.pcard figcaption { margin-top:7px; text-align:center; font:600 1.25rem/1.1 "Caveat"; color:var(--ink); }
+.pcard-stats { margin-top:7px; padding-top:7px; border-top:1px solid rgba(21,19,13,.16); display:flex; justify-content:center; }
+.pcard-stats.age-hidden { display:none; }
+.age-btn { display:grid; gap:2px; justify-items:center; padding:2px 18px 3px; border:0; background:transparent; cursor:pointer; border-radius:2px; transition:background .2s; }
+.age-btn:hover, .age-btn[aria-expanded="true"] { background:rgba(201,162,39,.14); }
+.age-btn .stat-label { font-size:.46rem; font-weight:800; letter-spacing:.2em; color:var(--muted); }
+.age-btn .stat-value { font:700 .95rem/1 "Roboto Slab"; color:var(--ink); }
+
+/* ===== λυτά "φύλλα" κάτω από το βιβλίο (photo picker + date slip) ===== */
+.slip { width:min(470px,100%); background:var(--paper); color:var(--ink); padding:16px 18px 18px; box-shadow:0 8px 20px rgba(21,19,13,.28), 0 2px 4px rgba(21,19,13,.18); position:relative; transform:rotate(.6deg); }
+.slip[hidden] { display:none; }
+.slip::before { content:""; position:absolute; top:-7px; left:26px; width:50px; height:15px; background:rgba(21,19,13,.12); box-shadow:0 1px 3px rgba(0,0,0,.18); }
+.slip-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.slip-head strong { font-size:.72rem; font-weight:800; letter-spacing:.2em; }
+.slip-close { border:0; background:transparent; padding:2px 6px; cursor:pointer; color:var(--muted); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; }
+.slip-close:hover { color:var(--ink); }
+
+/* photo picker */
+.photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:12px; }
+.photo-cell { position:relative; display:grid; gap:5px; padding:5px 5px 7px; border:0; background:#fff; cursor:pointer; box-shadow:0 3px 8px rgba(21,19,13,.22); transform:rotate(-1deg); transition:transform .2s; }
+.photo-cell:nth-child(odd) { transform:rotate(1.2deg); }
+.photo-cell:hover { transform:rotate(0) translateY(-2px); }
+.photo-cell .thumb { width:100%; aspect-ratio:1; border-radius:1px; }
+.photo-cell .thumb-1 { background:radial-gradient(circle at 35% 30%,#4b5f8a,#232c42 70%); }
+.photo-cell .thumb-2 { background:radial-gradient(circle at 60% 35%,#6f6a52,#2e2b1d 75%); }
+.photo-cell .thumb-3 { background:radial-gradient(circle at 40% 25%,#8a8378,#3a362e 75%); }
+.photo-cell small { font-size:.56rem; font-weight:800; letter-spacing:.12em; color:var(--muted); text-align:center; }
+.photo-cell.selected { outline:2px solid var(--gold); }
+.photo-cell.selected small { color:var(--orange); }
+.photo-upload { display:grid; place-items:center; gap:6px; border:2px dashed var(--line); background:transparent; cursor:pointer; min-height:112px; color:var(--muted); font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; text-align:center; padding:8px; transition:.2s; }
+.photo-upload:hover { border-color:var(--orange); color:var(--orange); }
+.photo-upload .plus { font:500 1.6rem/1 "Roboto Slab"; }
+.photo-note { margin:12px 0 0; font-size:.72rem; color:var(--muted); line-height:1.45; }
+
+/* date slip */
+.date-row { display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center; }
+.date-field { display:grid; gap:6px; font-size:.66rem; font-weight:800; letter-spacing:.16em; color:var(--muted); }
+.date-field input { padding:10px 12px; border:1px solid var(--line); background:#fff; font:500 1rem "Roboto Slab"; color:var(--ink); border-radius:2px; }
+.age-out { padding:8px 14px; border-left:3px solid var(--gold); background:rgba(201,162,39,.1); display:grid; justify-items:center; gap:2px; }
+.age-out span { font-size:.6rem; font-weight:800; letter-spacing:.18em; color:var(--muted); }
+.age-out strong { font:700 1.7rem/1 "Roboto Slab"; }
+.hide-row { margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); display:flex; align-items:center; gap:10px; font-size:.85rem; font-weight:700; color:var(--ink); cursor:pointer; }
+.hide-row input { width:18px; height:18px; accent-color:var(--orange); cursor:pointer; }
+.hide-row small { display:block; font-size:.72rem; font-weight:500; color:var(--muted); }
+
+/* save */
+.save-btn { width:min(470px,100%); margin-top:6px; padding:18px 20px; border:0; background:var(--ink); color:var(--paper); font:800 .82rem "Alegreya Sans"; text-transform:uppercase; letter-spacing:.12em; cursor:pointer; box-shadow:inset 0 -3px 0 rgba(201,162,39,.5); transition:.25s; }
+.save-btn:hover { background:var(--orange); transform:translateY(-2px); }
+
+@media (prefers-reduced-motion:reduce) {
+  * { transition:none !important; }
+  .save-btn:hover, .photo-cell:hover { transform:rotate(0); }
+}
+@media (max-width:520px) {
+  .book { min-height:480px; padding:20px 20px 46px; }
+  .date-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN EXPLORATION — ΠΡΟΦΙΛ WEB · ΑΠΛΟΠΟΙΗΜΕΝΟ</p>
+  <h1>ΜΟΝΟ ΤΟ <em>LOGBOOK.</em></h1>
+  <p>Η σελίδα προφίλ στο web κρατά μόνο δύο πράγματα: το μαύρο Logbook και την αποθήκευση. Η φόρμα φεύγει — ό,τι άλλαζε από πεδία, τώρα αλλάζει πάνω στην ίδια την κάρτα. Πατάς τη φωτογραφία για να ανεβάσεις νέα ή να διαλέξεις από όσες έχεις ήδη ανεβάσει· πατάς την ηλικία για να ορίσεις ημερομηνία γέννησης ή να την κρύψεις. Το βάρος σβήνεται τελείως.</p>
+</header>
+
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ</b><span>ΚΑΡΤΑ = ΦΟΡΜΑ · ΛΥΤΑ ΦΥΛΛΑ ΓΙΑ ΦΩΤΟ &amp; ΗΜΕΡΟΜΗΝΙΑ · ΧΩΡΙΣ ΒΑΡΟΣ</span></div>
+
+<section class="app-page" aria-label="Προεπισκόπηση σελίδας προφίλ">
+  <p class="page-hint">ΔΟΚΙΜΑΣΕ ΤΟ: ΠΑΤΗΣΕ ΤΗ <b>ΦΩΤΟΓΡΑΦΙΑ</b> ΚΑΙ ΤΗΝ <b>ΗΛΙΚΙΑ</b> ΠΑΝΩ ΣΤΗΝ ΚΑΡΤΑ</p>
+
+  <article class="book">
+    <span class="brand-press" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <figure class="pcard">
+      <span class="tape" aria-hidden="true"></span>
+      <button id="photo-btn" class="photo-btn" type="button" aria-expanded="false" aria-controls="photo-slip">
+        <span class="photo-face" id="photo-face">ΦΩΤΟ</span>
+        <span class="photo-edit-tag">ΑΛΛΑΓΗ ΦΩΤΟΓΡΑΦΙΑΣ</span>
+      </button>
+      <figcaption>Δημήτρης</figcaption>
+      <div class="pcard-stats" id="pcard-stats">
+        <button id="age-btn" class="age-btn" type="button" aria-expanded="false" aria-controls="date-slip">
+          <span class="stat-label">ΗΛΙΚΙΑ</span>
+          <strong class="stat-value" id="age-value">30</strong>
+        </button>
+      </div>
+    </figure>
+    <div class="book-foot">TRAIN . LOG . REPEAT</div>
+    <span class="elastic" aria-hidden="true"></span>
+  </article>
+
+  <!-- λυτό φύλλο: φωτογραφίες -->
+  <aside id="photo-slip" class="slip" hidden aria-label="Φωτογραφίες προφίλ">
+    <div class="slip-head"><strong>ΦΩΤΟΓΡΑΦΙΕΣ ΠΡΟΦΙΛ</strong><button class="slip-close" type="button" data-close="photo">ΚΛΕΙΣΙΜΟ</button></div>
+    <div class="photo-grid">
+      <button class="photo-upload" type="button"><span class="plus" aria-hidden="true">+</span>ΑΝΕΒΑΣΜΑ ΝΕΑΣ<br>JPG, PNG ή WEBP</button>
+      <button class="photo-cell selected" type="button" data-photo="1"><span class="thumb thumb-1"></span><small>ΣΕ ΧΡΗΣΗ</small></button>
+      <button class="photo-cell" type="button" data-photo="2"><span class="thumb thumb-2"></span><small>ΜΑΡ 2026</small></button>
+      <button class="photo-cell" type="button" data-photo="3"><span class="thumb thumb-3"></span><small>ΙΑΝ 2026</small></button>
+    </div>
+    <p class="photo-note">Ό,τι ανεβάζεις μένει εδώ για να το ξαναδιαλέξεις. Αν δεν έχεις ανεβάσει τίποτα ακόμη, υπάρχει μόνο το «Ανέβασμα νέας».</p>
+  </aside>
+
+  <!-- λυτό φύλλο: ημερομηνία γέννησης -->
+  <aside id="date-slip" class="slip" hidden aria-label="Ημερομηνία γέννησης">
+    <div class="slip-head"><strong>ΗΜΕΡΟΜΗΝΙΑ ΓΕΝΝΗΣΗΣ</strong><button class="slip-close" type="button" data-close="date">ΚΛΕΙΣΙΜΟ</button></div>
+    <div class="date-row">
+      <label class="date-field">ΗΜΕΡΟΜΗΝΙΑ<input id="birthdate" type="date" value="1996-03-14"></label>
+      <div class="age-out" aria-live="polite"><span>ΗΛΙΚΙΑ</span><strong id="age-out">30</strong></div>
+    </div>
+    <label class="hide-row"><input id="hide-age" type="checkbox">
+      <span>Απόκρυψη ηλικίας από την κάρτα<small>Η ημερομηνία μένει αποθηκευμένη — απλώς δεν φαίνεται στο Logbook.</small></span>
+    </label>
+  </aside>
+
+  <button class="save-btn" type="button">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ</button>
+</section>
+
+<div class="notes-wrap"><section class="app-page" style="background:transparent;padding:34px 0 0;display:block;">
+  <p class="notes"><b>Πώς δουλεύει:</b> (1) Η φόρμα του προφίλ φεύγει από το web — μένουν η κάρτα και το «Αποθήκευση προφίλ»· (2) το πάτημα στη φωτογραφία ανοίγει λυτό φύλλο με «Ανέβασμα νέας» και τις ήδη ανεβασμένες, με σήμανση «ΣΕ ΧΡΗΣΗ» στην ενεργή· (3) το πάτημα στην ηλικία ανοίγει φύλλο με ημερομηνία γέννησης, ζωντανό υπολογισμό ηλικίας και «Απόκρυψη ηλικίας από την κάρτα» — με απόκρυψη, η γραμμή στατιστικών εξαφανίζεται και το polaroid μένει φωτογραφία + όνομα· (4) το <b>βάρος σβήνεται τελείως</b>: ούτε πεδίο, ούτε στήλη στην κάρτα. Τα φύλλα βγαίνουν κάτω από το βιβλίο σαν χαρτιά τραβηγμένα μέσα από το Logbook — ένα ανοιχτό κάθε φορά.</p>
+</section></div>
+
+<script>
+(() => {
+  const photoBtn = document.getElementById('photo-btn');
+  const ageBtn = document.getElementById('age-btn');
+  const photoSlip = document.getElementById('photo-slip');
+  const dateSlip = document.getElementById('date-slip');
+  const stats = document.getElementById('pcard-stats');
+  const face = document.getElementById('photo-face');
+
+  const set = (btn, slip, open) => { btn.setAttribute('aria-expanded', String(open)); slip.hidden = !open; };
+  const toggle = (btn, slip, otherBtn, otherSlip) => {
+    const open = slip.hidden;
+    set(btn, slip, open);
+    if (open) set(otherBtn, otherSlip, false);
+  };
+  photoBtn.addEventListener('click', () => toggle(photoBtn, photoSlip, ageBtn, dateSlip));
+  ageBtn.addEventListener('click', () => toggle(ageBtn, dateSlip, photoBtn, photoSlip));
+  document.querySelectorAll('.slip-close').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.close === 'photo') set(photoBtn, photoSlip, false); else set(ageBtn, dateSlip, false);
+  }));
+
+  // επιλογή υπάρχουσας φωτογραφίας
+  const faces = { 1:'radial-gradient(circle at 35% 30%,#4b5f8a,#232c42 70%)', 2:'radial-gradient(circle at 60% 35%,#6f6a52,#2e2b1d 75%)', 3:'radial-gradient(circle at 40% 25%,#8a8378,#3a362e 75%)' };
+  document.querySelectorAll('.photo-cell').forEach(cell => cell.addEventListener('click', () => {
+    document.querySelectorAll('.photo-cell').forEach(c => { c.classList.remove('selected'); if (c.querySelector('small').textContent === 'ΣΕ ΧΡΗΣΗ') c.querySelector('small').textContent = 'ΠΡΟΗΓΟΥΜΕΝΗ'; });
+    cell.classList.add('selected');
+    cell.querySelector('small').textContent = 'ΣΕ ΧΡΗΣΗ';
+    photoBtn.style.background = faces[cell.dataset.photo];
+    face.textContent = '';
+  }));
+
+  // ηλικία από ημερομηνία γέννησης
+  const birth = document.getElementById('birthdate');
+  const ageValue = document.getElementById('age-value');
+  const ageOut = document.getElementById('age-out');
+  const computeAge = () => {
+    const d = new Date(birth.value);
+    if (Number.isNaN(d.getTime())) { ageValue.textContent = '—'; ageOut.textContent = '—'; return; }
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
+    ageValue.textContent = age; ageOut.textContent = age;
+  };
+  birth.addEventListener('input', computeAge);
+  computeAge();
+
+  // απόκρυψη ηλικίας από την κάρτα
+  document.getElementById('hide-age').addEventListener('change', e => stats.classList.toggle('age-hidden', e.target.checked));
+})();
+</script>
+</body>
+</html>
