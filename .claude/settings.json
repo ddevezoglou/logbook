@@ -22,5 +22,11 @@
       "PowerShell(node --test --test-name-pattern \"plan-less copy|rebuilds an emptied plan\" tests/cloud-sync.test.mjs tests/app.test.mjs 2>$null)",
       "PowerShell(node \"C:\\\\Users\\\\DIMITR~1.DEV\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-dimitris-devetzoglou-logbook\\\\7a5383fa-191c-4fcc-b012-1235171b4b7b\\\\scratchpad\\\\sync-repro2.mjs\" 2>$null)"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true
   }
 }
