@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadApp } from './helpers.mjs';
+import { loadApp, click } from './helpers.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const seedSource = readFileSync(join(root, 'seed-week.js'), 'utf8');
@@ -76,11 +76,13 @@ test('booting the app on seeded data grants stage 4 GYMRAT with correct week pro
   assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
 });
 
-test('seeded data feeds the overview, personal bests and plan board', () => {
+test('seeded data feeds the overview, progress personal bests and plan board', () => {
   const { routines, sessions } = runSeed();
   const { document } = loadApp({ trainingRoutines: routines, trainingSessions: sessions });
   assert.equal(document.querySelector('#plan-count').textContent, '4/7 ημέρες');
   assert.equal(document.querySelectorAll('#session-cards .session-card').length, planOffsets.length * pastWeeks + expectedThisWeek);
+  click(document, '.nav-button[data-view="progress"]');
   const bests = document.querySelector('#personal-bests').textContent;
+  assert.ok(document.querySelector('#progress-view #personal-bests'), 'personal bests live in progress');
   for (const exercise of ['Bench Press', 'Deadlift', 'Pull-ups', 'Leg Press']) assert.ok(bests.includes(exercise), `personal bests must include ${exercise}`);
 });

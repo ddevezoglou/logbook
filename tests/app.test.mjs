@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.6.0');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.7.0');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -134,6 +134,17 @@ test('program manager keeps only the three creation fields before the tickets', 
   assert.ok(createPanel.compareDocumentPosition(tickets) & 4, 'the training tickets follow the definition form');
 });
 
+test('program motto follows the available program tickets', () => {
+  const { document } = loadApp();
+  const manager = document.querySelector('.routine-manager');
+  const carousel = manager.querySelector('.routine-carousel');
+  const motto = manager.querySelector('.routine-motto');
+
+  assert.equal(motto.previousElementSibling, carousel);
+  assert.equal(motto.textContent.trim(), 'STRONGER EVERY SESSION');
+  assert.equal(motto.getAttribute('aria-hidden'), 'true');
+});
+
 test('the plan exercise heading has no explanatory description', () => {
   const { document } = loadApp();
   const heading = document.querySelector('.exercise-builder-heading');
@@ -141,9 +152,10 @@ test('the plan exercise heading has no explanatory description', () => {
   assert.equal(heading.querySelector('small'), null);
 });
 
-test('stamp copy uses the shortened notification labels and session wording', () => {
+test('stamp copy uses the shortened notification labels and Personal Records wording', () => {
   const { document } = loadApp();
-  assert.equal(document.querySelector('.bests-motto').textContent.trim(), 'STRONGER EVERY SESSION');
+  assert.equal(document.querySelector('.personal-records-stamp').textContent.trim(), 'Personal Records');
+  assert.equal(document.querySelector('#history-counter').textContent.trim().replace(/\s+/g, ' '), '0 Logged Workouts');
   assert.match(styles, /\.toast::before\s*\{\s*content:"RECORDED"/);
   assert.match(styles, /\.toast\.toast-error::before\s*\{\s*content:"ATTENTION"/);
 });
@@ -715,8 +727,28 @@ test('personal bests pick the heavier set', () => {
     { id: 's2', date: '2026-07-03', type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: sets(110) }] },
   ];
   const { document } = loadApp({ trainingSessions: sessions });
-  click(document, '.nav-button[data-view="overview"]');
+  click(document, '.nav-button[data-view="progress"]');
   assert.ok(document.querySelector('#personal-bests').innerHTML.includes('110'), 'best should be 110kg');
+});
+
+test('personal records move from history to an expandable sheet below progress', () => {
+  const { document } = loadApp();
+  assert.equal(document.querySelector('#overview-view #personal-bests'), null, 'history no longer contains personal records');
+  const trigger = document.querySelector('#personal-records-trigger');
+  const sheet = document.querySelector('#personal-records-sheet');
+  assert.equal(trigger.getAttribute('aria-expanded'), 'false');
+  assert.equal(sheet.hidden, true);
+  assert.equal(trigger.textContent.trim().replace(/\s+/g, ' '), 'Personal Records');
+  assert.equal(trigger.querySelector('use').getAttribute('href'), '#trophy-fill');
+  click(document, '#personal-records-trigger');
+  assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+  assert.equal(trigger.getAttribute('aria-label'), 'Κλείσιμο Personal Records');
+  assert.equal(sheet.hidden, false);
+  assert.equal(sheet.querySelector('.personal-records-head strong').textContent, 'ΚΑΛΥΤΕΡΑ ΣΕΤ');
+  assert.equal(sheet.querySelector('.best-sets-badge').textContent, 'PR');
+  click(document, '#personal-records-trigger');
+  assert.equal(trigger.getAttribute('aria-expanded'), 'false');
+  assert.equal(sheet.hidden, true);
 });
 
 test('progress chart renders two comparable points', () => {
@@ -1450,7 +1482,7 @@ test('personal bests track modes separately and rank bodyweight by reps', () => 
     mk('s2', '2026-07-03', [{ reps: 12, weight: null, plates: null, weightMode: 'bodyweight' }]),
     mk('s3', '2026-07-05', [{ reps: 6, weight: 10, plates: null, weightMode: 'bodyweight_extra' }]),
   ] });
-  click(document, '.nav-button[data-view="overview"]');
+  click(document, '.nav-button[data-view="progress"]');
   const bests = document.querySelector('#personal-bests').innerHTML;
   assert.ok(bests.includes('12'), 'bodyweight best is 12 reps');
   assert.ok(bests.includes('extra kg'), 'bodyweight_extra tracked as its own mode');
@@ -1464,8 +1496,8 @@ test('overview stamp counts logged workout sessions', () => {
   const { document } = loadApp({ trainingSessions: [session, { ...session, id:'s2' }] });
   click(document, '.nav-button[data-view="overview"]');
   assert.equal(document.querySelector('#history-session-count').textContent, '2');
-  assert.equal(document.querySelectorAll('#history-counter .history-counter-label').length, 1);
-  assert.equal(document.querySelector('#history-counter').textContent.trim().replace(/\s+/g, ' '), '2 καταγεγραμμένες προπονήσεις');
+  assert.equal(document.querySelectorAll('#history-counter .history-counter-copy').length, 1);
+  assert.equal(document.querySelector('#history-counter').textContent.trim().replace(/\s+/g, ' '), '2 Logged Workouts');
   assert.equal(document.querySelector('#history-counter .history-counter-shadow'), null, 'the background figure is removed');
   assert.equal(document.querySelector('#metrics'), null, 'the old metric cards are removed');
 });
@@ -1474,15 +1506,14 @@ test('history, personal bests and progress empty states show only their guidance
   const { document } = loadApp();
   click(document, '.nav-button[data-view="overview"]');
   const historyEmpty = document.querySelector('#session-cards .empty');
-  const bestsEmpty = document.querySelector('#personal-bests .empty');
   assert.equal(historyEmpty.children.length, 1);
   assert.equal(historyEmpty.firstElementChild.tagName, 'SPAN');
   assert.equal(historyEmpty.textContent, 'Ολοκληρώστε την πρώτη προπόνηση και αρχίστε να χτίζετε το αρχείο σας.');
+  click(document, '.nav-button[data-view="progress"]');
+  const bestsEmpty = document.querySelector('#personal-bests .empty');
   assert.equal(bestsEmpty.children.length, 1);
   assert.equal(bestsEmpty.firstElementChild.tagName, 'SPAN');
   assert.equal(bestsEmpty.textContent, 'Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σας.');
-
-  click(document, '.nav-button[data-view="progress"]');
   const progressEmpty = document.querySelector('#progress-panel .empty');
   assert.equal(progressEmpty.children.length, 1);
   assert.equal(progressEmpty.firstElementChild.tagName, 'SPAN');

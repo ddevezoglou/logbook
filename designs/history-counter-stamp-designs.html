@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Counter — Σφραγίδα στα πρότυπα της εφαρμογής</title>
+<style>
+  /* Πραγματικές γραμματοσειρές της εφαρμογής (self-hosted) */
+  @font-face { font-family:"Alegreya Sans"; font-weight:700; font-display:swap; src:url("../assets/fonts/alegreya-sans-greek-700-normal.woff2") format("woff2"); unicode-range:U+0370-03FF; }
+  @font-face { font-family:"Alegreya Sans"; font-weight:700; font-display:swap; src:url("../assets/fonts/alegreya-sans-latin-700-normal.woff2") format("woff2"); unicode-range:U+0000-00FF,U+2000-206F; }
+  @font-face { font-family:"Alegreya Sans"; font-weight:800; font-display:swap; src:url("../assets/fonts/alegreya-sans-greek-800-normal.woff2") format("woff2"); unicode-range:U+0370-03FF; }
+  @font-face { font-family:"Alegreya Sans"; font-weight:800; font-display:swap; src:url("../assets/fonts/alegreya-sans-latin-800-normal.woff2") format("woff2"); unicode-range:U+0000-00FF,U+2000-206F; }
+  @font-face { font-family:"Roboto Slab"; font-weight:500; font-display:swap; src:url("../assets/fonts/roboto-slab-greek-500-normal.woff2") format("woff2"); unicode-range:U+0370-03FF; }
+  @font-face { font-family:"Roboto Slab"; font-weight:500; font-display:swap; src:url("../assets/fonts/roboto-slab-latin-500-normal.woff2") format("woff2"); unicode-range:U+0000-00FF,U+2000-206F; }
+  @font-face { font-family:"Roboto Slab"; font-weight:700; font-display:swap; src:url("../assets/fonts/roboto-slab-greek-700-normal.woff2") format("woff2"); unicode-range:U+0370-03FF; }
+  @font-face { font-family:"Roboto Slab"; font-weight:700; font-display:swap; src:url("../assets/fonts/roboto-slab-latin-700-normal.woff2") format("woff2"); unicode-range:U+0000-00FF,U+2000-206F; }
+
+  /* Design tokens — ίδια με styles.css :root */
+  :root { --ink:#15130d; --paper:#efe8d8; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#6d6551; --line:#b6ad97; --pen:#4d3f24;
+          --stamp-ink:#8a6a1c; --stamp-soft:rgba(138,106,28,.55); --stamp-line:rgba(138,106,28,.42); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 100px; }
+  h1.page { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:820px; line-height:1.55; margin:0 0 8px; }
+  .intro b { color:var(--pen); }
+  .legend { color:var(--muted); max-width:820px; line-height:1.5; margin:0 0 40px; font-size:.92rem; }
+
+  .variant { margin-bottom:52px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; flex-wrap:wrap; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.2rem; margin:0; }
+  .variant-title .tag { color:var(--orange); font-weight:800; font-size:.66rem; letter-spacing:.14em; }
+  .variant-title .rec { color:#fff; background:var(--orange); font-weight:800; font-size:.6rem; letter-spacing:.12em; padding:3px 8px; border-radius:2px; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:760px; line-height:1.5; }
+
+  /* ---- mockup of overview-hero context (όπως στο index.html) ---- */
+  .hero-mock { position:relative; background:var(--paper); border:1px solid var(--line); padding:58px 5vw 42px; display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:44px; overflow:hidden; }
+  .hero-mock::before { content:"LOGBOOK / ARCHIVE"; position:absolute; top:16px; right:20px; font:800 .58rem "Alegreya Sans"; letter-spacing:.24em; color:rgba(109,101,81,.5); }
+  .hero-mock h1 { font-family:"Roboto Slab",serif; font-weight:700; font-size:clamp(2.4rem,4.6vw,4.4rem); line-height:.92; text-transform:uppercase; letter-spacing:-.02em; margin:0; }
+  .hero-mock h1 em { font-style:italic; color:var(--orange); }
+  .stamp-slot { justify-self:center; display:grid; place-items:center; }
+
+  /* ===== shared: refined ink, one accent, mix-blend to sit in paper ===== */
+  .seal, .frame, .badge-wrap, .postmark { user-select:none; -webkit-user-select:none; mix-blend-mode:multiply; }
+
+  /* ============ 0 — Τρέχουσα κατάσταση (reference) ============ */
+  .v0 .cur { width:min(100%,300px); min-height:130px; padding:22px 14px 14px; position:relative; display:grid; place-items:end center; color:rgba(72,70,60,.9); transform:rotate(6deg); isolation:isolate; }
+  .v0 .cur::before { content:""; position:absolute; z-index:-1; left:34px; right:4px; top:58px; height:70px; opacity:.3; transform:rotate(-4deg) skewX(-12deg); background:linear-gradient(90deg,transparent,currentColor 8%,currentColor 82%,transparent); -webkit-mask-image:radial-gradient(ellipse at center,#000 0 42%,transparent 76%),repeating-linear-gradient(176deg,#000 0 3px,transparent 3px 7px); mask-image:radial-gradient(ellipse at center,#000 0 42%,transparent 76%),repeating-linear-gradient(176deg,#000 0 3px,transparent 3px 7px); -webkit-mask-composite:source-in; mask-composite:intersect; }
+  .v0 .cur .copy { position:relative; display:flex; align-items:baseline; gap:12px; color:rgba(72,70,60,.94); mix-blend-mode:multiply; }
+  .v0 .cur .copy strong { font:700 clamp(2.3rem,3.9vw,3.2rem)/.8 "Roboto Slab"; letter-spacing:-.08em; }
+  .v0 .cur .copy span { max-width:130px; font:800 .64rem/1.25 "Alegreya Sans"; letter-spacing:.15em; text-transform:uppercase; }
+
+  /* ============ Α — Σφραγίδα-σφραγίδα αρχείου (στρογγυλή, διπλός δακτύλιος) ============ */
+  .vA .seal { width:186px; height:186px; border-radius:50%; border:2.5px solid var(--stamp-ink); color:var(--stamp-ink); display:grid; place-items:center; text-align:center; transform:rotate(-6deg); position:relative; }
+  .vA .seal::before { content:""; position:absolute; inset:9px; border:1.5px solid currentColor; border-radius:50%; opacity:.55; }
+  .vA .seal .inner { display:grid; justify-items:center; gap:4px; padding:0 20px; }
+  .vA .seal .eyebrow { font:800 .5rem "Alegreya Sans"; letter-spacing:.22em; opacity:.75; }
+  .vA .seal .num { font:700 3.5rem/.82 "Roboto Slab"; letter-spacing:-.05em; }
+  .vA .seal .lab { font:800 .5rem/1.25 "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; max-width:11ch; opacity:.9; }
+
+  /* ============ Β — Πλαίσιο μετρητή (ορθογώνια σφραγίδα, editorial) ============ */
+  .vB .frame { position:relative; display:flex; align-items:center; gap:16px; padding:16px 20px; border:2.5px solid var(--stamp-ink); color:var(--stamp-ink); transform:rotate(-3deg); }
+  .vB .frame::before { content:""; position:absolute; inset:4px; border:1px solid currentColor; opacity:.45; pointer-events:none; }
+  .vB .frame .num { font:700 3.4rem/.8 "Roboto Slab"; letter-spacing:-.06em; }
+  .vB .frame .divider { width:1.5px; align-self:stretch; background:currentColor; opacity:.4; }
+  .vB .frame .meta { display:grid; gap:3px; }
+  .vB .frame .meta .k { font:800 .6rem/1.2 "Alegreya Sans"; letter-spacing:.15em; text-transform:uppercase; max-width:12ch; }
+  .vB .frame .meta .sub { font:800 .52rem "Alegreya Sans"; letter-spacing:.2em; opacity:.6; }
+
+  /* ============ Γ — Αριθμός-ήρωας + badge (πιο συγκρατημένο) ============ */
+  /* Κρατά τον μεγάλο αριθμό σε μελάνι (--pen) όπως τώρα, αλλά αντικαθιστά
+     το φαγωμένο silhouette με μια καθαρή σφραγίδα-ετικέτα από κάτω. */
+  .vC .badge-wrap { display:grid; justify-items:center; gap:12px; transform:rotate(-2deg); }
+  .vC .num { font:700 clamp(3.6rem,7vw,5rem)/.78 "Roboto Slab"; letter-spacing:-.06em; color:var(--pen); }
+  .vC .badge { display:inline-flex; align-items:center; gap:9px; border:2px solid var(--stamp-line); color:var(--stamp-soft); padding:6px 12px; font:800 .6rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; }
+  .vC .badge svg { width:16px; height:16px; fill:currentColor; flex:0 0 auto; }
+
+  /* ============ Δ — Postmark (κυκλική σφραγίδα ταχυδρομείου) ============ */
+  .vD .postmark { width:190px; height:190px; border-radius:50%; color:var(--stamp-ink); display:grid; place-items:center; text-align:center; transform:rotate(5deg); position:relative; }
+  .vD .postmark::before { content:""; position:absolute; inset:0; border-radius:50%; border:2.5px solid currentColor; -webkit-mask-image:repeating-conic-gradient(#000 0 5deg,transparent 5deg 8deg); mask-image:repeating-conic-gradient(#000 0 5deg,transparent 5deg 8deg); }
+  .vD .postmark::after { content:""; position:absolute; inset:16px; border-radius:50%; border:1.5px solid currentColor; opacity:.6; }
+  .vD .postmark .arc { position:absolute; inset:0; }
+  .vD .postmark .arc text { font:800 .5rem "Alegreya Sans"; letter-spacing:.16em; fill:currentColor; }
+  .vD .postmark .inner { display:grid; justify-items:center; gap:2px; }
+  .vD .postmark .num { font:700 3.3rem/.82 "Roboto Slab"; letter-spacing:-.05em; }
+  .vD .postmark .lab { font:800 .5rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; opacity:.85; }
+
+  @media(max-width:720px){
+    .hero-mock { grid-template-columns:1fr; gap:26px; }
+    .stamp-slot { justify-self:start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Εικονίδιο γραμμής (currentColor) — ένα σετ, χωρίς emoji, όπως το flex-icon της εφαρμογής -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="check-seal" viewBox="0 0 24 24"><path d="M20 6.5 9.5 17 4 11.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<h1 class="page">History counter — σφραγίδα στα πρότυπα της εφαρμογής</h1>
+<p class="intro">Το τρέχον γραφικό «καταγεγραμμένες προπονήσεις» είναι η <b>μόνη</b> σφραγίδα χωρίς πλαίσιο, με γκρι φαγωμένο μελάνι και dotted silhouette — γι' αυτό ξεχωρίζει από τις υπόλοιπες <b>σφραγιδούλες</b> (motto-stamp, info-stamp, account-connected-stamp, best-sets-badge). Παρακάτω τέσσερις παραλλαγές που το φέρνουν στην ίδια γλώσσα: καθαρό <b>2px πλαίσιο</b>, ένα accent (χρυσό/πορτοκαλί μελάνι <code>#8a6a1c</code>), Roboto Slab για τον αριθμό, Alegreya Sans 800 uppercase για την ετικέτα, ελαφριά κλίση, <code>mix-blend-mode:multiply</code> για να «κάθεται» στο χαρτί.</p>
+<p class="legend">Το πλαίσιο mockup αναπαράγει το <code>.overview-hero</code> (τίτλος «Η ΔΟΥΛΕΙΑ ΜΙΛΑΕΙ.» + eyebrow «LOGBOOK / ARCHIVE»). Ο αριθμός <b>13</b> είναι δείγμα. Πρώτη είναι η τρέχουσα κατάσταση για σύγκριση.</p>
+
+<!-- 0: reference -->
+<section class="variant v0">
+  <div class="variant-title"><h2>Τρέχουσα κατάσταση</h2><span class="tag">REFERENCE</span></div>
+  <p class="variant-note">Χωρίς πλαίσιο, γκρι μελάνι, dotted halftone silhouette + <code>press-light</code> διάβρωση. Η μόνη σφραγίδα που δεν μοιάζει με τις υπόλοιπες.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp-slot">
+      <div class="cur"><div class="copy"><strong>13</strong><span>καταγεγραμμένες προπονήσεις</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Α -->
+<section class="variant vA">
+  <div class="variant-title"><h2>Α — Σφραγίδα αρχείου</h2><span class="tag">ARCHIVE SEAL</span><span class="rec">ΠΡΟΤΕΙΝΟΜΕΝΗ</span></div>
+  <p class="variant-note">Κυκλική σφραγίδα με διπλό δακτύλιο — ακριβώς η γλώσσα του <code>.info-stamp</code> σε μεγέθυνση. Ο αριθμός στο κέντρο (Roboto Slab), ετικέτα από κάτω, μικρό eyebrow «LOGBOOK». Διαβάζεται ως επίσημη σφραγίδα καταχώρησης — δένει με το «LOGBOOK / ARCHIVE» του hero. Κλίση -6°.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp-slot">
+      <div class="seal">
+        <div class="inner">
+          <span class="eyebrow">LOGBOOK</span>
+          <span class="num">13</span>
+          <span class="lab">καταγεγραμμένες προπονήσεις</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Β -->
+<section class="variant vB">
+  <div class="variant-title"><h2>Β — Πλαίσιο μετρητή</h2><span class="tag">FRAMED COUNTER</span></div>
+  <p class="variant-note">Ορθογώνια σφραγίδα με διπλή γραμμή (γλώσσα του <code>.account-connected-stamp</code>). Μεγάλος αριθμός αριστερά, κάθετη γραμμή, ετικέτα δεξιά σε δύο επίπεδα. Πιο editorial / «στοιχείο μητρώου». Κλίση -3°.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp-slot">
+      <div class="frame">
+        <span class="num">13</span>
+        <span class="divider"></span>
+        <span class="meta"><span class="k">καταγεγραμμένες προπονήσεις</span><span class="sub">LOGBOOK · ARCHIVE</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Γ -->
+<section class="variant vC">
+  <div class="variant-title"><h2>Γ — Αριθμός-ήρωας + badge</h2><span class="tag">RESTRAINED</span></div>
+  <p class="variant-note">Η πιο συντηρητική: κρατά τον μεγάλο αριθμό σε μελάνι (<code>--pen</code>) όπως τώρα — ώστε να παραμείνει ήρωας του hero — αλλά αντικαθιστά το φαγωμένο silhouette με μια καθαρή σφραγίδα-ετικέτα από κάτω, ίδια με το <code>.motto-stamp</code> (πλαίσιο + line icon). Ελάχιστη αλλαγή, μηδενική «βρωμιά». Κλίση -2°.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp-slot">
+      <div class="badge-wrap">
+        <span class="num">13</span>
+        <span class="badge"><svg><use href="#check-seal"/></svg>καταγεγραμμένες προπονήσεις</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Δ -->
+<section class="variant vD">
+  <div class="variant-title"><h2>Δ — Postmark</h2><span class="tag">CANCELLATION</span></div>
+  <p class="variant-note">Κυκλική σφραγίδα ταχυδρομείου: εξωτερικός δακτύλιος με «δόντια» (segmented) + εσωτερικός συμπαγής, κείμενο σε τόξο. Λίγο πιο παιχνιδιάρικο αλλά μονόχρωμο. Κλίση +5°. Καλή αν θέλεις πιο έντονη «σφραγίδα-γεγονός».</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp-slot">
+      <div class="postmark">
+        <svg class="arc" viewBox="0 0 190 190">
+          <path id="arcTop" d="M 30 95 A 65 65 0 0 1 160 95" fill="none"/>
+          <text><textPath href="#arcTop" startOffset="50%" text-anchor="middle">ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ</textPath></text>
+        </svg>
+        <div class="inner">
+          <span class="num">13</span>
+          <span class="lab">προπονήσεις</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

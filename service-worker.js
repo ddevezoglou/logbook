@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.6.0';
+const CACHE_VERSION = 'logbook-0.7.0';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
 const SUPABASE_LIBRARY = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const APP_SHELL = [

@@ -853,6 +853,9 @@ function renderOverview() {
     return `<article class="session-card" data-session-id="${esc(session.id)}" data-session-date="${esc(session.date || '')}"><div class="session-summary" data-view-session="${esc(session.id)}" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="session-detail-dialog" aria-label="Άνοιγμα προπόνησης ${esc(sessionWorkoutName(session))}"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${sessionNumber}</small></div><div class="card-body"><div class="card-stats"><span>${exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><div class="card-title-row"><h3 data-i18n-user>${esc(sessionWorkoutName(session))}</h3></div><p class="card-exercises" data-i18n-user>${exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment" data-i18n-user>${esc(session.comments)}</p>` : ''}</div><span class="card-stamp" aria-hidden="true">LOGGED</span><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${esc(session.id)}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${esc(session.id)}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-copy" data-copy-session="${esc(session.id)}" type="button">ΑΝΤΙΓΡΑΦΗ</button><button class="card-delete" data-delete-session="${esc(session.id)}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></div></article>`;
   }).join('') : '<div class="empty"><span>Ολοκληρώστε την πρώτη προπόνηση και αρχίστε να χτίζετε το αρχείο σας.</span></div>';
   renderHistoryWeek();
+}
+
+function renderPersonalBests() {
   const bests = new Map();
   const performanceScore = set => set.weightMode === 'bodyweight' ? [Number(set.reps)||0] : set.weightMode === 'mixed' ? [Number(set.plates)||0,Number(set.weight)||0,Number(set.reps)||0] : set.weightMode === 'plates' ? [Number(set.plates)||0,Number(set.reps)||0] : [Number(set.weight)||0,Number(set.reps)||0];
   const isBetter = (candidate, current) => !current || performanceScore(candidate).some((value,index) => value !== performanceScore(current)[index] && performanceScore(candidate).slice(0,index).every((prior,i) => prior === performanceScore(current)[i]) && value > performanceScore(current)[index]);
@@ -886,6 +889,7 @@ function progressWorkouts() {
 }
 
 function renderProgressSelectors() {
+  renderPersonalBests();
   const workouts = progressWorkouts(), workoutSelect = $('#progress-workout'), previousWorkout = workoutSelect.value;
   workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option data-i18n-user value="${esc(item.key)}">${esc(item.name)}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
   if (workouts.some(item => item.key === previousWorkout)) workoutSelect.value = previousWorkout;
@@ -1518,6 +1522,13 @@ document.addEventListener('keydown', event => {
 $('#progress-workout').addEventListener('change', renderProgressSelectors);
 $('#progress-exercise').addEventListener('change', renderProgressSelectors);
 $('#progress-set').addEventListener('change', renderProgressChart);
+$('#personal-records-trigger').addEventListener('click', event => {
+  const trigger = event.currentTarget;
+  const willOpen = trigger.getAttribute('aria-expanded') !== 'true';
+  trigger.setAttribute('aria-expanded', String(willOpen));
+  trigger.setAttribute('aria-label', `${willOpen ? 'Κλείσιμο' : 'Άνοιγμα'} Personal Records`);
+  $('#personal-records-sheet').hidden = !willOpen;
+});
 // SVG has no z-index: the tooltip of an early point paints below later points, so lift the active point last in the tree.
 const raiseChartPoint = target => { const point = target.closest?.('.chart-point'); if (point?.parentNode && point.parentNode.lastElementChild !== point) point.parentNode.appendChild(point); };
 document.addEventListener('mouseover', event => raiseChartPoint(event.target));

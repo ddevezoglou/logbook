@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Counter — τελική σφραγίδα, ίδια με τις υπόλοιπες (.motto-stamp)</title>
+<style>
+  @font-face { font-family:"Alegreya Sans"; font-weight:800; font-display:swap; src:url("../assets/fonts/alegreya-sans-latin-800-normal.woff2") format("woff2"); unicode-range:U+0000-00FF,U+2000-206F; }
+  @font-face { font-family:"Alegreya Sans"; font-weight:800; font-display:swap; src:url("../assets/fonts/alegreya-sans-greek-800-normal.woff2") format("woff2"); unicode-range:U+0370-03FF; }
+  @font-face { font-family:"Roboto Slab"; font-weight:700; font-display:swap; src:url("../assets/fonts/roboto-slab-latin-700-normal.woff2") format("woff2"); unicode-range:U+0000-00FF,U+2000-206F; }
+  @font-face { font-family:"Roboto Slab"; font-weight:700; font-display:swap; src:url("../assets/fonts/roboto-slab-greek-700-normal.woff2") format("woff2"); unicode-range:U+0370-03FF; }
+
+  :root { --ink:#15130d; --paper:#efe8d8; --gold:#c9a227; --orange:#8a6a1c; --muted:#6d6551; --line:#b6ad97; --pen:#4d3f24; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8cfba; color:var(--ink); font-family:"Alegreya Sans","Segoe UI",sans-serif; padding:40px 4vw 100px; }
+  h1.page { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; }
+  .intro { color:var(--muted); max-width:820px; line-height:1.55; margin:0 0 8px; }
+  .intro b { color:var(--pen); } .intro code,.variant-note code { background:rgba(21,19,13,.06); padding:0 4px; border-radius:3px; font-size:.9em; }
+  .legend { color:var(--muted); max-width:820px; line-height:1.5; margin:0 0 40px; font-size:.92rem; }
+  .variant { margin-bottom:52px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; margin-bottom:4px; flex-wrap:wrap; }
+  .variant-title h2 { font-family:"Roboto Slab",serif; font-size:1.2rem; margin:0; }
+  .variant-title .tag { color:var(--orange); font-weight:800; font-size:.66rem; letter-spacing:.14em; }
+  .variant-title .rec { color:#fff; background:var(--orange); font-weight:800; font-size:.6rem; letter-spacing:.12em; padding:3px 8px; border-radius:2px; }
+  .variant-note { color:var(--muted); margin:0 0 16px; max-width:760px; line-height:1.5; }
+
+  .hero-mock { position:relative; background:var(--paper); border:1px solid var(--line); padding:58px 5vw 42px; display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:44px; overflow:hidden; }
+  .hero-mock::before { content:"LOGBOOK / ARCHIVE"; position:absolute; top:16px; right:20px; font:800 .58rem "Alegreya Sans"; letter-spacing:.24em; color:rgba(109,101,81,.5); }
+  .hero-mock h1 { font-family:"Roboto Slab",serif; font-weight:700; font-size:clamp(2.4rem,4.6vw,4.4rem); line-height:.92; text-transform:uppercase; letter-spacing:-.02em; margin:0; }
+  .hero-mock h1 em { font-style:italic; color:var(--orange); }
+  .stamp-slot { justify-self:center; display:grid; place-items:center; }
+
+  /* ============================================================
+     ΑΚΡΙΒΩΣ τα tokens του .motto-stamp (styles.css:265-266)
+     ============================================================ */
+  .motto-stamp { display:inline-flex; align-items:center; gap:9px; border:2px solid rgba(138,106,28,.35); color:rgba(138,106,28,.6); padding:6px 11px; font:800 .58rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; transform:rotate(-2deg); pointer-events:none; user-select:none; }
+  .motto-stamp svg { width:17px; height:17px; fill:currentColor; flex:0 0 auto; }
+
+  /* Η νέα σφραγίδα = ΑΚΡΙΒΩΣ .motto-stamp. Χωρίς κανένα override:
+     το «13» είναι απλό κείμενο, ίδια γραμματοσειρά/μέγεθος με την ετικέτα. */
+
+  /* σειρά σύγκρισης: η νέα δίπλα σε υπάρχουσα σφραγίδα της εφαρμογής */
+  .compare-row { display:flex; align-items:center; gap:26px; flex-wrap:wrap; }
+  .compare-tag { font:800 .56rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+  .compare-cell { display:flex; flex-direction:column; align-items:center; gap:9px; }
+</style>
+</head>
+<body>
+
+<!-- Γεμάτο μολύβι (fill:currentColor) — ίδια λογική με το flex-icon των υπόλοιπων σφραγίδων -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="pencil-fill" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+  <symbol id="flex-icon" viewBox="0 0 24 24"><path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></symbol>
+</defs></svg>
+
+<h1 class="page">Τελική — ίδια σφραγίδα με τις υπόλοιπες</h1>
+<p class="intro">Η νέα σφραγίδα χρησιμοποιεί <b>ακριβώς</b> τα tokens του <code>.motto-stamp</code>: Alegreya Sans <b>800 .58rem</b>, uppercase, tracking <code>.16em</code>, πλαίσιο <code>2px</code>, χρώμα <code>rgba(138,106,28,.6)</code>, κλίση <code>-2°</code>, εικονίδιο <code>17px</code> γεμάτο. Το <b>13</b> είναι απλό κείμενο — <b>ίδια γραμματοσειρά και μέγεθος</b> με την ετικέτα, όχι μεγάλος αριθμός. Το <b>LOGGED WORKOUTS</b> είναι σταθερό (εκτός i18n).</p>
+<p class="legend">Παρακάτω η νέα σφραγίδα <b>μέσα στο hero</b>, και μια σειρά σύγκρισης όπου κάθεται δίπλα στην υπαρκτή σφραγίδα «STRONGER EVERY SESSION» — ίδιο βάρος, ίδιο μέγεθος, αδέρφια.</p>
+
+<!-- Recommended -->
+<section class="variant">
+  <div class="variant-title"><h2>Γ2 — μολύβι + 13 + LOGGED WORKOUTS</h2><span class="tag">= .motto-stamp</span><span class="rec">ΤΕΛΙΚΗ</span></div>
+  <p class="variant-note">Εικονίδιο μολυβιού, μετά <code>13 LOGGED WORKOUTS</code> σε μία σειρά — όλα στο ίδιο μέγεθος/βάρος με τις άλλες σφραγίδες.</p>
+  <div class="hero-mock">
+    <div><h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1></div>
+    <div class="stamp-slot">
+      <div class="motto-stamp"><svg><use href="#pencil-fill"/></svg>13 Logged Workouts</div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section class="variant">
+  <div class="variant-title"><h2>Σύγκριση με υπάρχουσα σφραγίδα</h2><span class="tag">SIBLINGS</span></div>
+  <p class="variant-note">Ίδια γραμματοσειρά, μέγεθος, πλαίσιο, χρώμα και κλίση. Η νέα δεν ξεχωρίζει πια.</p>
+  <div class="hero-mock" style="grid-template-columns:1fr; place-items:center;">
+    <div class="compare-row">
+      <div class="compare-cell">
+        <span class="compare-tag">ΝΕΑ</span>
+        <div class="motto-stamp"><svg><use href="#pencil-fill"/></svg>13 Logged Workouts</div>
+      </div>
+      <div class="compare-cell">
+        <span class="compare-tag">ΥΠΑΡΧΟΥΣΑ</span>
+        <div class="motto-stamp"><svg><use href="#flex-icon"/></svg>Stronger Every Session<svg style="transform:scaleX(-1)"><use href="#flex-icon"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Micro-options -->
+<section class="variant">
+  <div class="variant-title"><h2>Μικρο-επιλογές διάταξης</h2><span class="tag">OPTIONS</span></div>
+  <p class="variant-note">Ίδιο στυλ, μικρές διαφορές στη σειρά/διαχωριστικό. Πες μου αν προτιμάς κάποια.</p>
+  <div class="hero-mock" style="grid-template-columns:1fr; place-items:center; gap:20px;">
+    <div class="compare-row" style="justify-content:center;">
+      <div class="compare-cell"><span class="compare-tag">A · εικονίδιο μπροστά</span>
+        <div class="motto-stamp"><svg><use href="#pencil-fill"/></svg>13 Logged Workouts</div></div>
+      <div class="compare-cell"><span class="compare-tag">B · με τελεία</span>
+        <div class="motto-stamp"><svg><use href="#pencil-fill"/></svg>13 · Logged Workouts</div></div>
+      <div class="compare-cell"><span class="compare-tag">C · αριθμός στο τέλος</span>
+        <div class="motto-stamp"><svg><use href="#pencil-fill"/></svg>Logged Workouts&nbsp;·&nbsp;13</div></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

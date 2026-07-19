@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Επίβλεψη — Personal Records stamp</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../fonts.css">
+  <style>
+    :root {
+      --ink:#15130d;
+      --paper:#efe8d8;
+      --paper-soft:#f8f3e4;
+      --paper-dark:#d8cfba;
+      --gold:#c9a227;
+      --orange:#8a6a1c;
+      --muted:#706957;
+      --line:#b6ad97;
+      --shadow:rgba(21,19,13,.14);
+    }
+
+    * { box-sizing:border-box; }
+    html { color-scheme:light; }
+    body {
+      margin:0;
+      padding:40px clamp(16px,4vw,64px) 96px;
+      background:
+        linear-gradient(rgba(21,19,13,.035) 1px,transparent 1px),
+        var(--paper-dark);
+      background-size:100% 32px;
+      color:var(--ink);
+      font-family:"Alegreya Sans","Segoe UI",sans-serif;
+    }
+
+    button { font:inherit; }
+    .page-head { max-width:1040px; margin:0 auto 38px; }
+    .kicker { color:var(--orange); font-size:.72rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { margin-bottom:8px; font:700 clamp(1.8rem,4vw,3rem)/1.05 "Roboto Slab",serif; }
+    .intro { max-width:760px; margin-bottom:0; color:var(--muted); font-size:1rem; line-height:1.55; }
+    .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+    .legend span { padding:6px 9px; border:1px solid rgba(21,19,13,.28); background:rgba(239,232,216,.65); font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+
+    .option { max-width:1040px; margin:0 auto 44px; }
+    .option-head { display:grid; grid-template-columns:48px 1fr; gap:14px; align-items:start; margin-bottom:14px; }
+    .option-letter { width:42px; height:42px; display:grid; place-items:center; border:2px solid var(--orange); border-radius:50%; color:var(--orange); font:700 1.05rem "Roboto Slab",serif; transform:rotate(-7deg); }
+    .option-head h2 { margin-bottom:4px; font:700 1.15rem "Roboto Slab",serif; }
+    .option-head p { max-width:760px; margin-bottom:0; color:var(--muted); font-size:.9rem; line-height:1.45; }
+    .recommended { display:inline-block; margin-left:8px; color:var(--orange); font:.78rem "Alegreya Sans",sans-serif; font-weight:800; letter-spacing:.12em; vertical-align:middle; }
+
+    .screen {
+      overflow:hidden;
+      border:1px solid var(--ink);
+      background:var(--paper);
+      box-shadow:7px 8px 0 var(--shadow);
+    }
+    .screen-top {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:11px 18px;
+      border-bottom:1px solid rgba(201,162,39,.35);
+      background:var(--ink);
+      color:var(--paper);
+    }
+    .screen-brand { font:700 .72rem "Roboto Slab",serif; letter-spacing:.18em; }
+    .screen-location { color:var(--gold); font-size:.68rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+    .content { padding:30px clamp(16px,4vw,42px) 34px; }
+    .controls { display:grid; grid-template-columns:1fr 1fr .55fr; gap:12px; margin-bottom:18px; }
+    .control { min-width:0; }
+    .control small { display:block; margin-bottom:5px; color:var(--muted); font-size:.66rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
+    .fake-select { display:flex; align-items:center; justify-content:space-between; min-height:42px; padding:9px 11px; border:1px solid var(--ink); background:rgba(255,255,255,.22); font-weight:700; }
+    .fake-select svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; }
+
+    .chart-card { position:relative; padding:24px 24px 16px; border:1px solid var(--ink); background:rgba(255,255,255,.28); box-shadow:3px 3px 0 rgba(21,19,13,.07); }
+    .chart-summary { display:flex; align-items:end; justify-content:space-between; gap:24px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+    .chart-summary h3 { margin-bottom:4px; font:700 1.25rem "Roboto Slab",serif; }
+    .chart-summary small { color:var(--muted); font-size:.72rem; }
+    .latest { padding-left:13px; border-left:2px solid var(--orange); }
+    .latest span { display:block; color:var(--muted); font-size:.57rem; font-weight:800; letter-spacing:.14em; }
+    .latest strong { display:block; margin-top:4px; font:700 1rem "Roboto Slab",serif; }
+    .chart { display:block; width:100%; height:auto; margin-top:12px; overflow:visible; }
+    .grid-line { stroke:var(--line); stroke-width:1; stroke-dasharray:1 5; }
+    .tick { fill:var(--muted); font:600 10px "Alegreya Sans",sans-serif; }
+    .weight-line { fill:none; stroke:var(--orange); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .rep-line { fill:none; stroke:var(--ink); stroke-width:2.5; stroke-dasharray:7 6; opacity:.45; }
+    .dot { fill:var(--paper); stroke:var(--orange); stroke-width:3; }
+    .rep-dot { fill:var(--orange); stroke:var(--ink); stroke-width:1.5; }
+    .date { fill:var(--muted); font:600 10px "Alegreya Sans",sans-serif; letter-spacing:.03em; }
+
+    .pr-zone { position:relative; display:grid; align-content:start; justify-items:center; min-height:62px; margin-top:12px; }
+    .pr-trigger {
+      position:relative;
+      min-width:212px;
+      min-height:48px;
+      border:0;
+      background:transparent;
+      color:var(--orange);
+      cursor:pointer;
+      text-transform:uppercase;
+      touch-action:manipulation;
+      transition:transform .2s ease,color .2s ease;
+    }
+    .pr-trigger:hover { color:#6f5314; }
+    .pr-trigger:focus-visible { outline:3px solid var(--gold); outline-offset:4px; }
+    .pr-trigger:active { transform:scale(.98); }
+    .pr-trigger[aria-expanded="true"] .chevron { transform:rotate(180deg); }
+    .chevron { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; transition:transform .2s ease; }
+
+    .records-sheet {
+      position:relative;
+      width:min(100%,660px);
+      margin-top:8px;
+      border:1px solid rgba(138,106,28,.38);
+      background:var(--paper-soft);
+      box-shadow:5px 7px 0 rgba(138,106,28,.18);
+      transform-origin:top center;
+      animation:sheet-in .22s ease-out both;
+    }
+    .records-sheet[hidden] { display:none; }
+    .records-head { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:15px 18px 12px; border-bottom:2px solid var(--ink); }
+    .records-head div { display:flex; align-items:center; gap:11px; }
+    .records-head svg { width:20px; height:20px; fill:none; stroke:var(--orange); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    .records-head strong { font:700 .82rem "Roboto Slab",serif; letter-spacing:.08em; text-transform:uppercase; }
+    .records-head small { color:var(--muted); font-size:.7rem; font-weight:700; }
+    .best-sets-badge { display:inline-grid; place-items:center; flex:0 0 auto; width:58px; height:32px; border:2px solid var(--orange); border-radius:50%; color:var(--orange); font:800 .62rem "Alegreya Sans",sans-serif; letter-spacing:.08em; transform:rotate(-4deg); }
+    .records-list { margin:0; padding:0 18px 5px; list-style:none; }
+    .records-list li { display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center; padding:13px 2px; border-bottom:1px solid var(--line); }
+    .records-list li:last-child { border-bottom:0; }
+    .records-list b { display:block; font-size:.93rem; }
+    .records-list span { display:block; margin-top:2px; color:var(--muted); font-size:.73rem; }
+    .record-value { color:var(--orange); font:700 1.25rem "Roboto Slab",serif; white-space:nowrap; }
+    .record-value em { margin-left:3px; font:800 .58rem "Alegreya Sans",sans-serif; font-style:normal; letter-spacing:.04em; }
+
+    /* A — compact rectangular rubber stamp */
+    .option-a .pr-trigger { display:grid; place-items:center; width:184px; min-width:184px; padding:0; transform:none; color:inherit; }
+    .option-a .pr-stamp-face { display:inline-flex; align-items:center; gap:9px; border:2px solid rgba(138,106,28,.35); color:rgba(138,106,28,.6); padding:6px 11px; font:800 .58rem "Alegreya Sans",sans-serif; letter-spacing:.16em; text-transform:uppercase; white-space:nowrap; transform:rotate(-2deg); transform-origin:center; transition:transform .22s ease-out,color .18s ease,border-color .18s ease; user-select:none; }
+    .option-a .trophy-icon { width:17px; height:17px; fill:currentColor; flex:0 0 auto; }
+    .option-a .pr-copy { font:inherit; letter-spacing:inherit; }
+    .option-a .pr-trigger:active { transform:none; }
+    .option-a .pr-trigger:hover .pr-stamp-face { color:rgba(138,106,28,.78); border-color:rgba(138,106,28,.52); }
+    .option-a .pr-trigger:active .pr-stamp-face { transform:translateY(1px) rotate(-.4deg); }
+    .option-a .pr-trigger[aria-expanded="true"] .pr-stamp-face { transform:translate(2px,1px) rotate(1.2deg); }
+    .option-a .records-sheet { transform:rotate(-.15deg); }
+    .option-a .records-sheet::before { content:""; position:absolute; top:-8px; left:52%; width:70px; height:18px; background:rgba(213,194,145,.68); transform:translateX(-50%) rotate(2deg); }
+
+    /* B — oval athletic seal */
+    .option-b .pr-zone { justify-items:end; }
+    .option-b .pr-trigger { display:grid; grid-template-columns:34px 1fr 16px; align-items:center; gap:7px; min-width:238px; padding:6px 14px; }
+    .option-b .pr-trigger::before { content:""; position:absolute; inset:1px; border:2px solid currentColor; border-radius:50%; transform:rotate(-2deg); }
+    .option-b .pr-trigger::after { content:""; position:absolute; inset:6px; border:1px solid currentColor; border-radius:50%; opacity:.55; transform:rotate(1deg); }
+    .option-b .medal { position:relative; z-index:1; width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.8; }
+    .option-b .pr-copy { position:relative; z-index:1; font:700 .72rem "Roboto Slab",serif; letter-spacing:.1em; }
+    .option-b .chevron { position:relative; z-index:1; }
+    .option-b .records-sheet { width:min(100%,610px); margin-right:8px; transform:rotate(.25deg); }
+
+    /* C — archive tab / index marker */
+    .option-c .pr-zone { justify-items:start; min-height:70px; }
+    .option-c .pr-trigger { display:grid; grid-template-columns:50px 1fr 16px; align-items:center; min-width:265px; padding:0 14px 0 0; border-bottom:2px solid currentColor; text-align:left; }
+    .option-c .pr-count { align-self:stretch; display:grid; place-items:center; margin-right:12px; background:var(--ink); color:var(--gold); font:700 1rem "Roboto Slab",serif; }
+    .option-c .pr-copy { display:grid; gap:1px; font:700 .7rem "Roboto Slab",serif; letter-spacing:.11em; }
+    .option-c .pr-copy small { color:var(--muted); font:.61rem "Alegreya Sans",sans-serif; font-weight:800; letter-spacing:.06em; text-transform:none; }
+    .option-c .records-sheet { justify-self:start; width:min(100%,700px); box-shadow:0 6px 0 rgba(21,19,13,.1); }
+
+    .decision { max-width:1040px; margin:8px auto 0; padding:24px 28px; background:var(--ink); color:var(--paper); box-shadow:7px 8px 0 rgba(21,19,13,.2); }
+    .decision b { color:var(--gold); }
+    .decision p { margin:0; line-height:1.55; }
+
+    @keyframes sheet-in {
+      from { opacity:0; transform:translateY(-8px) scale(.985); }
+      to { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    @media (max-width:700px) {
+      body { padding:24px 12px 64px; }
+      .option-head { grid-template-columns:38px 1fr; gap:10px; }
+      .option-letter { width:34px; height:34px; }
+      .content { padding:18px 12px 22px; }
+      .controls { grid-template-columns:1fr; gap:8px; }
+      .chart-card { padding:18px 12px 12px; }
+      .chart-summary { align-items:flex-start; flex-direction:column; gap:12px; }
+      .latest { padding-left:10px; }
+      .chart { min-width:540px; }
+      .chart-scroll { overflow-x:auto; padding-bottom:4px; }
+      .pr-zone,.option-b .pr-zone,.option-c .pr-zone { justify-items:stretch; }
+      .pr-trigger,.option-b .pr-trigger,.option-c .pr-trigger { width:100%; min-width:0; }
+      .option-a .pr-zone { justify-items:center; }
+      .option-a .pr-trigger { width:184px; min-width:184px; }
+      .records-sheet,.option-b .records-sheet,.option-c .records-sheet { width:100%; margin-right:0; }
+      .records-head { align-items:flex-start; flex-direction:column; gap:4px; }
+      .records-list li { gap:10px; }
+      .record-value { font-size:1.05rem; }
+      .screen-top { padding-inline:12px; }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-head">
+    <span class="kicker">Logbook / σχεδιαστική πρόταση</span>
+    <h1>Personal Records κάτω από το γράφημα</h1>
+    <p class="intro">Τρεις τρόποι να μεταφερθούν τα «Καλύτερα Σετ» από το Ιστορικό στην Επίβλεψη. Πάτησε κάθε σφραγίδα για να δεις την ανοιχτή κατάσταση — όπως ακριβώς ανοίγουν οι Οδηγίες.</p>
+    <div class="legend" aria-label="Κοινά χαρακτηριστικά">
+      <span>48px touch target</span><span>inline άνοιγμα</span><span>χωρίς νέα σελίδα</span><span>keyboard accessible</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="option option-a">
+      <div class="option-head">
+        <div class="option-letter">A</div>
+        <div><h2>Personal Records στο σύστημα των motto stamps <span class="recommended">ΕΠΙΛΕΓΜΕΝΟ</span></h2><p>Ίδιο πλαίσιο, typography, tracking και χρώμα με το «STRONGER EVERY SESSION». Το μονόχρωμο κύπελλο μπαίνει αριστερά και, στο άνοιγμα, αλλάζει μόνο η ήπια κλίση και θέση του αποτυπώματος.</p></div>
+      </div>
+      <div class="screen" data-option="a"></div>
+    </section>
+
+    <section class="option option-b">
+      <div class="option-head">
+        <div class="option-letter">B</div>
+        <div><h2>Οβάλ αθλητική σφραγίδα</h2><p>Πιο «achievement / medal», δεξιά στοιχισμένη σαν επιβράβευση μετά την ανάγνωση του chart. Έχει περισσότερη προσωπικότητα, αλλά και λίγο μεγαλύτερο οπτικό βάρος.</p></div>
+      </div>
+      <div class="screen" data-option="b"></div>
+    </section>
+
+    <section class="option option-c">
+      <div class="option-head">
+        <div class="option-letter">C</div>
+        <div><h2>Καρτέλα αρχείου με μετρητή</h2><p>Η πιο πληροφοριακή εκδοχή: δείχνει ήδη πόσα personal records υπάρχουν και λειτουργεί σαν index tab του logbook. Πολύ σαφής, λιγότερο «σφραγιδούλα».</p></div>
+      </div>
+      <div class="screen" data-option="c"></div>
+    </section>
+  </main>
+
+  <aside class="decision">
+    <p><b>Πρόταση: A.</b> Ταιριάζει καλύτερα στο ζητούμενο «μια σφραγιδούλα κάτω από το γράφημα», κρατά την Επίβλεψη καθαρή και μεταφέρει τα καλύτερα σετ με την ίδια progressive-disclosure λογική των Οδηγιών. Η B είναι η καλύτερη εναλλακτική αν θέλουμε πιο έντονο reward χαρακτήρα.</p>
+  </aside>
+
+  <template id="screen-template">
+    <div class="screen-top"><span class="screen-brand">LOGBOOK</span><span class="screen-location">Επίβλεψη</span></div>
+    <div class="content">
+      <div class="controls" aria-hidden="true">
+        <div class="control"><small>Προπόνηση</small><div class="fake-select">Upper A <svg viewBox="0 0 20 20"><path d="m5 7 5 5 5-5"/></svg></div></div>
+        <div class="control"><small>Άσκηση</small><div class="fake-select">Πιέσεις πάγκου <svg viewBox="0 0 20 20"><path d="m5 7 5 5 5-5"/></svg></div></div>
+        <div class="control"><small>Σετ</small><div class="fake-select">1ο <svg viewBox="0 0 20 20"><path d="m5 7 5 5 5-5"/></svg></div></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-summary"><div><h3>Πιέσεις πάγκου</h3><small>6 καταγραφές</small></div><div class="latest"><span>ΤΕΛΕΥΤΑΙΑ ΕΠΙΔΟΣΗ</span><strong>78 kg × 8</strong></div></div>
+        <div class="chart-scroll">
+          <svg class="chart" viewBox="0 0 760 250" role="img" aria-label="Ενδεικτικό γράφημα προόδου βάρους και επαναλήψεων">
+            <g><line class="grid-line" x1="52" y1="38" x2="720" y2="38"/><line class="grid-line" x1="52" y1="103" x2="720" y2="103"/><line class="grid-line" x1="52" y1="168" x2="720" y2="168"/></g>
+            <g><text class="tick" x="42" y="42" text-anchor="end">80</text><text class="tick" x="42" y="107" text-anchor="end">70</text><text class="tick" x="42" y="172" text-anchor="end">60</text></g>
+            <path class="rep-line" d="M74 92 C160 85 180 106 208 99 S310 78 342 82 S440 64 476 66 S580 72 610 61 S680 52 704 45"/>
+            <path class="weight-line" d="M74 164 C145 158 173 145 208 148 S306 120 342 126 S442 91 476 96 S574 76 610 79 S676 51 704 53"/>
+            <g><circle class="dot" cx="74" cy="164" r="6"/><circle class="dot" cx="208" cy="148" r="6"/><circle class="dot" cx="342" cy="126" r="6"/><circle class="dot" cx="476" cy="96" r="6"/><circle class="dot" cx="610" cy="79" r="6"/><circle class="dot" cx="704" cy="53" r="6"/></g>
+            <g><circle class="rep-dot" cx="74" cy="92" r="4"/><circle class="rep-dot" cx="208" cy="99" r="4"/><circle class="rep-dot" cx="342" cy="82" r="4"/><circle class="rep-dot" cx="476" cy="66" r="4"/><circle class="rep-dot" cx="610" cy="61" r="4"/><circle class="rep-dot" cx="704" cy="45" r="4"/></g>
+            <g><text class="date" x="74" y="220" text-anchor="start">3 Ιουν</text><text class="date" x="208" y="220" text-anchor="middle">10 Ιουν</text><text class="date" x="342" y="220" text-anchor="middle">17 Ιουν</text><text class="date" x="476" y="220" text-anchor="middle">24 Ιουν</text><text class="date" x="610" y="220" text-anchor="middle">1 Ιουλ</text><text class="date" x="704" y="220" text-anchor="end">8 Ιουλ</text></g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="pr-zone">
+        <button class="pr-trigger" type="button" aria-expanded="false">
+          <span class="pr-monogram" aria-hidden="true">PR</span>
+          <svg class="medal" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l-1 5a4 4 0 0 1-6 0L8 3Z"/><circle cx="12" cy="14" r="4"/><path d="m10 18-1 3 3-1 3 1-1-3"/></svg>
+          <span class="pr-count" aria-hidden="true">12</span>
+          <span class="pr-copy">Personal Records <small>οι καλύτερες επιδόσεις σου</small></span>
+          <svg class="chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5"/></svg>
+        </button>
+        <section class="records-sheet" hidden>
+          <div class="records-head"><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v3a5 5 0 0 1-10 0V3Z"/><path d="M7 5H4v1a4 4 0 0 0 4 4M17 5h3v1a4 4 0 0 1-4 4M12 11v5M8 21h8M9 16h6v5"/></svg><strong>Personal Records</strong></div><small>Υπολογίζονται από το Ιστορικό σου</small></div>
+          <ul class="records-list">
+            <li><div><b>Πιέσεις πάγκου</b><span>8 επαναλήψεις · 8 Ιουλ</span></div><div class="record-value">78<em>kg</em></div></li>
+            <li><div><b>Έλξεις</b><span>10 επαναλήψεις · 5 Ιουλ</span></div><div class="record-value">15<em>extra kg</em></div></li>
+            <li><div><b>Καθίσματα</b><span>6 επαναλήψεις · 2 Ιουλ</span></div><div class="record-value">110<em>kg</em></div></li>
+            <li><div><b>Κωπηλατική</b><span>10 επαναλήψεις · 28 Ιουν</span></div><div class="record-value">72.5<em>kg</em></div></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const template = document.querySelector('#screen-template');
+
+    document.querySelectorAll('.screen').forEach((screen, index) => {
+      screen.append(template.content.cloneNode(true));
+      const option = screen.dataset.option;
+      const trigger = screen.querySelector('.pr-trigger');
+      const sheet = screen.querySelector('.records-sheet');
+      const sheetId = `records-${option}`;
+      sheet.id = sheetId;
+      trigger.setAttribute('aria-controls', sheetId);
+      trigger.setAttribute('aria-label', 'Άνοιγμα Personal Records');
+
+      if (option === 'a') {
+        trigger.querySelector('.pr-count').remove();
+        trigger.querySelector('.pr-monogram').remove();
+        trigger.querySelector('.chevron').remove();
+        trigger.querySelector('.pr-copy small').remove();
+        const stampFace = document.createElement('span');
+        stampFace.className = 'pr-stamp-face';
+        const trophyIcon = trigger.querySelector('.medal');
+        trophyIcon.classList.remove('medal');
+        trophyIcon.classList.add('trophy-icon');
+        trophyIcon.setAttribute('viewBox', '0 0 24 24');
+        trophyIcon.innerHTML = '<path d="M19 5h-2V3H7v2H5a2 2 0 0 0-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 16.9V19H7v2h10v-2h-4v-2.1a5.01 5.01 0 0 0 3.61-3.96C19.08 12.63 21 10.55 21 8V7a2 2 0 0 0-2-2ZM5 8V7h2v3.82A3 3 0 0 1 5 8Zm14 0a3 3 0 0 1-2 2.82V7h2v1Z"/>';
+        stampFace.append(trophyIcon, trigger.querySelector('.pr-copy'));
+        trigger.append(stampFace);
+        const recordsHead = sheet.querySelector('.records-head');
+        recordsHead.querySelector('svg').remove();
+        recordsHead.querySelector('strong').textContent = 'ΚΑΛΥΤΕΡΑ ΣΕΤ';
+        recordsHead.querySelector('small').remove();
+        const badge = document.createElement('span');
+        badge.className = 'best-sets-badge';
+        badge.setAttribute('aria-hidden', 'true');
+        badge.textContent = 'PR';
+        recordsHead.querySelector('div').append(badge);
+      }
+
+      if (option === 'b') {
+        trigger.querySelector('.pr-monogram').remove();
+        trigger.querySelector('.pr-count').remove();
+        trigger.querySelector('.pr-copy small').remove();
+      }
+
+      if (option === 'c') {
+        trigger.querySelector('.pr-monogram').remove();
+        trigger.querySelector('.medal').remove();
+      }
+
+      trigger.addEventListener('click', () => {
+        const willOpen = trigger.getAttribute('aria-expanded') !== 'true';
+        trigger.setAttribute('aria-expanded', String(willOpen));
+        trigger.setAttribute('aria-label', `${willOpen ? 'Κλείσιμο' : 'Άνοιγμα'} Personal Records`);
+        sheet.hidden = !willOpen;
+      });
+
+      if (index === 0) trigger.click();
+    });
+  </script>
+</body>
+</html>
