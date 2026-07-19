@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Καταγραφή — Καρτελοθήκη με την υπάρχουσα κάρτα, 4 παραλλαγές</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#6d6551; --line:#b6ad97; --faded:#a89f86; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:640px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; white-space:nowrap; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.08em; font-weight:700; }
+.stage { padding:clamp(36px,5vw,64px) 5vw 62px; display:grid; grid-template-columns:minmax(330px,460px) minmax(280px,1fr); gap:clamp(28px,4vw,60px); align-items:start; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+@media(max-width:760px){ .stage { grid-template-columns:minmax(0,1fr); } }
+.notes { margin:0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.6; }
+.notes h4 { margin:0 0 8px; font:700 .95rem "Roboto Slab"; color:var(--ink); text-transform:uppercase; letter-spacing:.04em; }
+.notes b { color:var(--ink); }
+.notes ul { margin:8px 0 0; padding-left:18px; }
+.notes li { margin-bottom:6px; }
+.notes .g { color:var(--orange); font-weight:800; }
+.hint { margin:10px 2px 0; font-size:.74rem; color:var(--muted); letter-spacing:.04em; }
+.slot { display:flex; flex-direction:column; }
+.outro { padding:40px 5vw 70px; border-top:3px solid var(--ink); box-shadow:0 -6px 0 -5px var(--ink); }
+.outro h2 { font:700 1.5rem "Roboto Slab"; text-transform:uppercase; margin:0 0 14px; }
+.outro ul { max-width:760px; margin:0; padding-left:20px; color:var(--muted); line-height:1.65; }
+.outro b { color:var(--ink); }
+
+/* ===== demo shell ===== */
+.demo { width:min(460px,100%); border:1px solid var(--line); background:var(--paper); box-shadow:5px 6px 0 rgba(21,19,13,.12); outline:none; }
+.demo:focus-visible { box-shadow:0 0 0 3px var(--paper),0 0 0 5px rgba(138,106,28,.55),5px 6px 0 rgba(21,19,13,.12); }
+.demo-top { display:flex; justify-content:space-between; align-items:center; min-height:54px; gap:12px; padding:10px 16px 0; }
+.demo-top .lbl { font-size:.6rem; font-weight:800; letter-spacing:.2em; color:var(--muted); }
+.demo-view { position:relative; }
+.demo-bar { display:flex; align-items:stretch; border-top:2px solid var(--ink); background:rgba(21,19,13,.04); }
+.demo-bar .nav { width:52px; border:0; background:transparent; color:var(--ink); font:700 1.3rem "Roboto Slab"; cursor:pointer; transition:.2s; }
+.demo-bar .nav:first-child { border-right:1px solid var(--line); }
+.demo-bar .nav:last-child { border-left:1px solid var(--line); }
+.demo-bar .nav:hover { background:var(--ink); color:var(--gold); }
+.demo-bar .addx { flex:1; border:0; padding:15px 10px; background:transparent; color:var(--ink); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; cursor:pointer; transition:.2s; }
+.demo-bar .addx:hover { background:var(--ink); color:var(--paper); }
+.demo-bar .barnote { flex:1; display:grid; place-items:center; padding:15px 10px; color:var(--muted); font:800 .62rem "Alegreya Sans"; letter-spacing:.12em; }
+.stamp { padding:6px 12px 5px; border:2px solid rgba(138,106,28,.55); color:var(--orange); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:multiply; white-space:nowrap; }
+
+/* ===== το συρτάρι (κοινό) ===== */
+.drawer { display:flex; gap:14px; padding:14px 7% 20px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; cursor:grab; }
+.drawer::-webkit-scrollbar { display:none; }
+.drawer.dragging { cursor:grabbing; scroll-snap-type:none; }
+.drawer .slotcard { position:relative; display:flex; flex:0 0 86%; scroll-snap-align:center; }
+.drawer .slotcard>.workout-exercise { flex:1; transition:opacity .3s, box-shadow .3s; opacity:.5; }
+.drawer .slotcard.on>.workout-exercise { opacity:1; box-shadow:4px 6px 14px rgba(40,32,18,.18); }
+
+/* ============================================================
+   Η ΚΑΡΤΑ — πιστό αντίγραφο από το styles.css (mobile εκδοχή).
+   ΔΕΝ αλλάζει σε καμία παραλλαγή.
+   ============================================================ */
+.workout-exercise { background:#f3ecdc; border:1px solid var(--line); padding:16px; position:relative; box-shadow:2px 3px 0 rgba(21,19,13,.08); }
+.exercise-title { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.exercise-title>div { min-width:0; }
+.exercise-order { font-size:.65rem; color:var(--orange); letter-spacing:.15em; font-weight:800; }
+.exercise-title h3 { font:700 1.28rem/1.08 "Roboto Slab"; margin:3px 0 0; text-transform:uppercase; }
+.exercise-name { width:100%; min-width:0; border:0; border-bottom:1px solid var(--ink); background:rgba(255,255,255,.2); padding:10px; font:700 1.28rem "Roboto Slab"; text-transform:uppercase; color:var(--ink); outline:none; }
+.exercise-name:focus { background:#fdf6e3; border-color:var(--orange); box-shadow:0 2px 0 var(--orange); }
+.exercise-title-actions { display:flex; align-items:center; gap:7px; flex:0 0 auto; }
+.planned-tag { border:1px solid var(--ink); padding:6px 8px; font-size:.7rem; font-weight:800; text-transform:uppercase; white-space:nowrap; }
+.remove-planned-exercise,.remove-exercise { width:31px; height:31px; border:1px solid var(--orange); background:transparent; color:var(--orange); font-size:1.25rem; line-height:1; cursor:pointer; }
+.cue-banner { margin:16px 0 0; padding:11px 12px; border-left:4px solid var(--gold); background:rgba(201,162,39,.1); color:var(--ink); }
+.cue-banner span { display:block; margin:0 0 4px; font-size:.68rem; font-weight:800; letter-spacing:.15em; color:var(--orange); }
+.exercise-sets { display:grid; gap:12px; margin-top:16px; }
+.set-row { position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; padding:14px 52px 14px 14px; border:1px solid #c7bca3; background:rgba(255,255,255,.36); box-shadow:2px 2px 0 rgba(21,19,13,.06); }
+.set-number { grid-column:1 / -1; padding-bottom:8px; border-bottom:1px solid var(--line); color:var(--orange); font:700 1rem "Roboto Slab"; }
+.set-number::before { content:"SET "; color:var(--muted); font:800 .62rem "Alegreya Sans"; letter-spacing:.13em; }
+.set-control { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.set-control-label { color:var(--muted); font-size:.62rem; line-height:1.15; letter-spacing:.08em; font-weight:800; text-transform:uppercase; }
+.set-control>input,.set-control>select { width:100%; min-height:48px; padding:10px 11px; border:1px solid #b8ad95; background:#f7f1e3; font:500 16px "Alegreya Sans"; color:var(--ink); outline:none; border-radius:0; transition:.2s; }
+.set-control>input:focus,.set-control>select:focus { border-color:var(--orange); }
+.weight-entry { grid-column:1 / -1; display:grid; grid-template-columns:1fr; gap:12px; }
+.remove-set { position:absolute; top:14px; right:12px; width:32px; height:32px; border:1px solid rgba(138,106,28,.58); background:var(--paper); color:rgba(138,106,28,.78); cursor:pointer; font-size:1rem; line-height:1; }
+.mini-button { width:max-content; margin-top:12px; min-height:44px; border:1px solid var(--ink); background:transparent; padding:8px 12px; font:800 .76rem "Alegreya Sans"; text-transform:uppercase; letter-spacing:.08em; cursor:pointer; }
+.mini-button:hover { background:var(--ink); color:var(--paper); }
+.full-field { display:flex; flex-direction:column; gap:8px; margin-top:20px; font-size:.76rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+.full-field textarea { width:100%; border:0; border-bottom:1px solid var(--ink); background:rgba(255,255,255,.2); border-radius:0; padding:13px 10px; font:500 1rem "Alegreya Sans"; color:var(--ink); outline:none; resize:vertical; }
+
+/* ============================================================
+   ΠΑΡΑΛΛΑΓΗ Α — σειρά από tabs αρχείου πάνω από το συρτάρι
+   ============================================================ */
+.tabsrow { display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; flex:1; padding:0 2px; }
+.tabsrow::-webkit-scrollbar { display:none; }
+.tabsrow button { flex:0 0 auto; max-width:170px; overflow:hidden; padding:8px 12px 6px; border:1px solid var(--line); border-bottom:0; background:var(--paper-dark); color:var(--muted); font:800 .6rem "Alegreya Sans"; letter-spacing:.08em; white-space:nowrap; text-overflow:ellipsis; cursor:pointer; border-radius:7px 7px 0 0; transition:background .2s,color .2s; }
+.tabsrow button.on { background:var(--ink); border-color:var(--ink); color:var(--gold); }
+.vA .demo-top { padding-bottom:0; border-bottom:2px solid var(--ink); align-items:flex-end; }
+
+/* ============================================================
+   ΠΑΡΑΛΛΑΓΗ Β — «καβαλάρηδες»: tab φακέλου πάνω σε κάθε slot
+   ============================================================ */
+.vB .drawer { padding-top:30px; }
+.ftab { position:absolute; top:-16px; z-index:2; max-width:64%; overflow:hidden; padding:5px 12px 3px; background:var(--paper-dark); border:1px solid rgba(63,51,30,.5); border-bottom:0; border-radius:7px 7px 0 0; font:800 .56rem "Alegreya Sans"; letter-spacing:.1em; color:var(--muted); white-space:nowrap; text-overflow:ellipsis; transition:.3s; }
+.slotcard.on .ftab { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+
+/* ============================================================
+   ΠΑΡΑΛΛΑΓΗ Γ — καθαρό συρτάρι: σφραγίδα θέσης + γραμμή προόδου + βέλη overlay
+   Πλατιά εκδοχή: η κάρτα πιάνει σχεδόν όλο το πλάτος, το peek γίνεται λεπτή λωρίδα.
+   ============================================================ */
+.vC .drawer { padding:14px 3% 20px; gap:8px; }
+.vC .drawer .slotcard { flex:0 0 94%; }
+.progressline { height:3px; margin:0 16px 14px; background:rgba(21,19,13,.12); position:relative; }
+.progressline i { position:absolute; inset:0 auto 0 0; background:var(--orange); transition:width .35s ease; }
+.ovnav { position:absolute; top:50%; z-index:5; width:40px; height:40px; margin-top:-20px; border:1px solid var(--line); border-radius:50%; background:rgba(248,243,228,.92); color:var(--ink); font:700 1.15rem "Roboto Slab"; cursor:pointer; box-shadow:2px 3px 8px rgba(21,19,13,.18); transition:.2s; }
+.ovnav:hover { background:var(--ink); color:var(--gold); }
+.ovnav.prev { left:8px; } .ovnav.next { right:8px; }
+@media(hover:none){ .ovnav { display:none; } }
+
+/* ============================================================
+   ΠΑΡΑΛΛΑΓΗ Δ — κάρτα-φάντασμα «＋» στο τέλος του συρταριού
+   ============================================================ */
+.ghost-add { flex:1; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; border:2px dashed var(--line); background:rgba(255,255,255,.18); color:var(--muted); cursor:pointer; transition:.25s; }
+.ghost-add b { width:58px; height:58px; display:grid; place-items:center; border:1px solid currentColor; border-radius:50%; font:700 1.7rem/1 "Roboto Slab"; }
+.ghost-add span { font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; }
+.ghost-add:hover { border-color:var(--orange); color:var(--orange); background:rgba(201,162,39,.07); }
+
+@media(prefers-reduced-motion:reduce){ .drawer { scroll-behavior:auto !important; } .drawer .slotcard>.workout-exercise,.progressline i { transition-duration:.01s; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΚΑΤΑΓΡΑΦΗ / ΚΑΡΤΕΛΟΘΗΚΗ — Β' ΓΥΡΟΣ</p>
+  <h1>ΙΔΙΑ ΚΑΡΤΑ,<br><em>ΝΕΟ ΣΥΡΤΑΡΙ.</em></h1>
+  <p>Τέσσερις παραλλαγές της Πρότασης 3, με δεσμευτικό κανόνα: η κάρτα άσκησης μένει <b>ακριβώς όπως είναι σήμερα</b> — ίδια τυπογραφία, ίδια πεδία, ίδια κουμπιά (πιστό αντίγραφο από το styles.css). Αλλάζει μόνο ό,τι την περιβάλλει: πώς φαίνεται η θέση σου, πώς πηδάς σε άλλη άσκηση και πώς μπαίνει η νέα κάρτα. Όλα τα demos λειτουργούν — σύρε, πάτα tabs/βέλη, δοκίμασε την προσθήκη.</p>
+</header>
+
+<!-- Α -->
+<div class="attempt-label"><b>ΠΑΡΑΛΛΑΓΗ Α</b><span>Σειρά tabs αρχείου πάνω από το συρτάρι — το ενεργό tab ανοίγει και δείχνει το όνομα</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo vA" data-demo="A" tabindex="0" aria-label="Παραλλαγή Α — tabs αρχείου">
+      <div class="demo-top"><div class="tabsrow js-tabs"></div></div>
+      <div class="demo-view"><div class="drawer js-drawer"></div></div>
+      <div class="demo-bar"><button class="nav js-prev" aria-label="Προηγούμενη">‹</button><button class="addx js-add">＋ ΠΡΟΣΘΗΚΗ ΑΣΚΗΣΗΣ</button><button class="nav js-next" aria-label="Επόμενη">›</button></div>
+    </div>
+    <p class="hint">Σύρε το συρτάρι ή πάτα tab για άλμα. Το «＋» βάζει κάρτα μετά την τρέχουσα και κυλά δεξιά.</p>
+  </div>
+  <aside class="notes">
+    <h4>Tabs αρχείου</h4>
+    Τα tabs κάθονται στο χείλος του συρταριού, εκτός κάρτας. Το ενεργό ανοίγει σε πλάτος και δείχνει «01 · ΟΝΟΜΑ», τα υπόλοιπα μένουν αριθμοί.
+    <ul>
+      <li><span class="g">Θέση + άλμα μαζί:</span> βλέπεις πόσες ασκήσεις έχει η προπόνηση και πας κατευθείαν σε όποια θες — δυνατό σε προπονήσεις 6+ ασκήσεων.</li>
+      <li><span class="g">Υπέρ:</span> η πιο πλήρης πλοήγηση· η σειρά των tabs είναι και η σειρά της προπόνησης.</li>
+      <li><span class="g">Κατά:</span> με πολλές ασκήσεις τα tabs σκρολάρουν και αυτά (το ενεργό αυτο-κεντράρεται).</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- Β -->
+<div class="attempt-label"><b>ΠΑΡΑΛΛΑΓΗ Β</b><span>«Καβαλάρηδες» — tab φακέλου πάνω σε κάθε κάρτα, σε τρεις εναλλασσόμενες θέσεις όπως σε πραγματική καρτελοθήκη</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo vB" data-demo="B" tabindex="0" aria-label="Παραλλαγή Β — καβαλάρηδες">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp js-stamp">ΑΣΚΗΣΗ 01 / 03</span></div>
+      <div class="demo-view"><div class="drawer js-drawer"></div></div>
+      <div class="demo-bar"><button class="nav js-prev" aria-label="Προηγούμενη">‹</button><button class="addx js-add">＋ ΠΡΟΣΘΗΚΗ ΑΣΚΗΣΗΣ</button><button class="nav js-next" aria-label="Επόμενη">›</button></div>
+    </div>
+    <p class="hint">Οι καβαλάρηδες των διπλανών καρτών ξεμυτίζουν στα άκρα — βλέπεις το όνομα της επόμενης πριν σύρεις.</p>
+  </div>
+  <aside class="notes">
+    <h4>Καβαλάρηδες</h4>
+    Κάθε κάρτα φοράει το δικό της tab, σε θέση που εναλλάσσεται (αριστερά / κέντρο / δεξιά) όπως οι καβαλάρηδες σε φυσική καρτελοθήκη. Το tab αγγίζει το πάνω χείλος της κάρτας αλλά είναι στοιχείο του slot — η ίδια η κάρτα δεν πειράζεται.
+    <ul>
+      <li><span class="g">Το κέρδος:</span> στα peek των άκρων φαίνεται και το <b>όνομα</b> της προηγούμενης/επόμενης, όχι μόνο η ύπαρξή της.</li>
+      <li><span class="g">Υπέρ:</span> η πιο «φυσική» μετάφραση της καρτελοθήκης· η σφραγίδα κρατά το «02/05».</li>
+      <li><span class="g">Κατά:</span> δεν προσφέρει άλμα σε μακρινή άσκηση (μόνο βήμα-βήμα ή με τα βέλη).</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- Γ -->
+<div class="attempt-label"><b>ΠΑΡΑΛΛΑΓΗ Γ</b><span>Καθαρό συρτάρι — καμία προσθήκη πάνω από την κάρτα· σφραγίδα θέσης, λεπτή γραμμή προόδου, βέλη overlay στο web</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo vC" data-demo="C" tabindex="0" aria-label="Παραλλαγή Γ — καθαρό συρτάρι">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp js-stamp">ΑΣΚΗΣΗ 01 / 03</span></div>
+      <div class="demo-view">
+        <div class="drawer js-drawer"></div>
+        <button class="ovnav prev js-prev" aria-label="Προηγούμενη">‹</button>
+        <button class="ovnav next js-next" aria-label="Επόμενη">›</button>
+      </div>
+      <div class="progressline"><i class="js-line" style="width:33%"></i></div>
+      <div class="demo-bar"><button class="nav js-prev2" aria-label="Προηγούμενη">‹</button><button class="addx js-add">＋ ΠΡΟΣΘΗΚΗ ΑΣΚΗΣΗΣ</button><button class="nav js-next2" aria-label="Επόμενη">›</button></div>
+    </div>
+    <p class="hint">Πλατιά εκδοχή: η κάρτα πιάνει το 94% του πλάτους — οι διπλανές φαίνονται μόνο ως λεπτή λωρίδα στα άκρα. Σε mobile πλοηγείσαι με swipe· στο web εμφανίζονται και τα στρογγυλά βέλη.</p>
+  </div>
+  <aside class="notes">
+    <h4>Καθαρό συρτάρι</h4>
+    Η πιο συντηρητική εκδοχή: τίποτα δεν προστίθεται γύρω από την κάρτα εκτός από τη σφραγίδα «ΑΣΚΗΣΗ 02/05» (ήδη γνώριμο στοιχείο της γλώσσας σας) και μια λεπτή γραμμή προόδου κάτω από το συρτάρι.
+    <ul>
+      <li><span class="g">Ελάχιστη οπτική αλλαγή</span> σε σχέση με τη σημερινή Καταγραφή — ουσιαστικά μόνο η διάταξη γίνεται οριζόντια.</li>
+      <li><span class="g">Υπέρ:</span> καμία σύγχυση, τίποτα καινούργιο να μάθεις· ό,τι πιο κοντά στο «απλά κάνε τις κάρτες swipeable».</li>
+      <li><span class="g">Κατά:</span> χωρίς ονόματα/άλματα — η αίσθηση του «πού είμαι» στηρίζεται μόνο στη σφραγίδα και τη γραμμή.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- Δ -->
+<div class="attempt-label"><b>ΠΑΡΑΛΛΑΓΗ Δ</b><span>Κάρτα-φάντασμα «＋» — η προσθήκη δεν είναι κουμπί κάτω, είναι η επόμενη θέση του συρταριού</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo vD" data-demo="D" tabindex="0" aria-label="Παραλλαγή Δ — κάρτα-φάντασμα προσθήκης">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp js-stamp">ΑΣΚΗΣΗ 01 / 03</span></div>
+      <div class="demo-view"><div class="drawer js-drawer"></div></div>
+      <div class="demo-bar"><button class="nav js-prev" aria-label="Προηγούμενη">‹</button><span class="barnote">Η ΠΡΟΣΘΗΚΗ ΖΕΙ ΣΤΟ ΤΕΛΟΣ ΤΟΥ ΣΥΡΤΑΡΙΟΥ</span><button class="nav js-next" aria-label="Επόμενη">›</button></div>
+    </div>
+    <p class="hint">Σύρε ως το τέλος: η τελευταία θέση είναι διακεκομμένη κάρτα «＋». Πάτα την — γίνεται κανονική κάρτα και νέο «＋» εμφανίζεται δεξιά της.</p>
+  </div>
+  <aside class="notes">
+    <h4>Κάρτα-φάντασμα</h4>
+    Το «Προσθήκη άσκησης» παύει να είναι κουμπί και γίνεται <b>θέση</b>: μια διακεκομμένη κάρτα που περιμένει πάντα στο τέλος. Πατώντας την, μετατρέπεται σε κανονική κάρτα (με πεδίο ονόματος, όπως η σημερινή ελεύθερη) και το φάντασμα ξαναγεννιέται δίπλα της.
+    <ul>
+      <li><span class="g">Το effect προς τα δεξιά</span> βγαίνει φυσικά: σύρσιμο → φάντασμα → tap → η νέα κάρτα «στερεοποιείται» μπροστά σου.</li>
+      <li><span class="g">Υπέρ:</span> η ροή «βάζω άσκηση → σύρω δεξιά → βάζω επόμενη» γίνεται ένα συνεχές gesture· εξαιρετικό για την ελεύθερη προπόνηση.</li>
+      <li><span class="g">Κατά:</span> η προσθήκη <b>ανάμεσα</b> σε υπάρχουσες ασκήσεις θέλει δεύτερο δρόμο (π.χ. κράτημα/long-press σε κάρτα) — στο σενάριο αντιγραφής σπάνια χρειάζεται.</li>
+      <li>Συνδυάζεται με όποια από τις Α/Β/Γ για την ένδειξη θέσης.</li>
+    </ul>
+  </aside>
+</section>
+
+<footer class="outro">
+  <h2>Σημειώσεις υλοποίησης — γιατί αυτό είναι φθηνό στο κόστος</h2>
+  <ul>
+    <li><b>Η exerciseCard() δεν αλλάζει καθόλου:</b> το συρτάρι είναι ένα CSS περιτύλιγμα γύρω από τα υπάρχοντα .workout-exercise στα #free-exercises / #scheduled-session — κάθε κάρτα μπαίνει σε ένα .slotcard και ο γονιός γίνεται flex με scroll-snap.</li>
+    <li><b>Native scroll-snap κάνει το swipe:</b> σε mobile δεν χρειάζεται καθόλου custom gesture κώδικας· το JS προσθέτει μόνο (α) ανίχνευση ενεργής κάρτας στο scroll, (β) mouse-drag για desktop, (γ) scrollIntoView για tabs/βέλη/προσθήκη.</li>
+    <li><b>Τα inputs μένουν στο DOM</b> — καμία απώλεια τιμών στο swipe, το «ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ» και τα «Σχόλια προπόνησης» μένουν σταθερά κάτω από το συρτάρι, εκτός καρτών.</li>
+    <li><b>Το κάθετο scroll μένει ελεύθερο:</b> το οριζόντιο swipe το χειρίζεται ο browser (snap) μόνο όταν η κίνηση είναι οριζόντια — μέσα στην κάρτα τα πεδία και το scroll λειτουργούν όπως τώρα.</li>
+    <li><b>Web χωρίς ποντικοδρομίες:</b> βέλη ‹ › (bar ή overlay) + πλήκτρα ←/→ όταν το συρτάρι έχει focus.</li>
+    <li><b>Πρόταση:</b> Β για την αίσθηση καρτελοθήκης με ορατά ονόματα, Α αν οι προπονήσεις σας έχουν συχνά 6+ ασκήσεις, Γ αν προέχει η μηδενική αλλαγή, Δ ως προσθήκη πάνω σε όποια επιλεγεί για την ελεύθερη προπόνηση.</li>
+  </ul>
+</footer>
+
+<script>
+const pad = n => String(n).padStart(2,'0');
+const SAMPLE = [
+  { name:'CHEST SUPPORTED ROW - KELSO SHRUGS', cues:'Η κίνηση γίνεται με τους αγκώνες', sets:2 },
+  { name:'ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ', cues:'', sets:2 },
+  { name:'ΑΡΣΕΙΣ ΠΛΑΓΙΕΣ', cues:'Χωρίς ταλάντευση', sets:2 },
+];
+
+function setRowHTML(j){
+  return `<div class="set-row" data-weight-mode="kg">
+    <span class="set-number">${pad(j+1)}</span>
+    <label class="set-control"><span class="set-control-label">Επαναληψεις</span><input type="number" inputmode="numeric" placeholder="0"></label>
+    <label class="set-control"><span class="set-control-label">Μετρηση</span><select><option>Κιλά</option><option>Πλάκες</option><option>Πλάκες + Κιλά</option><option>Bodyweight</option></select></label>
+    <div class="weight-entry"><label class="set-control"><span class="set-control-label">Βαρος (kg)</span><input type="number" inputmode="decimal" placeholder="0"></label></div>
+    <button class="remove-set" type="button" aria-label="Αφαίρεση σετ">−</button>
+  </div>`;
+}
+function realCard(ex, i){
+  const title = ex.free
+    ? `<input class="exercise-name" type="text" placeholder="Όνομα άσκησης" value="${ex.name==='ΝΕΑ ΑΣΚΗΣΗ'?'':ex.name}">
+       <button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>`
+    : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${i+1}η</span><h3>${ex.name}</h3></div>
+       <div class="exercise-title-actions"><span class="planned-tag">${ex.sets} ΣΕΤ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`;
+  return `<article class="workout-exercise">
+    <div class="exercise-title">${title}</div>
+    ${ex.cues ? `<div class="cue-banner"><span>CUES</span><b>${ex.cues}</b></div>` : ''}
+    <div class="exercise-sets">${Array.from({length:ex.sets},(_,j)=>setRowHTML(j)).join('')}</div>
+    <div class="set-actions"><button class="mini-button" type="button">＋ EXTRA ΣΕΤ</button></div>
+    <label class="full-field">Σχόλια άσκησης<textarea rows="2" placeholder="Τεχνική, αίσθηση, RPE..."></textarea></label>
+  </article>`;
+}
+
+const isFormEl = t => t.closest('input,select,textarea,button');
+
+function initDrawer(root, { tabs=false, riders=false, ghost=false } = {}){
+  const drawer = root.querySelector('.js-drawer');
+  const tabsEl = root.querySelector('.js-tabs');
+  const stampEl = root.querySelector('.js-stamp');
+  const lineEl = root.querySelector('.js-line');
+  let data = SAMPLE.map(x=>({...x})), cur = 0;
+
+  function slotHTML(ex, i){
+    const rider = riders ? `<span class="ftab" style="left:${[6,32,58][i%3]}%">${pad(i+1)} · ${ex.name||'ΝΕΑ ΑΣΚΗΣΗ'}</span>` : '';
+    return `<div class="slotcard" data-i="${i}">${rider}${realCard(ex,i)}</div>`;
+  }
+  function markActive(){
+    const mid = drawer.scrollLeft + drawer.clientWidth/2;
+    let best = 0, bd = 1e9;
+    [...drawer.children].forEach((el,i)=>{ const c = el.offsetLeft+el.offsetWidth/2, d = Math.abs(c-mid); if (d<bd){ bd=d; best=i; } });
+    cur = best;
+    [...drawer.children].forEach((el,i)=>el.classList.toggle('on', i===cur));
+    const total = data.length, onGhost = ghost && cur >= total;
+    if (stampEl) stampEl.textContent = onGhost ? '＋ ΝΕΑ ΑΣΚΗΣΗ' : `ΑΣΚΗΣΗ ${pad(cur+1)} / ${pad(total)}`;
+    if (lineEl) lineEl.style.width = `${Math.min((cur+1)/total,1)*100}%`;
+    if (tabsEl) [...tabsEl.children].forEach((b,i)=>{ b.classList.toggle('on', i===cur);
+      b.textContent = i===cur ? `${pad(i+1)} · ${data[i].name||'ΝΕΑ ΑΣΚΗΣΗ'}` : pad(i+1);
+      if (i===cur) b.scrollIntoView({ inline:'nearest', block:'nearest', behavior:'smooth' }); });
+  }
+  function goto(i, smooth=true){
+    const el = drawer.children[i]; if (!el) return;
+    drawer.scrollTo({ left: el.offsetLeft - (drawer.clientWidth - el.offsetWidth)/2, behavior: smooth?'smooth':'auto' });
+  }
+  function render(){
+    drawer.innerHTML = data.map(slotHTML).join('')
+      + (ghost ? `<div class="slotcard" data-i="${data.length}"><button class="ghost-add" type="button"><b>＋</b><span>ΠΡΟΣΘΗΚΗ ΑΣΚΗΣΗΣ</span></button></div>` : '');
+    if (tabsEl){ tabsEl.innerHTML = data.map((ex,i)=>`<button type="button" title="${ex.name||'ΝΕΑ ΑΣΚΗΣΗ'}">${pad(i+1)}</button>`).join('');
+      [...tabsEl.children].forEach((b,i)=>b.addEventListener('click', ()=>goto(i))); }
+    if (ghost) drawer.querySelector('.ghost-add').addEventListener('click', ()=>{
+      data.push({ name:'ΝΕΑ ΑΣΚΗΣΗ', cues:'', sets:3, free:true });
+      const at = data.length-1; render(); goto(at, false); requestAnimationFrame(markActive);
+    });
+    markActive();
+  }
+  drawer.addEventListener('scroll', ()=>requestAnimationFrame(markActive));
+  let down=false, lx=0, moved=0;
+  drawer.addEventListener('pointerdown', e=>{ if (e.pointerType!=='mouse' || isFormEl(e.target)) return; down=true; moved=0; lx=e.clientX; });
+  window.addEventListener('pointermove', e=>{ if(!down) return; const d=e.clientX-lx; if (Math.abs(d)>3) drawer.classList.add('dragging'); moved+=Math.abs(d); drawer.scrollLeft-=d; lx=e.clientX; });
+  window.addEventListener('pointerup', ()=>{ if(!down) return; down=false; drawer.classList.remove('dragging'); if (moved>5) goto(cur); });
+  const api = {
+    prev(){ goto(cur-1); }, next(){ goto(cur+1); },
+    add(){ data.splice(cur+1, 0, { name:'ΝΕΑ ΑΣΚΗΣΗ', cues:'', sets:3, free:true }); const at=cur+1; render(); goto(cur, false); requestAnimationFrame(()=>goto(at)); },
+  };
+  root.querySelectorAll('.js-prev,.js-prev2').forEach(b=>b.addEventListener('click', api.prev));
+  root.querySelectorAll('.js-next,.js-next2').forEach(b=>b.addEventListener('click', api.next));
+  const addBtn = root.querySelector('.js-add'); if (addBtn) addBtn.addEventListener('click', api.add);
+  root.addEventListener('keydown', e=>{
+    if (isFormEl(e.target)) return;
+    if (e.key==='ArrowLeft'){ e.preventDefault(); api.prev(); }
+    if (e.key==='ArrowRight'){ e.preventDefault(); api.next(); }
+  });
+  render();
+}
+
+initDrawer(document.querySelector('[data-demo="A"]'), { tabs:true });
+initDrawer(document.querySelector('[data-demo="B"]'), { riders:true });
+initDrawer(document.querySelector('[data-demo="C"]'), {});
+initDrawer(document.querySelector('[data-demo="D"]'), { ghost:true });
+</script>
+</body>
+</html>

@@ -340,6 +340,8 @@
     'Πλοήγηση στις ημέρες του ιστορικού':['Browse history days','Parcourir les jours de l’historique','Verlaufstage durchsuchen'],
     'Προηγούμενη ημέρα':['Previous day','Jour précédent','Vorheriger Tag'],
     'Επόμενη ημέρα':['Next day','Jour suivant','Nächster Tag'],
+    'Προηγούμενη άσκηση':['Previous exercise','Exercice précédent','Vorherige Übung'],
+    'Επόμενη άσκηση':['Next exercise','Exercice suivant','Nächste Übung'],
     'Κάθε καταγραφή αφήνει το σημάδι της.':['Every log leaves its mark.','Chaque saisie laisse sa trace.','Jeder Eintrag hinterlässt Spuren.'],
     'ΑΣΚΗΣΕΙΣ':['EXERCISES','EXERCICES','ÜBUNGEN'],
     'ΚΑΤΑΓΡΑΦΗΚΕ':['LOGGED','ENREGISTRÉ','ERFASST'],

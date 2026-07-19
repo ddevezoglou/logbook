@@ -46,7 +46,7 @@ body:not(.app-ready)>.menu-ribbon,body:not(.app-ready)>.menu-backdrop,body:not(.
 .auth-gate-login .account-form button { min-height:54px; }
 .auth-gate-languages { position:absolute; right:clamp(24px,4vw,60px); bottom:clamp(18px,3vw,36px); width:min(300px,calc(100% - 48px)); margin:0; }
 .auth-gate-languages button { min-width:44px; min-height:44px; }
-@media(max-width:760px){.auth-gate{align-content:start;padding:34px 18px 96px}.auth-gate-book{grid-template-columns:1fr;perspective:none}.auth-gate-page{min-height:0;transform:none}.auth-gate-page-left{border-radius:10px 10px 0 0;padding:24px 22px 20px;background-image:linear-gradient(rgba(21,19,13,0) 78%,rgba(21,19,13,.12))}.auth-gate-page-left .brand-mark{margin-bottom:14px;transform:scale(.82);transform-origin:left center}.auth-gate-brand-title{font-size:1.7rem}.auth-gate-type{margin-top:18px;min-height:40px;font-size:1.35rem}.auth-gate-page-right{border-radius:0 0 10px 10px;min-height:440px;padding:24px 22px}.auth-gate-stitch{display:none}.auth-gate-ribbon{top:-10px;left:auto;right:12%;transform:rotate(.8deg);height:150px}.auth-gate-languages{position:absolute;left:22px;right:22px;bottom:14px;width:auto}}
+@media(max-width:760px){.auth-gate{grid-template-columns:minmax(0,1fr);align-content:start;gap:24px;padding:34px 18px}.auth-gate-book{grid-template-columns:1fr;justify-self:center;perspective:none}.auth-gate-page{min-height:0;transform:none}.auth-gate-page-left{border-radius:10px 10px 0 0;padding:24px 22px 20px;background-image:linear-gradient(rgba(21,19,13,0) 78%,rgba(21,19,13,.12))}.auth-gate-page-left .brand-mark{margin-bottom:14px;transform:scale(.82);transform-origin:left center}.auth-gate-brand-title{font-size:1.7rem}.auth-gate-type{margin-top:18px;min-height:40px;font-size:1.35rem}.auth-gate-page-right{border-radius:0 0 10px 10px;min-height:440px;padding:24px 22px}.auth-gate-stitch{display:none}.auth-gate-ribbon{top:-10px;left:auto;right:12%;transform:rotate(.8deg);height:150px}.auth-gate-languages{position:static;justify-self:center;width:min(880px,100%);margin:0}}
 @media(max-height:650px) and (orientation:landscape){.auth-gate{align-items:start;padding-top:24px;padding-bottom:74px}.auth-gate-page{min-height:380px}.auth-gate-type{margin-top:20px;min-height:44px;font-size:1.5rem}.auth-gate-login .account-form{grid-template-columns:1fr 1fr}.auth-gate-login .account-form .primary-button{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.auth-gate{transition:none}.auth-gate-flipbook .flip{animation:none;transform:perspective(400px) rotateY(-40deg)}.auth-gate-type .caret{animation:none}}
 .grain { position:fixed; inset:0; pointer-events:none; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
@@ -985,10 +985,10 @@ button,input,select,textarea { -webkit-tap-highlight-color:transparent; }
   .auth-gate {
     padding-top:calc(34px + env(safe-area-inset-top));
     padding-right:calc(18px + env(safe-area-inset-right));
-    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+    padding-bottom:calc(34px + env(safe-area-inset-bottom));
     padding-left:calc(18px + env(safe-area-inset-left));
   }
-  .auth-gate-languages { bottom:calc(14px + env(safe-area-inset-bottom)); }
+  .auth-gate-languages { padding-bottom:env(safe-area-inset-bottom); }
 }
 
 @media(max-width:600px) {
@@ -1186,11 +1186,10 @@ button,input,select,textarea { -webkit-tap-highlight-color:transparent; }
     grid-auto-flow:column;
     grid-auto-columns:68px;
     gap:7px;
-    overflow-x:auto;
-    overscroll-behavior-x:contain;
-    scroll-snap-type:x mandatory;
+    overflow:hidden;
     scrollbar-width:none;
-    touch-action:pan-x;
+    touch-action:pan-y;
+    user-select:none;
   }
   .week-strip::-webkit-scrollbar { display:none; }
   .day-tile { min-height:88px; padding:9px 8px 7px; align-items:flex-start; scroll-snap-align:center; }
@@ -1244,4 +1243,88 @@ button,input,select,textarea { -webkit-tap-highlight-color:transparent; }
   #profile-view .profile-hero { display:grid; min-height:164px; }
   #profile-view .profile-hero h1 { padding-right:72px; font-size:clamp(2.2rem,10.5vw,3rem); }
   #profile-view #profile-preview-age-unit { display:none; }
+}
+
+/* ===== Καταγραφή — στοίβα ασκήσεων και γραμμές set ===== */
+.exercise-deck-shell { position:relative; margin-top:0; outline:none; }
+.exercise-deck-shell:focus-visible { box-shadow:0 0 0 2px var(--paper),0 0 0 4px rgba(138,106,28,.55); }
+.deck-head { min-height:44px; margin:0 18px 2px; display:grid; place-items:center; }
+.deck-stamp { justify-self:center; padding:6px 12px 5px; border:2px solid rgba(138,106,28,.55); color:var(--orange); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:multiply; white-space:nowrap; }
+.exercise-deck { position:relative; margin:0 24px; touch-action:pan-y; isolation:isolate; }
+.exercise-deck > .workout-exercise { position:absolute; inset:18px 0 auto; width:100%; min-width:0; margin:0; overflow:hidden; background:#f3ecdc; box-shadow:3px 5px 0 rgba(21,19,13,.12); transform-origin:top center; transition:transform .45s cubic-bezier(.2,.75,.25,1),opacity .35s ease,box-shadow .35s ease; will-change:transform; }
+.exercise-deck > .workout-exercise:not([aria-hidden="true"]) { box-shadow:4px 7px 16px rgba(40,32,18,.16); }
+.exercise-deck > .workout-exercise.deck-dragging { transition:none; cursor:grabbing; user-select:none; }
+.exercise-tape { position:absolute; top:-10px; left:24px; width:58px; height:20px; z-index:2; background:rgba(213,194,145,.72); box-shadow:inset 0 0 0 1px rgba(90,72,35,.1); transform:rotate(-4deg); pointer-events:none; }
+.deck-progress { position:relative; height:3px; margin:12px 2px 0; background:rgba(21,19,13,.12); }
+.deck-progress i { position:absolute; inset:0 auto 0 0; width:0; background:var(--orange); transition:width .35s ease; }
+.deck-add { display:grid; place-items:center; width:100%; min-height:48px; margin-top:12px; padding:0 12px; border:0; border-top:1px dashed var(--line); border-bottom:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; text-align:center; text-transform:uppercase; }
+.deck-add:hover { background:var(--ink); color:var(--paper); }
+.deck-arrow { position:absolute; top:var(--deck-arrow-y,50%); z-index:260; width:26px; min-width:26px; height:52px; padding:0; transform:translateY(-50%); border:0; background:rgba(248,243,228,.72); color:var(--ink); opacity:.48; font:700 1.15rem "Roboto Slab"; cursor:pointer; transition:background .2s,color .2s,opacity .2s; }
+.deck-arrow-prev { left:22px; }
+.deck-arrow-next { right:22px; }
+.deck-arrow:hover:not(:disabled),.deck-arrow:focus-visible { background:rgba(21,19,13,.88); color:var(--gold); opacity:1; }
+.deck-arrow:disabled { opacity:.12; cursor:default; }
+.exercise-deck-shell.deck-empty .deck-head,
+.exercise-deck-shell.deck-empty .deck-progress { display:none; }
+.exercise-deck-shell.deck-single .deck-arrow { opacity:.24; cursor:default; }
+
+.workout-exercise .sets-header,.workout-exercise .set-row { grid-template-columns:36px minmax(62px,.42fr) 16px minmax(0,1.58fr) 30px; gap:7px; }
+.workout-exercise .sets-header { display:grid; margin-top:18px; padding:0 0 7px; border-bottom:2px solid var(--ink); color:var(--muted); font-size:.56rem; letter-spacing:.13em; }
+.workout-exercise .set-row { min-height:52px; margin:0; padding:0; border-bottom:1px solid rgba(57,47,28,.28); background:transparent; box-shadow:none; }
+.workout-exercise .set-number { color:var(--orange); font-size:.78rem; }
+.workout-exercise .set-times { color:var(--muted); text-align:center; }
+.workout-exercise .set-load-entry { min-width:0; display:grid; grid-template-columns:minmax(190px,.82fr) minmax(90px,1fr); gap:8px; align-items:center; }
+.workout-exercise .set-control { min-width:0; gap:0; }
+.workout-exercise .set-control-label { display:none; }
+.workout-exercise .set-row input,.workout-exercise .set-row select { min-width:0; min-height:42px; padding:8px 6px; border:0; background:transparent; box-shadow:none; font-size:1rem; }
+.workout-exercise .set-row input:focus,.workout-exercise .set-row select:focus { background:#fdf6e3; box-shadow:inset 0 -2px 0 var(--orange); }
+.workout-exercise .set-row select.weight-mode { color:var(--orange); font-size:.68rem; font-weight:800; letter-spacing:.01em; white-space:nowrap; }
+.workout-exercise .weight-entry { min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.workout-exercise .set-row[data-weight-mode="kg"] .weight-entry,
+.workout-exercise .set-row[data-weight-mode="plates"] .weight-entry,
+.workout-exercise .set-row[data-weight-mode="bodyweight_extra"] .weight-entry { grid-template-columns:1fr; }
+.workout-exercise .set-row[data-weight-mode="bodyweight"] .set-load-entry { grid-template-columns:minmax(106px,160px); }
+.workout-exercise .set-row[data-weight-mode="bodyweight"] .weight-entry { display:none; }
+.workout-exercise .set-row[data-weight-mode="kg"] .set-plates-control,
+.workout-exercise .set-row[data-weight-mode="plates"] .set-weight-control,
+.workout-exercise .set-row[data-weight-mode="bodyweight_extra"] .set-plates-control { display:none; }
+.workout-exercise .remove-set { top:50%; right:0; width:28px; min-width:28px; height:30px; min-height:30px; padding:0; transform:translateY(-50%); border:0; background:transparent; color:rgba(138,106,28,.7); }
+.workout-exercise .remove-set:hover { background:var(--orange); color:var(--paper); }
+.workout-exercise .extra-set::before { left:auto; right:31px; top:3px; font-size:.52rem; }
+.workout-exercise .set-actions { margin-top:2px; border-bottom:1px dashed var(--line); }
+.workout-exercise .set-actions .mini-button { min-height:40px; margin:0; border:0; color:var(--muted); }
+.workout-exercise .set-actions .mini-button:hover { color:var(--paper); }
+.workout-exercise > .full-field { margin-top:18px; }
+.workout-exercise > .full-field textarea { min-height:48px; padding-left:4px; background:transparent; }
+
+@media(max-width:700px) {
+  .deck-head { margin-right:4px; margin-left:4px; }
+  .exercise-deck { margin-right:2px; margin-left:2px; }
+  .deck-arrow { width:22px; min-width:22px; height:46px; background:rgba(248,243,228,.68); font-size:1rem; }
+  .deck-arrow-prev { left:-1px; }
+  .deck-arrow-next { right:-1px; }
+  .deck-add { padding:0 6px; font-size:.62rem; letter-spacing:.1em; }
+  .exercise-deck > .workout-exercise { top:16px; }
+  .workout-exercise .sets-header,.workout-exercise .set-row { grid-template-columns:28px minmax(42px,.38fr) 10px minmax(0,1.62fr) 24px; gap:4px; }
+  .workout-exercise .sets-header { display:grid; margin-top:16px; font-size:.48rem; letter-spacing:.06em; }
+  .workout-exercise .set-row { min-height:50px; padding:0; border:0; border-bottom:1px solid rgba(57,47,28,.28); box-shadow:none; }
+  .workout-exercise .set-number { grid-column:auto; padding:0; border:0; font-size:.72rem; }
+  .workout-exercise .set-number::before { content:none; }
+  .workout-exercise .set-load-entry { grid-template-columns:minmax(78px,.72fr) minmax(64px,1fr); gap:3px; }
+  .workout-exercise .set-row input,.workout-exercise .set-row select { min-height:44px; padding-right:3px; padding-left:3px; font-size:16px; }
+  .workout-exercise .set-row select.weight-mode { font-size:10px; letter-spacing:0; }
+  .workout-exercise .weight-entry { grid-column:auto; gap:2px; }
+  .workout-exercise .set-row[data-weight-mode="bodyweight"] .set-load-entry { grid-template-columns:minmax(82px,130px); }
+  .workout-exercise .set-row[data-weight-mode="mixed"] { min-height:82px; }
+  .workout-exercise .set-row[data-weight-mode="mixed"] .set-load-entry { grid-template-columns:1fr; gap:0; }
+  .workout-exercise .set-row[data-weight-mode="mixed"] .weight-entry { grid-template-columns:1fr 1fr; }
+  .workout-exercise .set-row[data-weight-mode="bodyweight_extra"] { min-height:82px; }
+  .workout-exercise .set-row[data-weight-mode="bodyweight_extra"] .set-load-entry { grid-template-columns:1fr; gap:0; }
+  .workout-exercise .remove-set { top:50%; right:0; width:24px; min-width:24px; height:30px; min-height:30px; }
+  .workout-exercise .extra-set::before { right:25px; top:2px; }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .exercise-deck > .workout-exercise { transition-duration:.01s; }
+  .deck-progress i { transition:none; }
 }

@@ -156,6 +156,7 @@ const state = { routines, selectedRoutineId:routines.find(routine => routine.isA
 let customAvatarData = state.profile?.customImage || '';
 let routineCarouselIndex = 0;
 let routineSwipeStartX = null;
+let historySwipe = null;
 if (!savedSessions.length && oldLogs.length) safeStoreWrite('trainingSessions', state.sessions);
 if (!(Array.isArray(savedRoutines) && savedRoutines.length) || JSON.stringify(savedRoutines) !== JSON.stringify(state.routines)) safeStoreWrite('trainingRoutines', state.routines);
 const $ = selector => document.querySelector(selector);
@@ -338,8 +339,10 @@ function setRows(count, values = [], prefix = '', options = {}) {
     const setPosition = startIndex + i + 1;
     return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(setPosition).padStart(2,'0')}</span>
       <label class="set-control set-reps-control"><span class="set-control-label">Επαναλήψεις</span><input class="${prefix}reps set-reps" type="number" min="0" inputmode="numeric" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${setPosition}" required></label>
-      <label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες + Κιλά</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + Extra Βάρος</option></select></label>
-      <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (kg)</span><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" inputmode="decimal" placeholder="0" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div><button class="remove-set${extra ? ' remove-extra-set' : ''}" type="button" aria-label="Αφαίρεση εργάσιμου σετ">−</button></div>`;
+      <span class="set-times" aria-hidden="true">×</span>
+      <div class="set-load-entry"><label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες + Κιλά</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + Extra Βάρος</option></select></label>
+        <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (kg)</span><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" inputmode="decimal" placeholder="${mode === 'bodyweight_extra' ? 'extra kg' : 'kg'}" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div>
+      </div><button class="remove-set${extra ? ' remove-extra-set' : ''}" type="button" aria-label="Αφαίρεση εργάσιμου σετ">−</button></div>`;
   }).join('');
 }
 
@@ -601,11 +604,12 @@ function duplicateRoutine(routineId) {
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
   return `<article class="workout-exercise" data-exercise data-id="${exercise.id || id()}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}">
+    <span class="exercise-tape" aria-hidden="true"></span>
     <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}η</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${exercise.sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
     ${exercise.cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
     ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${exercise.sets?.length || 3}"></label>` : ''}
-    <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΜΕΤΡΗΣΗ ΒΑΡΟΥΣ</span><span>ΒΑΡΟΣ</span></div>
+    <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ / ΜΕΤΡΗΣΗ</span><span></span></div>
     <div class="exercise-sets">${setRows(exercise.sets?.length || 3, exercise.sets || [])}</div>
     <div class="set-actions"><button class="mini-button copy-first-set hidden" type="button" aria-label="Αντιγραφή του πρώτου σετ στα υπόλοιπα">ΑΝΤΙΓΡΑΦΗ</button>${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}</div>
     <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" data-i18n-user rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
@@ -635,6 +639,164 @@ function refreshWorkoutDayOptions(preferredDay) {
   return selectedDay;
 }
 
+function deckShellHTML(cardsHTML) {
+  return `<div class="exercise-deck-shell" tabindex="0">
+    <div class="deck-head">
+      <button class="deck-arrow deck-arrow-prev" type="button" aria-label="Προηγούμενη άσκηση">‹</button>
+      <span class="deck-stamp" role="status"></span>
+      <button class="deck-arrow deck-arrow-next" type="button" aria-label="Επόμενη άσκηση">›</button>
+    </div>
+    <div class="exercise-deck">${cardsHTML}</div>
+    <div class="deck-progress"><i></i></div>
+  </div>`;
+}
+
+function deckCards(deck) {
+  return [...deck.querySelectorAll(':scope > [data-exercise]')];
+}
+
+function deckIndex(deck) {
+  const cards = deckCards(deck);
+  return Math.max(0, Math.min(cards.length - 1, Number(deck.dataset.currentIndex) || 0));
+}
+
+function measureDeck(deck) {
+  const cards = deckCards(deck);
+  const heights = cards.map(card => Math.max(card.offsetHeight, card.scrollHeight));
+  const height = Math.max(0, ...heights);
+  if (height) {
+    deck.style.height = `${height + 18}px`;
+    const activeCard = cards[deckIndex(deck)];
+    const activeHeight = Math.max(activeCard.offsetHeight, activeCard.scrollHeight);
+    deck.closest('.exercise-deck-shell').style.setProperty('--deck-arrow-y', `${deck.offsetTop + activeCard.offsetTop + activeHeight / 2}px`);
+  }
+}
+
+function layoutDeck(shell) {
+  const deck = shell.querySelector('.exercise-deck');
+  const cards = deckCards(deck);
+  const index = deckIndex(deck);
+  deck.dataset.currentIndex = String(index);
+  shell.classList.toggle('deck-empty', !cards.length);
+  shell.classList.toggle('deck-single', cards.length === 1);
+  if (!cards.length) {
+    deck.style.height = '0px';
+    return;
+  }
+
+  cards.forEach((card, cardIndex) => {
+    const distance = cardIndex - index;
+    card.classList.remove('deck-dragging');
+    if (distance < 0) {
+      card.style.transform = 'translateX(132%) rotate(14deg)';
+      card.style.opacity = '0';
+      card.style.zIndex = String(200 + cardIndex);
+    } else {
+      const depth = Math.min(distance, 3);
+      card.style.transform = `translateY(${-11 * depth}px) scale(${1 - .035 * depth})`;
+      card.style.opacity = distance > 3 ? '0' : '1';
+      card.style.zIndex = String(100 - distance);
+    }
+    card.style.pointerEvents = distance === 0 ? 'auto' : 'none';
+    card.inert = distance !== 0;
+    card.toggleAttribute('inert', distance !== 0);
+    if (distance === 0) card.removeAttribute('aria-hidden');
+    else card.setAttribute('aria-hidden', 'true');
+  });
+
+  const stampText = `ΑΣΚΗΣΗ ${String(index + 1).padStart(2,'0')} / ${String(cards.length).padStart(2,'0')}`;
+  if (shell.dataset.stampValue !== stampText) {
+    shell.dataset.stampValue = stampText;
+    shell.querySelector('.deck-stamp').textContent = stampText;
+  }
+  shell.querySelector('.deck-progress i').style.width = `${((index + 1) / cards.length) * 100}%`;
+  shell.querySelector('.deck-arrow-prev').disabled = index === 0;
+  shell.querySelector('.deck-arrow-next').disabled = index === cards.length - 1;
+  requestAnimationFrame(() => measureDeck(deck));
+}
+
+function showDeckCard(deck, nextIndex) {
+  if (!deck) return;
+  const cards = deckCards(deck);
+  if (!cards.length) return;
+  const index = Math.max(0, Math.min(cards.length - 1, nextIndex));
+  const shell = deck.closest('.exercise-deck-shell');
+  const focusedCard = document.activeElement?.closest?.('[data-exercise]');
+  if (focusedCard && focusedCard !== cards[index]) shell.focus({ preventScroll:true });
+  deck.dataset.currentIndex = String(index);
+  layoutDeck(shell);
+}
+
+function showDeckCardForField(deck, card) {
+  if (!deck || !card) return;
+  showDeckCard(deck, deckCards(deck).indexOf(card));
+}
+
+function setupDeck(shell) {
+  if (shell.dataset.deckReady) return layoutDeck(shell);
+  shell.dataset.deckReady = 'true';
+  const deck = shell.querySelector('.exercise-deck');
+  const observeCardSizes = () => {
+    if (!shell.deckResizeObserver) return;
+    shell.deckResizeObserver.disconnect();
+    deckCards(deck).forEach(card => shell.deckResizeObserver.observe(card));
+  };
+  if ('ResizeObserver' in window) {
+    shell.deckResizeObserver = new ResizeObserver(() => measureDeck(deck));
+    observeCardSizes();
+  }
+  new MutationObserver(() => {
+    observeCardSizes();
+    layoutDeck(shell);
+  }).observe(deck, { childList:true });
+
+  const move = step => showDeckCard(deck, deckIndex(deck) + step);
+  shell.querySelector('.deck-arrow-prev').addEventListener('click', () => move(-1));
+  shell.querySelector('.deck-arrow-next').addEventListener('click', () => move(1));
+  shell.addEventListener('keydown', event => {
+    if (event.target.closest('input,select,textarea,button,a')) return;
+    if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); }
+    if (event.key === 'ArrowRight') { event.preventDefault(); move(1); }
+  });
+
+  let gesture = null;
+  deck.addEventListener('pointerdown', event => {
+    if (event.isPrimary === false || (event.button !== undefined && event.button !== 0) || event.target.closest('input,select,textarea,button,label,a')) return;
+    gesture = { pointerId:event.pointerId, startX:event.clientX, startY:event.clientY, distanceX:0, horizontal:false, card:deckCards(deck)[deckIndex(deck)] };
+  });
+  deck.addEventListener('pointermove', event => {
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const distanceX = event.clientX - gesture.startX;
+    const distanceY = event.clientY - gesture.startY;
+    if (!gesture.horizontal) {
+      if (Math.abs(distanceX) < 6 && Math.abs(distanceY) < 6) return;
+      if (Math.abs(distanceY) > Math.abs(distanceX)) { gesture = null; return; }
+      gesture.horizontal = true;
+      gesture.card.classList.add('deck-dragging');
+      deck.setPointerCapture?.(event.pointerId);
+    }
+    gesture.distanceX = distanceX;
+    const index = deckIndex(deck);
+    const canMove = (distanceX > 0 && index < deckCards(deck).length - 1) || (distanceX < 0 && index > 0);
+    const visualDistance = canMove ? distanceX : distanceX / 4;
+    gesture.card.style.transform = `translateX(${visualDistance}px) rotate(${visualDistance / 15}deg)`;
+  });
+  const finishGesture = (event, cancelled = false) => {
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const { distanceX, horizontal } = gesture;
+    gesture = null;
+    if (!cancelled && horizontal && distanceX > 70) move(1);
+    else if (!cancelled && horizontal && distanceX < -70) move(-1);
+    else layoutDeck(shell);
+  };
+  deck.addEventListener('pointerup', event => finishGesture(event));
+  deck.addEventListener('pointercancel', event => finishGesture(event, true));
+  layoutDeck(shell);
+}
+
+function refreshSessionDecks() { $$('#log-view .exercise-deck-shell').forEach(setupDeck); }
+window.addEventListener('resize', refreshSessionDecks);
+
 function renderScheduledSession(preferredDay = null) {
   const date = $('#log-date').value;
   const calendarDay = dayForDate(date);
@@ -646,11 +808,18 @@ function renderScheduledSession(preferredDay = null) {
   const planned = activePlan().filter(item => itemCycleDay(item, routine) === Number(planDay)).map(item => ({ ...item, sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
   const workoutName = planned[0]?.workoutName || 'Η προπόνηση της ημέρας';
   const slotLabel = cycleDayLabel(routine, planDay);
-  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2></div></div>${planned.map((item, index) => exerciseCard(item, false, index)).join('')}` : `<div class="no-workout empty"><span>Δεν υπάρχει ορισμένη προπόνηση για ${slotLabel}.</span></div>`;
+  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2></div></div>${deckShellHTML(planned.map((item, index) => exerciseCard(item, false, index)).join(''))}` : `<div class="no-workout empty"><span>Δεν υπάρχει ορισμένη προπόνηση για ${slotLabel}.</span></div>`;
   refreshCopySetButtons($('#scheduled-session'));
+  refreshSessionDecks();
 }
 
-function addFreeExercise() { $('#free-exercises').insertAdjacentHTML('beforeend', exerciseCard({ sets:[{},{},{}] }, true)); refreshCopySetButtons($('#free-exercises')); }
+function addFreeExercise() {
+  const deck = $('#free-exercises');
+  deck.insertAdjacentHTML('beforeend', exerciseCard({ sets:[{},{},{}] }, true));
+  refreshCopySetButtons(deck);
+  refreshSessionDecks();
+  showDeckCard(deck, deckCards(deck).length - 1);
+}
 
 function loadDayForEdit(day) {
   const routine = selectedRoutine();
@@ -817,6 +986,9 @@ function renderHistoryWeek(direction = 0) {
       ? `<button class="day-tile done ${state.selectedHistoryDate === key ? 'selected' : ''}" type="button" data-history-date="${key}" aria-label="Δείτε ${sessionCount === 1 ? 'την προπόνηση' : `τις ${sessionCount} προπονήσεις`} της ${formatDate(key)}">${inner}</button>`
       : `<div class="day-tile">${inner}</div>`;
   }).join('');
+  requestAnimationFrame(() => {
+    if (window.matchMedia?.('(max-width:600px)').matches) weekStrip.scrollLeft = weekStrip.scrollWidth;
+  });
   weekStrip.classList.remove('week-shift-older', 'week-shift-newer');
   if (direction) {
     void weekStrip.offsetWidth;
@@ -981,8 +1153,7 @@ function renderProgressChart() {
       const bracketY = below ? pointY + 26 : pointY - 26, tickDir = below ? -6 : 6, labelY = below ? bracketY + 17 : bracketY - 10;
       const fromReps = points[start].reps, toReps = points[end].reps;
       const repsText = fromReps === toReps ? `${fromReps}` : `${fromReps} → ${toReps}`;
-      const suffix = end === points.length - 1 ? ' · σε εξέλιξη' : '';
-      const label = x2 - x1 >= 64 ? `<text class="cycle-label" x="${(x1 + x2) / 2}" y="${labelY}" text-anchor="middle">${repsText} <tspan>επαν.${suffix}</tspan></text>` : '';
+      const label = x2 - x1 >= 64 ? `<text class="cycle-label" x="${(x1 + x2) / 2}" y="${labelY}" text-anchor="middle">${repsText} <tspan>επαναλήψεις</tspan></text>` : '';
       return `<path class="cycle-bracket" d="M ${x1} ${bracketY + tickDir} L ${x1} ${bracketY} L ${x2} ${bracketY} L ${x2} ${bracketY + tickDir}"/>${label}`;
     }).join('');
   })();
@@ -1359,6 +1530,7 @@ function setMode(mode) {
   $('#scheduled-session').classList.toggle('hidden', mode !== 'scheduled'); $('#free-session').classList.toggle('hidden', mode !== 'free');
   $('#workout-day-field').classList.toggle('hidden', mode !== 'scheduled');
   if (mode === 'free' && !$('#free-exercises').children.length) addFreeExercise();
+  refreshSessionDecks();
 }
 
 function resetSessionForm() {
@@ -1391,11 +1563,12 @@ function loadSessionForEdit(sessionId) {
   if (session.type === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
     $('#day-badge').innerHTML = `<span>${dayForDate(session.date)}</span><small>${formatDate(session.date)}</small>`;
-    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Διορθώστε τις τιμές που θέλετε και αποθηκεύστε ξανά.</p></div></div>${session.exercises.map((item, index) => exerciseCard(item, false, index)).join('')}`;
+    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Διορθώστε τις τιμές που θέλετε και αποθηκεύστε ξανά.</p></div></div>${deckShellHTML(session.exercises.map((item, index) => exerciseCard(item, false, index)).join(''))}`;
   } else {
     $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard(item, true)).join('');
   }
   refreshCopySetButtons();
+  refreshSessionDecks();
   $$('.mode-button').forEach(button => { button.disabled = true; });
   $('#workout-day-select').disabled = true;
   $('#cancel-session-edit').classList.remove('hidden');
@@ -1420,11 +1593,12 @@ function loadSessionForCopy(sessionId) {
   if (session.type === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
     $('#day-badge').innerHTML = `<span>${dayForDate(today)}</span><small>${formatDate(today)}</small>`;
-    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Προσαρμόστε ό,τι εκτελέσατε σήμερα και ολοκληρώστε τη νέα προπόνηση.</p></div></div>${session.exercises.map((item, index) => exerciseCard(item, false, index)).join('')}`;
+    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Προσαρμόστε ό,τι εκτελέσατε σήμερα και ολοκληρώστε τη νέα προπόνηση.</p></div></div>${deckShellHTML(session.exercises.map((item, index) => exerciseCard(item, false, index)).join(''))}`;
   } else {
     $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard(item, true)).join('');
   }
   refreshCopySetButtons();
+  refreshSessionDecks();
   $$('.mode-button').forEach(button => { button.disabled = true; });
   $('#workout-day-select').disabled = true;
   $('#cancel-session-edit').classList.remove('hidden');
@@ -1503,6 +1677,19 @@ $('#routine-list').addEventListener('pointerup', event => {
   if (Math.abs(distance) >= 45) scrollRoutineTickets(distance < 0 ? 1 : -1);
 });
 $('#routine-list').addEventListener('pointercancel', () => { routineSwipeStartX = null; });
+$('#week-strip').addEventListener('pointerdown', event => {
+  if (event.isPrimary === false || (event.pointerType && !['touch', 'pen'].includes(event.pointerType))) return;
+  historySwipe = { pointerId:event.pointerId, x:event.clientX, y:event.clientY };
+  event.currentTarget.setPointerCapture?.(event.pointerId);
+});
+$('#week-strip').addEventListener('pointerup', event => {
+  if (!historySwipe || (event.pointerId !== undefined && event.pointerId !== historySwipe.pointerId)) return;
+  const distanceX = event.clientX - historySwipe.x;
+  const distanceY = event.clientY - historySwipe.y;
+  historySwipe = null;
+  if (Math.abs(distanceX) >= 45 && Math.abs(distanceX) > Math.abs(distanceY) * 1.25) moveHistoryWeek(distanceX > 0 ? 1 : -1);
+});
+$('#week-strip').addEventListener('pointercancel', () => { historySwipe = null; });
 $('#session-detail-close').addEventListener('click', () => closeSessionDialog());
 $('#session-detail-dialog').addEventListener('cancel', event => {
   event.preventDefault();
@@ -1766,7 +1953,13 @@ $('#save-session').addEventListener('click', () => {
   const container = state.mode === 'scheduled' ? $('#scheduled-session') : $('#free-exercises');
   const exercises = collectExercises(container);
   if (!exercises.length) return toast('Χρειάζεται τουλάχιστον μία άσκηση', 'error');
-  if (container.querySelector(':invalid')) { container.querySelector(':invalid').reportValidity(); return; }
+  const invalidField = container.querySelector(':invalid');
+  if (invalidField) {
+    const deck = container.matches('.exercise-deck') ? container : container.querySelector('.exercise-deck');
+    showDeckCardForField(deck, invalidField.closest('[data-exercise]'));
+    invalidField.reportValidity();
+    return;
+  }
   const existing = state.sessions.find(item => String(item.id) === String(state.editingSessionId));
   if (state.editingSessionId && !existing) {
     resetSessionForm();

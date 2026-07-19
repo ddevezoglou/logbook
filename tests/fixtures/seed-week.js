@@ -157,5 +157,5 @@
   localStorage.removeItem('routineRewardTracking');
   localStorage.removeItem('trainingLogs');
   console.log(`Seed OK: 4 προγράμματα (7/8/9/10 ημέρες), ${sessions.length} προπονήσεις σε ${pastWeeks} εβδομάδες + τρέχουσα. Reload...`);
-  location.reload();
+  if (!globalThis.__LOGBOOK_SEED_SKIP_RELOAD__) location.reload();
 })();

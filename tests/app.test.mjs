@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.8.0');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.0');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -810,9 +810,10 @@ test('progress chart annotates weight plateaus with rep-cycle brackets', () => {
   assert.equal(brackets.length, 2, 'one bracket per weight plateau');
   const labels = [...document.querySelectorAll('#progress-panel .cycle-label')].map(t => t.textContent.replace(/\s+/g, ' ').trim());
   assert.ok(labels[0].includes('6 → 10'), 'closed cycle shows the rep journey');
-  assert.ok(!labels[0].includes('σε εξέλιξη'), 'closed cycle is not marked ongoing');
+  assert.ok(labels[0].includes('επαναλήψεις'), 'closed cycle spells out repetitions');
   assert.ok(labels[1].includes('6 → 8'), 'current cycle shows progress so far');
-  assert.ok(labels[1].includes('σε εξέλιξη'), 'the cycle containing the latest session is marked ongoing');
+  assert.ok(labels[1].includes('επαναλήψεις'), 'current cycle spells out repetitions');
+  assert.ok(labels.every(label => !label.includes('επαν.') && !label.includes('σε εξέλιξη')), 'cycle labels contain neither abbreviations nor ongoing status');
 });
 
 test('progress chart draws no cycle brackets when every session changes weight', () => {
@@ -1228,6 +1229,79 @@ test('copy-first-set fills the remaining rows with the first set values', () => 
   const rows = [...card.querySelectorAll('[data-set]')];
   assert.equal(rows[1].querySelector('.set-reps').value, '8');
   assert.equal(rows[2].querySelector('.set-weight').value, '60');
+});
+
+test('scheduled exercises use deck arrows to reveal one stacked card at a time', () => {
+  const plan = [
+    planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Push Day' }),
+    planDay('Δευτέρα', 'Incline Press', { cycleDay:1, workoutName:'Push Day' }),
+  ];
+  const { document } = loadApp({ trainingRoutines:routineWith(plan) });
+  setValue(document, '#log-date', '2026-07-06');
+  const shell = document.querySelector('#scheduled-session .exercise-deck-shell');
+  const deck = shell.querySelector('.exercise-deck');
+  const cards = [...deck.querySelectorAll(':scope > [data-exercise]')];
+
+  assert.equal(cards.length, 2);
+  assert.equal(deck.dataset.currentIndex, '0');
+  assert.equal(shell.querySelector('.deck-stamp').textContent, 'ΑΣΚΗΣΗ 01 / 02');
+  assert.equal(shell.querySelector('.deck-toolbar'), null, 'the lower navigation bar is removed');
+  assert.ok(shell.querySelector('.deck-head .deck-arrow-prev'), 'the previous arrow remains in the stable deck controls');
+  assert.ok(shell.querySelector('.deck-head .deck-arrow-next'), 'the next arrow remains in the stable deck controls');
+  assert.equal(shell.querySelector('.deck-arrow-prev').disabled, true);
+  assert.equal(shell.querySelector('.deck-arrow-next').disabled, false);
+  assert.equal(cards[0].hasAttribute('aria-hidden'), false);
+  assert.equal(cards[1].getAttribute('aria-hidden'), 'true');
+
+  click(document, shell.querySelector('.deck-arrow-next'));
+
+  assert.equal(deck.dataset.currentIndex, '1');
+  assert.equal(shell.querySelector('.deck-stamp').textContent, 'ΑΣΚΗΣΗ 02 / 02');
+  assert.equal(shell.querySelector('.deck-arrow-prev').disabled, false);
+  assert.equal(shell.querySelector('.deck-arrow-next').disabled, true);
+  assert.equal(shell.querySelector('.deck-progress i').style.width, '100%');
+  assert.equal(cards[0].getAttribute('aria-hidden'), 'true');
+  assert.equal(cards[1].hasAttribute('aria-hidden'), false);
+});
+
+test('adding a free exercise keeps existing input and places the new card on top of the deck', () => {
+  const { document } = loadApp();
+  click(document, '[data-mode="free"]');
+  const deck = document.querySelector('#free-exercises');
+  setValue(document, '#free-exercises .exercise-name', 'Squat', 'input');
+  click(document, '#add-free-exercise');
+  const cards = [...deck.querySelectorAll(':scope > [data-exercise]')];
+
+  assert.equal(cards.length, 2);
+  assert.equal(cards[0].querySelector('.exercise-name').value, 'Squat');
+  assert.equal(deck.dataset.currentIndex, '1');
+  assert.equal(deck.closest('.exercise-deck-shell').querySelector('.deck-stamp').textContent, 'ΑΣΚΗΣΗ 02 / 02');
+  assert.equal(cards[0].getAttribute('aria-hidden'), 'true');
+  assert.equal(cards[1].hasAttribute('aria-hidden'), false);
+});
+
+test('horizontal deck swipe changes exercises while preserving all card inputs', () => {
+  const plan = [
+    planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Push Day' }),
+    planDay('Δευτέρα', 'Incline Press', { cycleDay:1, workoutName:'Push Day' }),
+  ];
+  const { document } = loadApp({ trainingRoutines:routineWith(plan) });
+  setValue(document, '#log-date', '2026-07-06');
+  const deck = document.querySelector('#scheduled-session .exercise-deck');
+  const firstWeight = deck.querySelector('[data-exercise] .set-weight');
+  firstWeight.value = '82.5';
+  const pointer = (type, x, y) => {
+    const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
+    Object.defineProperties(event, { pointerId:{ value:8 }, pointerType:{ value:'touch' }, button:{ value:0 }, clientX:{ value:x }, clientY:{ value:y } });
+    deck.dispatchEvent(event);
+  };
+
+  pointer('pointerdown', 70, 30);
+  pointer('pointermove', 155, 33);
+  pointer('pointerup', 155, 33);
+
+  assert.equal(deck.dataset.currentIndex, '1');
+  assert.equal(firstWeight.value, '82.5');
 });
 
 test('working sets are removable after confirmation and renumbered', () => {
@@ -1735,6 +1809,31 @@ test('history strip moves one day at a time and selects logged workouts without 
   assert.equal(document.querySelector('#week-strip .day-tile.done').dataset.historyDate, dateAt(1));
 });
 
+test('history strip supports one-day horizontal touch swipes while ignoring vertical gestures', () => {
+  const dateAt = daysAgo => { const date = new Date(); date.setHours(12,0,0,0); date.setDate(date.getDate() - daysAgo); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
+  const mk = (id, daysAgo) => ({ id, date:dateAt(daysAgo), type:'free', comments:'', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg' }] }] });
+  const { document } = loadApp({ trainingSessions:[mk('recent', 1), mk('older', 7), mk('oldest', 15)] });
+  click(document, '.nav-button[data-view="overview"]');
+  const strip = document.querySelector('#week-strip');
+  const pointer = (type, x, y) => {
+    const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
+    Object.defineProperties(event, { pointerId:{ value:4 }, pointerType:{ value:'touch' }, clientX:{ value:x }, clientY:{ value:y } });
+    strip.dispatchEvent(event);
+  };
+
+  pointer('pointerdown', 100, 40);
+  pointer('pointerup', 180, 44);
+  assert.equal(strip.querySelector('.day-tile.done').dataset.historyDate, dateAt(7), 'right swipe reveals the previous day');
+
+  pointer('pointerdown', 180, 40);
+  pointer('pointerup', 100, 44);
+  assert.equal(strip.querySelector('.day-tile.done').dataset.historyDate, dateAt(1), 'left swipe returns to the next day');
+
+  pointer('pointerdown', 100, 20);
+  pointer('pointerup', 150, 120);
+  assert.equal(strip.querySelector('.day-tile.done').dataset.historyDate, dateAt(1), 'mostly vertical movement does not change the history day');
+});
+
 test('progress chart excludes sessions logged in a different weight mode', () => {
   const mk = (id, date, sets) => ({ id, date, type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets }] });
   const { document } = loadApp({
@@ -1812,17 +1911,45 @@ test('changing the free set count rebuilds rows without losing entered values', 
   assert.equal(rows[0].querySelector('.set-weight').value, '25');
 });
 
-test('switching a set to plates mode swaps the required weight inputs', () => {
+test('weight selector exposes all five modes and requires only their matching fields', () => {
   const { document } = loadApp({ trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]) });
   setValue(document, '#log-date', '2026-07-06');
   const row = document.querySelector('#scheduled-session [data-set]');
-  assert.equal(row.querySelector('.set-weight').required, true, 'kg mode requires kg');
   const modeSelect = row.querySelector('.weight-mode');
-  modeSelect.value = 'plates';
-  modeSelect.dispatchEvent(new (document.defaultView.Event)('change', { bubbles: true }));
+  const weight = row.querySelector('.set-weight');
+  const plates = row.querySelector('.set-plates');
+  const selectMode = mode => {
+    modeSelect.value = mode;
+    modeSelect.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
+  };
+
+  assert.deepEqual([...modeSelect.options].map(option => [option.value, option.textContent]), [
+    ['kg', 'Κιλά'],
+    ['plates', 'Πλάκες'],
+    ['mixed', 'Πλάκες + Κιλά'],
+    ['bodyweight', 'Bodyweight'],
+    ['bodyweight_extra', 'Bodyweight + Extra Βάρος'],
+  ]);
+  assert.equal(weight.required, true, 'kg mode requires kg');
+  assert.equal(plates.required, false);
+
+  selectMode('plates');
   assert.equal(row.dataset.weightMode, 'plates');
-  assert.equal(row.querySelector('.set-plates').required, true);
-  assert.equal(row.querySelector('.set-weight').required, false);
+  assert.equal(plates.required, true);
+  assert.equal(weight.required, false);
+
+  selectMode('mixed');
+  assert.equal(plates.required, true, 'mixed mode requires plates');
+  assert.equal(weight.required, true, 'mixed mode also requires kg');
+
+  selectMode('bodyweight');
+  assert.equal(plates.required, false);
+  assert.equal(weight.required, false);
+
+  selectMode('bodyweight_extra');
+  assert.equal(plates.required, false);
+  assert.equal(weight.required, true);
+  assert.equal(weight.placeholder, 'extra kg');
 });
 
 test('plan cues appear as a banner on the scheduled exercise card', () => {

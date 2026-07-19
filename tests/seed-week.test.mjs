@@ -10,11 +10,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const seedSource = readFileSync(join(root, 'tests', 'fixtures', 'seed-week.js'), 'utf8');
 
 // Runs the shared fixture in a browser-like storage context and returns
-// the data it produced. jsdom cannot perform the final
-// location.reload(), so that error is swallowed — storage is written first.
+// the data it produced. The fixture skips only its final browser reload in jsdom.
 function runSeed() {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', runScripts: 'outside-only' });
-  try { dom.window.eval(seedSource); } catch { /* location.reload not implemented in jsdom */ }
+  dom.window.__LOGBOOK_SEED_SKIP_RELOAD__ = true;
+  dom.window.eval(seedSource);
   return {
     routines: JSON.parse(dom.window.localStorage.getItem('trainingRoutines')),
     sessions: JSON.parse(dom.window.localStorage.getItem('trainingSessions')),

@@ -16,7 +16,10 @@ async function installAuthenticatedStub(page, { onlineOnly = false, withWorkout 
       const anchor = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       localStorage.setItem('trainingRoutines', JSON.stringify([{
         id:'mobile-routine', name:'Mobile Strength', isActive:true, cycleLength:7, cycleAnchorDate:anchor, usesWeekdays:false,
-        plan:[{ id:'mobile-legs', day:null, cycleDay:1, workoutName:'Legs', exercise:'Leg Extensions', workSets:3, cues:'Θέση στο 7' }],
+        plan:[
+          { id:'mobile-legs', day:null, cycleDay:1, workoutName:'Legs', exercise:'Leg Extensions', workSets:3, cues:'Θέση στο 7' },
+          { id:'mobile-curls', day:null, cycleDay:1, workoutName:'Legs', exercise:'Hamstring Curl', workSets:3, cues:'Αργή επιστροφή' },
+        ],
       }]));
       localStorage.setItem('userProfile', JSON.stringify({ name:'Mobile Athlete', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' }));
     }
@@ -99,6 +102,15 @@ test('login gate fits mobile viewports and exposes touch-sized controls', async 
     expect(box?.height || 0).toBeGreaterThanOrEqual(44);
   }
   expect(await page.locator('#account-signin-email').evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(16);
+
+  await page.locator('[data-account-mode="signup"]').click();
+  const layout = await page.evaluate(() => {
+    const submit = document.querySelector('#account-signup-form .primary-button').getBoundingClientRect();
+    const languages = document.querySelector('.auth-gate-languages').getBoundingClientRect();
+    return { submitBottom:submit.bottom, languagesTop:languages.top, languagePosition:getComputedStyle(document.querySelector('.auth-gate-languages')).position };
+  });
+  expect(layout.languagePosition).toBe('static');
+  expect(layout.languagesTop).toBeGreaterThanOrEqual(layout.submitBottom);
   await expectNoSeriousAxeViolations(page);
 });
 
@@ -171,18 +183,45 @@ test('desktop navigation remains available above the mobile breakpoint', async (
   await expectNoHorizontalOverflow(page);
 });
 
-test('workout sets use a mobile card hierarchy and keep completion reachable', async ({ page }) => {
+test('workout deck keeps compact set lines, dynamic weight fields and completion reachable', async ({ page }) => {
   await installAuthenticatedStub(page, { withWorkout:true });
   await page.goto('/');
   await page.locator('#open-menu').click();
   await page.locator('#side-menu [data-view="log"]').click();
 
-  const exercise = page.locator('.workout-exercise').first();
+  const deck = page.locator('#scheduled-session .exercise-deck-shell');
+  const exercise = deck.locator('.workout-exercise').first();
   await expect(exercise.getByRole('heading', { name:'Leg Extensions' })).toBeVisible();
   await expect(exercise.locator('.set-row')).toHaveCount(3);
-  await expect(exercise.locator('.set-control-label', { hasText:'Επαναλήψεις' }).first()).toBeVisible();
-  await expect(exercise.locator('.set-control-label', { hasText:'Βάρος (kg)' }).first()).toBeVisible();
+  await expect(deck.locator('.deck-stamp')).toHaveText('ΑΣΚΗΣΗ 01 / 02');
+  await expect(exercise.locator('.sets-header')).toBeVisible();
   expect((await exercise.locator('.set-reps').first().boundingBox())?.height || 0).toBeGreaterThanOrEqual(44);
+
+  const firstRow = exercise.locator('.set-row').first();
+  await firstRow.locator('.weight-mode').selectOption('mixed');
+  await expect(firstRow.locator('.set-plates')).toBeVisible();
+  await expect(firstRow.locator('.set-weight')).toBeVisible();
+  expect((await firstRow.boundingBox())?.height || 0).toBeGreaterThanOrEqual(80);
+  await firstRow.locator('.weight-mode').selectOption('bodyweight');
+  await expect(firstRow.locator('.weight-entry')).toBeHidden();
+  await firstRow.locator('.weight-mode').selectOption('bodyweight_extra');
+  const compactModeStyle = await firstRow.locator('.weight-mode').evaluate(element => ({
+    fontSize:parseFloat(getComputedStyle(element).fontSize),
+    whiteSpace:getComputedStyle(element).whiteSpace,
+  }));
+  expect(compactModeStyle.fontSize).toBeLessThanOrEqual(10);
+  expect(compactModeStyle.whiteSpace).toBe('nowrap');
+
+  const cardBox = await exercise.boundingBox();
+  const previousArrowBox = await deck.locator('.deck-arrow-prev').boundingBox();
+  const nextArrowBox = await deck.locator('.deck-arrow-next').boundingBox();
+  const cardCenter = (cardBox?.y || 0) + (cardBox?.height || 0) / 2;
+  expect(Math.abs(cardCenter - ((previousArrowBox?.y || 0) + (previousArrowBox?.height || 0) / 2))).toBeLessThanOrEqual(1);
+  expect(Math.abs(cardCenter - ((nextArrowBox?.y || 0) + (nextArrowBox?.height || 0) / 2))).toBeLessThanOrEqual(1);
+
+  await deck.locator('.deck-arrow-next').click();
+  await expect(deck.locator('.deck-stamp')).toHaveText('ΑΣΚΗΣΗ 02 / 02');
+  await expect(deck.getByRole('heading', { name:'Hamstring Curl' })).toBeVisible();
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForFunction(() => Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight);
   const saveBox = await page.locator('.session-save-actions').boundingBox();

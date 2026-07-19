@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Καταγραφή — Οι Γραμμές με ορατές τις υπόλοιπες κάρτες, 2 εκδοχές</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-card:#f3ecdc; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --muted:#6d6551; --line:#b6ad97; --faded:#a89f86; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:660px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.intro b { color:var(--ink); }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; white-space:nowrap; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.08em; font-weight:700; }
+.stage { padding:clamp(36px,5vw,64px) 5vw 62px; display:grid; grid-template-columns:minmax(330px,470px) minmax(280px,1fr); gap:clamp(28px,4vw,60px); align-items:start; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+@media(max-width:760px){ .stage { grid-template-columns:minmax(0,1fr); } }
+.notes { margin:0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.6; }
+.notes h4 { margin:0 0 8px; font:700 .95rem "Roboto Slab"; color:var(--ink); text-transform:uppercase; letter-spacing:.04em; }
+.notes b { color:var(--ink); }
+.notes ul { margin:8px 0 0; padding-left:18px; }
+.notes li { margin-bottom:6px; }
+.notes .g { color:var(--orange); font-weight:800; }
+.hint { margin:10px 2px 0; font-size:.74rem; color:var(--muted); letter-spacing:.04em; }
+.slot { display:flex; flex-direction:column; }
+.outro { padding:40px 5vw 70px; border-top:3px solid var(--ink); box-shadow:0 -6px 0 -5px var(--ink); }
+.outro h2 { font:700 1.5rem "Roboto Slab"; text-transform:uppercase; margin:0 0 14px; }
+.outro ul { max-width:760px; margin:0; padding-left:20px; color:var(--muted); line-height:1.65; }
+.outro b { color:var(--ink); }
+
+/* ===== demo shell ===== */
+.demo { width:min(470px,100%); border:1px solid var(--line); background:var(--paper); box-shadow:5px 6px 0 rgba(21,19,13,.12); outline:none; padding:12px 0 16px; }
+.demo:focus-visible { box-shadow:0 0 0 3px var(--paper),0 0 0 5px rgba(138,106,28,.55),5px 6px 0 rgba(21,19,13,.12); }
+.demo-top { display:flex; justify-content:space-between; align-items:center; min-height:46px; gap:12px; margin:0 14px 8px; }
+.demo-top .lbl { font-size:.6rem; font-weight:800; letter-spacing:.2em; color:var(--muted); }
+.stamp { padding:6px 12px 5px; border:2px solid rgba(138,106,28,.55); color:var(--orange); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:multiply; white-space:nowrap; }
+.progressline { height:3px; margin:14px 16px 0; background:rgba(21,19,13,.12); position:relative; }
+.progressline i { position:absolute; inset:0 auto 0 0; background:var(--orange); transition:width .35s ease; }
+.demo-bar { display:flex; align-items:stretch; border-top:2px solid var(--ink); margin-top:14px; background:rgba(21,19,13,.04); }
+.demo-bar .nav { width:52px; border:0; background:transparent; color:var(--ink); font:700 1.3rem "Roboto Slab"; cursor:pointer; transition:.2s; }
+.demo-bar .nav:first-child { border-right:1px solid var(--line); }
+.demo-bar .nav:last-child { border-left:1px solid var(--line); }
+.demo-bar .nav:hover { background:var(--ink); color:var(--gold); }
+.demo-bar .nav:disabled { opacity:.25; pointer-events:none; }
+.demo-bar .addx { flex:1; border:0; padding:15px 10px; background:transparent; color:var(--ink); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; cursor:pointer; transition:.2s; }
+.demo-bar .addx:hover { background:var(--ink); color:var(--paper); }
+
+/* ===== η κάρτα με τις Γραμμές — τωρινή γραμματοσειρά, τωρινό μελάνι ===== */
+.xcard { background:var(--paper-card); border:1px solid var(--line); padding:16px; position:relative; box-shadow:2px 3px 0 rgba(21,19,13,.08); }
+.exercise-order { font-size:.65rem; color:var(--orange); letter-spacing:.15em; font-weight:800; }
+.xcard h3 { font:700 1.24rem/1.08 "Roboto Slab"; margin:3px 0 0; text-transform:uppercase; overflow-wrap:anywhere; }
+.xcard .exercise-name { width:100%; min-width:0; border:0; border-bottom:1px solid var(--ink); background:rgba(255,255,255,.2); padding:8px 6px; margin-top:3px; font:700 1.24rem "Roboto Slab"; text-transform:uppercase; color:var(--ink); outline:none; border-radius:0; }
+.xcard .exercise-name:focus { background:#fdf6e3; border-color:var(--orange); box-shadow:0 2px 0 var(--orange); }
+.remove-x { position:absolute; top:12px; right:12px; width:30px; height:30px; border:1px solid var(--orange); background:transparent; color:var(--orange); font-size:1.15rem; line-height:1; cursor:pointer; }
+.cue-banner { margin:14px 0 0; padding:10px 12px; border-left:4px solid var(--gold); background:rgba(201,162,39,.1); font-size:.92rem; }
+.cue-banner span { display:block; margin:0 0 3px; font-size:.66rem; font-weight:800; letter-spacing:.15em; color:var(--orange); }
+.rule-head { display:grid; grid-template-columns:34px 1fr 22px 1.5fr 30px; gap:6px; margin-top:16px; padding:0 0 6px; border-bottom:2px solid var(--ink); font-size:.56rem; font-weight:800; letter-spacing:.15em; color:var(--muted); }
+.rline { display:grid; grid-template-columns:34px 1fr 22px 1.5fr 30px; gap:6px; align-items:center; border-bottom:1px solid rgba(57,47,28,.28); }
+.rline>b { font:700 .78rem "Roboto Slab"; color:var(--orange); }
+.rline .x { color:var(--muted); font-size:.95rem; text-align:center; }
+.line-in { width:100%; min-width:0; border:0; background:transparent; outline:none; padding:11px 4px 9px; border-radius:0; font:500 1.05rem "Alegreya Sans"; color:var(--ink); }
+.line-in::placeholder { color:var(--faded); }
+.line-in:focus { background:#fdf6e3; box-shadow:0 2px 0 var(--orange); }
+.wcell { display:flex; align-items:center; gap:6px; min-width:0; }
+.unit { flex:0 0 auto; border:1px solid rgba(138,106,28,.55); background:transparent; color:var(--orange); font:800 .58rem "Alegreya Sans"; letter-spacing:.08em; padding:5px 7px 4px; cursor:pointer; transition:.15s; }
+.unit:hover { background:var(--orange); color:var(--paper-soft); }
+.rline .rdel { border:0; background:transparent; color:rgba(138,106,28,.55); font-size:1rem; cursor:pointer; padding:2px; }
+.rline .rdel:hover { color:var(--orange); }
+.rline.bw .wt { pointer-events:none; opacity:.35; }
+.rule-add { display:block; width:100%; margin-top:2px; padding:10px 4px 8px; border:0; border-bottom:1px dashed var(--line); background:transparent; color:var(--muted); font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-align:left; cursor:pointer; }
+.rule-add:hover { color:var(--orange); border-color:var(--orange); }
+.rule-note { display:flex; align-items:center; gap:10px; margin-top:16px; font-size:.62rem; font-weight:800; letter-spacing:.13em; color:var(--muted); }
+.rule-note .line-in { border-bottom:1px solid rgba(57,47,28,.28); font-size:.98rem; }
+
+/* ============================================================
+   ΕΚΔΟΧΗ 1 — ΤΟ ΣΥΡΤΑΡΙ: οι διπλανές κάρτες ξεμυτίζουν στα άκρα
+   ============================================================ */
+.exercise-drawer { display:flex; align-items:flex-start; gap:10px; padding:6px 8% 10px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; cursor:grab; }
+.exercise-drawer::-webkit-scrollbar { display:none; }
+.exercise-drawer.dragging { scroll-snap-type:none; cursor:grabbing; user-select:none; }
+.exercise-drawer>.xcard { flex:0 0 88%; min-width:0; scroll-snap-align:center; transition:opacity .3s, box-shadow .3s; opacity:.45; }
+.exercise-drawer>.xcard.on { opacity:1; box-shadow:4px 6px 14px rgba(40,32,18,.18); }
+
+/* ============================================================
+   ΕΚΔΟΧΗ 2 — Η ΣΤΟΙΒΑ: οι επόμενες κάρτες προεξέχουν από πίσω
+   ============================================================ */
+.deckview { position:relative; margin:16px 18px 6px; }
+.deckview .xcard { position:absolute; inset:0; overflow-y:auto; transition:transform .45s cubic-bezier(.2,.75,.25,1), opacity .4s; will-change:transform; }
+.deckview .xcard.dragging { transition:none; }
+.deckview .xcard .xclip { position:absolute; top:-10px; left:22px; width:56px; height:20px; background:rgba(213,194,145,.72); box-shadow:inset 0 0 0 1px rgba(90,72,35,.1); transform:rotate(-4deg); pointer-events:none; }
+
+@media(prefers-reduced-motion:reduce){ * { transition-duration:.01s !important; } .exercise-drawer { scroll-behavior:auto !important; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΚΑΤΑΓΡΑΦΗ / Δ' ΓΥΡΟΣ — ΟΙ ΓΡΑΜΜΕΣ, ΜΕ ΣΥΝΤΡΟΦΙΑ</p>
+  <h1>ΟΙ ΓΡΑΜΜΕΣ,<br><em>ΜΕ ΘΕΑ.</em></h1>
+  <p>Η επιλεγμένη Ιδέα 1 («Οι Γραμμές»: κάθε σετ μία γραμμή, το dropdown έγινε κουμπάκι μονάδας) — τώρα με τις δύο διορθώσεις σου: <b>η γραμματοσειρά των πεδίων μένει η σημερινή</b> (Alegreya Sans, κανονικό μελάνι — καμία μπλε χειρόγραφη), και <b>οι υπόλοιπες ασκήσεις είναι πάντα ορατές</b>. Δύο εκδοχές για το πώς φαίνονται: δίπλα (συρτάρι) ή από πίσω (στοίβα). Και οι δύο έχουν 4 ασκήσεις με δεδομένα — σύρε, πρόσθεσε σετ, άλλαξε μονάδα.</p>
+</header>
+
+<!-- ΕΚΔΟΧΗ 1 -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ 1</b><span>ΤΟ ΣΥΡΤΑΡΙ — οι διπλανές κάρτες ξεμυτίζουν αριστερά/δεξιά, όπως στο ήδη υλοποιημένο συρτάρι</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" data-demo="drawer" tabindex="0" aria-label="Εκδοχή 1 — συρτάρι με γραμμές">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp js-stamp">ΑΣΚΗΣΗ 01 / 04</span></div>
+      <div class="exercise-drawer js-drawer"></div>
+      <div class="progressline"><i class="js-line"></i></div>
+      <div class="demo-bar"><button class="nav js-prev" aria-label="Προηγούμενη">‹</button><button class="addx js-add">＋ ΠΡΟΣΘΗΚΗ ΑΣΚΗΣΗΣ</button><button class="nav js-next" aria-label="Επόμενη">›</button></div>
+    </div>
+    <p class="hint">Σύρε το συρτάρι — οι γειτονικές κάρτες φαίνονται στα άκρα, αχνές. Το «＋» βάζει νέα κάρτα στο τέλος και κυλά εκεί.</p>
+  </div>
+  <aside class="notes">
+    <h4>Το συρτάρι</h4>
+    Ίδια μηχανική με αυτό που έχει ήδη μπει στην εφαρμογή — μόνο το εσωτερικό της κάρτας άλλαξε σε γραμμές. Η κάρτα πιάνει το 88% του πλάτους (αντί 94%), ώστε οι διπλανές να ξεμυτίζουν καθαρά και όχι σαν λωρίδα.
+    <ul>
+      <li><span class="g">Πάντα βλέπεις συνέχεια:</span> αριστερά ό,τι έγινε, δεξιά ό,τι έρχεται — αχνά (opacity .45) για να μην αποσπούν.</li>
+      <li><span class="g">Μηδενική νέα μηχανική:</span> native scroll-snap, τα βέλη και η σφραγίδα υπάρχουν ήδη· στο app αλλάζει μόνο το flex-basis και το εσωτερικό markup.</li>
+      <li><span class="g">Οι κοντές κάρτες κερδίζουν:</span> με το χαμηλό ύψος των γραμμών, δύο γειτονικές κάρτες δεν κάνουν πια τη σελίδα «τοίχο από φόρμες».</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ΕΚΔΟΧΗ 2 -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ 2</b><span>Η ΣΤΟΙΒΑ — οι επόμενες κάρτες προεξέχουν πίσω/πάνω από την τρέχουσα· σύρε δεξιά για την επόμενη</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" data-demo="deck" tabindex="0" aria-label="Εκδοχή 2 — στοίβα με γραμμές">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp js-stamp">ΑΣΚΗΣΗ 01 / 04</span></div>
+      <div class="deckview js-deck"></div>
+      <div class="progressline"><i class="js-line"></i></div>
+      <div class="demo-bar"><button class="nav js-prev" aria-label="Προηγούμενη">‹</button><button class="addx js-add">＋ ΠΡΟΣΘΗΚΗ ΑΣΚΗΣΗΣ</button><button class="nav js-next" aria-label="Επόμενη">›</button></div>
+    </div>
+    <p class="hint">Σύρε την κάρτα δεξιά → πετάγεται και έρχεται η επόμενη από πίσω. Σύρε αριστερά → η προηγούμενη ξαναπροσγειώνεται.</p>
+  </div>
+  <aside class="notes">
+    <h4>Η στοίβα</h4>
+    Οι επόμενες κάρτες προεξέχουν από πίσω και από πάνω — σαν στοίβα καρτελών με χαρτοταινία. Πιο «σωματική» αίσθηση από το συρτάρι, με σαφές πέταγμα προς τα δεξιά όταν τελειώνεις μια άσκηση.
+    <ul>
+      <li><span class="g">Βλέπεις ότι υπάρχει συνέχεια</span> (τα χείλη των επόμενων καρτών από πίσω) αλλά όχι το περιεχόμενό τους — η ματιά μένει στη μία άσκηση.</li>
+      <li><span class="g">Το drag δεν μπερδεύεται με τα πεδία:</span> το σύρσιμο ξεκινά μόνο εκτός inputs/κουμπιών, και μόνο όταν η κίνηση είναι οριζόντια.</li>
+      <li><span class="g">Κατά:</span> θέλει σταθερό ύψος σκηνής (η ψηλότερη κάρτα ορίζει το ύψος, οι υπόλοιπες σκρολάρουν εσωτερικά) — το συρτάρι το αποφεύγει αυτό.</li>
+    </ul>
+  </aside>
+</section>
+
+<footer class="outro">
+  <h2>Τι κλειδώνει από αυτόν τον γύρο</h2>
+  <ul>
+    <li><b>Η γραμματοσειρά δεν αλλάζει πουθενά:</b> τιμές και placeholders στα πεδία γράφονται με τη σημερινή Alegreya Sans στο κανονικό μελάνι — η μπλε χειρόγραφη (Playpen Sans) κόβεται από την πρόταση.</li>
+    <li><b>Το εσωτερικό των γραμμών είναι κοινό και στις δύο εκδοχές:</b> γραμμή ανά σετ, κουμπάκι μονάδας (KG → ΠΛΑΚΕΣ → BW → BW+KG) στη θέση του dropdown, «＋ ΣΕΤ» ως διακεκομμένη γραμμή, «−» για αφαίρεση, ΣΧΟΛΙΑ ως τελευταία γραμμή.</li>
+    <li><b>Η απόφαση που μένει</b> είναι μόνο το περιβάλλον: συρτάρι (ελάχιστη αλλαγή στο ήδη υλοποιημένο, ορατό περιεχόμενο γειτόνων) ή στοίβα (πιο θεατρική, ορατή μόνο η ύπαρξη των επόμενων).</li>
+    <li><b>Κανόνες που ισχύουν ό,τι κι αν επιλεγεί:</b> κάθετο scroll ελεύθερο (pan-y), βέλη ‹ › και πλήκτρα ←/→ στο web, σφραγίδα θέσης + γραμμή προόδου πάντα ορατές, prefers-reduced-motion χωρίς πτήσεις, τα inputs μένουν στο DOM (καμία απώλεια τιμών στο swipe).</li>
+  </ul>
+</footer>
+
+<script>
+const pad = n => String(n).padStart(2,'0');
+const UNITS = ['KG','ΠΛΑΚΕΣ','BW','BW+KG'];
+const SAMPLE = [
+  { name:'ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ', cues:'Ωμοπλάτες κλειδωμένες, πόδια στο έδαφος', sets:[{r:10,w:'60',u:0},{r:8,w:'70',u:0},{r:6,w:'75',u:0}], note:'Καλή αίσθηση, RPE 8' },
+  { name:'ΠΙΕΣΕΙΣ ΩΜΩΝ ΜΕ ΑΛΤΗΡΕΣ', cues:'', sets:[{r:12,w:'22',u:0},{r:'',w:'',u:0},{r:'',w:'',u:0}], note:'' },
+  { name:'ΒΥΘΙΣΕΙΣ', cues:'Ελαφριά κλίση μπροστά', sets:[{r:'',w:'',u:2},{r:'',w:'',u:2},{r:'',w:'',u:2}], note:'' },
+  { name:'ΕΚΤΑΣΕΙΣ ΤΡΙΚΕΦΑΛΩΝ', cues:'', sets:[{r:'',w:'',u:0},{r:'',w:'',u:0},{r:'',w:'',u:0}], note:'' },
+];
+const isFormEl = t => !!t.closest('input,select,textarea,button');
+
+/* ---- κάρτα με γραμμές: φτιάχνεται μία φορά, δεν ξανα-render-άρεται ---- */
+function makeCard(ex, index){
+  const card = document.createElement('article');
+  card.className = 'xcard';
+  const title = ex.free
+    ? `<input class="exercise-name" type="text" placeholder="Όνομα άσκησης" aria-label="Όνομα άσκησης">`
+    : `<span class="exercise-order">ΑΣΚΗΣΗ ${index+1}η</span><h3>${ex.name}</h3>`;
+  card.innerHTML = `${title}
+    ${ex.cues ? `<div class="cue-banner"><span>CUES</span><b>${ex.cues}</b></div>` : ''}
+    <div class="rule-head"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ</span><span></span></div>
+    <div class="rows"></div>
+    <button class="rule-add" type="button">＋ ΣΕΤ</button>
+    <label class="rule-note">ΣΧΟΛΙΑ<input class="line-in" placeholder="Τεχνική, αίσθηση, RPE…" value="${ex.note||''}"></label>`;
+  const rows = card.querySelector('.rows');
+  function renumber(){ [...rows.children].forEach((el,i)=>{ el.querySelector('b').textContent = pad(i+1); }); }
+  function addRow(s){
+    const d = document.createElement('div');
+    d.className = 'rline' + (UNITS[s.u]==='BW' ? ' bw' : '');
+    d.innerHTML = `<b>${pad(rows.children.length+1)}</b>
+      <input class="line-in" inputmode="numeric" placeholder="0" value="${s.r}" aria-label="Επαναλήψεις">
+      <span class="x">×</span>
+      <div class="wcell"><input class="line-in wt" inputmode="decimal" placeholder="0" value="${s.w}" aria-label="Βάρος"><button class="unit" type="button" aria-label="Μονάδα μέτρησης">${UNITS[s.u]}</button></div>
+      <button class="rdel" type="button" aria-label="Αφαίρεση σετ">−</button>`;
+    const unit = d.querySelector('.unit');
+    unit.addEventListener('click', ()=>{
+      s.u = (s.u + 1) % UNITS.length;
+      unit.textContent = UNITS[s.u];
+      d.classList.toggle('bw', UNITS[s.u] === 'BW');
+      if (UNITS[s.u] === 'BW') d.querySelector('.wt').value = '';
+    });
+    d.querySelector('.rdel').addEventListener('click', ()=>{ d.remove(); renumber(); });
+    rows.appendChild(d);
+  }
+  ex.sets.forEach(addRow);
+  card.querySelector('.rule-add').addEventListener('click', ()=>addRow({r:'',w:'',u:0}));
+  return card;
+}
+function bindKeys(root, api){
+  root.addEventListener('keydown', e => {
+    if (isFormEl(e.target)) return;
+    if (e.key==='ArrowLeft'){ e.preventDefault(); api.prev(); }
+    if (e.key==='ArrowRight'){ e.preventDefault(); api.next(); }
+  });
+}
+
+/* ===== Εκδοχή 1: συρτάρι ===== */
+(function(){
+  const root = document.querySelector('[data-demo="drawer"]');
+  const drawer = root.querySelector('.js-drawer');
+  const stamp = root.querySelector('.js-stamp'), line = root.querySelector('.js-line');
+  let cur = 0, count = 0;
+  function markActive(){
+    const mid = drawer.scrollLeft + drawer.clientWidth/2;
+    let best = 0, bd = 1e9;
+    [...drawer.children].forEach((el,i)=>{ const c = el.offsetLeft+el.offsetWidth/2, d = Math.abs(c-mid); if (d<bd){ bd=d; best=i; } });
+    cur = best;
+    [...drawer.children].forEach((el,i)=>el.classList.toggle('on', i===cur));
+    stamp.textContent = `ΑΣΚΗΣΗ ${pad(cur+1)} / ${pad(count)}`;
+    line.style.width = `${(cur+1)/count*100}%`;
+    root.querySelector('.js-prev').disabled = cur === 0;
+    root.querySelector('.js-next').disabled = cur === count-1;
+  }
+  function goto(i, smooth=true){
+    const el = drawer.children[i]; if (!el) return;
+    drawer.scrollTo({ left: el.offsetLeft - (drawer.clientWidth - el.offsetWidth)/2, behavior: smooth?'smooth':'auto' });
+  }
+  SAMPLE.forEach((ex,i)=>{ drawer.appendChild(makeCard(structuredClone(ex), i)); count++; });
+  drawer.addEventListener('scroll', ()=>requestAnimationFrame(markActive));
+  let down=false, lx=0, moved=0;
+  drawer.addEventListener('pointerdown', e=>{ if (e.pointerType!=='mouse' || isFormEl(e.target)) return; down=true; moved=0; lx=e.clientX; });
+  window.addEventListener('pointermove', e=>{ if(!down) return; const d=e.clientX-lx; if (Math.abs(d)>3) drawer.classList.add('dragging'); moved+=Math.abs(d); drawer.scrollLeft-=d; lx=e.clientX; });
+  window.addEventListener('pointerup', ()=>{ if(!down) return; down=false; drawer.classList.remove('dragging'); if (moved>5) goto(cur); });
+  const api = {
+    prev(){ goto(cur-1); }, next(){ goto(cur+1); },
+    add(){ drawer.appendChild(makeCard({ name:'', cues:'', sets:[{r:'',w:'',u:0},{r:'',w:'',u:0},{r:'',w:'',u:0}], note:'', free:true }, count)); count++; markActive(); requestAnimationFrame(()=>goto(count-1)); },
+  };
+  root.querySelector('.js-prev').addEventListener('click', api.prev);
+  root.querySelector('.js-next').addEventListener('click', api.next);
+  root.querySelector('.js-add').addEventListener('click', api.add);
+  bindKeys(root, api);
+  markActive();
+})();
+
+/* ===== Εκδοχή 2: στοίβα ===== */
+(function(){
+  const root = document.querySelector('[data-demo="deck"]');
+  const deck = root.querySelector('.js-deck');
+  const stamp = root.querySelector('.js-stamp'), line = root.querySelector('.js-line');
+  let cur = 0;
+  function cards(){ return [...deck.children]; }
+  function layout(){
+    const list = cards();
+    list.forEach((el,i)=>{
+      const d = i - cur;
+      el.classList.remove('dragging');
+      if (d < 0){ el.style.transform = 'translateX(135%) rotate(16deg)'; el.style.opacity = 0; el.style.zIndex = 200+i; }
+      else { const k = Math.min(d,3);
+        el.style.transform = `translateY(${-12*k}px) scale(${1-.045*k})`;
+        el.style.opacity = d>3 ? 0 : 1; el.style.zIndex = 100-d; }
+      el.style.pointerEvents = d===0 ? 'auto' : 'none';
+    });
+    stamp.textContent = `ΑΣΚΗΣΗ ${pad(cur+1)} / ${pad(list.length)}`;
+    line.style.width = `${(cur+1)/list.length*100}%`;
+    root.querySelector('.js-prev').disabled = cur === 0;
+    root.querySelector('.js-next').disabled = cur === list.length-1;
+  }
+  function sizeStage(){
+    // η ψηλότερη κάρτα ορίζει το ύψος της σκηνής
+    let h = 0;
+    cards().forEach(el=>{ el.style.position='static'; h = Math.max(h, el.offsetHeight); el.style.position=''; });
+    deck.style.height = (h + 26) + 'px';
+  }
+  SAMPLE.forEach((ex,i)=>{
+    const c = makeCard(structuredClone(ex), i);
+    c.insertAdjacentHTML('afterbegin','<span class="xclip" aria-hidden="true"></span>');
+    deck.appendChild(c);
+  });
+  const api = {
+    prev(){ if (cur>0){ cur--; layout(); } },
+    next(){ if (cur<cards().length-1){ cur++; layout(); } },
+    add(){
+      const c = makeCard({ name:'', cues:'', sets:[{r:'',w:'',u:0},{r:'',w:'',u:0},{r:'',w:'',u:0}], note:'', free:true }, cards().length);
+      c.insertAdjacentHTML('afterbegin','<span class="xclip" aria-hidden="true"></span>');
+      deck.children[cur].after(c);
+      sizeStage();
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ cur++; layout(); }));
+    },
+  };
+  /* οριζόντιο drag μόνο εκτός πεδίων */
+  let sx=0, sy=0, dx=0, active=false, locked=false, el=null;
+  deck.addEventListener('pointerdown', e=>{
+    if (e.button || isFormEl(e.target)) return;
+    sx=e.clientX; sy=e.clientY; dx=0; active=true; locked=false;
+    el = cards()[cur];
+  });
+  deck.addEventListener('pointermove', e=>{
+    if (!active || !el) return;
+    dx = e.clientX - sx; const dy = e.clientY - sy;
+    if (!locked){
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (Math.abs(dy) > Math.abs(dx)) { active=false; return; }
+      locked = true; el.classList.add('dragging');
+      try { deck.setPointerCapture(e.pointerId); } catch {}
+    }
+    const r = dx<0 ? dx/3 : dx;
+    el.style.transform = `translateX(${r}px) rotate(${r/14}deg)`;
+  });
+  const finish = () => {
+    if (active && locked){
+      if (dx>70 && cur<cards().length-1) cur++;
+      else if (dx<-70 && cur>0) cur--;
+      layout();
+    }
+    active=false; locked=false; el=null;
+  };
+  deck.addEventListener('pointerup', finish);
+  deck.addEventListener('pointercancel', finish);
+  root.querySelector('.js-prev').addEventListener('click', api.prev);
+  root.querySelector('.js-next').addEventListener('click', api.next);
+  root.querySelector('.js-add').addEventListener('click', api.add);
+  bindKeys(root, api);
+  layout();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeStage); else sizeStage();
+  window.addEventListener('resize', sizeStage);
+  sizeStage();
+})();
+</script>
+</body>
+</html>

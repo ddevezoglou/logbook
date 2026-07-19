@@ -4,7 +4,7 @@
 
 | Στοιχείο | Τρέχουσα κατάσταση |
 |---|---|
-| Έκδοση | **0.8.0** |
+| Έκδοση | **0.9.0** |
 | Runtime | Node.js 22 |
 | Client | HTML, CSS και JavaScript χωρίς build step |
 | Αποθήκευση | Local-first με `localStorage` και Supabase sync |
@@ -206,7 +206,7 @@ npm.cmd run test:e2e
 
 Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.6.0`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
 
-## Γνωστοί περιορισμοί της 0.8.0
+## Γνωστοί περιορισμοί της 0.9.0
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry, αλλά όχι UI χειροκίνητης επίλυσης ταυτόχρονων αλλαγών στο ίδιο αντικείμενο.
 - Δεν υπάρχει ακόμη ασφαλές export/import ή αυτόματο backup δεδομένων από το UI.

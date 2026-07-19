@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Καταγραφή — Το εσωτερικό της κάρτας, 5 ιδέες + σκίτσα</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-card:#f3ecdc; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen:#1f6493; --muted:#6d6551; --line:#b6ad97; --faded:#a89f86; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (ίδιο με τους δύο πρώτους γύρους) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.2rem,5vw,4.4rem)/.9 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:660px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.intro b { color:var(--ink); }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; white-space:nowrap; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.08em; font-weight:700; }
+.stage { padding:clamp(36px,5vw,64px) 5vw 62px; display:grid; grid-template-columns:minmax(330px,460px) minmax(280px,1fr); gap:clamp(28px,4vw,60px); align-items:start; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+@media(max-width:760px){ .stage { grid-template-columns:minmax(0,1fr); } }
+.notes { margin:0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.6; }
+.notes h4 { margin:0 0 8px; font:700 .95rem "Roboto Slab"; color:var(--ink); text-transform:uppercase; letter-spacing:.04em; }
+.notes b { color:var(--ink); }
+.notes ul { margin:8px 0 0; padding-left:18px; }
+.notes li { margin-bottom:6px; }
+.notes .g { color:var(--orange); font-weight:800; }
+.hint { margin:10px 2px 0; font-size:.74rem; color:var(--muted); letter-spacing:.04em; }
+.slot { display:flex; flex-direction:column; }
+.outro { padding:40px 5vw 70px; border-top:3px solid var(--ink); box-shadow:0 -6px 0 -5px var(--ink); }
+.outro h2 { font:700 1.5rem "Roboto Slab"; text-transform:uppercase; margin:0 0 14px; }
+.outro ul { max-width:760px; margin:0; padding-left:20px; color:var(--muted); line-height:1.65; }
+.outro b { color:var(--ink); }
+
+/* ===== demo shell: το συρτάρι όπως έχει ήδη υλοποιηθεί ===== */
+.demo { width:min(460px,100%); border:1px solid var(--line); background:var(--paper); box-shadow:5px 6px 0 rgba(21,19,13,.12); outline:none; padding:12px 14px 16px; }
+.demo:focus-visible { box-shadow:0 0 0 3px var(--paper),0 0 0 5px rgba(138,106,28,.55),5px 6px 0 rgba(21,19,13,.12); }
+.demo-top { display:flex; justify-content:space-between; align-items:center; min-height:46px; gap:12px; margin-bottom:8px; }
+.demo-top .lbl { font-size:.6rem; font-weight:800; letter-spacing:.2em; color:var(--muted); }
+.stamp { padding:6px 12px 5px; border:2px solid rgba(138,106,28,.55); color:var(--orange); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:multiply; white-space:nowrap; }
+.progressline { height:3px; margin:14px 2px 0; background:rgba(21,19,13,.12); position:relative; }
+.progressline i { position:absolute; inset:0 auto 0 0; background:var(--orange); width:50%; }
+
+/* ===== βάση κάρτας — ό,τι κρατάμε από τη σημερινή ===== */
+.xcard { background:var(--paper-card); border:1px solid var(--line); padding:16px; position:relative; box-shadow:2px 3px 0 rgba(21,19,13,.08); }
+.exercise-order { font-size:.65rem; color:var(--orange); letter-spacing:.15em; font-weight:800; }
+.xcard h3 { font:700 1.28rem/1.08 "Roboto Slab"; margin:3px 0 0; text-transform:uppercase; }
+.cue-banner { margin:14px 0 0; padding:10px 12px; border-left:4px solid var(--gold); background:rgba(201,162,39,.1); font-size:.92rem; }
+.cue-banner span { display:block; margin:0 0 3px; font-size:.66rem; font-weight:800; letter-spacing:.15em; color:var(--orange); }
+.hand, .hand-in { font:600 1.12rem/1.2 "Playpen Sans",cursive; color:var(--pen); }
+.hand-in { width:100%; min-width:0; border:0; background:transparent; outline:none; padding:6px 4px 4px; border-radius:0; }
+.hand-in::placeholder { color:rgba(31,100,147,.32); }
+.hand-in:focus { background:rgba(255,255,255,.45); box-shadow:0 2px 0 var(--orange); }
+.mini-button { width:max-content; min-height:40px; border:1px solid var(--ink); background:transparent; padding:8px 12px; font:800 .72rem "Alegreya Sans"; text-transform:uppercase; letter-spacing:.08em; cursor:pointer; color:var(--ink); transition:.2s; }
+.mini-button:hover { background:var(--ink); color:var(--paper); }
+
+/* ============================================================
+   ΙΔΕΑ 1 — «ΟΙ ΓΡΑΜΜΕΣ» : κάθε σετ μία γραμμή τετραδίου
+   ============================================================ */
+.rule-head { display:grid; grid-template-columns:34px 1fr 22px 1.5fr 30px; gap:6px; margin-top:16px; padding:0 0 6px; border-bottom:2px solid var(--ink); font-size:.56rem; font-weight:800; letter-spacing:.15em; color:var(--muted); }
+.rline { display:grid; grid-template-columns:34px 1fr 22px 1.5fr 30px; gap:6px; align-items:baseline; border-bottom:1px solid rgba(57,47,28,.28); }
+.rline>b { font:700 .78rem "Roboto Slab"; color:var(--orange); }
+.rline .x { color:var(--muted); font-size:.95rem; text-align:center; }
+.wcell { display:flex; align-items:baseline; gap:6px; min-width:0; }
+.unit { flex:0 0 auto; border:1px solid rgba(138,106,28,.55); background:transparent; color:var(--orange); font:800 .58rem "Alegreya Sans"; letter-spacing:.08em; padding:4px 7px 3px; cursor:pointer; transition:.15s; }
+.unit:hover { background:var(--orange); color:var(--paper-soft); }
+.rline .rdel { border:0; background:transparent; color:rgba(138,106,28,.55); font-size:1rem; cursor:pointer; padding:2px; }
+.rline .rdel:hover { color:var(--orange); }
+.rline.bw .wt { pointer-events:none; opacity:.35; }
+.rule-add { display:block; width:100%; margin-top:2px; padding:9px 4px 7px; border:0; border-bottom:1px dashed var(--line); background:transparent; color:var(--muted); font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-align:left; cursor:pointer; }
+.rule-add:hover { color:var(--orange); border-color:var(--orange); }
+.rule-note { display:flex; align-items:baseline; gap:10px; margin-top:18px; font-size:.62rem; font-weight:800; letter-spacing:.13em; color:var(--muted); }
+.rule-note .hand-in { border-bottom:1px solid rgba(57,47,28,.28); }
+
+/* ============================================================
+   ΙΔΕΑ 2 — «Η ΣΦΡΑΓΙΔΑ ΣΕΤ» : ένα σετ ανοιχτό, τα άλλα κλείνουν
+   ============================================================ */
+.set-ticks { display:inline-flex; gap:5px; margin-left:10px; vertical-align:middle; }
+.set-ticks i { width:9px; height:9px; border:1px solid var(--orange); display:inline-block; }
+.set-ticks i.on { background:var(--orange); }
+.sflow { margin-top:16px; display:grid; gap:8px; }
+.sline { display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:9px 10px 7px; border:0; border-bottom:1px solid rgba(57,47,28,.28); background:transparent; cursor:pointer; }
+.sline>b { font:700 .78rem "Roboto Slab"; color:var(--orange); }
+.sline .hand { flex:1; }
+.sline.pend { cursor:default; color:var(--faded); }
+.sline.pend span { flex:1; letter-spacing:.2em; }
+.okstamp { flex:0 0 auto; padding:3px 8px 2px; border:2px solid rgba(138,106,28,.5); color:var(--orange); font:800 .56rem "Alegreya Sans"; letter-spacing:.12em; transform:rotate(-6deg); mix-blend-mode:multiply; }
+.spanel { border:1px solid #c7bca3; background:rgba(255,255,255,.36); box-shadow:2px 2px 0 rgba(21,19,13,.06); padding:12px; }
+.spanel .snum { display:block; padding-bottom:8px; border-bottom:1px solid var(--line); color:var(--orange); font:700 .95rem "Roboto Slab"; }
+.spanel .snum::before { content:"SET "; color:var(--muted); font:800 .6rem "Alegreya Sans"; letter-spacing:.13em; }
+.spanel .fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; }
+.spanel label { display:flex; flex-direction:column; gap:5px; min-width:0; font-size:.6rem; font-weight:800; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; }
+.spanel input { width:100%; min-width:0; min-height:46px; padding:8px 10px; border:1px solid #b8ad95; background:#f7f1e3; font:600 1.15rem "Playpen Sans"; color:var(--pen); outline:none; border-radius:0; }
+.spanel input:focus { border-color:var(--orange); }
+.sealbtn { margin-top:12px; width:100%; min-height:44px; border:2px solid var(--ink); background:transparent; font:800 .74rem "Alegreya Sans"; letter-spacing:.14em; cursor:pointer; transition:.2s; }
+.sealbtn:hover { background:var(--ink); color:var(--gold); }
+
+/* ============================================================
+   ΙΔΕΑ 3 — «ΤΟ ΚΟΝΤΕΡ» : ούτε ένα άνοιγμα πληκτρολογίου
+   ============================================================ */
+.dialrow { display:grid; grid-template-columns:34px 1fr 1fr; gap:10px; align-items:center; padding:10px 0 8px; border-bottom:1px solid rgba(57,47,28,.28); }
+.dialrow>b { font:700 .78rem "Roboto Slab"; color:var(--orange); }
+.dial { display:grid; grid-template-columns:38px 1fr 38px; align-items:stretch; border:1px solid #c7bca3; background:rgba(255,255,255,.36); }
+.dial button { border:0; background:transparent; color:var(--orange); font:700 1.15rem "Roboto Slab"; cursor:pointer; min-height:44px; transition:.15s; }
+.dial button:hover { background:var(--ink); color:var(--gold); }
+.dial .val { display:grid; place-items:center; text-align:center; padding:2px 2px 0; }
+.dial .val output { font:600 1.2rem/1 "Playpen Sans"; color:var(--pen); }
+.dial .val small { font:800 .5rem "Alegreya Sans"; letter-spacing:.12em; color:var(--muted); }
+.copyrow { margin-top:12px; display:flex; gap:8px; }
+
+/* ============================================================
+   ΙΔΕΑ 4 — «ΤΟ ΚΑΡΜΠΟΝ» : η προηγούμενη φορά κάτω από το μελάνι
+   ============================================================ */
+.carbon-tape { position:absolute; top:-11px; right:14px; padding:4px 12px 3px; background:rgba(213,194,145,.85); box-shadow:inset 0 0 0 1px rgba(90,72,35,.12); transform:rotate(2deg); font:800 .56rem "Alegreya Sans"; letter-spacing:.12em; color:var(--muted); }
+.crow { display:grid; grid-template-columns:34px 1fr 22px 1.2fr auto; gap:6px; align-items:center; padding:4px 0 2px; border-bottom:1px solid rgba(57,47,28,.28); }
+.crow>b { font:700 .78rem "Roboto Slab"; color:var(--orange); }
+.crow .x { color:var(--muted); text-align:center; }
+.gwrap { position:relative; min-width:0; }
+.gwrap .ghost { position:absolute; inset:6px 4px 4px; pointer-events:none; font:600 1.12rem/1.2 "Playpen Sans"; color:rgba(21,19,13,.25); }
+.gwrap.filled .ghost { visibility:hidden; }
+.crow .accept { border:1px dashed rgba(138,106,28,.55); background:transparent; color:var(--orange); font:800 .58rem "Alegreya Sans"; letter-spacing:.08em; padding:5px 8px 4px; cursor:pointer; white-space:nowrap; transition:.15s; }
+.crow .accept:hover { background:rgba(201,162,39,.15); border-style:solid; }
+.crow .accept.spent { opacity:.3; pointer-events:none; }
+
+/* ============================================================
+   ΙΔΕΑ 5 — «ΤΟ ΚΑΡΝΕ» : δικό μας αριθμητήριο, όχι πληκτρολόγιο του OS
+   ============================================================ */
+.npf { border-bottom:1px solid rgba(57,47,28,.28) !important; caret-color:transparent; cursor:pointer; }
+.npf.live { background:rgba(255,255,255,.5); box-shadow:0 2px 0 var(--orange); }
+.numpad { margin-top:14px; border-top:2px solid var(--ink); padding-top:10px; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.numpad button { min-height:46px; border:1px solid var(--line); background:var(--paper-soft); font:700 1.05rem "Roboto Slab"; color:var(--ink); cursor:pointer; box-shadow:1px 2px 0 rgba(21,19,13,.1); transition:.12s; }
+.numpad button:active { transform:translateY(1px); box-shadow:none; }
+.numpad button:hover { border-color:var(--orange); color:var(--orange); }
+.numpad .npnext { grid-column:span 2; background:var(--ink); color:var(--gold); border-color:var(--ink); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; }
+.numpad .npnext:hover { color:var(--paper); }
+
+/* ===== τοίχος με σκίτσα ===== */
+.sketchwall { padding:clamp(36px,5vw,64px) 5vw 30px; }
+.sketchwall h2 { font:700 1.5rem "Roboto Slab"; text-transform:uppercase; margin:0 0 6px; }
+.sketchwall>p { margin:0 0 26px; color:var(--muted); max-width:640px; line-height:1.5; }
+.sketches { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px; }
+.sketch { position:relative; padding:16px 16px 14px; background:var(--paper-soft); border:1px solid var(--line); box-shadow:3px 4px 0 rgba(21,19,13,.1); }
+.sketch b { display:block; font:700 .95rem "Roboto Slab"; text-transform:uppercase; margin:2px 0 7px; }
+.sketch span.no { font:800 .6rem "Alegreya Sans"; letter-spacing:.18em; color:var(--orange); }
+.sketch p { margin:0; color:var(--muted); font-size:.88rem; line-height:1.5; }
+.sketch .pin { position:absolute; top:-9px; left:18px; width:44px; height:18px; background:rgba(213,194,145,.8); box-shadow:inset 0 0 0 1px rgba(90,72,35,.12); transform:rotate(-3deg); }
+
+@media(prefers-reduced-motion:reduce){ * { transition-duration:.01s !important; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΚΑΤΑΓΡΑΦΗ / Γ' ΓΥΡΟΣ — ΤΟ ΕΣΩΤΕΡΙΚΟ ΤΗΣ ΚΑΡΤΑΣ</p>
+  <h1>ΑΠΟ ΦΟΡΜΑ,<br><em>ΣΕ ΣΕΛΙΔΑ.</em></h1>
+  <p>Το συρτάρι με το swipe στέκει — η διάγνωση για το «κάτι με χαλάει» είναι <b>μέσα</b> στην κάρτα: κάθε σετ είναι σήμερα ένα κουτί-φόρμα με ετικέτες, dropdown πέντε επιλογών και μεγάλα πεδία. Γραφειοκρατία τη στιγμή της προσπάθειας. Και το πιο άδικο: η χειρόγραφη ταυτότητα του logbook (μελάνι, γραμμές, σφραγίδες) εμφανίζεται μόνο στο Ιστορικό — <b>ποτέ όταν γράφεις</b>. Πέντε διαδραστικές ιδέες για να γίνει η κάρτα σελίδα τετραδίου, κι ένας τοίχος με οκτώ ακόμα σκίτσα. Συνδυάζονται μεταξύ τους.</p>
+</header>
+
+<!-- ΙΔΕΑ 1 -->
+<div class="attempt-label"><b>ΙΔΕΑ 1</b><span>«ΟΙ ΓΡΑΜΜΕΣ» — κάθε σετ μία γραμμή τετραδίου· το dropdown γίνεται κουμπάκι μονάδας που εναλλάσσεται</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" tabindex="0" aria-label="Ιδέα 1 — γραμμές τετραδίου">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp">ΑΣΚΗΣΗ 02 / 04</span></div>
+      <article class="xcard" id="v1card">
+        <span class="exercise-order">ΑΣΚΗΣΗ 2η</span>
+        <h3>ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ</h3>
+        <div class="cue-banner"><span>CUES</span><b>Ωμοπλάτες κλειδωμένες, πόδια στο έδαφος</b></div>
+        <div class="rule-head"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ</span><span></span></div>
+        <div id="v1rows"></div>
+        <button class="rule-add" id="v1add" type="button">＋ ΣΕΤ</button>
+        <label class="rule-note">ΣΧΟΛΙΑ<input class="hand-in" placeholder="Τεχνική, αίσθηση, RPE…"></label>
+      </article>
+      <div class="progressline"><i></i></div>
+    </div>
+    <p class="hint">Γράψε στα πεδία — γράφεις με «μελάνι». Πάτα το κουμπάκι KG για να αλλάξεις μονάδα (KG → ΠΛΑΚΕΣ → BW → BW+KG).</p>
+  </div>
+  <aside class="notes">
+    <h4>Οι γραμμές</h4>
+    Το κουτί κάθε σετ καταργείται. Ένα σετ = μία γραμμή: αριθμός, επαναλήψεις × βάρος, μονάδα. Ό,τι πληκτρολογείς γράφεται με τη γραφή του Ιστορικού (Playpen Sans, μπλε μελάνι) — <b>η καταγραφή δείχνει από την πρώτη στιγμή όπως η τελική σελίδα</b>.
+    <ul>
+      <li><span class="g">Το dropdown πεθαίνει:</span> η «Μέτρηση» γίνεται κουμπάκι-μονάδα δίπλα στο βάρος που εναλλάσσεται με tap. Πέντε επιλογές σε ένα κουμπί 40px αντί για select 48px.</li>
+      <li><span class="g">Το ύψος πέφτει ~60%:</span> 3 σετ = 3 γραμμές, όχι 3 κουτιά. Το swipe ανάμεσα σε κάρτες σταματά να «χοροπηδάει».</li>
+      <li><span class="g">Υπέρ:</span> η μεγαλύτερη αισθητική διόρθωση με τη μικρότερη δομική αλλαγή — τα ίδια inputs, άλλο ρούχο.</li>
+      <li><span class="g">Κατά:</span> τα μικρότερα πεδία θέλουν προσοχή στα touch targets (η γραμμή παραμένει ≥44px ύψος).</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ΙΔΕΑ 2 -->
+<div class="attempt-label"><b>ΙΔΕΑ 2</b><span>«Η ΣΦΡΑΓΙΔΑ ΣΕΤ» — ένα σετ ανοιχτό κάθε φορά· τα τελειωμένα κλείνουν σε χειρόγραφη γραμμή με σφραγίδα</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" tabindex="0" aria-label="Ιδέα 2 — ροή σετ με σφραγίδα">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp">ΑΣΚΗΣΗ 02 / 04</span></div>
+      <article class="xcard">
+        <span class="exercise-order">ΑΣΚΗΣΗ 2η <span class="set-ticks" id="v2ticks"></span></span>
+        <h3>ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ</h3>
+        <div class="sflow" id="v2flow"></div>
+      </article>
+      <div class="progressline"><i></i></div>
+    </div>
+    <p class="hint">Συμπλήρωσε και πάτα «ΣΦΡΑΓΙΣΕ ΤΟ» — το σετ κλείνει σε μια γραμμή με σφραγίδα ΟΚ και ανοίγει το επόμενο. Πάτα κλεισμένη γραμμή για διόρθωση.</p>
+  </div>
+  <aside class="notes">
+    <h4>Η σφραγίδα σετ</h4>
+    Η κάρτα ακολουθεί τον ρυθμό του γυμναστηρίου: κάνεις ένα σετ → το γράφεις → ξεκουράζεσαι. Μόνο το τρέχον σετ είναι ανοιχτή φόρμα· τα τελειωμένα γίνονται χειρόγραφες γραμμές με σφραγίδα «ΟΚ», τα επόμενα περιμένουν αχνά.
+    <ul>
+      <li><span class="g">Η στιγμή της σφραγίδας</span> είναι το μικρο-reward της εφαρμογής — ίδια γλώσσα με τις σφραγίδες της Αρχικής και του Ιστορικού.</li>
+      <li><span class="g">Πάντα ένα πράγμα να κάνεις:</span> δεν κοιτάς ποτέ 3 άδεια κουτιά· κοιτάς το σετ που έχεις μπροστά σου.</li>
+      <li><span class="g">Υπέρ:</span> ελάχιστο ύψος + αίσθηση προόδου· τα τικ ■■□ δίπλα στον τίτλο δείχνουν πού είσαι.</li>
+      <li><span class="g">Κατά:</span> ένα tap παραπάνω ανά σετ· όσοι γράφουν όλα τα σετ στο τέλος θα προτιμήσουν την Ιδέα 1 (ή το «ΣΦΡΑΓΙΣΕ ΤΟ» να προσυμπληρώνει από το προηγούμενο σετ).</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ΙΔΕΑ 3 -->
+<div class="attempt-label"><b>ΙΔΕΑ 3</b><span>«ΤΟ ΚΟΝΤΕΡ» — καθόλου πληκτρολόγιο· βήματα −/＋ με τον αντίχειρα, 2.5 kg τη φορά</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" tabindex="0" aria-label="Ιδέα 3 — στροφείς χωρίς πληκτρολόγιο">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp">ΑΣΚΗΣΗ 02 / 04</span></div>
+      <article class="xcard">
+        <span class="exercise-order">ΑΣΚΗΣΗ 2η</span>
+        <h3>ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ</h3>
+        <div id="v3rows"></div>
+        <div class="copyrow"><button class="mini-button" id="v3copy" type="button">↓ ΟΠΩΣ ΤΟ ΣΕΤ 01</button></div>
+      </article>
+      <div class="progressline"><i></i></div>
+    </div>
+    <p class="hint">Πάτα − / ＋ : επαναλήψεις ανά 1, κιλά ανά 2.5. Το «ΟΠΩΣ ΤΟ ΣΕΤ 01» αντιγράφει το πρώτο σετ παντού.</p>
+  </div>
+  <aside class="notes">
+    <h4>Το κοντέρ</h4>
+    Στο γυμναστήριο το χέρι είναι ιδρωμένο και το βάρος αλλάζει σχεδόν πάντα κατά μία πλάκα. Οι στροφείς −/＋ ξεκινούν από την τιμή της προηγούμενης φοράς και δουλεύουν με τον αντίχειρα — <b>το πληκτρολόγιο του κινητού δεν ανοίγει ποτέ</b>, άρα και το layout δεν αναπηδά ποτέ μέσα στο συρτάρι.
+    <ul>
+      <li><span class="g">Σωστά βήματα:</span> κιλά ανά 2.5 (η μικρή πλάκα ×2), επαναλήψεις ανά 1. Κράτημα παρατεταμένα = γρήγορη αύξηση.</li>
+      <li><span class="g">Υπέρ:</span> η ταχύτερη καταγραφή στο κινητό· λύνει και το πρόβλημα «το keyboard σπρώχνει την κάρτα».</li>
+      <li><span class="g">Κατά:</span> για ασυνήθιστες τιμές (π.χ. 37.5→60) θέλει πολλά taps — λύση: tap πάνω στον αριθμό ανοίγει το Καρνέ (Ιδέα 5) ως fallback.</li>
+      <li>Δουλεύει τέλεια μαζί με το Καρμπόν (Ιδέα 4): το κοντέρ ξεκινά από ό,τι σήκωσες την προηγούμενη φορά.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ΙΔΕΑ 4 -->
+<div class="attempt-label"><b>ΙΔΕΑ 4</b><span>«ΤΟ ΚΑΡΜΠΟΝ» — η προηγούμενη προπόνηση φαίνεται αχνά κάτω από το σημερινό μελάνι· ένα tap τη δέχεσαι</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" tabindex="0" aria-label="Ιδέα 4 — καρμπόν προηγούμενης προπόνησης">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp">ΑΣΚΗΣΗ 02 / 04</span></div>
+      <article class="xcard">
+        <span class="carbon-tape">ΚΑΡΜΠΟΝ · ΤΡΙΤΗ 14/07</span>
+        <span class="exercise-order">ΑΣΚΗΣΗ 2η</span>
+        <h3>ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ</h3>
+        <div id="v4rows"></div>
+        <div class="copyrow"><button class="mini-button" id="v4all" type="button">✓ ΟΛΑ ΟΠΩΣ ΤΟΤΕ</button></div>
+      </article>
+      <div class="progressline"><i></i></div>
+    </div>
+    <p class="hint">Οι γκρίζοι αριθμοί είναι η προηγούμενη φορά. Γράψε από πάνω τους — ή πάτα «ΤΟΤΕ» για να τους δεχτείς όπως είναι.</p>
+  </div>
+  <aside class="notes">
+    <h4>Το καρμπόν</h4>
+    Η ερώτηση που κάνει κάθε αθλητής πριν από κάθε σετ είναι «τι είχα βάλει την προηγούμενη φορά;». Εδώ η απάντηση είναι <b>ήδη πάνω στη σελίδα</b>: οι τιμές της τελευταίας ίδιας άσκησης φαίνονται σαν αποτύπωμα καρμπόν κάτω από τα πεδία.
+    <ul>
+      <li><span class="g">Ένα tap = ίδια απόδοση,</span> γράψιμο από πάνω = πρόοδος. Και τα δύο σενάρια γίνονται στιγμιαία.</li>
+      <li><span class="g">Χαρτοταινία με την ημερομηνία</span> της προηγούμενης καταγραφής — ξέρεις πόσο «φρέσκο» είναι το καρμπόν.</li>
+      <li><span class="g">Υπέρ:</span> μετατρέπει την Καταγραφή από απλή φόρμα σε εργαλείο progressive overload — βλέπεις τι πρέπει να ξεπεράσεις.</li>
+      <li><span class="g">Κατά:</span> θέλει lookup στο ιστορικό ανά όνομα άσκησης (υπάρχει ήδη στη λογική της Επίβλεψης)· χωρίς ιστορικό, η κάρτα δείχνει απλώς κενή.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ΙΔΕΑ 5 -->
+<div class="attempt-label"><b>ΙΔΕΑ 5</b><span>«ΤΟ ΚΑΡΝΕ» — δικό μας αριθμητήριο μέσα στην κάρτα· το πληκτρολόγιο του κινητού δεν ανοίγει ποτέ</span></div>
+<section class="stage">
+  <div class="slot">
+    <div class="demo" tabindex="0" aria-label="Ιδέα 5 — ενσωματωμένο αριθμητήριο">
+      <div class="demo-top"><span class="lbl">ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ</span><span class="stamp">ΑΣΚΗΣΗ 02 / 04</span></div>
+      <article class="xcard">
+        <span class="exercise-order">ΑΣΚΗΣΗ 2η</span>
+        <h3>ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ</h3>
+        <div class="rule-head"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ (KG)</span><span></span></div>
+        <div id="v5rows"></div>
+        <div class="numpad" id="v5pad" aria-label="Αριθμητήριο">
+          <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="del">⌫</button>
+          <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k=".">.</button>
+          <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="0">0</button>
+          <button type="button" class="npnext" data-k="next">ΕΠΟΜΕΝΟ ↵</button><button type="button" data-k="c">C</button><button type="button" data-k="00">00</button>
+        </div>
+      </article>
+      <div class="progressline"><i></i></div>
+    </div>
+    <p class="hint">Πάτα ένα πεδίο και γράψε από το αριθμητήριο. «ΕΠΟΜΕΝΟ» πηγαίνει στο επόμενο πεδίο — επαναλήψεις → βάρος → επόμενο σετ.</p>
+  </div>
+  <aside class="notes">
+    <h4>Το καρνέ</h4>
+    Το πραγματικό «κάτι» που χαλάει τις mobile φόρμες είναι το πληκτρολόγιο του OS: ανοίγει, κλείνει, σπρώχνει το layout, κρύβει τη μισή κάρτα, σπάει το swipe. Εδώ η κάρτα έχει το δικό της αριθμητήριο — σταθερό, μεγάλο, πάντα στην ίδια θέση, σαν μηχανικό καρνέ ταμείου.
+    <ul>
+      <li><span class="g">Μηδέν αναπήδηση:</span> το ύψος της κάρτας δεν αλλάζει ποτέ· το swipe και το scroll μένουν προβλέψιμα.</li>
+      <li><span class="g">Ροή «ΕΠΟΜΕΝΟ»:</span> επαναλήψεις → βάρος → επόμενο σετ με ένα κουμπί — τα 6 πεδία μιας άσκησης γεμίζουν χωρίς ούτε ένα tap σε πεδίο.</li>
+      <li><span class="g">Υπέρ:</span> η πιο «εργαλειακή» αίσθηση· εξαιρετικό pairing με τις Γραμμές (Ιδέα 1) ως εμφάνιση των πεδίων.</li>
+      <li><span class="g">Κατά:</span> στο desktop είναι περιττό (εκεί μένει το φυσικό πληκτρολόγιο)· χρειάζεται media query ώστε το καρνέ να εμφανίζεται μόνο σε touch.</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ΤΟΙΧΟΣ ΜΕ ΣΚΙΤΣΑ -->
+<section class="sketchwall">
+  <h2>Ο τοίχος με τα σκίτσα</h2>
+  <p>Οκτώ ακόμα ιδέες, μικρότερες — καθεμιά καρφιτσωμένη με μια πρόταση. Οι περισσότερες κουμπώνουν πάνω σε όποια από τις πέντε μεγάλες επιλεγεί.</p>
+  <div class="sketches">
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 01</span><b>Χρονόμετρο ανάπαυσης</b><p>Με το σφράγισμα ενός σετ, στη θέση του κουμπιού εμφανίζεται σφραγίδα-χρονόμετρο που μετρά την ξεκούραση («REST 0:47»). Δένει με το «growth happens in the rest».</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 02</span><b>Τμηματική γραμμή προόδου</b><p>Η γραμμή κάτω από το συρτάρι σπάει σε τμήματα ανά άσκηση· κάθε τμήμα γεμίζει με τα σετ που κλείνουν — δείχνει πόση προπόνηση έμεινε, όχι μόνο σε ποια κάρτα είσαι.</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 03</span><b>Σφραγίδα «ΡΕΚΟΡ!»</b><p>Αν το βάρος που γράφεις ξεπερνά το ιστορικό σου μέγιστο στην άσκηση, τυπώνεται επιτόπου μια μικρή στραβή σφραγίδα «ΡΕΚΟΡ» δίπλα στο σετ. Ίδια γλώσσα με τα stamps των Επιδόσεων.</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 04</span><b>Η άσκηση «τσεκάρεται»</b><p>Όταν κλείσουν όλα τα σετ, η κάρτα παίρνει ένα πλάγιο ✓ πάνω στη γωνία και το συρτάρι κυλά μόνο του στην επόμενη ανοιχτή άσκηση μετά από μισό δευτερόλεπτο.</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 05</span><b>Καβαλάρηδες στις άκρες</b><p>Από τον Β' γύρο: οι γειτονικές κάρτες που ξεμυτίζουν δείχνουν tab με το όνομά τους — βλέπεις τι ακολουθεί πριν σύρεις. Συνδυάζεται με όλα τα παραπάνω.</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 06</span><b>Το τέλος έρχεται στην κάρτα</b><p>Στην τελευταία άσκηση, όταν σφραγιστεί και το τελευταίο σετ, το «ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ» γλιστρά μέσα στην κάρτα ως τελική γραμμή — δεν ψάχνεις κουμπί κάτω από το συρτάρι.</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 07</span><b>Δόνηση μολυβιού</b><p>Μικρό haptic (navigator.vibrate) στο σφράγισμα σετ και στην αλλαγή κάρτας — η αίσθηση του «κάτι γράφτηκε» χωρίς κανένα εικαστικό βάρος.</p></article>
+    <article class="sketch"><span class="pin"></span><span class="no">ΣΚΙΤΣΟ 08</span><b>Πρώτο άδειο πεδίο, έτοιμο</b><p>Με το swipe σε νέα κάρτα, το πρώτο άδειο πεδίο παίρνει έναν διακριτικό παλμό στο underline — σε καλεί, χωρίς να ανοίξει πληκτρολόγιο ή να κλέψει focus.</p></article>
+  </div>
+</section>
+
+<footer class="outro">
+  <h2>Πώς δένουν μεταξύ τους</h2>
+  <ul>
+    <li><b>Η βάση είναι η Ιδέα 1 (Γραμμές):</b> είναι καθαρά CSS/markup αλλαγή πάνω στα υπάρχοντα inputs του setRows() — ίδια δεδομένα, ίδιο validation, άλλη εμφάνιση. Όλες οι άλλες ιδέες γράφονται πάνω της.</li>
+    <li><b>Προτεινόμενο πακέτο mobile:</b> Γραμμές + Καρμπόν + Σφραγίδα σετ, με το Κοντέρ ή το Καρνέ ως τρόπο εισαγωγής (διαλέγεις έναν από τους δύο — και οι δύο κρατούν το πληκτρολόγιο του OS κλειστό).</li>
+    <li><b>Το χειρόγραφο στυλ στα inputs</b> είναι μία γραμμή CSS (font-family/color στα .set-reps/.set-weight) και μηδέν ρίσκο — μπορεί να μπει αύριο, ό,τι άλλο κι αν επιλεγεί.</li>
+    <li><b>Το κουμπάκι μονάδας</b> αντικαθιστά το select αλλά κρατά το ίδιο weight-mode μοντέλο (kg/plates/mixed/bodyweight/bodyweight_extra) — απλώς κάνει cycle αντί για dropdown· με long-press ανοίγει λίστα για άμεση επιλογή.</li>
+    <li><b>Τα σκίτσα 01–04</b> προϋποθέτουν την έννοια «κλεισμένο σετ» — άρα ενεργοποιούνται μόνο αν επιλεγεί η Σφραγίδα σετ (Ιδέα 2) ή κάποιο άλλο ρητό «τέλος σετ».</li>
+    <li><b>prefers-reduced-motion + desktop:</b> σφραγίδες και παλμοί πέφτουν σε απλή εμφάνιση/απόκρυψη· Κοντέρ και Καρνέ εμφανίζονται μόνο σε συσκευές αφής.</li>
+  </ul>
+</footer>
+
+<script>
+/* ===== Ιδέα 1: γραμμές + κουμπάκι μονάδας ===== */
+(function(){
+  const UNITS = ['KG','ΠΛΑΚΕΣ','BW','BW+KG'];
+  const rows = document.getElementById('v1rows');
+  const seed = [{r:'',w:'',u:0},{r:'',w:'',u:0},{r:'',w:'',u:0}];
+  function rowEl(i, s){
+    const d = document.createElement('div');
+    d.className = 'rline';
+    d.innerHTML = `<b>${String(i+1).padStart(2,'0')}</b>
+      <input class="hand-in" inputmode="numeric" placeholder="0" value="${s.r}" aria-label="Επαναλήψεις σετ ${i+1}">
+      <span class="x">×</span>
+      <div class="wcell"><input class="hand-in wt" inputmode="decimal" placeholder="0" value="${s.w}" aria-label="Βάρος σετ ${i+1}"><button class="unit" type="button" aria-label="Μονάδα μέτρησης">${UNITS[s.u]}</button></div>
+      <button class="rdel" type="button" aria-label="Αφαίρεση σετ">−</button>`;
+    const unit = d.querySelector('.unit');
+    unit.addEventListener('click', () => {
+      s.u = (s.u + 1) % UNITS.length;
+      unit.textContent = UNITS[s.u];
+      d.classList.toggle('bw', UNITS[s.u] === 'BW');
+      if (UNITS[s.u] === 'BW') d.querySelector('.wt').value = '';
+    });
+    d.querySelector('.rdel').addEventListener('click', () => { d.remove(); renumber(); });
+    return d;
+  }
+  function renumber(){ [...rows.children].forEach((el,i)=>{ el.querySelector('b').textContent = String(i+1).padStart(2,'0'); }); }
+  seed.forEach((s,i)=>rows.appendChild(rowEl(i,s)));
+  document.getElementById('v1add').addEventListener('click', ()=>{ rows.appendChild(rowEl(rows.children.length, {r:'',w:'',u:0})); });
+})();
+
+/* ===== Ιδέα 2: ροή σετ με σφραγίδα ===== */
+(function(){
+  const flow = document.getElementById('v2flow');
+  const ticks = document.getElementById('v2ticks');
+  const sets = [{r:10,w:'60',done:true},{r:'',w:'',done:false},{r:'',w:'',done:false}];
+  let active = 1;
+  function render(){
+    ticks.innerHTML = sets.map(s=>`<i class="${s.done?'on':''}"></i>`).join('');
+    flow.innerHTML = '';
+    sets.forEach((s,i)=>{
+      if (s.done && i !== active){
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'sline';
+        b.innerHTML = `<b>${String(i+1).padStart(2,'0')}</b><span class="hand">${s.r} × ${s.w} kg</span><i class="okstamp">ΟΚ</i>`;
+        b.addEventListener('click', ()=>{ active = i; render(); });
+        flow.appendChild(b);
+      } else if (i === active){
+        const p = document.createElement('div');
+        p.className = 'spanel';
+        p.innerHTML = `<span class="snum">${String(i+1).padStart(2,'0')}</span>
+          <div class="fields">
+            <label>Επαναλήψεις<input inputmode="numeric" placeholder="0" value="${s.r}"></label>
+            <label>Βάρος (kg)<input inputmode="decimal" placeholder="0" value="${s.w}"></label>
+          </div>
+          <button class="sealbtn" type="button">ΣΦΡΑΓΙΣΕ ΤΟ</button>`;
+        const [ri, wi] = p.querySelectorAll('input');
+        p.querySelector('.sealbtn').addEventListener('click', ()=>{
+          s.r = ri.value || 0; s.w = wi.value || 0; s.done = true;
+          const nxt = sets.findIndex(x=>!x.done);
+          active = nxt === -1 ? -1 : nxt;
+          render();
+        });
+        flow.appendChild(p);
+        requestAnimationFrame(()=>ri.focus({preventScroll:true}));
+      } else {
+        const d = document.createElement('div');
+        d.className = 'sline pend';
+        d.innerHTML = `<b>${String(i+1).padStart(2,'0')}</b><span>— — —</span>`;
+        flow.appendChild(d);
+      }
+    });
+    if (active === -1){
+      const done = document.createElement('div');
+      done.style.cssText = 'text-align:center;padding:10px 0 2px;';
+      done.innerHTML = `<span class="okstamp" style="font-size:.7rem;padding:6px 14px 5px;">ΑΣΚΗΣΗ ΠΛΗΡΗΣ ✓</span>`;
+      flow.appendChild(done);
+    }
+  }
+  render();
+})();
+
+/* ===== Ιδέα 3: κοντέρ −/＋ ===== */
+(function(){
+  const wrap = document.getElementById('v3rows');
+  const sets = [{r:10,w:60},{r:8,w:70},{r:6,w:75}];
+  const fmt = w => (w % 1 ? w.toFixed(1) : String(w));
+  function dial(get, set, unit, step, min){
+    const d = document.createElement('div');
+    d.className = 'dial';
+    d.innerHTML = `<button type="button" aria-label="Μείωση">−</button><span class="val"><output>${fmt(get())}</output><small>${unit}</small></span><button type="button" aria-label="Αύξηση">＋</button>`;
+    const [minus, plus] = d.querySelectorAll('button');
+    const out = d.querySelector('output');
+    minus.addEventListener('click', ()=>{ set(Math.max(min, get()-step)); out.textContent = fmt(get()); });
+    plus.addEventListener('click', ()=>{ set(get()+step); out.textContent = fmt(get()); });
+    return d;
+  }
+  function render(){
+    wrap.innerHTML = '';
+    sets.forEach((s,i)=>{
+      const row = document.createElement('div');
+      row.className = 'dialrow';
+      const b = document.createElement('b'); b.textContent = String(i+1).padStart(2,'0');
+      row.appendChild(b);
+      row.appendChild(dial(()=>s.r, v=>s.r=v, 'ΕΠΑΝ.', 1, 0));
+      row.appendChild(dial(()=>s.w, v=>s.w=v, 'KG', 2.5, 0));
+      wrap.appendChild(row);
+    });
+  }
+  document.getElementById('v3copy').addEventListener('click', ()=>{ sets.forEach((s,i)=>{ if(i){ s.r = sets[0].r; s.w = sets[0].w; } }); render(); });
+  render();
+})();
+
+/* ===== Ιδέα 4: καρμπόν ===== */
+(function(){
+  const LAST = [[12,'57.5'],[10,'60'],[8,'62.5']];
+  const wrap = document.getElementById('v4rows');
+  const inputs = [];
+  LAST.forEach((prev,i)=>{
+    const row = document.createElement('div');
+    row.className = 'crow';
+    row.innerHTML = `<b>${String(i+1).padStart(2,'0')}</b>
+      <label class="gwrap"><input class="hand-in" inputmode="numeric" placeholder="" aria-label="Επαναλήψεις σετ ${i+1}"><span class="ghost">${prev[0]}</span></label>
+      <span class="x">×</span>
+      <label class="gwrap"><input class="hand-in" inputmode="decimal" placeholder="" aria-label="Βάρος σετ ${i+1}"><span class="ghost">${prev[1]} kg</span></label>
+      <button class="accept" type="button">✓ ΤΟΤΕ</button>`;
+    const [ri, wi] = row.querySelectorAll('input');
+    const sync = () => {
+      ri.closest('.gwrap').classList.toggle('filled', ri.value !== '');
+      wi.closest('.gwrap').classList.toggle('filled', wi.value !== '');
+    };
+    ri.addEventListener('input', sync); wi.addEventListener('input', sync);
+    row.querySelector('.accept').addEventListener('click', e => {
+      ri.value = prev[0]; wi.value = prev[1]; sync();
+      e.currentTarget.classList.add('spent');
+    });
+    inputs.push({ri, wi, prev, row});
+    wrap.appendChild(row);
+  });
+  document.getElementById('v4all').addEventListener('click', ()=>{
+    inputs.forEach(({row})=>{ const a = row.querySelector('.accept'); if (!a.classList.contains('spent')) a.click(); });
+  });
+})();
+
+/* ===== Ιδέα 5: καρνέ / αριθμητήριο ===== */
+(function(){
+  const wrap = document.getElementById('v5rows');
+  const fields = [];
+  for (let i = 0; i < 3; i++){
+    const row = document.createElement('div');
+    row.className = 'rline';
+    row.innerHTML = `<b>${String(i+1).padStart(2,'0')}</b>
+      <input class="hand-in npf" readonly placeholder="0" aria-label="Επαναλήψεις σετ ${i+1}">
+      <span class="x">×</span>
+      <div class="wcell"><input class="hand-in npf" readonly placeholder="0" aria-label="Βάρος σετ ${i+1}"></div>
+      <span></span>`;
+    wrap.appendChild(row);
+    fields.push(...row.querySelectorAll('.npf'));
+  }
+  let cur = 0;
+  function setCur(i){
+    cur = Math.max(0, Math.min(i, fields.length - 1));
+    fields.forEach((f,j)=>f.classList.toggle('live', j === cur));
+  }
+  fields.forEach((f,i)=>f.addEventListener('click', ()=>setCur(i)));
+  document.getElementById('v5pad').addEventListener('click', e => {
+    const k = e.target.closest('button')?.dataset.k;
+    if (!k) return;
+    const f = fields[cur];
+    if (k === 'next'){ setCur(cur + 1); return; }
+    if (k === 'del'){ f.value = f.value.slice(0, -1); return; }
+    if (k === 'c'){ f.value = ''; return; }
+    if (k === '.' && f.value.includes('.')) return;
+    if (f.value.length >= 6) return;
+    f.value += k;
+  });
+  setCur(0);
+})();
+</script>
+</body>
+</html>
