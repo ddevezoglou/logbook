@@ -201,7 +201,10 @@ test('workout deck keeps compact set lines, dynamic weight fields and completion
   await firstRow.locator('.weight-mode').selectOption('mixed');
   await expect(firstRow.locator('.set-plates')).toBeVisible();
   await expect(firstRow.locator('.set-weight')).toBeVisible();
-  expect((await firstRow.boundingBox())?.height || 0).toBeGreaterThanOrEqual(80);
+  expect((await firstRow.boundingBox())?.height || 0).toBeLessThanOrEqual(60);
+  const mixedModeBox = await firstRow.locator('.weight-mode').boundingBox();
+  const mixedPlatesBox = await firstRow.locator('.set-plates').boundingBox();
+  expect(Math.abs((mixedModeBox?.y || 0) - (mixedPlatesBox?.y || 0))).toBeLessThanOrEqual(2);
   await firstRow.locator('.weight-mode').selectOption('bodyweight');
   await expect(firstRow.locator('.weight-entry')).toBeHidden();
   await firstRow.locator('.weight-mode').selectOption('bodyweight_extra');
@@ -211,6 +214,9 @@ test('workout deck keeps compact set lines, dynamic weight fields and completion
   }));
   expect(compactModeStyle.fontSize).toBeLessThanOrEqual(10);
   expect(compactModeStyle.whiteSpace).toBe('nowrap');
+  const extraModeBox = await firstRow.locator('.weight-mode').boundingBox();
+  const extraWeightBox = await firstRow.locator('.set-weight').boundingBox();
+  expect(Math.abs((extraModeBox?.y || 0) - (extraWeightBox?.y || 0))).toBeLessThanOrEqual(2);
 
   const cardBox = await exercise.boundingBox();
   const previousArrowBox = await deck.locator('.deck-arrow-prev').boundingBox();
@@ -226,6 +232,10 @@ test('workout deck keeps compact set lines, dynamic weight fields and completion
   await page.waitForFunction(() => Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight);
   const saveBox = await page.locator('.session-save-actions').boundingBox();
   expect((saveBox?.y || 0) + (saveBox?.height || 0)).toBeLessThanOrEqual((page.viewportSize()?.height || 0) + 1);
+  await expect(page.locator('.session-save-actions .motto-stamp')).toBeVisible();
+  const earnItBox = await page.locator('.session-save-actions .motto-stamp').boundingBox();
+  const completeBox = await page.locator('#save-session').boundingBox();
+  expect((earnItBox?.y || 0) + (earnItBox?.height || 0)).toBeLessThanOrEqual(completeBox?.y || 0);
   await expectNoHorizontalOverflow(page);
 });
 

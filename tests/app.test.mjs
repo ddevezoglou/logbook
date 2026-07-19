@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.0');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.1');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -36,7 +36,7 @@ test('boots with empty storage without throwing', () => {
 test('athlete profile card shows the notebook cover with brand mark, polaroid and motto', () => {
   const { document } = loadApp();
   assert.equal(document.querySelector('#profile-view .profile-hero h1').textContent.replace(/\s+/g, ''), 'ΤΟΑΠΟΤΥΠΩΜΑΜΕΝΕΙ.');
-  assert.equal(document.querySelectorAll('#profile-guide li').length, 3);
+  assert.equal(document.querySelectorAll('#profile-guide li').length, 4);
   assert.equal(document.querySelectorAll('.profile-card-top .profile-brand-mark i').length, 5);
   assert.ok(document.querySelector('.profile-polaroid .profile-tape'));
   assert.ok(document.querySelector('.profile-polaroid-photo #profile-reward-ring'));
@@ -978,6 +978,15 @@ test('language picker switches all supported languages and persists the choice',
   assert.equal(document.querySelector('#routine-form > label').childNodes[0].textContent, 'Όνομα προγράμματος');
 });
 
+test('English section mottos omit articles while Greek keeps the revised Today motto', () => {
+  const { document } = loadApp();
+  assert.equal(document.querySelector('#log-view h1').textContent.replace(/\s+/g, ''), 'ΤΟΣΗΜΕΡΑ.ΜΕΤΡΑΕΙ.');
+  click(document, '[data-language="en"]');
+  assert.equal(document.querySelector('#log-view h1').textContent.replace(/\s+/g, ''), 'TODAY.COUNTS.');
+  assert.equal(document.querySelector('#plan-view h1').textContent.replace(/\s+/g, ''), 'PLANLEADS.');
+  assert.equal(document.querySelector('#overview-view h1').textContent.replace(/\s+/g, ''), 'WORKSPEAKS.');
+});
+
 test('changing language preserves in-progress workout values', () => {
   const { document } = loadApp({
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]),
@@ -1911,6 +1920,53 @@ test('changing the free set count rebuilds rows without losing entered values', 
   assert.equal(rows[0].querySelector('.set-weight').value, '25');
 });
 
+test('leaving a workout draft offers stay, save or discard without losing data silently', () => {
+  const { document, localStorage } = loadApp();
+  click(document, '.nav-button[data-view="log"]');
+  click(document, '[data-mode="free"]');
+  const card = document.querySelector('#free-exercises [data-exercise]');
+  card.querySelector('.exercise-name').value = 'Dips';
+  card.querySelectorAll('[data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '10';
+    row.querySelector('.set-weight').value = '20';
+  });
+
+  click(document, '.nav-button[data-view="overview"]');
+  assert.equal(document.querySelector('#exercise-delete-dialog').open, true);
+  assert.equal(document.querySelector('#exercise-delete-title').textContent, 'Μη αποθηκευμένη καταγραφή');
+  assert.match(document.querySelector('#exercise-delete-message').textContent, /θα χαθούν/);
+  assert.equal(document.querySelector('#confirm-delete-cancel').textContent, 'Παραμονή');
+  assert.equal(document.querySelector('#confirm-delete-accept').textContent, 'Αποθήκευση');
+  assert.equal(document.querySelector('#confirm-delete-secondary').textContent, 'Έξοδος χωρίς αποθήκευση');
+
+  click(document, '#confirm-delete-cancel');
+  assert.ok(document.querySelector('#log-view').classList.contains('active'));
+  assert.equal(document.querySelector('#free-exercises .exercise-name').value, 'Dips');
+
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '#confirm-delete-accept');
+  assert.ok(document.querySelector('#overview-view').classList.contains('active'));
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 1);
+});
+
+test('discarding a workout draft resets it before navigation and history edits are protected too', () => {
+  const session = { id:'s1', date:'2026-07-06', type:'free', workoutName:'Dips', comments:'', exercises:[{ exercise:'Dips', comments:'', sets:[{ reps:10, weight:20, weightMode:'kg' }] }] };
+  const { document } = loadApp({ trainingSessions:[session] });
+  click(document, '.nav-button[data-view="log"]');
+  click(document, '[data-mode="free"]');
+  document.querySelector('#free-exercises .exercise-name').value = 'Draft';
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '#confirm-delete-secondary');
+  assert.ok(document.querySelector('#overview-view').classList.contains('active'));
+  assert.equal(document.querySelector('#free-exercises').children.length, 0);
+
+  click(document, '[data-edit-session="s1"]');
+  click(document, '.nav-button[data-view="home"]');
+  assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'old history sessions receive the same protection');
+  click(document, '#confirm-delete-cancel');
+  assert.ok(document.querySelector('#log-view').classList.contains('active'));
+});
+
 test('weight selector exposes all five modes and requires only their matching fields', () => {
   const { document } = loadApp({ trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press')]) });
   setValue(document, '#log-date', '2026-07-06');
@@ -1926,9 +1982,9 @@ test('weight selector exposes all five modes and requires only their matching fi
   assert.deepEqual([...modeSelect.options].map(option => [option.value, option.textContent]), [
     ['kg', 'Κιλά'],
     ['plates', 'Πλάκες'],
-    ['mixed', 'Πλάκες + Κιλά'],
+    ['mixed', 'Πλάκες+kg'],
     ['bodyweight', 'Bodyweight'],
-    ['bodyweight_extra', 'Bodyweight + Extra Βάρος'],
+    ['bodyweight_extra', 'Bodyweight + kg'],
   ]);
   assert.equal(weight.required, true, 'kg mode requires kg');
   assert.equal(plates.required, false);
@@ -1949,7 +2005,15 @@ test('weight selector exposes all five modes and requires only their matching fi
   selectMode('bodyweight_extra');
   assert.equal(plates.required, false);
   assert.equal(weight.required, true);
-  assert.equal(weight.placeholder, 'extra kg');
+  assert.equal(weight.placeholder, 'kg');
+});
+
+test('history LOGGED stamp sits with the counters and rotates counter-clockwise', () => {
+  const session = { id:'s1', date:'2026-07-06', type:'free', workoutName:'Push B', comments:'', exercises:[{ exercise:'Dips', comments:'', sets:[{ reps:10, weight:20, weightMode:'kg' }] }] };
+  const { document } = loadApp({ trainingSessions:[session] });
+  const stamp = document.querySelector('.card-stamp');
+  assert.ok(stamp.closest('.card-stats'));
+  assert.match(styles, /\.card-stats \.card-stamp\s*\{[^}]*transform:rotate\(-4deg\)/);
 });
 
 test('plan cues appear as a banner on the scheduled exercise card', () => {
