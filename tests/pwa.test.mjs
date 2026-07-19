@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
+const packageVersion = JSON.parse(read('package.json')).version;
 const html = read('index.html');
 const manifest = JSON.parse(read('manifest.webmanifest'));
 const fonts = read('fonts.css');
@@ -74,7 +75,7 @@ test('service worker precaches the complete local shell without development seed
   ]) {
     assert.ok(serviceWorker.includes(`'${path}'`), `${path} is in the app shell`);
   }
-  assert.match(serviceWorker, /CACHE_VERSION = 'logbook-0\.8\.0'/);
+  assert.ok(serviceWorker.includes(`CACHE_VERSION = 'logbook-${packageVersion}'`));
   assert.match(serviceWorker, /SUPABASE_LIBRARY = 'https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2'/);
   assert.doesNotMatch(serviceWorker, /seed(-week)?\.html|seed-week\.js/);
   assert.doesNotMatch(serviceWorker, /event\.waitUntil\(refresh\)/, 'navigation must not refresh index.html independently from the cached JS shell');
