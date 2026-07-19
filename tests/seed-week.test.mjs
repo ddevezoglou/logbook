@@ -7,10 +7,10 @@ import { dirname, join } from 'node:path';
 import { loadApp, click } from './helpers.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const seedSource = readFileSync(join(root, 'seed-week.js'), 'utf8');
+const seedSource = readFileSync(join(root, 'tests', 'fixtures', 'seed-week.js'), 'utf8');
 
-// Runs seed-week.js the way a user would (pasted into the browser console)
-// and returns the storage it produced. jsdom cannot perform the final
+// Runs the shared fixture in a browser-like storage context and returns
+// the data it produced. jsdom cannot perform the final
 // location.reload(), so that error is swallowed — storage is written first.
 function runSeed() {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', runScripts: 'outside-only' });
@@ -26,7 +26,7 @@ const pastWeeks = 13;
 const todayOffset = (new Date().getDay() + 6) % 7;
 const expectedThisWeek = planOffsets.filter(offset => offset <= todayOffset).length;
 
-test('seed-week.js produces one active routine plus 8/9/10-day examples and thirteen full previous weeks of logs', () => {
+test('seed fixture produces one active routine plus 8/9/10-day examples and thirteen full previous weeks of logs', () => {
   const { routines, sessions } = runSeed();
   assert.equal(routines.length, 4);
   assert.ok(routines[0].isActive);

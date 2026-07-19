@@ -10,7 +10,7 @@ if (!email || !password) {
 
 const root = new URL('../', import.meta.url);
 const configSource = readFileSync(new URL('supabase-config.js', root), 'utf8');
-const seedSource = readFileSync(new URL('seed-week.js', root), 'utf8');
+const seedSource = readFileSync(new URL('tests/fixtures/seed-week.js', root), 'utf8');
 const url = configSource.match(/url:\s*'([^']+)'/)?.[1];
 const publishableKey = configSource.match(/publishableKey:\s*'([^']+)'/)?.[1];
 
