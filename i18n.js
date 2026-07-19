@@ -348,6 +348,7 @@
     'ΔΙΑΓΡΑΦΗ':['DELETE','SUPPRIMER','LÖSCHEN'],
     'επαναλήψεις':['reps','répétitions','Wiederholungen'],
     'επαν.':['reps','rép.','Wdh.'],
+    'σε εξέλιξη':['in progress','en cours','laufend'],
     'πλάκες':['plates','plaques','Scheiben'],
     'Πλάκες + Κιλά':['Plates + kg','Plaques + kg','Scheiben + kg'],
     'Πλάκες':['Plates','Plaques','Scheiben'],

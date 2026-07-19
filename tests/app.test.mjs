@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.7.0');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.8.0');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -797,6 +797,36 @@ test('progress chart raises the hovered point above later points', () => {
   assert.notEqual(svg.lastElementChild, firstPoint, 'first point starts below its siblings');
   firstPoint.dispatchEvent(new document.defaultView.Event('mouseover', { bubbles: true }));
   assert.equal(svg.lastElementChild, firstPoint, 'hovered point moves to the top of the paint order');
+});
+
+test('progress chart annotates weight plateaus with rep-cycle brackets', () => {
+  const mkSession = (id, date, weight, reps) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Bench Press', comments: '', sets: [{ reps, weight, weightMode: 'kg', plates: null }] }] });
+  const { document } = loadApp({ trainingSessions: [
+    mkSession('c1', '2026-05-08', 60, 6), mkSession('c2', '2026-05-15', 60, 8), mkSession('c3', '2026-05-22', 60, 10),
+    mkSession('c4', '2026-05-29', 62.5, 6), mkSession('c5', '2026-06-05', 62.5, 8),
+  ] });
+  click(document, '.nav-button[data-view="progress"]');
+  const brackets = document.querySelectorAll('#progress-panel .cycle-bracket');
+  assert.equal(brackets.length, 2, 'one bracket per weight plateau');
+  const labels = [...document.querySelectorAll('#progress-panel .cycle-label')].map(t => t.textContent.replace(/\s+/g, ' ').trim());
+  assert.ok(labels[0].includes('6 → 10'), 'closed cycle shows the rep journey');
+  assert.ok(!labels[0].includes('σε εξέλιξη'), 'closed cycle is not marked ongoing');
+  assert.ok(labels[1].includes('6 → 8'), 'current cycle shows progress so far');
+  assert.ok(labels[1].includes('σε εξέλιξη'), 'the cycle containing the latest session is marked ongoing');
+});
+
+test('progress chart draws no cycle brackets when every session changes weight', () => {
+  const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
+  const { document } = loadApp({ trainingSessions: [mkSession('s1', '2026-06-01', 60), mkSession('s2', '2026-06-08', 65), mkSession('s3', '2026-06-15', 70)] });
+  click(document, '.nav-button[data-view="progress"]');
+  assert.equal(document.querySelectorAll('#progress-panel .cycle-bracket').length, 0, 'no plateaus, no brackets');
+});
+
+test('progress chart keeps distinct mixed plate loads out of the same rep cycle', () => {
+  const mkSession = (id, date, weight, reps) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Dip', comments: '', sets: [{ reps, plates: 4, weight, weightMode: 'mixed' }] }] });
+  const { document } = loadApp({ trainingSessions: [mkSession('m1', '2026-06-01', 5, 8), mkSession('m2', '2026-06-08', 10, 10)] });
+  click(document, '.nav-button[data-view="progress"]');
+  assert.equal(document.querySelectorAll('#progress-panel .cycle-bracket').length, 0, 'different extra kg remain distinct even when their chart positions are capped equally');
 });
 
 test('bodyweight progress chart labels its line as repetitions', () => {

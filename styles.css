@@ -1,4 +1,4 @@
-:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --danger:#7a3325; --steel:#676a63; --recovery:#64705a; --muted:#6d6551; --line:#b6ad97; --pen:#4d3f24; --ink-line:#3d3828; --ink-muted:#a89f86; --ink-faint:#6f695a; --warning-bg:#e8dcc1; --control-height:46px; --control-height-compact:44px; --control-height-primary:56px; --control-pad:18px; --control-font:.76rem; --control-tracking:.09em; --control-shadow:4px 4px 0 rgba(21,19,13,.13); --control-shadow-hover:6px 6px 0 rgba(21,19,13,.16); --control-speed:.2s; }
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --steel:#676a63; --recovery:#64705a; --muted:#6d6551; --line:#b6ad97; --pen:#4d3f24; --ink-line:#3d3828; --ink-muted:#a89f86; --ink-faint:#6f695a; --warning-bg:#e8dcc1; --control-height:46px; --control-height-compact:44px; --control-height-primary:56px; --control-pad:18px; --control-font:.76rem; --control-tracking:.09em; --control-shadow:4px 4px 0 rgba(21,19,13,.13); --control-shadow-hover:6px 6px 0 rgba(21,19,13,.16); --control-speed:.2s; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans", sans-serif; min-height:100vh; }
@@ -235,6 +235,9 @@ input:focus,textarea:focus,select:focus { background:#fdf6e3; border-color:var(-
 .progress-controls { grid-template-columns:1fr 1fr .55fr; max-width:980px; }
 .chart-legend { display:flex; justify-content:flex-end; gap:20px; padding-top:14px; color:var(--muted); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }.chart-legend span::before { content:""; display:inline-block; width:22px; height:3px; margin-right:7px; vertical-align:middle; }.weight-key::before { background:var(--orange); }.reps-key::before { background:var(--ink); }
 .chart-reps-line { fill:none; stroke:var(--ink); stroke-width:3; stroke-dasharray:8 7; stroke-linecap:round; }.chart-reps-dot { stroke:var(--ink); stroke-width:2; }
+.cycle-bracket { fill:none; stroke:var(--pen-blue); stroke-width:1.8; opacity:.9; }
+.cycle-label { font:700 10.5px "Alegreya Sans"; fill:var(--ink); paint-order:stroke; stroke:var(--paper); stroke-width:4px; stroke-linejoin:round; }
+.cycle-label tspan { fill:var(--muted); font-weight:600; }
 .chart-date { paint-order:stroke; stroke:var(--paper); stroke-width:5px; stroke-linejoin:round; }
 .chart-point { outline:0; cursor:crosshair; }
 .chart-point:focus-visible { outline:2px solid var(--orange); outline-offset:4px; }
