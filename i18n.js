@@ -331,6 +331,7 @@
     'Αριθμός σετ':['Number of sets','Nombre de séries','Anzahl Sätze'],
     'ΕΠΑΝΑΛΗΨΕΙΣ':['REPS','RÉPÉTITIONS','WIEDERHOLUNGEN'],
     'ΜΕΤΡΗΣΗ ΒΑΡΟΥΣ':['WEIGHT METHOD','MODE DE CHARGE','GEWICHTSMESSUNG'],
+    'ΒΑΡΟΣ / ΜΕΤΡΗΣΗ':['WEIGHT / MEASURE','CHARGE / MESURE','GEWICHT / MESSART'],
     'ΒΑΡΟΣ':['WEIGHT','CHARGE','GEWICHT'],
     'Αντιγραφή του πρώτου σετ στα υπόλοιπα':['Copy first set to the rest','Copier la première série sur les autres','Ersten Satz auf die übrigen kopieren'],
     'ΑΝΤΙΓΡΑΦΗ':['COPY','COPIER','KOPIEREN'],
@@ -448,7 +449,21 @@
     'ημέρες':['days','jours','Tage'],
     'π.χ. ώμοι πίσω, σταθερά πόδια':['e.g. shoulders back, feet planted','p. ex. épaules en arrière, pieds stables','z. B. Schultern zurück, Füße stabil'],
     'π.χ. Δημήτρης':['e.g. Alex','p. ex. Alex','z. B. Alex'],
-    'π.χ.':['e.g.','p. ex.','z. B.']
+    'π.χ.':['e.g.','p. ex.','z. B.'],
+    'Αποθήκευση':['Save','Enregistrer','Speichern'],
+    'σετ':['sets','séries','Sätze'],
+    'καταγραφές':['logs','séries','Einträge'],
+    'στις':['on','du','am'],
+    'Η ημερομηνία προπόνησης δεν μπορεί να είναι μεταγενέστερη από τη σημερινή':['The workout date cannot be later than today','La date de la séance ne peut pas être postérieure à aujourd’hui','Das Trainingsdatum darf nicht nach heute liegen'],
+    'έχει ήδη δηλωθεί':['has already been declared','a déjà été déclaré','wurde bereits festgelegt'],
+    'μία φορά':['once','une fois','einmal'],
+    'δύο φορές':['twice','deux fois','zweimal'],
+    'Να διαγραφεί οριστικά το':['Permanently delete','Supprimer définitivement','Endgültig löschen'],
+    'και όλες οι ημέρες του':['and all its days','et tous ses jours','und alle seine Tage'],
+    'Να διαγραφεί ολόκληρο το πρόγραμμα για':['Delete the entire workout for','Supprimer entièrement le programme pour','Das gesamte Trainingsprogramm für'],
+    'Να διαγραφεί οριστικά η προπόνηση':['Permanently delete the workout','Supprimer définitivement la séance','Das Training endgültig löschen'],
+    'Το ':['','',''],
+    'Η ':['','','']
   };
 
   const wordCharacter = /[\p{L}\p{N}_]/u;

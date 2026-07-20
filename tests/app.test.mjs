@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.1');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.2');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -1901,7 +1901,7 @@ test('removing a planned exercise from the log form renumbers the rest', () => {
   click(document, '#confirm-delete-accept');
   const cards = document.querySelectorAll('#scheduled-session [data-exercise]');
   assert.equal(cards.length, 1);
-  assert.equal(cards[0].querySelector('.exercise-order').textContent, 'ΑΣΚΗΣΗ 1η');
+  assert.equal(cards[0].querySelector('.exercise-order').textContent, 'ΑΣΚΗΣΗ 1');
 });
 
 test('changing the free set count rebuilds rows without losing entered values', () => {
