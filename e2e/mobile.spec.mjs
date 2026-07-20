@@ -166,6 +166,38 @@ test('mobile home stacks the web cards and contains no section navigation button
   await expectNoHorizontalOverflow(page);
 });
 
+test('profile unit control switches the mobile workout UI to pounds', async ({ page }) => {
+  test.setTimeout(60_000);
+  await installAuthenticatedStub(page, { withWorkout:true });
+  await page.goto('/');
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="profile"]').click();
+
+  const card = page.locator('#profile-view .profile-card');
+  const control = page.locator('.profile-weight-unit');
+  await expect(control).toBeVisible();
+  const cardBox = await card.boundingBox();
+  const controlBox = await control.boundingBox();
+  expect(controlBox?.y || 0).toBeGreaterThan((cardBox?.y || 0) + (cardBox?.height || 0));
+  for (const option of await control.locator('label span').all()) {
+    expect((await option.boundingBox())?.height || 0).toBeGreaterThanOrEqual(44);
+  }
+
+  await control.getByText('LBS', { exact:true }).click();
+  await expect(control.locator('input[value="lbs"]')).toBeChecked();
+  await expect(page.locator('#profile-save')).toBeVisible();
+  await page.locator('#profile-save').click();
+  await expect(page.locator('#profile-save')).toBeHidden();
+  await page.locator('#open-menu').click();
+  await expect(page.locator('#side-menu')).toHaveClass(/open/);
+  await page.locator('#side-menu [data-view="log"]').click();
+
+  const firstRow = page.locator('#scheduled-session .set-row').first();
+  await expect(firstRow.locator('.weight-mode option:checked')).toHaveText('Λίβρες');
+  await expect(firstRow.locator('.set-weight-control .set-control-label')).toHaveText('Βάρος (lbs)');
+  await expectNoHorizontalOverflow(page);
+});
+
 test('desktop navigation remains available above the mobile breakpoint', async ({ page }) => {
   await page.setViewportSize({ width:1280, height:800 });
   await installAuthenticatedStub(page, { withWorkout:true });
@@ -199,6 +231,7 @@ test('workout deck keeps compact set lines, dynamic weight fields and completion
 
   const firstRow = exercise.locator('.set-row').first();
   await firstRow.locator('.weight-mode').selectOption('mixed');
+  await expect(firstRow.locator('.weight-mode').locator('option:checked')).toHaveText('Πλάκες+Κιλά');
   await expect(firstRow.locator('.set-plates')).toBeVisible();
   await expect(firstRow.locator('.set-weight')).toBeVisible();
   expect((await firstRow.boundingBox())?.height || 0).toBeLessThanOrEqual(60);
@@ -208,6 +241,7 @@ test('workout deck keeps compact set lines, dynamic weight fields and completion
   await firstRow.locator('.weight-mode').selectOption('bodyweight');
   await expect(firstRow.locator('.weight-entry')).toBeHidden();
   await firstRow.locator('.weight-mode').selectOption('bodyweight_extra');
+  await expect(firstRow.locator('.weight-mode').locator('option:checked')).toHaveText('Bodyweight+Κιλά');
   const compactModeStyle = await firstRow.locator('.weight-mode').evaluate(element => ({
     fontSize:parseFloat(getComputedStyle(element).fontSize),
     whiteSpace:getComputedStyle(element).whiteSpace,

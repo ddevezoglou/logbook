@@ -167,6 +167,56 @@ if (!(Array.isArray(savedRoutines) && savedRoutines.length) || JSON.stringify(sa
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 
+const KG_TO_LBS = 2.2046226218;
+const profileWeightUnit = profile => profile?.weightUnit === 'lbs' ? 'lbs' : 'kg';
+const weightUnit = () => profileWeightUnit(state.profile);
+const weightUnitName = (unit = weightUnit()) => unit === 'lbs' ? 'Λίβρες' : 'Κιλά';
+const weightUnitSymbol = (unit = weightUnit()) => unit === 'lbs' ? 'lbs' : 'kg';
+const roundWeight = value => Number(Number(value).toFixed(6));
+const storedWeightToDisplay = (value, unit = weightUnit()) => {
+  if (value === '' || value === null || value === undefined || !Number.isFinite(Number(value))) return '';
+  const converted = unit === 'lbs' ? Number(value) * KG_TO_LBS : Number(value);
+  return Number(converted.toFixed(unit === 'lbs' ? 2 : 6));
+};
+const inputWeightToStored = (value, unit = weightUnit()) => {
+  if (value === '' || value === null || value === undefined || !Number.isFinite(Number(value))) return null;
+  return roundWeight(unit === 'lbs' ? Number(value) / KG_TO_LBS : Number(value));
+};
+const weightModeSourceLabel = (mode, unit = weightUnit()) => ({
+  kg:weightUnitName(unit),
+  plates:'Πλάκες',
+  mixed:`Πλάκες+${weightUnitName(unit)}`,
+  bodyweight:'Bodyweight',
+  bodyweight_extra:`Bodyweight+${weightUnitName(unit)}`
+}[mode] || mode);
+
+function refreshWeightUnitUI(previousUnit = weightUnit()) {
+  const unit = weightUnit(), symbol = weightUnitSymbol(unit), unitName = weightUnitName(unit);
+  $$('[data-set]').forEach(row => {
+    const input = row.querySelector('.set-weight');
+    if (input && previousUnit !== unit && input.value !== '') {
+      input.value = storedWeightToDisplay(inputWeightToStored(input.value, previousUnit), unit);
+    }
+    const label = row.querySelector('.set-weight-control .set-control-label');
+    if (label) label.textContent = `Βάρος (${symbol})`;
+    if (input) {
+      input.placeholder = symbol;
+      input.step = unit === 'lbs' ? '0.01' : '0.05';
+      const setPosition = Number(row.querySelector('.set-number')?.textContent) || 1;
+      input.setAttribute('aria-label', `${unitName} σετ ${setPosition}`);
+    }
+    row.querySelectorAll('.weight-mode option').forEach(option => { option.textContent = weightModeSourceLabel(option.value, unit); });
+    window.LogbookI18n?.translate(row);
+  });
+  const guide = $('#log-weight-guide');
+  if (guide) {
+    guide.textContent = unit === 'lbs'
+      ? 'Καταγράψτε επαναλήψεις και επιλέξτε λίβρες, πλάκες, συνδυασμό ή Bodyweight.'
+      : 'Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.';
+    window.LogbookI18n?.translate(guide);
+  }
+}
+
 const dailyQuotes = Array.isArray(window.LogbookQuotes)
   ? window.LogbookQuotes.filter(quote => quote?.active !== false && typeof quote?.text === 'string' && quote.text.trim())
   : [];
@@ -338,15 +388,17 @@ function renderRewards() {
 
 function setRows(count, values = [], prefix = '', options = {}) {
   const { extra = false, startIndex = 0 } = options;
+  const unit = weightUnit(), symbol = weightUnitSymbol(unit), unitName = weightUnitName(unit);
   return Array.from({ length: count }, (_, i) => {
     const value = values[i] || {};
     const mode = value.weightMode || (value.plates !== undefined && value.plates !== '' ? (value.weight !== undefined && value.weight !== '' ? 'mixed' : 'plates') : 'kg');
     const setPosition = startIndex + i + 1;
+    const optionsMarkup = ['kg','plates','mixed','bodyweight','bodyweight_extra'].map(option => `<option value="${option}" ${mode === option ? 'selected' : ''}>${weightModeSourceLabel(option, unit)}</option>`).join('');
     return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(setPosition).padStart(2,'0')}</span>
       <label class="set-control set-reps-control"><span class="set-control-label">Επαναλήψεις</span><input class="${prefix}reps set-reps" type="number" min="0" inputmode="numeric" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${setPosition}" required></label>
       <span class="set-times" aria-hidden="true">×</span>
-      <div class="set-load-entry"><label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}"><option value="kg" ${mode === 'kg' ? 'selected' : ''}>Κιλά</option><option value="plates" ${mode === 'plates' ? 'selected' : ''}>Πλάκες</option><option value="mixed" ${mode === 'mixed' ? 'selected' : ''}>Πλάκες+kg</option><option value="bodyweight" ${mode === 'bodyweight' ? 'selected' : ''}>Bodyweight</option><option value="bodyweight_extra" ${mode === 'bodyweight_extra' ? 'selected' : ''}>Bodyweight + kg</option></select></label>
-        <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (kg)</span><input class="${prefix}weight set-weight" type="number" min="0" step="0.05" inputmode="decimal" placeholder="kg" value="${value.weight ?? ''}" aria-label="Κιλά σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div>
+      <div class="set-load-entry"><label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}">${optionsMarkup}</select></label>
+        <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (${symbol})</span><input class="${prefix}weight set-weight" type="number" min="0" step="${unit === 'lbs' ? '0.01' : '0.05'}" inputmode="decimal" placeholder="${symbol}" value="${storedWeightToDisplay(value.weight, unit)}" aria-label="${unitName} σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div>
       </div><button class="remove-set${extra ? ' remove-extra-set' : ''}" type="button" aria-label="Αφαίρεση εργάσιμου σετ">−</button></div>`;
   }).join('');
 }
@@ -359,7 +411,7 @@ function renumberSetRows(card) {
     row.querySelector('.set-reps').setAttribute('aria-label', `Επαναλήψεις σετ ${setPosition}`);
     row.querySelector('.weight-mode').setAttribute('aria-label', `Τρόπος καταγραφής βάρους για το σετ ${setPosition}`);
     row.querySelector('.set-plates').setAttribute('aria-label', `Πλάκες σετ ${setPosition}`);
-    row.querySelector('.set-weight').setAttribute('aria-label', `Κιλά σετ ${setPosition}`);
+    row.querySelector('.set-weight').setAttribute('aria-label', `${weightUnitName()} σετ ${setPosition}`);
   });
   const freeSetCount = card.querySelector('.free-set-count');
   if (freeSetCount) freeSetCount.value = rows.length;
@@ -372,7 +424,7 @@ function configureWeightMode(row, mode) {
   row.dataset.weightMode = mode;
   const weightInput = row.querySelector('.set-weight');
   weightInput.required = ['kg','mixed','bodyweight_extra'].includes(mode);
-  weightInput.placeholder = 'kg';
+  weightInput.placeholder = weightUnitSymbol();
   row.querySelector('.set-plates').required = ['plates','mixed'].includes(mode);
 }
 
@@ -874,7 +926,7 @@ function collectExercises(container) {
       const weightMode = row.querySelector('.weight-mode').value;
       const weight = row.querySelector('.set-weight').value;
       const plates = row.querySelector('.set-plates').value;
-      return { reps:Number(row.querySelector('.set-reps').value), weightMode, weight:['kg','mixed','bodyweight_extra'].includes(weightMode) && weight !== '' ? Number(weight) : null, plates:['plates','mixed'].includes(weightMode) && plates !== '' ? Number(plates) : null };
+      return { reps:Number(row.querySelector('.set-reps').value), weightMode, weight:['kg','mixed','bodyweight_extra'].includes(weightMode) && weight !== '' ? inputWeightToStored(weight) : null, plates:['plates','mixed'].includes(weightMode) && plates !== '' ? Number(plates) : null };
     })
   })).filter(item => item.exercise);
 }
@@ -911,11 +963,12 @@ function syncPlanChangesToHistory(routineId, sourceDay, targetDay, previousItems
 
 function loggedLoad(set = {}) {
   const mode = set.weightMode || 'kg';
+  const displayedWeight = storedWeightToDisplay(set.weight), symbol = weightUnitSymbol();
   if (mode === 'bodyweight') return 'Σωματικό βάρος';
   if (mode === 'plates') return `${Number(set.plates) || 0} πλάκες`;
-  if (mode === 'mixed') return `${Number(set.plates) || 0} πλάκες + ${Number(set.weight) || 0} kg`;
-  if (mode === 'bodyweight_extra') return `Σωματικό βάρος + ${Number(set.weight) || 0} kg`;
-  return `${Number(set.weight) || 0} kg`;
+  if (mode === 'mixed') return `${Number(set.plates) || 0} πλάκες + ${displayedWeight || 0} ${symbol}`;
+  if (mode === 'bodyweight_extra') return `Σωματικό βάρος + ${displayedWeight || 0} ${symbol}`;
+  return `${displayedWeight || 0} ${symbol}`;
 }
 
 function sessionPage(session, sessionNumber) {
@@ -1045,15 +1098,18 @@ function renderPersonalBests() {
     if (isBetter({ ...set, weightMode:mode }, bests.get(key)?.set)) bests.set(key, { name:ex.exercise, mode, set:{ ...set, weightMode:mode } });
   })));
   const ranked = [...bests.values()].sort((a,b) => a.name.localeCompare(b.name,'el'));
-  const bestValue = best => best.mode === 'bodyweight' ? `${best.set.reps}<em>επαν.</em>` : best.mode === 'plates' ? `${best.set.plates}<em>πλάκες</em>` : best.mode === 'mixed' ? `${best.set.plates}<em>πλάκες</em> + ${best.set.weight}<em>kg</em>` : `${best.set.weight}<em>${best.mode === 'bodyweight_extra' ? 'extra kg' : 'kg'}</em>`;
+  const bestValue = best => {
+    const displayedWeight = storedWeightToDisplay(best.set.weight), symbol = weightUnitSymbol();
+    return best.mode === 'bodyweight' ? `${best.set.reps}<em>επαν.</em>` : best.mode === 'plates' ? `${best.set.plates}<em>πλάκες</em>` : best.mode === 'mixed' ? `${best.set.plates}<em>πλάκες</em> + ${displayedWeight}<em>${symbol}</em>` : `${displayedWeight}<em>${best.mode === 'bodyweight_extra' ? `extra ${symbol}` : symbol}</em>`;
+  };
   $('#personal-bests').innerHTML = ranked.length ? ranked.map(best => `<article><div><strong data-i18n-user>${esc(best.name)}</strong><small>${best.set.reps} επαναλήψεις</small></div><b>${bestValue(best)}</b></article>`).join('') : '<div class="empty"><span>Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σας.</span></div>';
 }
 
 const normalizedName = value => String(value || '').trim().toLocaleLowerCase('el-GR').replace(/\s+/g, ' ');
-const modeLabel = mode => ({ kg:'kg', plates:'πλάκες', mixed:'πλάκες + kg', bodyweight:'Bodyweight', bodyweight_extra:'Bodyweight + Extra Βάρος' }[mode] || mode);
+const modeLabel = mode => ({ kg:weightUnitSymbol(), plates:'πλάκες', mixed:`πλάκες + ${weightUnitSymbol()}`, bodyweight:'Bodyweight', bodyweight_extra:'Bodyweight + Extra Βάρος' }[mode] || mode);
 // Πλάκες and Πλάκες + Κιλά share the plates scale; Bodyweight and Bodyweight + kg share the extra-kg scale.
 const weightModeGroup = mode => mode === 'kg' ? 'kg' : ['plates','mixed'].includes(mode) ? 'plates' : 'bodyweight';
-const groupLabel = group => ({ kg:'kg', plates:'Πλάκες (+ kg)', bodyweight:'Bodyweight (+ kg)' }[group] || group);
+const groupLabel = group => ({ kg:weightUnitSymbol(), plates:`Πλάκες (+ ${weightUnitSymbol()})`, bodyweight:`Bodyweight (+ ${weightUnitSymbol()})` }[group] || group);
 
 function progressWorkouts() {
   const groups = new Map();
@@ -1097,8 +1153,8 @@ function renderProgressChart() {
     const mode = set.weightMode || 'kg', group = weightModeGroup(mode), reps = Number(set.reps);
     // kg group: value = kg. plates group: value = plates, extraWeight = extra kg (0 when plates-only).
     // bodyweight group: value = extra kg over bodyweight (0 for plain bodyweight), so BW → BW + kg reads as progress.
-    const value = group === 'kg' ? Number(set.weight) : group === 'plates' ? Number(set.plates) : mode === 'bodyweight_extra' ? Number(set.weight) : 0;
-    const extraWeight = group === 'plates' ? (mode === 'mixed' ? Number(set.weight) : 0) : null;
+    const value = group === 'kg' ? storedWeightToDisplay(set.weight) : group === 'plates' ? Number(set.plates) : mode === 'bodyweight_extra' ? storedWeightToDisplay(set.weight) : 0;
+    const extraWeight = group === 'plates' ? (mode === 'mixed' ? storedWeightToDisplay(set.weight) : 0) : null;
     const validLoad = group === 'kg' ? value > 0 : group === 'plates' ? value > 0 && extraWeight >= 0 : mode === 'bodyweight' || value > 0;
     if (!validLoad || !(reps > 0)) return { session, reason:'Λείπει βάρος ή επαναλήψεις από το σετ' };
     return { session, mode, group, value, extraWeight, reps };
@@ -1112,15 +1168,15 @@ function renderProgressChart() {
   const width=Math.max(panelWidth, 320);
   // Plates chart on one line: extra kg counts as a fraction of a plate (assumed 5 kg step, capped just
   // below the next plate), so 9 plates + 2.3 kg plots above 9 plates and below 10 — a visible rise.
-  const plateStepKg = 5;
-  const chartValue = item => comparableGroup === 'plates' && item.extraWeight > 0 ? item.value + Math.min(item.extraWeight / plateStepKg, .95) : item.value;
+  const plateStep = storedWeightToDisplay(5);
+  const chartValue = item => comparableGroup === 'plates' && item.extraWeight > 0 ? item.value + Math.min(item.extraWeight / plateStep, .95) : item.value;
   const values=points.map(chartValue), min=Math.min(...values), max=Math.max(...values);
   const floor=min===max ? Math.max(0,min-1) : Math.max(0, min-(max-min)*.15), ceiling=min===max ? max+1 : max+(max-min)*.15;
   const repValues=points.map(item => item.reps), repMin=Math.min(...repValues), repMax=Math.max(...repValues), repFloor=repMin===repMax?Math.max(0,repMin-1):repMin-.5, repCeiling=repMin===repMax?repMax+1:repMax+.5;
   const xStep = (width-left-right) / Math.max(points.length-1, 1);
   const x=i => left+i*xStep, y=value => top+(ceiling-value)/(ceiling-floor)*(height-top-bottom), repY=value => top+(repCeiling-value)/(repCeiling-repFloor)*(height-top-bottom);
   // Bodyweight-only history has no load to chart, so the line tracks reps instead.
-  const primaryUnit = comparableGroup === 'kg' ? 'kg' : comparableGroup === 'plates' ? 'πλάκες' : points.some(item => item.value > 0) ? 'extra kg' : null;
+  const primaryUnit = comparableGroup === 'kg' ? weightUnitSymbol() : comparableGroup === 'plates' ? 'πλάκες' : points.some(item => item.value > 0) ? `extra ${weightUnitSymbol()}` : null;
   const linePoints = points.map((item,i) => ({ x:x(i), y:y(chartValue(item)) }));
   const smoothPath = series => {
     if (series.length < 2) return '';
@@ -1142,7 +1198,7 @@ function renderProgressChart() {
   const mainPoints = primaryUnit ? linePoints : points.map((item,i) => ({ x:x(i), y:repY(item.reps) }));
   const smoothLine = smoothPath(mainPoints);
   const exerciseName = points[0]?.session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey)?.exercise || '';
-  const pointLabel = item => comparableGroup === 'bodyweight' ? (item.value > 0 ? `Σωματικό βάρος + ${item.value} kg · ${item.reps} επαν.` : `Σωματικό βάρος · ${item.reps} επαν.`) : comparableGroup === 'plates' ? `${item.value} πλάκες${item.extraWeight > 0 ? ` + ${item.extraWeight} kg` : ''} · ${item.reps} επαν.` : `${item.value} ${primaryUnit} · ${item.reps} επαν.`;
+  const pointLabel = item => comparableGroup === 'bodyweight' ? (item.value > 0 ? `Σωματικό βάρος + ${item.value} ${weightUnitSymbol()} · ${item.reps} επαν.` : `Σωματικό βάρος · ${item.reps} επαν.`) : comparableGroup === 'plates' ? `${item.value} πλάκες${item.extraWeight > 0 ? ` + ${item.extraWeight} ${weightUnitSymbol()}` : ''} · ${item.reps} επαν.` : `${item.value} ${primaryUnit} · ${item.reps} επαν.`;
   const weightLegend = `<span class="weight-key">${primaryUnit || 'Επαναλήψεις'}</span>`;
   const weightSeries = `<path d="${smoothLine}" class="chart-line"/>`;
   // Κάτω από κάθε ίσιωμα της γραμμής (ίδιο φορτίο σε συνεχόμενες προπονήσεις) μια αγκύλη σημειώνει
@@ -1218,6 +1274,7 @@ function comparableProfile(profile = {}) {
     name:String(profile.name || '').trim(),
     birthdate:profile.birthdate || '',
     hideAge:Boolean(profile.hideAge),
+    weightUnit:profileWeightUnit(profile),
     customImage,
     imageGallery:imageGallery.slice(0, PROFILE_GALLERY_LIMIT)
   };
@@ -1228,6 +1285,7 @@ function currentProfileDraft() {
     name:$('#profile-name').value,
     birthdate:$('#profile-birthdate').value,
     hideAge:$('#profile-hide-age').checked,
+    weightUnit:$('#profile-form input[name="profile-weight-unit"]:checked')?.value,
     customImage:customAvatarData,
     imageGallery:profileGalleryDraft
   });
@@ -1497,12 +1555,15 @@ function loadProfile() {
   profileGalleryDraft = profileGalleryDraft.slice(0, PROFILE_GALLERY_LIMIT);
   $('#profile-birthdate').max = localDateInputValue();
   setProfileSlip('name', false);
+  const unitInput = $(`#profile-form input[name="profile-weight-unit"][value="${profileWeightUnit(profile)}"]`);
+  if (unitInput) unitInput.checked = true;
   if (profile) {
     $('#profile-name').value = profile.name || '';
     $('#profile-birthdate').value = profile.birthdate || '';
     $('#profile-hide-age').checked = Boolean(profile.hideAge);
   }
   updateProfileDraftState();
+  refreshWeightUnitUI();
   renderMenuIdentity();
 }
 let pendingConfirmation = null;
@@ -1883,6 +1944,7 @@ $('#profile-avatar-upload').addEventListener('change', async event => {
 });
 $('#profile-form').addEventListener('submit', event => {
   event.preventDefault();
+  const previousUnit = weightUnit();
   const name = $('#profile-name').value.trim();
   if (!name) {
     setProfileSlip('name', true);
@@ -1899,6 +1961,7 @@ $('#profile-form').addEventListener('submit', event => {
     name,
     birthdate,
     hideAge:$('#profile-hide-age').checked,
+    weightUnit:$('#profile-form input[name="profile-weight-unit"]:checked')?.value === 'lbs' ? 'lbs' : 'kg',
     avatar:'custom',
     customImage:customAvatarData,
     imageGallery:profileGalleryDraft
@@ -1909,10 +1972,13 @@ $('#profile-form').addEventListener('submit', event => {
     return toast('Δεν υπάρχει αρκετός χώρος για την εικόνα. Χρειάζεται μικρότερο αρχείο.', 'error');
   }
   state.profile = profile;
+  refreshWeightUnitUI(previousUnit);
   setProfileSlip('name', false);
   updateProfileDraftState();
   renderMenuIdentity();
   renderHomeProfileCard();
+  renderOverview();
+  renderProgressSelectors();
   toast('Το προφίλ αποθηκεύτηκε');
 });
 document.addEventListener('input', event => {
@@ -1920,7 +1986,7 @@ document.addEventListener('input', event => {
   if (!event.target.matches('.free-set-count')) return;
   const card = event.target.closest('[data-exercise]');
   const rows = card.querySelector('.exercise-sets');
-  const values = [...rows.querySelectorAll('[data-set]')].map(row => ({ reps:row.querySelector('.set-reps').value, weightMode:row.querySelector('.weight-mode').value, weight:row.querySelector('.set-weight').value, plates:row.querySelector('.set-plates').value }));
+  const values = [...rows.querySelectorAll('[data-set]')].map(row => ({ reps:row.querySelector('.set-reps').value, weightMode:row.querySelector('.weight-mode').value, weight:inputWeightToStored(row.querySelector('.set-weight').value), plates:row.querySelector('.set-plates').value }));
   const count = Math.max(1, Math.min(20, Number(event.target.value) || 1));
   rows.innerHTML = setRows(count, values);
   refreshCopySetButton(card);

@@ -133,7 +133,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version" aria-label="Application version 0.9.2"><i>VERSION</i><b>0.9.2</b></span>
+      <span class="app-version" aria-label="Application version 0.9.3"><i>VERSION</i><b>0.9.3</b></span>
     </div>
   </aside>
 
@@ -210,7 +210,7 @@
           <ol>
             <li><b>01</b><span>Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση.</span></li>
             <li><b>02</b><span>Μετακινηθείτε στις κάρτες ασκήσεων με τα βέλη ή με σύρσιμο.</span></li>
-            <li><b>03</b><span>Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.</span></li>
+            <li><b>03</b><span id="log-weight-guide">Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.</span></li>
             <li><b>04</b><span>Προσθέστε ή αφαιρέστε σετ, αντιγράψτε το πρώτο στα υπόλοιπα και γράψτε σχόλια όπου χρειάζεται.</span></li>
             <li><b>05</b><span>Με «Ολοκλήρωση προπόνησης» η καταγραφή αποθηκεύεται στο Ιστορικό. Από εκεί μπορείτε να τη διορθώσετε ή να την αντιγράψετε.</span></li>
           </ol>
@@ -398,6 +398,14 @@
               <div class="profile-card-foot"><span>TRAIN . LOG . REPEAT</span></div>
               <span class="profile-elastic" aria-hidden="true"></span>
             </div>
+
+          <fieldset class="profile-weight-unit">
+            <legend>Μονάδα μέτρησης</legend>
+            <div class="profile-weight-unit-options">
+              <label><input type="radio" name="profile-weight-unit" value="kg" checked><span>KG</span></label>
+              <label><input type="radio" name="profile-weight-unit" value="lbs"><span>LBS</span></label>
+            </div>
+          </fieldset>
 
           <aside id="profile-name-slip" class="profile-slip hidden" aria-label="Όνομα">
             <div class="profile-slip-head"><strong>ΟΝΟΜΑ</strong><button class="profile-slip-close" type="button" data-close-slip="name">ΚΛΕΙΣΙΜΟ</button></div>

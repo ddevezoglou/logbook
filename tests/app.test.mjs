@@ -28,7 +28,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.2');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.3');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -1460,6 +1460,65 @@ test('profile form submit persists the profile and updates the menu identity', (
   assert.equal(document.querySelector('#toast').textContent, 'Το προφίλ αποθηκεύτηκε');
 });
 
+test('profile weight unit switches log, history, progress and personal records to pounds', () => {
+  const profile = { name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[], weightUnit:'kg' };
+  const sessions = [
+    { id:'s1', date:'2026-07-06', type:'free', workoutName:'Strength', comments:'', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg' }] }] },
+    { id:'s2', date:'2026-07-13', type:'free', workoutName:'Strength', comments:'', exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:105, weightMode:'kg' }] }] },
+  ];
+  const routine = [{ id:'r1', name:'Strength', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan:[planDay('Δευτέρα', 'Squat', { cycleDay:1 })] }];
+  const { document, localStorage } = loadApp({ userProfile:profile, trainingRoutines:routine, trainingSessions:sessions });
+  click(document, '.nav-button[data-view="profile"]');
+  const kg = document.querySelector('[name="profile-weight-unit"][value="kg"]');
+  const lbs = document.querySelector('[name="profile-weight-unit"][value="lbs"]');
+  assert.equal(kg.checked, true);
+  lbs.checked = true;
+  lbs.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
+  assert.ok(!document.querySelector('#profile-save').classList.contains('hidden'));
+  document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles:true, cancelable:true }));
+
+  assert.equal(JSON.parse(localStorage.getItem('userProfile')).weightUnit, 'lbs');
+  const logRow = document.querySelector('#scheduled-session [data-set]');
+  assert.equal(logRow.querySelector('.set-weight-control .set-control-label').textContent, 'Βάρος (lbs)');
+  assert.deepEqual([...logRow.querySelector('.weight-mode').options].map(option => option.textContent), ['Λίβρες','Πλάκες','Πλάκες+Λίβρες','Bodyweight','Bodyweight+Λίβρες']);
+
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '[data-view-session="s2"] .card-body');
+  assert.ok(document.querySelector('.session-page').textContent.includes('231.49 lbs'));
+  click(document, '[data-close-session="s2"]');
+
+  click(document, '.nav-button[data-view="progress"]');
+  assert.ok(document.querySelector('#personal-bests').textContent.includes('231.49lbs'));
+  assert.ok(document.querySelector('#progress-panel').textContent.includes('231.49 lbs'));
+
+  const translatedModes = {
+    en:['lbs','Plates','Plates+lbs','Bodyweight','Bodyweight + lbs'],
+    fr:['lbs','Plaques','Plaques+lbs','Bodyweight','Poids du corps + lbs'],
+    de:['lbs','Scheiben','Scheiben+lbs','Bodyweight','Körpergewicht + lbs'],
+  };
+  Object.entries(translatedModes).forEach(([language, expected]) => {
+    click(document, `[data-language="${language}"]`);
+    assert.deepEqual([...logRow.querySelector('.weight-mode').options].map(option => option.textContent), expected);
+  });
+});
+
+test('pound entries are converted back to kilograms for stable storage', () => {
+  const profile = { name:'Dimitris', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[], weightUnit:'lbs' };
+  const routine = [{ id:'r1', name:'Strength', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan:[planDay('Δευτέρα', 'Bench Press', { cycleDay:1 })] }];
+  const { document, localStorage } = loadApp({ userProfile:profile, trainingRoutines:routine });
+  setValue(document, '#log-date', '2026-07-06');
+  const rows = document.querySelectorAll('#scheduled-session [data-set]');
+  assert.ok(rows.length > 0);
+  rows.forEach(row => {
+    row.querySelector('.set-reps').value = '5';
+    row.querySelector('.set-weight').value = '220.46';
+  });
+  click(document, '#save-session');
+  assert.ok(localStorage.getItem('trainingSessions'), document.querySelector('#toast').textContent);
+  const stored = JSON.parse(localStorage.getItem('trainingSessions'))[0].exercises[0].sets[0].weight;
+  assert.ok(Math.abs(stored - 100) < .01, `expected about 100 kg, received ${stored}`);
+});
+
 test('profile save appears only while the draft differs from the saved profile', () => {
   const profile = { name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[] };
   const { document } = loadApp({ userProfile:profile });
@@ -1982,10 +2041,18 @@ test('weight selector exposes all five modes and requires only their matching fi
   assert.deepEqual([...modeSelect.options].map(option => [option.value, option.textContent]), [
     ['kg', 'Κιλά'],
     ['plates', 'Πλάκες'],
-    ['mixed', 'Πλάκες+kg'],
+    ['mixed', 'Πλάκες+Κιλά'],
+    ['bodyweight', 'Bodyweight'],
+    ['bodyweight_extra', 'Bodyweight+Κιλά'],
+  ]);
+  click(document, '[data-language="en"]');
+  assert.deepEqual([...modeSelect.options].map(option => [option.value, option.textContent]), [
+    ['kg', 'kg'],
+    ['plates', 'Plates'],
+    ['mixed', 'Plates+kg'],
     ['bodyweight', 'Bodyweight'],
     ['bodyweight_extra', 'Bodyweight + kg'],
-  ]);
+  ], 'English mode labels keep kg');
   assert.equal(weight.required, true, 'kg mode requires kg');
   assert.equal(plates.required, false);
 
