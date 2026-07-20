@@ -1,6 +1,5 @@
 const CACHE_VERSION = 'logbook-0.9.3';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
-const SUPABASE_LIBRARY = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -20,6 +19,7 @@ const APP_SHELL = [
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',
   './assets/icons/apple-touch-icon.png',
+  './assets/vendor/supabase-2.110.7.min.js',
   './assets/fonts/alegreya-sans-greek-400-normal.woff2',
   './assets/fonts/alegreya-sans-greek-500-normal.woff2',
   './assets/fonts/alegreya-sans-greek-700-normal.woff2',
@@ -56,15 +56,6 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || request.headers.has('range')) return;
 
   const url = new URL(request.url);
-  if (request.url === SUPABASE_LIBRARY) {
-    event.respondWith(
-      caches.match(request).then(cached => cached || fetch(request).then(response => {
-        if (response.ok) caches.open(CACHE_VERSION).then(cache => cache.put(request, response.clone()));
-        return response;
-      }))
-    );
-    return;
-  }
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { loadApp, click, setValue } from './helpers.mjs';
 
 const styles = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 
 const routineWith = plan => [{ id: 'r1', name: 'Test Routine', isActive: true, plan }];
 const planDay = (day, exercise, extra = {}) => ({ id: `p-${day}-${exercise}`, day, workoutName: `${day} Workout`, exercise, workSets: 3, cues: '', ...extra });
@@ -1519,6 +1520,39 @@ test('pound entries are converted back to kilograms for stable storage', () => {
   assert.ok(Math.abs(stored - 100) < .01, `expected about 100 kg, received ${stored}`);
 });
 
+test('a session entered in pounds remains valid and editable after switching to kilograms', () => {
+  const profile = { name:'Dimitris', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[], weightUnit:'lbs' };
+  const routine = [{ id:'r1', name:'Strength', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:true, plan:[planDay('Δευτέρα', 'Bench Press', { cycleDay:1 })] }];
+  const { document, localStorage } = loadApp({ userProfile:profile, trainingRoutines:routine });
+  setValue(document, '#log-date', '2026-07-06');
+  document.querySelectorAll('#scheduled-session [data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '5';
+    row.querySelector('.set-weight').value = '100';
+  });
+  click(document, '#save-session');
+
+  click(document, '.nav-button[data-view="profile"]');
+  const kg = document.querySelector('[name="profile-weight-unit"][value="kg"]');
+  kg.checked = true;
+  kg.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
+  document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles:true, cancelable:true }));
+
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '[data-edit-session]');
+  const weight = document.querySelector('#scheduled-session .set-weight');
+  assert.equal(weight.value, '45.36');
+  assert.equal(weight.step, 'any');
+  assert.equal(weight.validity.stepMismatch, false);
+  assert.equal(weight.checkValidity(), true);
+  click(document, '#save-session');
+
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(sessions.length, 1);
+  assert.ok(Math.abs(sessions[0].exercises[0].sets[0].weight - 45.36) < .000001);
+  click(document, '[data-view-session] .card-body');
+  assert.ok(document.querySelector('.session-page').textContent.includes('45.36 kg'));
+});
+
 test('profile save appears only while the draft differs from the saved profile', () => {
   const profile = { name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'', hideAge:false, imageGallery:[] };
   const { document } = loadApp({ userProfile:profile });
@@ -1645,6 +1679,39 @@ test('exercise names with HTML are escaped in the history view', () => {
   assert.equal(document.querySelector('#session-cards img'), null, 'no injected element');
   assert.ok(document.querySelector('.card-exercises').textContent.includes('<img'));
   assert.equal(document.querySelector('.card-comment b'), null, 'comments are escaped too');
+});
+
+test('malformed local set values cannot create HTML attributes while editing', () => {
+  const injected = '1" autofocus onfocus="window.__setInjection=true';
+  const session = {
+    id:'s-malformed', date:'2026-07-06', type:'free', workoutName:'Unsafe', comments:'',
+    exercises:[{
+      id:injected, exercise:'Squat', comments:'',
+      sets:[
+        { reps:injected, weight:injected, plates:injected, weightMode:'mixed' },
+        { reps:5, weight:100, plates:null, weightMode:injected },
+      ],
+    }],
+  };
+  const { document } = loadApp({ trainingSessions:[session] });
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '[data-edit-session]');
+
+  const rows = [...document.querySelectorAll('#free-exercises [data-set]')];
+  assert.equal(document.querySelector('#free-exercises [autofocus]'), null);
+  assert.equal(document.querySelector('#free-exercises [onfocus]'), null);
+  assert.deepEqual([
+    rows[0].querySelector('.set-reps').value,
+    rows[0].querySelector('.set-weight').value,
+    rows[0].querySelector('.set-plates').value,
+  ], ['', '', '']);
+  assert.equal(rows[0].dataset.weightMode, 'mixed');
+  assert.equal(rows[1].dataset.weightMode, 'kg');
+  assert.equal(document.querySelector('#free-exercises [data-exercise]').dataset.id, injected);
+});
+
+test('the scheduled empty-state escapes its user-authored slot label', () => {
+  assert.match(appSource, /Δεν υπάρχει ορισμένη προπόνηση για \$\{esc\(slotLabel\)\}/);
 });
 
 test('personal bests track modes separately and rank bodyweight by reps', () => {

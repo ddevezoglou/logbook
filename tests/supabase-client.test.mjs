@@ -45,7 +45,7 @@ test('opening index.html directly never advertises localhost as its auth callbac
   assert.equal(dom.window.LogbookSupabaseConfig.siteUrl, null);
 });
 
-test('a cached Supabase session is exposed when the CDN is unavailable offline', () => {
+test('a cached Supabase session is exposed when the local client bundle is unavailable offline', () => {
   const dom = new JSDOM('', { runScripts:'outside-only', url:'http://localhost:3000/' });
   const session = {
     access_token:'cached-token',
@@ -88,7 +88,8 @@ test('Supabase scripts load before the application is dynamically bootstrapped',
   const auth = htmlSource.indexOf('src="auth.js"');
   const sync = htmlSource.indexOf('src="cloud-sync.js"');
 
-  assert.match(clientSource, /@supabase\/supabase-js@2/);
+  assert.match(clientSource, /assets\/vendor\/supabase-2\.110\.7\.min\.js/);
+  assert.doesNotMatch(clientSource, /https?:\/\//);
   assert.ok(config < client);
   assert.ok(client < auth);
   assert.ok(auth < sync);

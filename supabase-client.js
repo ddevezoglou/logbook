@@ -1,6 +1,6 @@
 (() => {
   const config = window.LogbookSupabaseConfig;
-  const libraryUrl = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  const libraryUrl = new URL('assets/vendor/supabase-2.110.7.min.js', document.baseURI).href;
   let library = null;
   let initialized = false;
 

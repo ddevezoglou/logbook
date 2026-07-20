@@ -283,7 +283,8 @@ test('an installed PWA boots from its cached session without a network', async (
     await navigator.serviceWorker.register('/service-worker.js', { scope:'/' });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once:true }));
-    for (const key of await caches.keys()) await (await caches.open(key)).delete('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+    const cachedClient = await caches.match(new URL('assets/vendor/supabase-2.110.7.min.js', location.href).href);
+    if (!cachedClient) throw new Error('The local Supabase client is missing from the offline app shell.');
   });
 
   await context.setOffline(true);

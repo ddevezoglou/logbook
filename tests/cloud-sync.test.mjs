@@ -195,6 +195,28 @@ test('merge keeps unique routines and sessions from both devices', async () => {
   assert.equal(merged.userProfile.name, 'Local athlete');
 });
 
+test('cloud payload normalization validates nested exercises and set fields', async () => {
+  const { window } = await loadSync();
+  const injected = '5" autofocus onfocus="alert(1)';
+  const normalized = window.LogbookCloudSync.mergePayloads({}, {
+    trainingSessions:[{
+      id:'unsafe-session', date:'2026-07-20', type:'free', exercises:[{
+        exercise:'Squat', comments:'', sets:[
+          { reps:'5', weight:'100.25', plates:null, weightMode:'kg' },
+          { reps:injected, weight:injected, plates:'4', weightMode:injected },
+          injected,
+        ],
+      }],
+    }],
+  });
+  const sets = JSON.parse(JSON.stringify(normalized.trainingSessions[0].exercises[0].sets));
+
+  assert.deepEqual(sets, [
+    { reps:5, weight:100.25, plates:null, weightMode:'kg' },
+    { reps:null, weight:null, plates:4, weightMode:'kg' },
+  ]);
+});
+
 test('merge does not let an empty local placeholder replace the remote active program', async () => {
   const { window } = await loadSync();
   const remote = {

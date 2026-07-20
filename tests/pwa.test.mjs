@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -11,6 +12,7 @@ const manifest = JSON.parse(read('manifest.webmanifest'));
 const fonts = read('fonts.css');
 const serviceWorker = read('service-worker.js');
 const pwa = read('pwa.js');
+const supabaseClient = read('supabase-client.js');
 const workflow = read('.github/workflows/pages.yml');
 const ciWorkflow = read('.github/workflows/ci.yml');
 const releaseWorkflow = read('.github/workflows/release.yml');
@@ -70,13 +72,14 @@ test('service worker precaches the complete local shell without development seed
     './auth.js',
     './cloud-sync.js',
     './pwa.js',
+    './assets/vendor/supabase-2.110.7.min.js',
     './assets/icons/icon-512.png',
     './assets/fonts/alegreya-sans-greek-800-normal.woff2',
   ]) {
     assert.ok(serviceWorker.includes(`'${path}'`), `${path} is in the app shell`);
   }
   assert.ok(serviceWorker.includes(`CACHE_VERSION = 'logbook-${packageVersion}'`));
-  assert.match(serviceWorker, /SUPABASE_LIBRARY = 'https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2'/);
+  assert.doesNotMatch(`${serviceWorker}\n${supabaseClient}`, /cdn\.jsdelivr\.net|@supabase\/supabase-js@2(?:[^.\d]|$)/);
   assert.doesNotMatch(serviceWorker, /seed(-week)?\.html|seed-week\.js/);
   assert.doesNotMatch(serviceWorker, /event\.waitUntil\(refresh\)/, 'navigation must not refresh index.html independently from the cached JS shell');
   assert.match(pwa, /new URL\('\.\/service-worker\.js', document\.baseURI\)/);
@@ -84,6 +87,14 @@ test('service worker precaches the complete local shell without development seed
   assert.match(pwa, /\['localhost', '127\.0\.0\.1', '\[::1\]'\]/);
   assert.match(pwa, /registration\.unregister\(\)/, 'local development removes stale workers');
   assert.match(pwa, /name\.startsWith\('logbook-'\)/, 'local development removes stale Logbook shell caches');
+});
+
+test('the pinned Supabase browser bundle is vendored with its license and expected checksum', () => {
+  const bundleUrl = new URL('../assets/vendor/supabase-2.110.7.min.js', import.meta.url);
+  const bundle = readFileSync(bundleUrl);
+  assert.equal(existsSync(bundleUrl), true);
+  assert.equal(existsSync(new URL('../assets/vendor/supabase-js-LICENSE.txt', import.meta.url)), true);
+  assert.equal(createHash('sha256').update(bundle).digest('hex'), '61010a711aa585660cc5132babd6da57fd89a973b845412c8916f8573a455c2b');
 });
 
 test('GitHub Pages workflow publishes a production-only artifact', () => {

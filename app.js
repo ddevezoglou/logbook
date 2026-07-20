@@ -172,15 +172,36 @@ const profileWeightUnit = profile => profile?.weightUnit === 'lbs' ? 'lbs' : 'kg
 const weightUnit = () => profileWeightUnit(state.profile);
 const weightUnitName = (unit = weightUnit()) => unit === 'lbs' ? 'Λίβρες' : 'Κιλά';
 const weightUnitSymbol = (unit = weightUnit()) => unit === 'lbs' ? 'lbs' : 'kg';
+const WEIGHT_MODES = ['kg','plates','mixed','bodyweight','bodyweight_extra'];
+const nonNegativeNumber = (value, { integer = false } = {}) => {
+  if (!['number','string'].includes(typeof value) || (typeof value === 'string' && !value.trim())) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 && (!integer || Number.isInteger(number)) ? number : null;
+};
+const numericInputValue = (value, options) => {
+  const number = nonNegativeNumber(value, options);
+  return number === null ? '' : String(number);
+};
+const inferredWeightMode = value => {
+  const plates = nonNegativeNumber(value.plates, { integer:true });
+  const weight = nonNegativeNumber(value.weight);
+  return plates !== null ? (weight !== null ? 'mixed' : 'plates') : 'kg';
+};
+const safeWeightMode = value => WEIGHT_MODES.includes(value) ? value : null;
 const roundWeight = value => Number(Number(value).toFixed(6));
+const formatWeightDisplay = value => Number(Number(value).toFixed(2));
 const storedWeightToDisplay = (value, unit = weightUnit()) => {
-  if (value === '' || value === null || value === undefined || !Number.isFinite(Number(value))) return '';
-  const converted = unit === 'lbs' ? Number(value) * KG_TO_LBS : Number(value);
-  return Number(converted.toFixed(unit === 'lbs' ? 2 : 6));
+  const stored = nonNegativeNumber(value);
+  if (stored === null) return '';
+  const converted = unit === 'lbs' ? stored * KG_TO_LBS : stored;
+  // Displayed inputs stay readable in either unit. Re-saving a converted value can therefore
+  // shift the canonical kg value by at most 0.005 kg, while storage otherwise keeps 6 decimals.
+  return formatWeightDisplay(converted);
 };
 const inputWeightToStored = (value, unit = weightUnit()) => {
-  if (value === '' || value === null || value === undefined || !Number.isFinite(Number(value))) return null;
-  return roundWeight(unit === 'lbs' ? Number(value) / KG_TO_LBS : Number(value));
+  const entered = nonNegativeNumber(value);
+  if (entered === null) return null;
+  return roundWeight(unit === 'lbs' ? entered / KG_TO_LBS : entered);
 };
 const weightModeSourceLabel = (mode, unit = weightUnit()) => ({
   kg:weightUnitName(unit),
@@ -201,7 +222,7 @@ function refreshWeightUnitUI(previousUnit = weightUnit()) {
     if (label) label.textContent = `Βάρος (${symbol})`;
     if (input) {
       input.placeholder = symbol;
-      input.step = unit === 'lbs' ? '0.01' : '0.05';
+      input.step = 'any';
       const setPosition = Number(row.querySelector('.set-number')?.textContent) || 1;
       input.setAttribute('aria-label', `${unitName} σετ ${setPosition}`);
     }
@@ -391,14 +412,17 @@ function setRows(count, values = [], prefix = '', options = {}) {
   const unit = weightUnit(), symbol = weightUnitSymbol(unit), unitName = weightUnitName(unit);
   return Array.from({ length: count }, (_, i) => {
     const value = values[i] || {};
-    const mode = value.weightMode || (value.plates !== undefined && value.plates !== '' ? (value.weight !== undefined && value.weight !== '' ? 'mixed' : 'plates') : 'kg');
+    const mode = safeWeightMode(value.weightMode) || inferredWeightMode(value);
     const setPosition = startIndex + i + 1;
-    const optionsMarkup = ['kg','plates','mixed','bodyweight','bodyweight_extra'].map(option => `<option value="${option}" ${mode === option ? 'selected' : ''}>${weightModeSourceLabel(option, unit)}</option>`).join('');
+    const reps = numericInputValue(value.reps, { integer:true });
+    const plates = numericInputValue(value.plates, { integer:true });
+    const displayedWeight = numericInputValue(storedWeightToDisplay(value.weight, unit));
+    const optionsMarkup = WEIGHT_MODES.map(option => `<option value="${option}" ${mode === option ? 'selected' : ''}>${weightModeSourceLabel(option, unit)}</option>`).join('');
     return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(setPosition).padStart(2,'0')}</span>
-      <label class="set-control set-reps-control"><span class="set-control-label">Επαναλήψεις</span><input class="${prefix}reps set-reps" type="number" min="0" inputmode="numeric" placeholder="0" value="${value.reps ?? ''}" aria-label="Επαναλήψεις σετ ${setPosition}" required></label>
+      <label class="set-control set-reps-control"><span class="set-control-label">Επαναλήψεις</span><input class="${prefix}reps set-reps" type="number" min="0" inputmode="numeric" placeholder="0" value="${reps}" aria-label="Επαναλήψεις σετ ${setPosition}" required></label>
       <span class="set-times" aria-hidden="true">×</span>
       <div class="set-load-entry"><label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}">${optionsMarkup}</select></label>
-        <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="πλάκες" value="${value.plates ?? ''}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (${symbol})</span><input class="${prefix}weight set-weight" type="number" min="0" step="${unit === 'lbs' ? '0.01' : '0.05'}" inputmode="decimal" placeholder="${symbol}" value="${storedWeightToDisplay(value.weight, unit)}" aria-label="${unitName} σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div>
+        <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="πλάκες" value="${plates}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (${symbol})</span><input class="${prefix}weight set-weight" type="number" min="0" step="any" inputmode="decimal" placeholder="${symbol}" value="${displayedWeight}" aria-label="${unitName} σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div>
       </div><button class="remove-set${extra ? ' remove-extra-set' : ''}" type="button" aria-label="Αφαίρεση εργάσιμου σετ">−</button></div>`;
   }).join('');
 }
@@ -660,7 +684,7 @@ function duplicateRoutine(routineId) {
 }
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
-  return `<article class="workout-exercise" data-exercise data-id="${exercise.id || id()}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}">
+  return `<article class="workout-exercise" data-exercise data-id="${esc(exercise.id || id())}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}">
     <span class="exercise-tape" aria-hidden="true"></span>
     <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${exercise.sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
@@ -865,7 +889,7 @@ function renderScheduledSession(preferredDay = null) {
   const planned = activePlan().filter(item => itemCycleDay(item, routine) === Number(planDay)).map(item => ({ ...item, sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
   const workoutName = planned[0]?.workoutName || 'Η προπόνηση της ημέρας';
   const slotLabel = cycleDayLabel(routine, planDay);
-  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2></div></div>${deckShellHTML(planned.map((item, index) => exerciseCard(item, false, index)).join(''))}` : `<div class="no-workout empty"><span>Δεν υπάρχει ορισμένη προπόνηση για ${slotLabel}.</span></div>`;
+  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2></div></div>${deckShellHTML(planned.map((item, index) => exerciseCard(item, false, index)).join(''))}` : `<div class="no-workout empty"><span>Δεν υπάρχει ορισμένη προπόνηση για ${esc(slotLabel)}.</span></div>`;
   refreshCopySetButtons($('#scheduled-session'));
   refreshSessionDecks();
 }

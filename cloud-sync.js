@@ -13,6 +13,7 @@
   const CACHE_PREFIX = 'logbookCloudCache:';
   const OWNER_KEY = 'logbookCloudOwner';
   const SYNC_DELAY = 700;
+  const WEIGHT_MODES = new Set(['kg', 'plates', 'mixed', 'bodyweight', 'bodyweight_extra']);
   let client = null;
   let userId = null;
   let syncTimer = null;
@@ -33,11 +34,70 @@
     }
   }
 
+  const isRecord = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+  function normalizeNumber(value, { integer = false } = {}) {
+    if (value === null || value === undefined || !['number','string'].includes(typeof value) || (typeof value === 'string' && !value.trim())) return null;
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 && (!integer || Number.isInteger(number)) ? number : null;
+  }
+
+  function normalizeTextFields(value, fields) {
+    const normalized = { ...value };
+    fields.forEach(field => {
+      if (hasOwn(normalized, field) && typeof normalized[field] !== 'string') normalized[field] = '';
+    });
+    return normalized;
+  }
+
+  function normalizeSet(value) {
+    if (!isRecord(value)) return null;
+    const set = { ...value };
+    if (hasOwn(set, 'reps')) set.reps = normalizeNumber(set.reps, { integer:true });
+    if (hasOwn(set, 'plates')) set.plates = normalizeNumber(set.plates, { integer:true });
+    if (hasOwn(set, 'weight')) set.weight = normalizeNumber(set.weight);
+    if (hasOwn(set, 'weightMode') && !WEIGHT_MODES.has(set.weightMode)) set.weightMode = 'kg';
+    return set;
+  }
+
+  function normalizeExercise(value) {
+    if (!isRecord(value)) return null;
+    const exercise = normalizeTextFields(value, ['exercise', 'comments', 'cues']);
+    exercise.sets = Array.isArray(value.sets) ? value.sets.map(normalizeSet).filter(Boolean) : [];
+    return exercise;
+  }
+
+  function normalizeSession(value) {
+    if (!isRecord(value)) return null;
+    const session = normalizeTextFields(value, ['date', 'type', 'workoutDay', 'workoutName', 'comments']);
+    session.exercises = Array.isArray(value.exercises) ? value.exercises.map(normalizeExercise).filter(Boolean) : [];
+    return session;
+  }
+
+  function normalizePlanItem(value) {
+    if (!isRecord(value)) return null;
+    const item = normalizeTextFields(value, ['day', 'workoutName', 'exercise', 'cues', 'comments']);
+    if (Array.isArray(value.sets)) item.sets = value.sets.map(normalizeSet).filter(Boolean);
+    if (hasOwn(item, 'workSets')) {
+      const workSets = normalizeNumber(item.workSets, { integer:true });
+      item.workSets = workSets !== null && workSets >= 1 && workSets <= 20 ? workSets : 3;
+    }
+    return item;
+  }
+
+  function normalizeRoutine(value) {
+    if (!isRecord(value)) return null;
+    const routine = normalizeTextFields(value, ['name', 'cycleAnchorDate']);
+    routine.plan = Array.isArray(value.plan) ? value.plan.map(normalizePlanItem).filter(Boolean) : [];
+    return routine;
+  }
+
   function normalizePayload(value = {}) {
     const payload = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     return {
-      trainingRoutines:Array.isArray(payload.trainingRoutines) ? payload.trainingRoutines : [],
-      trainingSessions:Array.isArray(payload.trainingSessions) ? payload.trainingSessions : [],
+      trainingRoutines:Array.isArray(payload.trainingRoutines) ? payload.trainingRoutines.map(normalizeRoutine).filter(Boolean) : [],
+      trainingSessions:Array.isArray(payload.trainingSessions) ? payload.trainingSessions.map(normalizeSession).filter(Boolean) : [],
       userProfile:payload.userProfile && typeof payload.userProfile === 'object' && !Array.isArray(payload.userProfile) ? payload.userProfile : null,
       routineRewardTracking:payload.routineRewardTracking && typeof payload.routineRewardTracking === 'object' && !Array.isArray(payload.routineRewardTracking) ? payload.routineRewardTracking : null,
       homeProfileCardPosition:payload.homeProfileCardPosition && typeof payload.homeProfileCardPosition === 'object' && !Array.isArray(payload.homeProfileCardPosition) ? payload.homeProfileCardPosition : null,

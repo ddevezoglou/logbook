@@ -219,14 +219,15 @@ npm.cmd run test:e2e
 
 ### Επόμενη συνεδρία — 20 Ιουλίου 2026
 
-- [ ] **Έλεγχος lb/kg:** έλεγχος της εναλλαγής μονάδας και της συνέπειας σε καταχώριση, εμφάνιση, ιστορικό, στατιστικά και συγχρονισμό.
+- [x] **Έλεγχος lb/kg:** έλεγχος της εναλλαγής μονάδας και της συνέπειας σε καταχώριση, εμφάνιση, ιστορικό, στατιστικά και συγχρονισμό. Ολοκληρώθηκε με code review στις 20 Ιουλίου 2026· η αποθήκευση σε κανονικά kg και ο συγχρονισμός του `weightUnit` είναι σωστά.
 - [x] **Βελτίωση γλώσσας:** έλεγχος και βελτίωση των κειμένων του UI και των μεταφράσεων, με έμφαση σε φυσική διατύπωση, συνέπεια όρων και πλήρη κάλυψη των translation keys.
 
 ### P1 — Production hardening
 
-- [ ] **Supabase dependency integrity:** αντικατάσταση του floating `@supabase/supabase-js@2` CDN URL με self-hosted αρχείο ή ακριβώς pinned έκδοση με SRI. Ενημέρωση του service-worker cache και των offline tests μαζί με την αλλαγή.
-- [ ] **Ασφαλή numeric attributes:** κανονικοποίηση και escaping των `reps`, `plates`, `weight` και συναφών τιμών που γράφει η `setRows()` σε HTML attributes. Προσθήκη regression test για αλλοιωμένα local/cloud δεδομένα.
-- [ ] **Debug cleanup:** έλεγχος και αφαίρεση προσωρινών `debug.log`, debug-only logging και artifacts πριν από release. Τα απαραίτητα operational errors να παραμείνουν σαφή και ελεγχόμενα.
+- [x] **Supabase dependency integrity:** αντικαταστάθηκε το floating `@supabase/supabase-js@2` CDN URL με το self-hosted, pinned bundle `2.110.7`, καταγεγραμμένο SHA-256 και την άδεια MIT. Το αρχείο είναι πλέον μέρος του `APP_SHELL`, χωρίς runtime εξάρτηση από τρίτο origin, και καλύπτεται από offline και integrity tests.
+- [x] **Ασφαλή numeric attributes και escaping:** τα `reps`, `plates`, `weight` και `weightMode` κανονικοποιούνται πριν γραφτούν από τη `setRows()` σε HTML attributes, το `slotLabel` περνά από `esc()`, και το `normalizePayload` ελέγχει πλέον βαθιά τα `exercises[].sets[]` σε local/cloud δεδομένα. Προστέθηκαν regression tests για αλλοιωμένα attributes και nested payloads.
+- [ ] **Debug cleanup:** έλεγχος και αφαίρεση προσωρινών `debug.log`, debug-only logging και artifacts πριν από release. Τα απαραίτητα operational errors να παραμείνουν σαφή και ελεγχόμενα. Από το review: το `debug.log` στο root είναι untracked Chromium GPU noise από Playwright runs χωρίς tokens ή PII — να προστεθεί στο `.gitignore`.
+- [ ] **Export και backup δεδομένων από το UI:** export και import προπονήσεων και προγραμμάτων σε JSON/CSV. Ανέβηκε από το P3 μετά το review της 20ής Ιουλίου 2026: η απουσία backup συγκρούεται με τη βασική αρχή «προστασία του ιστορικού», αφού σήμερα ο μόνος δρόμος ανάκτησης είναι το cloud snapshot.
 - [ ] **Physical-device QA:** smoke test σε τουλάχιστον ένα πρόσφατο Android και ένα iPhone, με έμφαση σε εγκατάσταση PWA, offline boot, safe areas, virtual keyboard και OAuth επιστροφή.
 - [ ] **Ελαφρύ error tracking:** καταγραφή αποτυχιών συγχρονισμού και πραγματικών client errors χωρίς αποθήκευση ευαίσθητων δεδομένων προπόνησης ή authentication tokens.
 
@@ -236,12 +237,12 @@ npm.cmd run test:e2e
 - [ ] **Αυτοματοποιημένο version bump:** script που ενημερώνει package metadata, UI version, service-worker cache, tests και documentation ως μία ελεγχόμενη πράξη.
 - [ ] **Στοχευμένα module tests:** διατήρηση των integration tests και προσθήκη μικρότερων tests στα νέα module boundaries.
 - [ ] **SVG navigation icons:** αντικατάσταση των text glyphs πλοήγησης με το υπάρχον SVG icon set χωρίς accessibility regression.
+- [ ] **Σταθερά i18n keys:** τα translation keys είναι σήμερα τα ίδια τα ελληνικά strings, οπότε κάθε αλλαγή ελληνικού κειμένου σπάει σιωπηλά τις μεταφράσεις (το v0.9.3 diff το έδειξε: «Πλάκες+kg» → «Πλάκες+Κιλά» απαίτησε rename των keys). Μετάβαση σε σταθερά IDs ανά φράση. Στο ίδιο πέρασμα, κάλυψη των σύνθετων aria-labels (π.χ. «Λίβρες σετ 1») που δεν αντιστοιχούν σε translation keys.
 
 ### P3 — Product roadmap
 
 - [ ] Ολοκλήρωση της ενότητας **Επίβλεψη** με περισσότερες μετρικές και σαφέστερη σύγκριση ανά προπόνηση, άσκηση και σετ.
 - [ ] Ιστορικό cloud snapshots, χειροκίνητη επαναφορά και προηγμένη επίλυση conflicts.
-- [ ] Export και import προπονήσεων και προγραμμάτων σε JSON/CSV.
 - [ ] Ενιαία προσωπική βιβλιοθήκη ασκήσεων αντί για αποκλειστικά ελεύθερο κείμενο.
 
 ## Definition of Done
