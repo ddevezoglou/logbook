@@ -1222,7 +1222,10 @@ function renderProgressChart() {
   const mainPoints = primaryUnit ? linePoints : points.map((item,i) => ({ x:x(i), y:repY(item.reps) }));
   const smoothLine = smoothPath(mainPoints);
   const exerciseName = points[0]?.session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey)?.exercise || '';
-  const pointLabel = item => comparableGroup === 'bodyweight' ? (item.value > 0 ? `Σωματικό βάρος + ${item.value} ${weightUnitSymbol()} · ${item.reps} επαν.` : `Σωματικό βάρος · ${item.reps} επαν.`) : comparableGroup === 'plates' ? `${item.value} πλάκες${item.extraWeight > 0 ? ` + ${item.extraWeight} ${weightUnitSymbol()}` : ''} · ${item.reps} επαν.` : `${item.value} ${primaryUnit} · ${item.reps} επαν.`;
+  const pointLabel = (item, { fullReps = false } = {}) => {
+    const repsUnit = fullReps ? 'επαναλήψεις' : 'επαν.';
+    return comparableGroup === 'bodyweight' ? (item.value > 0 ? `Σωματικό βάρος + ${item.value} ${weightUnitSymbol()} · ${item.reps} ${repsUnit}` : `Σωματικό βάρος · ${item.reps} ${repsUnit}`) : comparableGroup === 'plates' ? `${item.value} πλάκες${item.extraWeight > 0 ? ` + ${item.extraWeight} ${weightUnitSymbol()}` : ''} · ${item.reps} ${repsUnit}` : `${item.value} ${primaryUnit} · ${item.reps} ${repsUnit}`;
+  };
   const weightLegend = `<span class="weight-key">${primaryUnit || 'Επαναλήψεις'}</span>`;
   const weightSeries = `<path d="${smoothLine}" class="chart-line"/>`;
   // Κάτω από κάθε ίσιωμα της γραμμής (ίδιο φορτίο σε συνεχόμενες προπονήσεις) μια αγκύλη σημειώνει
@@ -1243,7 +1246,7 @@ function renderProgressChart() {
     }).join('');
   })();
   const axisDate = date => localDate(date).toLocaleDateString(window.LogbookI18n?.getLocale() || 'el-GR', { day:'numeric', month:'short' });
-  const latest = points.at(-1), latestLoad = pointLabel(latest);
+  const latest = points.at(-1), latestLoad = pointLabel(latest, { fullReps:true });
   const scaleFloor = primaryUnit ? floor : repFloor, scaleCeiling = primaryUnit ? ceiling : repCeiling, scaleY = primaryUnit ? y : repY;
   const gridMarkup = Array.from({ length:5 }, (_, index) => {
     const tickValue = scaleFloor + (scaleCeiling - scaleFloor) * index / 4, tickY = scaleY(tickValue);
@@ -1682,14 +1685,14 @@ function loadSessionForCopy(sessionId) {
   const today = localDateInputValue();
   $('#log-date').max = today;
   $('#log-date').value = today;
-  $('#session-comments').value = session.comments || '';
+  $('#session-comments').value = '';
   setMode(session.type);
   if (session.type === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
     $('#day-badge').innerHTML = `<span>${dayForDate(today)}</span><small>${formatDate(today)}</small>`;
-    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Προσαρμόστε ό,τι εκτελέσατε σήμερα και ολοκληρώστε τη νέα προπόνηση.</p></div></div>${deckShellHTML(session.exercises.map((item, index) => exerciseCard(item, false, index)).join(''))}`;
+    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Προσαρμόστε ό,τι εκτελέσατε σήμερα και ολοκληρώστε τη νέα προπόνηση.</p></div></div>${deckShellHTML(session.exercises.map((item, index) => exerciseCard({ ...item, comments:'' }, false, index)).join(''))}`;
   } else {
-    $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard(item, true)).join('');
+    $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard({ ...item, comments:'' }, true)).join('');
   }
   refreshCopySetButtons();
   refreshSessionDecks();

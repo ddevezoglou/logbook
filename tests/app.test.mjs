@@ -29,7 +29,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.3');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.4');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -752,9 +752,9 @@ test('personal records move from history to an expandable sheet below progress',
   assert.equal(sheet.hidden, true);
 });
 
-test('progress chart renders two comparable points', () => {
+test('progress chart renders two comparable points and spells out reps in the latest performance', () => {
   const mkSession = (id, date, weight) => ({ id, date, type: 'scheduled', routineId: 'r1', workoutDay: 'Δευτέρα', workoutName: 'Δευτέρα Workout', comments: '', exercises: [{ exercise: 'Bench Press', planExerciseId: 'p1', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
-  const { document } = loadApp({
+  const { document, window } = loadApp({
     trainingRoutines: routineWith([planDay('Δευτέρα', 'Bench Press', { id: 'p1' })]),
     trainingSessions: [mkSession('s1', '2026-07-01', 60), mkSession('s2', '2026-07-08', 65)],
   });
@@ -764,7 +764,17 @@ test('progress chart renders two comparable points', () => {
   assert.ok(panel.includes('class="chart-point"'), 'chart points expose details without crowding the plot');
   assert.ok(panel.includes('<title>'), 'point details remain available on hover/focus');
   assert.ok(panel.includes('class="chart-tooltip-card"'), 'hover details include the recording date');
-  assert.ok(panel.includes('65 kg · 8 επαν.'), 'latest performance shows weight and reps');
+  assert.equal(document.querySelector('.chart-latest strong').textContent, '65 kg · 8 επαναλήψεις');
+  assert.ok(document.querySelector('.chart-point title').textContent.includes('8 επαν.'), 'compact tooltip labels remain unchanged');
+  const expectedByLanguage = {
+    en:'65 kg · 8 reps',
+    fr:'65 kg · 8 répétitions',
+    de:'65 kg · 8 Wiederholungen',
+  };
+  Object.entries(expectedByLanguage).forEach(([language, expected]) => {
+    window.LogbookI18n.setLanguage(language);
+    assert.equal(document.querySelector('.chart-latest strong').textContent, expected);
+  });
 });
 
 test('progress chart shows every date label with room to breathe', () => {
@@ -1130,7 +1140,7 @@ test('editing a session cannot move it onto an occupied date', () => {
   assert.equal(document.querySelector('#toast').textContent, 'Υπάρχει ήδη καταγεγραμμένη προπόνηση για αυτή την ημέρα.');
 });
 
-test('copying a history session creates a new workout for today and preserves the original', () => {
+test('copying a history session creates a new workout without comments and preserves the original', () => {
   const session = { id:'s1', date:'2026-07-06', type:'scheduled', routineId:'r1', cycleDay:1, workoutDay:'Δευτέρα', workoutName:'Push Day', comments:'Original notes', exercises:[{ exercise:'Bench Press', planExerciseId:'p1', comments:'Pause', sets:[{ reps:8, weight:60, weightMode:'kg', plates:null }] }] };
   const { document, localStorage } = loadApp({
     trainingRoutines:routineWith([planDay('Δευτέρα', 'Bench Press', { id:'p1', cycleDay:1, workoutName:'Push Day' })]),
@@ -1147,6 +1157,8 @@ test('copying a history session creates a new workout for today and preserves th
   assert.equal(document.querySelector('#save-session').textContent, 'Ολοκλήρωση προπόνησης');
   assert.equal(document.querySelector('#cancel-session-edit').textContent, 'Ακύρωση αντιγραφής');
   assert.equal(document.querySelector('#scheduled-session .set-reps').value, '8');
+  assert.equal(document.querySelector('#session-comments').value, '');
+  assert.equal(document.querySelector('#scheduled-session .exercise-comments').value, '');
 
   click(document, '[data-language="en"]');
   assert.equal(document.querySelector('#cancel-session-edit').textContent, 'Cancel copy');
@@ -1166,6 +1178,8 @@ test('copying a history session creates a new workout for today and preserves th
   assert.equal(duplicate.workoutName, 'Push Day');
   assert.equal(duplicate.routineId, 'r1');
   assert.equal(duplicate.cycleDay, 1);
+  assert.equal(duplicate.comments, '');
+  assert.equal(duplicate.exercises[0].comments, '');
   assert.equal(duplicate.exercises[0].sets[0].reps, 9);
 });
 
@@ -1479,6 +1493,7 @@ test('profile weight unit switches log, history, progress and personal records t
   document.querySelector('#profile-form').dispatchEvent(new (document.defaultView.Event)('submit', { bubbles:true, cancelable:true }));
 
   assert.equal(JSON.parse(localStorage.getItem('userProfile')).weightUnit, 'lbs');
+  setValue(document, '#log-date', '2026-07-06');
   const logRow = document.querySelector('#scheduled-session [data-set]');
   assert.equal(logRow.querySelector('.set-weight-control .set-control-label').textContent, 'Βάρος (lbs)');
   assert.deepEqual([...logRow.querySelector('.weight-mode').options].map(option => option.textContent), ['Λίβρες','Πλάκες','Πλάκες+Λίβρες','Bodyweight','Bodyweight+Λίβρες']);
