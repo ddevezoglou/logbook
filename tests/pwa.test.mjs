@@ -71,6 +71,7 @@ test('service worker precaches the complete local shell without development seed
     './app.js',
     './auth.js',
     './cloud-sync.js',
+    './error-tracking.js',
     './pwa.js',
     './assets/vendor/supabase-2.110.7.min.js',
     './assets/icons/icon-512.png',
@@ -92,9 +93,10 @@ test('service worker precaches the complete local shell without development seed
 test('the pinned Supabase browser bundle is vendored with its license and expected checksum', () => {
   const bundleUrl = new URL('../assets/vendor/supabase-2.110.7.min.js', import.meta.url);
   const bundle = readFileSync(bundleUrl);
+  const canonicalBundle = Buffer.from(bundle.toString('utf8').replace(/\r\n/g, '\n'), 'utf8');
   assert.equal(existsSync(bundleUrl), true);
   assert.equal(existsSync(new URL('../assets/vendor/supabase-js-LICENSE.txt', import.meta.url)), true);
-  assert.equal(createHash('sha256').update(bundle).digest('hex'), '61010a711aa585660cc5132babd6da57fd89a973b845412c8916f8573a455c2b');
+  assert.equal(createHash('sha256').update(canonicalBundle).digest('hex'), '61010a711aa585660cc5132babd6da57fd89a973b845412c8916f8573a455c2b');
 });
 
 test('GitHub Pages workflow publishes a production-only artifact', () => {

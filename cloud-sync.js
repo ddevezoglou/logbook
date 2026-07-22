@@ -364,6 +364,10 @@
     syncPromise = performSync(activeUser)
       .catch(error => {
         console.warn('Logbook cloud sync failed.', error);
+        const errorCode = error?.message === 'SYNC_CONFLICT'
+          ? 'sync_conflict'
+          : (!navigator.onLine || error?.name === 'TypeError' ? 'sync_network_failure' : 'sync_failure');
+        window.LogbookErrorTracking?.report('sync', errorCode, error);
         setStatus('Δεν ολοκληρώθηκε ο συγχρονισμός. Οι αλλαγές παραμένουν ασφαλείς στη συσκευή.', 'error');
         return false;
       })
@@ -413,6 +417,7 @@
     client = nextClient;
     const { data, error } = await client.auth.getSession();
     if (error) {
+      window.LogbookErrorTracking?.report('sync', 'sync_failure', error);
       setStatus('Δεν ήταν δυνατή η εκκίνηση του συγχρονισμού.', 'error');
     } else {
       handleSession(data?.session);

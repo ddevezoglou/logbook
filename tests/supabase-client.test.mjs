@@ -85,13 +85,15 @@ test('the Supabase client retries initialization when the network returns', () =
 test('Supabase scripts load before the application is dynamically bootstrapped', () => {
   const config = htmlSource.indexOf('src="supabase-config.js"');
   const client = htmlSource.indexOf('src="supabase-client.js"');
+  const errorTracking = htmlSource.indexOf('src="error-tracking.js"');
   const auth = htmlSource.indexOf('src="auth.js"');
   const sync = htmlSource.indexOf('src="cloud-sync.js"');
 
   assert.match(clientSource, /assets\/vendor\/supabase-2\.110\.7\.min\.js/);
   assert.doesNotMatch(clientSource, /https?:\/\//);
   assert.ok(config < client);
-  assert.ok(client < auth);
+  assert.ok(client < errorTracking);
+  assert.ok(errorTracking < auth);
   assert.ok(auth < sync);
   assert.equal(htmlSource.includes('<script src="app.js"></script>'), false);
   assert.match(readFileSync(new URL('../auth.js', import.meta.url), 'utf8'), /script\.src = 'app\.js'/);

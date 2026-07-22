@@ -27,6 +27,7 @@
     if (localDevelopment && !localWorkerEnabled) {
       clearLocalDevelopmentWorker().catch(error => {
         console.warn('Logbook local service worker cleanup failed.', error);
+        window.LogbookErrorTracking?.report('pwa', 'service_worker_cleanup_failed', error);
       });
       return;
     }
@@ -38,6 +39,7 @@
       })
       .catch(error => {
         console.warn('Logbook service worker registration failed.', error);
+        window.LogbookErrorTracking?.report('pwa', 'service_worker_registration_failed', error);
       });
   }, { once:true });
 })();

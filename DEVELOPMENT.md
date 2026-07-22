@@ -4,7 +4,7 @@
 
 | Στοιχείο | Τρέχουσα κατάσταση |
 |---|---|
-| Έκδοση | **0.9.4** |
+| Έκδοση | **0.9.5** |
 | Runtime | Node.js 22 |
 | Client | HTML, CSS και JavaScript χωρίς build step |
 | Αποθήκευση | Local-first με `localStorage` και Supabase sync |
@@ -60,12 +60,16 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 Η τρέχουσα λειτουργική βάση περιλαμβάνει:
 
 - Πολλαπλά ανεξάρτητα προγράμματα και μικρόκυκλους 3–10 ημερών.
-- Προγραμματισμένες και ελεύθερες προπονήσεις με ασκήσεις, σετ, επαναλήψεις, βάρη, cues και σχόλια.
-- Ιστορικό, προσωπικά ρεκόρ, στατιστικά, γραφήματα προόδου και rewards συνέπειας.
-- Προφίλ αθλητή και ελληνικό, αγγλικό, γαλλικό και γερμανικό interface.
+- Προγραμματισμένες και ελεύθερες προπονήσεις με ασκήσεις, σετ, επαναλήψεις, βάρη, cues και σχόλια. Η αποθήκευση βάρους γίνεται σε κανονικοποιημένα kg, ενώ η καταχώριση και η εμφάνιση υποστηρίζουν συνεπή εναλλαγή kg/lb.
+- Ιστορικό με ασφαλή εξαγωγή σε CSV, προσωπικά ρεκόρ, στατιστικά, γραφήματα προόδου και rewards συνέπειας.
+- Προφίλ αθλητή και ελληνικό, αγγλικό, γαλλικό και γερμανικό interface, με ελεγμένη φυσική διατύπωση και πλήρη κάλυψη των translation keys.
 - Supabase Auth με email/κωδικό ή Google και συγχρονισμό πολλών συσκευών.
 - Αυτόματη μεταφορά παλιότερων τοπικών δεδομένων στο τρέχον μοντέλο.
 - Installable PWA με offline shell και responsive mobile UI.
+- Self-hosted και pinned Supabase browser bundle `2.110.7`, με καταγεγραμμένο SHA-256, άδεια MIT και offline/integrity tests.
+- Κανονικοποίηση των αριθμητικών τιμών και escaping του περιεχομένου χρήστη πριν από απόδοση σε HTML, μαζί με βαθύ validation των local/cloud payloads.
+- Release hygiene που αποκλείει debug logging και test artifacts από τον production κώδικα και τα releases.
+- Privacy-safe error tracking για sync, PWA και πραγματικά unhandled client failures, μόνο με allowlisted τεχνικά metadata, rate limit 10 συμβάντων ανά ώρα και διατήρηση 30 ημερών.
 
 ### Χάρτης βασικών αρχείων
 
@@ -206,10 +210,9 @@ npm.cmd run test:e2e
 
 Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.6.0`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
 
-## Γνωστοί περιορισμοί της 0.9.4
+## Γνωστοί περιορισμοί της 0.9.5
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry, αλλά όχι UI χειροκίνητης επίλυσης ταυτόχρονων αλλαγών στο ίδιο αντικείμενο.
-- Δεν υπάρχει ακόμη ασφαλές export/import ή αυτόματο backup δεδομένων από το UI.
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
@@ -217,19 +220,9 @@ npm.cmd run test:e2e
 
 Η σειρά δηλώνει προτεραιότητα, όχι απαραίτητα το release στο οποίο θα ολοκληρωθεί κάθε εργασία.
 
-### Επόμενη συνεδρία — 20 Ιουλίου 2026
-
-- [x] **Έλεγχος lb/kg:** έλεγχος της εναλλαγής μονάδας και της συνέπειας σε καταχώριση, εμφάνιση, ιστορικό, στατιστικά και συγχρονισμό. Ολοκληρώθηκε με code review στις 20 Ιουλίου 2026· η αποθήκευση σε κανονικά kg και ο συγχρονισμός του `weightUnit` είναι σωστά.
-- [x] **Βελτίωση γλώσσας:** έλεγχος και βελτίωση των κειμένων του UI και των μεταφράσεων, με έμφαση σε φυσική διατύπωση, συνέπεια όρων και πλήρη κάλυψη των translation keys.
-
 ### P1 — Production hardening
 
-- [x] **Supabase dependency integrity:** αντικαταστάθηκε το floating `@supabase/supabase-js@2` CDN URL με το self-hosted, pinned bundle `2.110.7`, καταγεγραμμένο SHA-256 και την άδεια MIT. Το αρχείο είναι πλέον μέρος του `APP_SHELL`, χωρίς runtime εξάρτηση από τρίτο origin, και καλύπτεται από offline και integrity tests.
-- [x] **Ασφαλή numeric attributes και escaping:** τα `reps`, `plates`, `weight` και `weightMode` κανονικοποιούνται πριν γραφτούν από τη `setRows()` σε HTML attributes, το `slotLabel` περνά από `esc()`, και το `normalizePayload` ελέγχει πλέον βαθιά τα `exercises[].sets[]` σε local/cloud δεδομένα. Προστέθηκαν regression tests για αλλοιωμένα attributes και nested payloads.
-- [ ] **Debug cleanup:** έλεγχος και αφαίρεση προσωρινών `debug.log`, debug-only logging και artifacts πριν από release. Τα απαραίτητα operational errors να παραμείνουν σαφή και ελεγχόμενα. Από το review: το `debug.log` στο root είναι untracked Chromium GPU noise από Playwright runs χωρίς tokens ή PII — να προστεθεί στο `.gitignore`.
-- [ ] **Export και backup δεδομένων από το UI:** export και import προπονήσεων και προγραμμάτων σε JSON/CSV. Ανέβηκε από το P3 μετά το review της 20ής Ιουλίου 2026: η απουσία backup συγκρούεται με τη βασική αρχή «προστασία του ιστορικού», αφού σήμερα ο μόνος δρόμος ανάκτησης είναι το cloud snapshot.
 - [ ] **Physical-device QA:** smoke test σε τουλάχιστον ένα πρόσφατο Android και ένα iPhone, με έμφαση σε εγκατάσταση PWA, offline boot, safe areas, virtual keyboard και OAuth επιστροφή.
-- [ ] **Ελαφρύ error tracking:** καταγραφή αποτυχιών συγχρονισμού και πραγματικών client errors χωρίς αποθήκευση ευαίσθητων δεδομένων προπόνησης ή authentication tokens.
 
 ### P2 — Πριν από την επόμενη μεγάλη λειτουργία
 
@@ -241,9 +234,7 @@ npm.cmd run test:e2e
 
 ### P3 — Product roadmap
 
-- [ ] Ολοκλήρωση της ενότητας **Επίβλεψη** με περισσότερες μετρικές και σαφέστερη σύγκριση ανά προπόνηση, άσκηση και σετ.
 - [ ] Ιστορικό cloud snapshots, χειροκίνητη επαναφορά και προηγμένη επίλυση conflicts.
-- [ ] Ενιαία προσωπική βιβλιοθήκη ασκήσεων αντί για αποκλειστικά ελεύθερο κείμενο.
 
 ## Definition of Done
 

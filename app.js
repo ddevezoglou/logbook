@@ -964,6 +964,52 @@ function sessionWorkoutName(session) {
   return routinePlan.find(item => itemCycleDay(item, routine) === cycleDay)?.workoutName || 'Προπόνηση';
 }
 
+const csvEscape = value => {
+  const raw = String(value ?? '');
+  const str = /^[\t\r]|^\s*[=+@-]/.test(raw) ? `'${raw}` : raw;
+  return /["\r\n,;]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+};
+
+function sessionsToCsvRows() {
+  const rows = [['Ημερομηνία', 'Προπόνηση', 'Άσκηση', 'Σετ', 'Επαναλήψεις', 'Βάρος', 'Μονάδα', 'Πλάκες', 'Σχόλια άσκησης', 'Σχόλια προπόνησης']];
+  [...state.sessions].sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach(session => {
+    const workoutName = sessionWorkoutName(session);
+    session.exercises.forEach(exercise => {
+      exercise.sets.forEach((set, index) => rows.push([
+        session.date,
+        workoutName,
+        exercise.exercise,
+        index + 1,
+        set.reps ?? '',
+        set.weight != null ? storedWeightToDisplay(set.weight) : '',
+        set.weight != null ? weightUnitSymbol() : '',
+        set.plates ?? '',
+        exercise.comments || '',
+        session.comments || ''
+      ]));
+    });
+  });
+  return rows;
+}
+
+function exportSessionsCsv() {
+  const csv = '﻿' + sessionsToCsvRows().map(row => row.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const filename = `logbook-istoriko-${localDateInputValue()}.csv`;
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  try {
+    document.body.appendChild(link);
+    link.click();
+  } finally {
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+  return filename;
+}
+
 function syncPlanChangesToHistory(routineId, sourceDay, targetDay, previousItems, nextItems) {
   if (!sourceDay || !previousItems.length) return true;
   const previousWorkoutName = previousItems[0].workoutName;
@@ -1968,6 +2014,29 @@ $('#profile-avatar-upload').addEventListener('change', async event => {
     $('#avatar-upload-status').textContent = 'JPG, PNG ή WEBP';
     event.target.value = '';
   }
+});
+$('#export-history-button').addEventListener('click', () => {
+  const button = $('#export-history-button');
+  const panel = $('#export-history-print');
+  const open = !panel.classList.contains('show');
+  panel.classList.toggle('show', open);
+  button.setAttribute('aria-expanded', String(open));
+  if (!open) return;
+  if (!state.sessions.length) {
+    $('#export-history-count').textContent = 'ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΠΡΟΠΟΝΗΣΕΙΣ .. 0';
+    $('#export-history-filename').textContent = 'ΑΡΧΕΙΟ: —';
+    $('#export-history-stamp').textContent = '—';
+    return toast('Δεν υπάρχουν καταγεγραμμένες προπονήσεις για εξαγωγή.', 'error');
+  }
+  let filename;
+  try {
+    filename = exportSessionsCsv();
+  } catch {
+    return toast('Δεν ήταν δυνατή η εξαγωγή του ιστορικού.', 'error');
+  }
+  $('#export-history-count').textContent = `ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΠΡΟΠΟΝΗΣΕΙΣ .. ${state.sessions.length}`;
+  $('#export-history-filename').textContent = `ΑΡΧΕΙΟ: ${filename}`;
+  $('#export-history-stamp').textContent = new Date().toLocaleString(window.LogbookI18n?.getLocale() || 'el-GR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 });
 $('#profile-form').addEventListener('submit', event => {
   event.preventDefault();
