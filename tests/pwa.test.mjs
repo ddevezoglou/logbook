@@ -108,6 +108,7 @@ test('GitHub Pages workflow publishes a production-only artifact', () => {
   assert.match(workflow, /actions\/upload-pages-artifact@v4/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /path: _site/);
+  assert.match(workflow, /cp .*error-tracking\.js.* _site\//, 'the deployed shell includes error tracking');
   assert.doesNotMatch(workflow, /cp .*seed/);
   assert.doesNotMatch(workflow, /cp .*tests/);
   assert.doesNotMatch(workflow, /cp .*designs/);
