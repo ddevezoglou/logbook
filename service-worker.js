@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.9.5';
+const CACHE_VERSION = 'logbook-0.9.6';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
 const APP_SHELL = [
   './',
