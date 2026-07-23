@@ -104,11 +104,29 @@ test('program manager cards keep the routine name readable in the ticket layout'
   const card = document.querySelector('#routine-list .routine-card');
   const name = card.querySelector('.routine-select strong');
   assert.equal(name.textContent, 'Readable Routine Name');
-  assert.equal(window.getComputedStyle(card).display, 'grid', 'the ticket card uses the topline + stub grid layout');
+  assert.equal(window.getComputedStyle(card).display, 'flex', 'the setlist card stacks title, workouts, duration and actions');
+  assert.equal(window.getComputedStyle(card).flexDirection, 'column', 'the setlist card stacks vertically');
   assert.equal(window.getComputedStyle(name).whiteSpace, 'normal', 'the full name can use the card width instead of a 30px grid column');
-  assert.equal(window.getComputedStyle(card.querySelector('.routine-topline')).display, 'flex', 'the actions live in the ticket topline');
-  assert.equal(window.getComputedStyle(card.querySelector('.routine-stub')).display, 'flex', 'the duration stub sits beside the ticket body');
+  assert.equal(window.getComputedStyle(card.querySelector('.routine-topline')).display, 'flex', 'the actions live in their own bottom row');
+  assert.equal(window.getComputedStyle(card.querySelector('.routine-stub')).display, 'flex', 'the duration line sits above the actions');
   assert.match(styles, /\.routine-carousel-controls button \{[^}]*border:0;[^}]*background:transparent;[^}]*box-shadow:none;/, 'carousel arrows stay frameless and visually independent');
+});
+
+test('program cards list the routine workouts without numbering', () => {
+  const routines = [{
+    id:'r-ppl', name:'Push Pull Legs', isActive:true, cycleLength:7, cycleAnchorDate:'2026-07-06', usesWeekdays:false,
+    plan:[
+      planDay(null, 'Bench', { cycleDay:1, workoutName:'Push' }),
+      planDay(null, 'Row', { cycleDay:2, workoutName:'Pull' }),
+      planDay(null, 'Squat', { cycleDay:3, workoutName:'Legs' }),
+    ],
+  }];
+  const { document } = loadApp({ trainingRoutines:routines });
+  const card = document.querySelector('#routine-list .routine-card');
+  const items = [...card.querySelectorAll('.routine-workouts li')];
+  assert.deepEqual(items.map(item => item.textContent), ['Push', 'Pull', 'Legs']);
+  assert.doesNotMatch(card.textContent, /ημέρες προπόνησης/, 'the day count gives way to the workout list');
+  assert.match(card.querySelector('.routine-stub').textContent, /ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ/);
 });
 
 test('program manager keeps only the three creation fields before the tickets', () => {

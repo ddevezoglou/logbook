@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Πρόγραμμα — Ζ' Γύρος: Έξι Χάρτινες Ιδέες</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Caveat:wght@500;600;700&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --pen:#4d3f24; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:620px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.notes { grid-column:1 / -1; justify-self:start; max-width:660px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+
+/* ===== shared: κουμπιά + tally ===== */
+.acts { display:flex; align-items:center; gap:5px; }
+.act { display:grid; place-items:center; width:30px; height:30px; padding:0; border:1px solid currentColor; background:transparent; color:inherit; font:700 .95rem "Roboto Slab"; cursor:pointer; transition:transform .15s ease,background .15s ease,color .15s ease; }
+.act svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.act:hover { transform:translateY(-1px); }
+.act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.acts-light { color:var(--pen); }
+.acts-light .act { border-color:rgba(77,63,36,.45); }
+.acts-light .act:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.acts-dark { color:var(--paper); }
+.acts-dark .act { border-color:rgba(239,232,216,.4); }
+.acts-dark .act:hover { background:var(--paper); border-color:var(--paper); color:var(--ink); }
+.acts .star[aria-pressed="true"] { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.tally { height:26px; width:auto; stroke:var(--pen-blue); stroke-width:2.6; stroke-linecap:round; fill:none; opacity:.85; }
+
+/* ============================================================
+   1. ΤΟ ΣΥΜΒΟΛΑΙΟ — συμφωνία με τον εαυτό σου
+   ============================================================ */
+.z1-sheet { position:relative; width:min(360px,100%); padding:26px 26px 16px; background:var(--paper-soft); border:1px solid rgba(21,19,13,.3); box-shadow:5px 7px 0 rgba(21,19,13,.13); transform:rotate(-.4deg); }
+.z1-sheet::before { content:""; position:absolute; inset:8px; border:1px solid rgba(21,19,13,.16); pointer-events:none; }
+.z1-head { text-align:center; padding-bottom:12px; border-bottom:3px double var(--ink); }
+.z1-head small { display:block; color:var(--orange); font-size:.56rem; font-weight:800; letter-spacing:.26em; }
+.z1-head h3 { margin:8px 0 0; font:700 1.4rem/1.05 "Roboto Slab"; text-transform:uppercase; }
+.z1-terms { margin:14px 0 4px; padding:0; list-style:none; }
+.z1-terms li { display:grid; grid-template-columns:52px 1fr auto; gap:8px; align-items:baseline; padding:6px 0; border-bottom:1px solid rgba(77,63,36,.14); font-size:.86rem; }
+.z1-terms li b { color:var(--orange); font:700 .58rem "Alegreya Sans"; letter-spacing:.12em; }
+.z1-terms li i { font-style:normal; color:var(--muted); }
+.z1-terms li strong { font-weight:800; }
+.z1-sign { display:flex; justify-content:space-between; align-items:flex-end; margin-top:16px; padding:0 4px; }
+.z1-sign .side { width:44%; text-align:center; }
+.z1-sign .line { border-bottom:1px solid var(--pen); min-height:34px; display:flex; align-items:flex-end; justify-content:center; }
+.z1-sign .line span { font:600 1rem/1.3 "Playpen Sans",cursive; color:var(--pen-blue); transform:rotate(-3deg); padding-bottom:2px; white-space:nowrap; }
+.z1-sign small { display:block; margin-top:5px; color:var(--muted); font-size:.54rem; font-weight:800; letter-spacing:.18em; }
+.z1-stamp { position:absolute; right:18px; bottom:86px; width:92px; height:92px; display:grid; place-items:center; text-align:center; border:3px solid var(--danger); border-radius:50%; color:var(--danger); transform:rotate(-11deg); opacity:.8; mix-blend-mode:multiply; }
+.z1-stamp::before { content:""; position:absolute; inset:5px; border:1px solid var(--danger); border-radius:50%; }
+.z1-stamp b { font:800 .82rem "Alegreya Sans"; letter-spacing:.2em; }
+.z1-stamp small { display:block; font-size:.5rem; font-weight:800; letter-spacing:.12em; margin-top:2px; }
+.z1-acts { justify-content:flex-end; margin-top:14px; padding-top:10px; border-top:1px dashed rgba(77,63,36,.4); position:relative; }
+
+/* ============================================================
+   2. Ο ΠΙΝΑΚΑΣ ΠΕΡΙΕΧΟΜΕΝΩΝ — κεφάλαια του logbook
+   ============================================================ */
+.z2-page { position:relative; width:min(420px,100%); padding:26px 28px 20px; background:var(--paper-soft); border:1px solid rgba(21,19,13,.3); box-shadow:5px 7px 0 rgba(21,19,13,.13); }
+.z2-page h3 { margin:0 0 4px; font:700 .95rem "Roboto Slab"; letter-spacing:.22em; text-transform:uppercase; text-align:center; }
+.z2-page > small { display:block; text-align:center; color:var(--muted); font-size:.56rem; font-weight:800; letter-spacing:.2em; padding-bottom:12px; border-bottom:2px solid var(--ink); }
+.z2-row { position:relative; padding:13px 2px 12px; border-bottom:1px solid rgba(77,63,36,.16); }
+.z2-line { display:flex; align-items:baseline; gap:10px; }
+.z2-line b { color:var(--orange); font:700 .6rem "Alegreya Sans"; letter-spacing:.12em; white-space:nowrap; }
+.z2-line h4 { margin:0; font:700 1.02rem/1 "Roboto Slab"; text-transform:uppercase; white-space:nowrap; }
+.z2-line .dots { flex:1; border-bottom:2px dotted rgba(77,63,36,.5); transform:translateY(-4px); min-width:24px; }
+.z2-line em { font-style:normal; color:var(--muted); font-size:.68rem; font-weight:800; letter-spacing:.1em; white-space:nowrap; }
+.z2-row.active { background:linear-gradient(90deg,rgba(201,162,39,.12),transparent 70%); }
+.z2-row.active h4 { font-size:1.18rem; }
+.z2-ribbon { position:absolute; top:-6px; left:-14px; width:16px; height:58px; background:linear-gradient(180deg,var(--gold),#a8841c); clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 8px),0 100%); box-shadow:2px 2px 3px rgba(21,19,13,.25); }
+.z2-sub { display:flex; justify-content:space-between; align-items:center; margin-top:9px; }
+.z2-sub small { color:var(--muted); font-size:.58rem; font-weight:800; letter-spacing:.16em; }
+.z2-acts .act { width:26px; height:26px; }
+.z2-acts .act svg { width:15px; height:15px; }
+.z2-more { margin:12px 0 0; text-align:center; color:var(--faded); font-size:.6rem; font-weight:800; letter-spacing:.22em; }
+
+/* ============================================================
+   3. ΤΟ ΔΡΟΜΟΛΟΓΙΟ — πίνακας αναχωρήσεων σταθμού
+   ============================================================ */
+.z3-board { position:relative; width:min(400px,100%); padding:20px 22px 14px; background:var(--ink); border:1px solid #3d3828; box-shadow:6px 8px 0 rgba(21,19,13,.18); color:var(--paper); transform:rotate(.3deg); }
+.z3-top { display:flex; align-items:baseline; gap:14px; padding-bottom:10px; border-bottom:2px solid var(--gold); }
+.z3-top .no { font:900 2rem/1 "Roboto Slab"; color:var(--gold); letter-spacing:-.02em; }
+.z3-top .dest { min-width:0; }
+.z3-top .dest small { display:block; color:var(--faded); font-size:.52rem; font-weight:800; letter-spacing:.24em; }
+.z3-top .dest h3 { margin:2px 0 0; font:700 1.22rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.z3-tbl { width:100%; margin:10px 0 4px; border-collapse:collapse; }
+.z3-tbl th { padding:4px 2px; color:var(--faded); font-size:.5rem; font-weight:800; letter-spacing:.22em; text-align:left; border-bottom:1px solid rgba(239,232,216,.22); }
+.z3-tbl th:last-child { text-align:right; }
+.z3-tbl td { padding:6px 2px; border-bottom:1px solid rgba(239,232,216,.1); font-size:.8rem; font-weight:700; letter-spacing:.08em; }
+.z3-tbl td:first-child { color:var(--gold); font:700 .72rem "Roboto Slab"; white-space:nowrap; }
+.z3-tbl td:last-child { text-align:right; color:var(--paper); text-transform:uppercase; }
+.z3-tbl tr.rest td:last-child { color:var(--faded); font-weight:500; letter-spacing:.2em; }
+.z3-foot { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+.z3-foot small { color:var(--faded); font-size:.54rem; font-weight:800; letter-spacing:.2em; }
+.z3-foot .live { display:inline-flex; align-items:center; gap:6px; color:var(--gold); }
+.z3-foot .live i { width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 6px var(--gold); }
+.z3-acts { justify-content:flex-end; margin-top:10px; padding-top:9px; border-top:1px dashed rgba(239,232,216,.3); }
+
+/* ============================================================
+   4. ΤΟ SETLIST — σελίδα κολλημένη με χαρτοταινία
+   ============================================================ */
+.z4-sheet { position:relative; width:min(350px,100%); padding:28px 26px 16px; background:var(--paper-soft); box-shadow:5px 7px 0 rgba(21,19,13,.13); transform:rotate(.7deg); }
+.z4-tape { position:absolute; width:78px; height:24px; background:rgba(224,215,194,.85); box-shadow:0 1px 2px rgba(21,19,13,.18); opacity:.9; }
+.z4-tape.tl { top:-10px; left:-20px; transform:rotate(-38deg); }
+.z4-tape.br { bottom:-10px; right:-20px; transform:rotate(-38deg); }
+.z4-head { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:8px; border-bottom:3px solid var(--ink); }
+.z4-head h3 { margin:0; font:900 1.5rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.z4-head small { color:var(--orange); font-size:.58rem; font-weight:800; letter-spacing:.18em; }
+.z4-list { margin:6px 0 0; padding:0; list-style:none; }
+.z4-list li { display:flex; align-items:baseline; gap:14px; padding:8px 2px; border-bottom:1px solid rgba(77,63,36,.14); }
+.z4-list li b { font:900 1.25rem/1 "Roboto Slab"; color:var(--orange); min-width:26px; }
+.z4-list li span { font:700 1.05rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:.02em; }
+.z4-list li.rest b { color:var(--faded); }
+.z4-list li.rest span { color:var(--faded); font-weight:500; font-size:.85rem; letter-spacing:.2em; }
+.z4-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+.z4-foot small { color:var(--muted); font-size:.58rem; font-weight:800; letter-spacing:.16em; }
+.z4-acts { margin-top:10px; padding-top:10px; border-top:1px dashed rgba(77,63,36,.4); justify-content:space-between; }
+
+/* ============================================================
+   5. Η ΚΑΡΤ ΠΟΣΤΑΛ — γραμματόσημο + postmark
+   ============================================================ */
+.z5-card { position:relative; width:min(480px,100%); padding:22px 24px 16px; background:var(--paper-soft); border:1px solid rgba(21,19,13,.3); box-shadow:5px 7px 0 rgba(21,19,13,.13); display:grid; grid-template-columns:1fr 118px; gap:18px; transform:rotate(-.3deg); }
+.z5-card::before { content:""; position:absolute; top:18px; bottom:18px; right:150px; border-right:1px solid rgba(77,63,36,.3); }
+.z5-main { padding-right:14px; min-width:0; }
+.z5-main small.top { display:block; color:var(--orange); font-size:.54rem; font-weight:800; letter-spacing:.24em; }
+.z5-main h3 { margin:6px 0 10px; font:900 1.6rem/.95 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.z5-lines { display:grid; gap:12px; margin-top:14px; }
+.z5-lines .ln { border-bottom:1px solid rgba(77,63,36,.35); display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:2px; }
+.z5-lines .ln small { color:var(--muted); font-size:.54rem; font-weight:800; letter-spacing:.16em; }
+.z5-lines .ln span { font:600 .92rem/1.3 "Playpen Sans",cursive; color:var(--pen-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.z5-side { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; }
+.z5-stampbox { position:relative; width:88px; padding:10px 8px 8px; border:2px dashed rgba(77,63,36,.5); text-align:center; background:rgba(255,255,255,.3); }
+.z5-stampbox .tally { height:22px; }
+.z5-stampbox small { display:block; margin-top:4px; color:var(--muted); font-size:.5rem; font-weight:800; letter-spacing:.14em; }
+.z5-postmark { position:absolute; top:48px; left:-12px; width:84px; height:84px; display:grid; place-items:center; text-align:center; border:2.5px solid var(--danger); border-radius:50%; color:var(--danger); transform:rotate(9deg); opacity:.75; mix-blend-mode:multiply; pointer-events:none; }
+.z5-postmark b { font:800 .6rem "Alegreya Sans"; letter-spacing:.16em; display:block; }
+.z5-postmark small { display:block; font-size:.46rem; font-weight:800; letter-spacing:.1em; margin-top:1px; }
+.z5-postmark::before,.z5-postmark::after { content:""; position:absolute; left:-34px; width:30px; border-top:2px solid var(--danger); opacity:.7; }
+.z5-postmark::before { top:34px; } .z5-postmark::after { top:44px; }
+.z5-acts { grid-column:1 / -1; justify-content:flex-end; padding-top:10px; border-top:1px dashed rgba(77,63,36,.4); }
+
+/* ============================================================
+   6. ΟΙ ΣΕΛΙΔΟΔΕΙΚΤΕΣ — κορδέλες αντί για καρουζέλ
+   ============================================================ */
+.z6-scene { width:min(560px,100%); }
+.z6-edge { position:relative; height:14px; background:linear-gradient(180deg,var(--paper-dark),#cfc5ab); border-radius:2px 2px 0 0; box-shadow:0 2px 3px rgba(21,19,13,.18), inset 0 -2px 0 rgba(21,19,13,.12); }
+.z6-edge small { position:absolute; right:8px; top:-16px; color:var(--faded); font-size:.5rem; font-weight:800; letter-spacing:.22em; }
+.z6-ribbons { display:flex; gap:26px; padding-left:34px; margin-bottom:18px; }
+.z6-rib { position:relative; width:34px; padding:14px 0 16px; background:linear-gradient(180deg,#4a4536,#3b372b); color:var(--paper); border:0; cursor:pointer; box-shadow:2px 3px 4px rgba(21,19,13,.25); clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 10px),0 100%); display:flex; align-items:flex-start; justify-content:center; height:112px; transition:height .2s ease; }
+.z6-rib span { writing-mode:vertical-rl; font:700 .62rem "Roboto Slab"; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; }
+.z6-rib:hover { height:124px; }
+.z6-rib:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.z6-rib.active { height:132px; background:linear-gradient(180deg,var(--gold),#a8841c); color:var(--ink); box-shadow:3px 4px 6px rgba(21,19,13,.3); }
+.z6-card { position:relative; padding:20px 24px 14px; background:var(--paper-soft); border:1px solid rgba(21,19,13,.3); box-shadow:5px 7px 0 rgba(21,19,13,.13); }
+.z6-card::before { content:""; position:absolute; top:-18px; left:calc(34px + 60px + 26px + 17px); border:9px solid transparent; border-bottom-color:var(--paper-soft); filter:drop-shadow(0 -1px 0 rgba(21,19,13,.3)); }
+.z6-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding-bottom:9px; border-bottom:2px solid var(--ink); }
+.z6-head h3 { margin:0; font:700 1.25rem/1 "Roboto Slab"; text-transform:uppercase; }
+.z6-head small { color:var(--orange); font-size:.6rem; font-weight:800; letter-spacing:.18em; }
+.z6-mid { display:flex; justify-content:space-between; align-items:center; padding:10px 0; }
+.z6-mid small { color:var(--muted); font-size:.6rem; font-weight:800; letter-spacing:.14em; }
+.z6-acts { justify-content:space-between; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); }
+
+@media(prefers-reduced-motion:reduce){ .act,.act:hover,.z6-rib { transition:none; transform:none; } }
+@media(max-width:600px){
+  .stage { grid-template-columns:1fr; }
+  .z5-card { grid-template-columns:1fr 104px; }
+  .z5-card::before { right:132px; }
+  .z6-ribbons { gap:16px; padding-left:20px; }
+  .z6-card::before { left:calc(20px + 34px + 16px + 17px + 34px); }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΠΡΟΓΡΑΜΜΑ — Ζ' ΓΥΡΟΣ</p>
+  <h1>Έξι <em>χαρτινες</em> ιδεες<br>χωρις κατασκευες</h1>
+  <p>Το clipboard του ΣΤ' γύρου απορρίφθηκε — μαζί του και οι «κατασκευές» (ξύλα, κλιπ, θήκες). Νέα δέσμη έξι concepts στη διακριτική γλώσσα του logbook: χαρτί, μελάνι, σφραγίδες, χειρόγραφο. Μείγμα σκούρων και ανοιχτών, παντού τα ίδια 6 κουμπιά ενεργειών.</p>
+</header>
+
+<!-- ═══════════════ 1 ═══════════════ -->
+<div class="attempt-label"><b>ΙΔΕΑ 1</b><span>ΤΟ ΣΥΜΒΟΛΑΙΟ — το πρόγραμμα ως συμφωνία με τον εαυτό σου</span></div>
+<section class="stage">
+  <article class="z1-sheet">
+    <div class="z1-head">
+      <small>ΙΔΙΩΤΙΚΟ ΣΥΜΦΩΝΗΤΙΚΟ ΠΡΟΠΟΝΗΣΗΣ</small>
+      <h3>Push Pull Legs</h3>
+    </div>
+    <ol class="z1-terms">
+      <li><b>ΑΡΘΡΟ 1</b><i>Ημέρες προπόνησης ανά κύκλο</i><strong>4</strong></li>
+      <li><b>ΑΡΘΡΟ 2</b><i>Διάρκεια κύκλου</i><strong>7 ημέρες</strong></li>
+      <li><b>ΑΡΘΡΟ 3</b><i>Έναρξη ισχύος</i><strong>Δευτέρα</strong></li>
+    </ol>
+    <div class="z1-sign">
+      <div class="side"><div class="line"><span>Ο ασκούμενος</span></div><small>ΥΠΟΓΡΑΦΗ</small></div>
+      <div class="side"><div class="line"></div><small>ΜΑΡΤΥΡΑΣ: ΤΟ LOGBOOK</small></div>
+    </div>
+    <span class="z1-stamp" aria-hidden="true"><span><b>ΕΝΕΡΓΟ</b><small>ΣΕ ΙΣΧΥ</small></span></span>
+    <div class="acts acts-light z1-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> το πρόγραμμα δεν είναι αντικείμενο — είναι <b>δέσμευση</b>. Τα meta γίνονται «άρθρα» της συμφωνίας, η ενεργοποίηση γίνεται <b>κόκκινη στρογγυλή σφραγίδα ΣΕ ΙΣΧΥ</b> και η χειρόγραφη υπογραφή με Playpen Sans (τη χειρόγραφη της εφαρμογής) δένει με τη γλώσσα του logbook. Όλο το χιούμορ είναι στη στοιχειοθεσία — καμία κατασκευή, μόνο χαρτί με διπλή κορνίζα γραμμών.</p>
+</section>
+
+<!-- ═══════════════ 2 ═══════════════ -->
+<div class="attempt-label"><b>ΙΔΕΑ 2</b><span>Ο ΠΙΝΑΚΑΣ ΠΕΡΙΕΧΟΜΕΝΩΝ — κάθε πρόγραμμα ένα κεφάλαιο του logbook· αντικαθιστά και το καρουζέλ</span></div>
+<section class="stage">
+  <article class="z2-page">
+    <h3>Περιεχόμενα</h3>
+    <small>ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΟΥ · 3</small>
+    <div class="z2-row">
+      <div class="z2-line"><b>ΚΕΦ. 01</b><h4>Full Body</h4><span class="dots"></span><em>3 ΗΜΕΡΕΣ</em></div>
+    </div>
+    <div class="z2-row active">
+      <span class="z2-ribbon" aria-hidden="true"></span>
+      <div class="z2-line"><b>ΚΕΦ. 02</b><h4>Push Pull Legs</h4><span class="dots"></span><em>4 ΗΜΕΡΕΣ</em></div>
+      <div class="z2-sub">
+        <small>ΚΥΚΛΟΣ 7 · ΕΝΑΡΞΗ ΔΕΥΤΕΡΑ · ΕΝΕΡΓΟ</small>
+        <div class="acts acts-light z2-acts">
+          <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+          <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+          <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+          <button class="act" title="Μετονομασία">✎</button>
+          <button class="act" title="Διαγραφή">×</button>
+        </div>
+      </div>
+    </div>
+    <div class="z2-row">
+      <div class="z2-line"><b>ΚΕΦ. 03</b><h4>Upper Lower</h4><span class="dots"></span><em>4 ΗΜΕΡΕΣ</em></div>
+    </div>
+    <p class="z2-more">＋ ΝΕΟ ΚΕΦΑΛΑΙΟ</p>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> η πιο ριζική — <b>καταργεί το καρουζέλ</b>. Όλα τα προγράμματα ορατά μαζί ως πίνακας περιεχομένων βιβλίου, με τελείες-οδηγούς και αριθμό κεφαλαίου. Το επιλεγμένο κεφάλαιο ανοίγει επιτόπου (χρυσή κορδέλα-σελιδοδείκτης στο περιθώριο, μεγαλύτερος τίτλος, κουμπιά). Μηδέν χαμένος χώρος, άμεση σύγκριση, και το πιο «logbook» απ' όλα.</p>
+</section>
+
+<!-- ═══════════════ 3 ═══════════════ -->
+<div class="attempt-label"><b>ΙΔΕΑ 3</b><span>ΤΟ ΔΡΟΜΟΛΟΓΙΟ — πίνακας αναχωρήσεων· η σκούρα εκδοχή του γύρου</span></div>
+<section class="stage">
+  <article class="z3-board">
+    <div class="z3-top">
+      <span class="no">02</span>
+      <div class="dest"><small>ΓΡΑΜΜΗ / ΠΡΟΟΡΙΣΜΟΣ</small><h3>Push Pull Legs</h3></div>
+    </div>
+    <table class="z3-tbl">
+      <thead><tr><th>ΗΜΕΡΑ</th><th>ΠΡΟΠΟΝΗΣΗ</th></tr></thead>
+      <tbody>
+        <tr><td>ΗΜ 1</td><td>Push</td></tr>
+        <tr><td>ΗΜ 2</td><td>Pull</td></tr>
+        <tr><td>ΗΜ 3</td><td>Legs</td></tr>
+        <tr class="rest"><td>ΗΜ 4</td><td>— ανάπαυση —</td></tr>
+      </tbody>
+    </table>
+    <div class="z3-foot">
+      <small>ΚΥΚΛΟΣ 7 ΗΜΕΡΩΝ · ΑΠΟ ΔΕΥΤΕΡΑ</small>
+      <small class="live"><i></i>ΣΕ ΚΥΚΛΟΦΟΡΙΑ</small>
+    </div>
+    <div class="acts acts-dark z3-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> κρατά τη <b>σκούρα ταυτότητα</b> της σημερινής κάρτας αλλά της δίνει λόγο ύπαρξης: είναι πίνακας αναχωρήσεων. Ο αριθμός γραμμής μεγάλος και χρυσός, οι ημέρες σαν δρομολόγια σε στήλες, και το «ΕΝΕΡΓΟ» γίνεται <b>ΣΕ ΚΥΚΛΟΦΟΡΙΑ</b> με αναμμένη χρυσή κουκκίδα. Δείχνει πραγματικό περιεχόμενο πλάνου χωρίς χειρόγραφα — όλα στοιχειοθετημένα.</p>
+</section>
+
+<!-- ═══════════════ 4 ═══════════════ -->
+<div class="attempt-label"><b>ΙΔΕΑ 4</b><span>ΤΟ SETLIST — η σελίδα με τη χαρτοταινία· το πλάνο σαν λίστα κομματιών</span></div>
+<section class="stage">
+  <article class="z4-sheet">
+    <span class="z4-tape tl" aria-hidden="true"></span>
+    <span class="z4-tape br" aria-hidden="true"></span>
+    <div class="z4-head"><h3>Push Pull Legs</h3><small>Νο 02</small></div>
+    <ol class="z4-list">
+      <li><b>1</b><span>Push</span></li>
+      <li><b>2</b><span>Pull</span></li>
+      <li><b>3</b><span>Legs</span></li>
+      <li class="rest"><b>4</b><span>ΑΝΑΠΑΥΣΗ</span></li>
+    </ol>
+    <div class="z4-foot"><small>ΚΥΚΛΟΣ 7 ΗΜΕΡΩΝ</small><small>ΕΝΑΡΞΗ: ΔΕΥΤΕΡΑ</small></div>
+    <div class="acts acts-light z4-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> το split σαν setlist συγκροτήματος — μεγάλοι αριθμοί, βαριά slab ονόματα ημερών, η ανάπαυση ξεθωριασμένη σαν κομμάτι που κόπηκε. Οι δύο λοξές <b>χαρτοταινίες</b> στις γωνίες είναι η μόνη «υλικότητα» — δύο ψευτο-στοιχεία CSS, τίποτα άλλο. Η πιο δυνατή τυπογραφικά εκδοχή του γύρου.</p>
+</section>
+
+<!-- ═══════════════ 5 ═══════════════ -->
+<div class="attempt-label"><b>ΙΔΕΑ 5</b><span>Η ΚΑΡΤ ΠΟΣΤΑΛ — γραμματόσημο με τις ημέρες, postmark = ενεργό</span></div>
+<section class="stage">
+  <article class="z5-card">
+    <div class="z5-main">
+      <small class="top">ΚΑΡΤ ΠΟΣΤΑΛ · Νο 02</small>
+      <h3>Push Pull Legs</h3>
+      <div class="z5-lines">
+        <div class="ln"><small>ΠΡΟΣ</small><span>στον εαυτό μου</span></div>
+        <div class="ln"><small>ΚΥΚΛΟΣ</small><span>7 ημέρες</span></div>
+        <div class="ln"><small>ΕΝΑΡΞΗ</small><span>Δευτέρα</span></div>
+      </div>
+    </div>
+    <div class="z5-side">
+      <div class="z5-stampbox">
+        <svg class="tally" viewBox="0 0 62 26" aria-hidden="true"><path d="M5 3v20M14 3v20M23 3v20M32 3v20M1 21 37 5" stroke-width="2.4"/></svg>
+        <small>4 ΗΜΕΡΕΣ</small>
+      </div>
+      <span class="z5-postmark" aria-hidden="true"><span><b>ΕΝΕΡΓΟ</b><small>ΑΠΟ ΔΕΥΤΕΡΑ</small></span></span>
+    </div>
+    <div class="acts acts-light z5-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> οριζόντια κάρτα με την κάθετη γραμμή της καρτ ποστάλ. Το <b>γραμματόσημο</b> κουβαλά το tally των ημερών (διακεκομμένο πλαίσιο — η οδοντωτή περφορέ αφαιρέθηκε ως υπερβολή), και η <b>ταχυδρομική σφραγίδα</b> που το ακυρώνει είναι η ένδειξη ΕΝΕΡΓΟ με την ημέρα έναρξης. Τα meta γραμμένα χειρόγραφα στις γραμμές διεύθυνσης. Η πιο πλατιά κάρτα — ταιριάζει σε desktop, διπλώνει σε κινητό.</p>
+</section>
+
+<!-- ═══════════════ 6 ═══════════════ -->
+<div class="attempt-label"><b>ΙΔΕΑ 6</b><span>ΟΙ ΣΕΛΙΔΟΔΕΙΚΤΕΣ — κορδέλες από την κορυφή της σελίδας· εναλλακτική για το καρουζέλ</span></div>
+<section class="stage">
+  <div class="z6-scene">
+    <div class="z6-edge"><small>Η ΡΑΧΗ ΤΟΥ LOGBOOK</small></div>
+    <div class="z6-ribbons">
+      <button class="z6-rib" title="Full Body"><span>Full Body</span></button>
+      <button class="z6-rib active" aria-pressed="true" title="Push Pull Legs — ενεργό"><span>Push Pull Legs</span></button>
+      <button class="z6-rib" title="Upper Lower"><span>Upper Lower</span></button>
+    </div>
+    <article class="z6-card">
+      <div class="z6-head"><h3>Push Pull Legs</h3><small>ΕΝΕΡΓΟ · Νο 02</small></div>
+      <div class="z6-mid">
+        <svg class="tally" viewBox="0 0 62 26" aria-hidden="true" style="height:22px"><path d="M5 3v20M14 3v20M23 3v20M32 3v20M1 21 37 5" stroke-width="2.4"/></svg>
+        <small>4 ΗΜΕΡΕΣ · ΚΥΚΛΟΣ 7 · ΕΝΑΡΞΗ ΔΕΥΤΕΡΑ</small>
+      </div>
+      <div class="acts acts-light z6-acts">
+        <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+        <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+        <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+        <button class="act" title="Μετονομασία">✎</button>
+        <button class="act" title="Διαγραφή">×</button>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Η ιδέα:</b> τα προγράμματα ως <b>κορδέλες-σελιδοδείκτες</b> που ξεπροβάλλουν από τη ράχη του logbook — δένει με την κορδέλα του μενού που ήδη υπάρχει. Πατάς μια κορδέλα και η κάρτα της ανοίγει από κάτω· η ενεργή είναι χρυσή και πιο μακριά. Αντικαθιστά το 3D καρουζέλ με μία κίνηση και δείχνει πόσα προγράμματα υπάρχουν με μια ματιά, χωρίς βέλη.</p>
+</section>
+
+<footer class="intro" style="border-bottom:0;border-top:3px solid var(--ink);box-shadow:0 -6px 0 -5px var(--ink)">
+  <p class="eyebrow">ΣΗΜΕΙΩΣΗ ΣΧΕΔΙΑΣΤΗ</p>
+  <p style="max-width:640px;margin:0;color:var(--muted);line-height:1.55">Δύο δρόμοι κρύβονται εδώ: οι <b style="color:var(--ink)">1, 3, 4, 5</b> είναι κάρτες που μπαίνουν στο σημερινό καρουζέλ ως έχουν, ενώ οι <b style="color:var(--ink)">2 και 6</b> αλλάζουν και την πλοήγηση (λίστα περιεχομένων / κορδέλες). Συνδυασμοί: 2 + 4 (περιεχόμενα που ανοίγουν σε setlist), 6 + 3 (κορδέλες με σκούρο δρομολόγιο). Αν κάτι τραβάει αλλά όχι ολόκληρο, πες ποιο κομμάτι — σφραγίδα, tally, δρομολόγιο — και το μεταφέρουμε.</p>
+</footer>
+
+</body>
+</html>

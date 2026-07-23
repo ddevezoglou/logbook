@@ -594,6 +594,8 @@ function updateRoutineCarousel(nextIndex = routineCarouselIndex) {
     card.querySelectorAll('.routine-actions button').forEach(control => { control.disabled = offset !== 0; });
   });
   $('#routine-carousel-count').textContent = `${String(routineCarouselIndex + 1).padStart(2, '0')} / ${String(cards.length).padStart(2, '0')}`;
+  const tallestCard = Math.max(...cards.map(card => card.offsetHeight));
+  if (tallestCard > 0) list.style.height = `${Math.ceil(tallestCard * 1.06) + 36}px`;
 }
 
 function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) {
@@ -602,14 +604,26 @@ function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) 
   const routines = [...state.routines].sort((a, b) => Number(b.isActive) - Number(a.isActive));
   list.innerHTML = routines.map((routine, index) => {
     const selected = routine.id === state.selectedRoutineId;
-    const dayCount = new Set(routine.plan.map(item => itemCycleDay(item, routine))).size;
+    const seenCycleDays = new Set();
+    const workoutNames = [];
+    routine.plan.forEach(item => {
+      const cycleDay = itemCycleDay(item, routine);
+      if (seenCycleDays.has(cycleDay)) return;
+      seenCycleDays.add(cycleDay);
+      workoutNames.push(item.workoutName || 'Προπόνηση');
+    });
     if (routine.id === state.editingRoutineId) return `<article class="routine-card routine-card-editing ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
       <form class="routine-inline-form" data-routine-rename-form="${esc(routine.id)}"><label>Όνομα προγράμματος<input class="routine-inline-name" type="text" maxlength="50" value="${esc(routine.name)}" required></label><div><button class="routine-inline-save" type="submit" aria-label="Αποθήκευση ονόματος">✓</button><button class="routine-inline-cancel" data-cancel-routine-edit type="button" aria-label="Ακύρωση μετονομασίας">×</button></div></form>
     </article>`;
     return `<article class="routine-card ${selected ? 'selected-routine' : ''} ${routine.isActive ? 'active-routine' : ''}" data-routine-id="${esc(routine.id)}">
-      <div class="routine-topline"><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-view" data-view-routine="${esc(routine.id)}" type="button" aria-label="Προβολή πλάνου"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button><button class="routine-add-workout" data-add-routine-workout="${esc(routine.id)}" type="button" aria-label="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="routine-duplicate" data-duplicate-routine="${esc(routine.id)}" type="button" aria-label="Αντιγραφή προγράμματος"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
-      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><strong data-i18n-user>${esc(routine.name)}</strong><small class="routine-day-count">${dayCount} ${dayCount === 1 ? 'ημέρα προπόνησης' : 'ημέρες προπόνησης'}</small></button>
+      <span class="routine-tape routine-tape-tl" aria-hidden="true"></span>
+      <span class="routine-tape routine-tape-br" aria-hidden="true"></span>
+      <button class="routine-select" data-select-routine="${esc(routine.id)}" type="button"><strong data-i18n-user>${esc(routine.name)}</strong></button>
+      <ul class="routine-workouts">${workoutNames.length
+        ? workoutNames.map(name => `<li data-i18n-user>${esc(name)}</li>`).join('')
+        : '<li class="routine-workouts-empty">Δεν έχει οριστεί προπόνηση</li>'}</ul>
       <span class="routine-stub"><span>ΔΙΑΡΚΕΙΑ: ${routine.cycleLength || 7} ΗΜΕΡΕΣ</span></span>
+      <div class="routine-topline"><div class="routine-actions"><button class="routine-star" data-activate-routine="${esc(routine.id)}" type="button" aria-label="${routine.isActive ? 'Ενεργό πρόγραμμα' : 'Ορισμός ως ενεργό πρόγραμμα'}" aria-pressed="${routine.isActive}">${routine.isActive ? '★' : '☆'}</button><button class="routine-view" data-view-routine="${esc(routine.id)}" type="button" aria-label="Προβολή πλάνου"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button><button class="routine-add-workout" data-add-routine-workout="${esc(routine.id)}" type="button" aria-label="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="routine-duplicate" data-duplicate-routine="${esc(routine.id)}" type="button" aria-label="Αντιγραφή προγράμματος"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button><button class="routine-rename" data-rename-routine="${esc(routine.id)}" type="button" aria-label="Μετονομασία προγράμματος">✎</button><button class="routine-delete" data-delete-routine="${esc(routine.id)}" type="button" aria-label="Διαγραφή προγράμματος">×</button></div></div>
     </article>`;
   }).join('');
   const requestedCenterId = centerRoutineId || previousCenteredRoutineId;

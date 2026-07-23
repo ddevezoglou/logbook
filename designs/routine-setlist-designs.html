@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Πρόγραμμα — Το Setlist σε Πέντε Εκδοχές</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --pen:#4d3f24; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p:last-child { max-width:620px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.notes { grid-column:1 / -1; justify-self:start; max-width:660px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+
+/* ===== shared: κουμπιά + χαρτοταινία + διάρκεια ===== */
+.acts { display:flex; align-items:center; gap:5px; }
+.act { display:grid; place-items:center; width:30px; height:30px; padding:0; border:1px solid currentColor; background:transparent; color:inherit; font:700 .95rem "Roboto Slab"; cursor:pointer; transition:transform .15s ease,background .15s ease,color .15s ease; }
+.act svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.act:hover { transform:translateY(-1px); }
+.act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.acts-light { color:var(--pen); }
+.acts-light .act { border-color:rgba(77,63,36,.45); }
+.acts-light .act:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.acts-dark { color:var(--paper); }
+.acts-dark .act { border-color:rgba(239,232,216,.4); }
+.acts-dark .act:hover { background:var(--paper); border-color:var(--paper); color:var(--ink); }
+.acts .star[aria-pressed="true"] { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.tape { position:absolute; width:78px; height:24px; background:rgba(224,215,194,.85); box-shadow:0 1px 2px rgba(21,19,13,.18); opacity:.9; }
+.tape.tl { top:-10px; left:-20px; transform:rotate(-38deg); }
+.tape.br { bottom:-10px; right:-20px; transform:rotate(-38deg); }
+.tape.tc { top:-11px; left:50%; transform:translateX(-50%) rotate(-2deg); }
+.dur { color:var(--muted); font-size:.6rem; font-weight:800; letter-spacing:.16em; }
+.dur b { color:var(--orange); font-weight:800; }
+
+/* ============================================================
+   Α. ΤΟ ΗΣΥΧΟ — γραμμές τετραδίου, μικρά slab ονόματα
+   ============================================================ */
+.s1-sheet { position:relative; width:min(340px,100%); padding:26px 26px 14px; background:var(--paper-soft); box-shadow:5px 7px 0 rgba(21,19,13,.13); transform:rotate(.6deg); }
+.s1-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding-bottom:8px; border-bottom:3px solid var(--ink); }
+.s1-head h3 { margin:0; font:900 1.35rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.s1-list { margin:2px 0 0; padding:0; list-style:none; }
+.s1-list li { padding:7px 2px 6px; border-bottom:1px solid rgba(77,63,36,.14); font:700 .6rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:.08em; }
+.s1-foot { display:flex; justify-content:space-between; align-items:center; margin-top:11px; }
+.s1-acts { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); justify-content:space-between; }
+
+/* ============================================================
+   Β. ΟΙ ΠΑΥΛΕΣ — σημάδι στυλό μπροστά από κάθε προπόνηση
+   ============================================================ */
+.s2-sheet { position:relative; width:min(340px,100%); padding:26px 26px 14px; background:var(--paper-soft); box-shadow:5px 7px 0 rgba(21,19,13,.13); transform:rotate(-.5deg); }
+.s2-head { padding-bottom:8px; border-bottom:3px solid var(--ink); }
+.s2-head h3 { margin:0; font:900 1.35rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.s2-list { margin:8px 0 0; padding:0; list-style:none; }
+.s2-list li { display:flex; align-items:center; gap:12px; padding:6px 2px; font-size:.8rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.s2-list li svg { width:22px; height:10px; stroke:var(--pen-blue); stroke-width:2.4; stroke-linecap:round; fill:none; opacity:.85; flex:none; }
+.s2-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid rgba(77,63,36,.25); }
+.s2-acts { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); justify-content:flex-end; }
+
+/* ============================================================
+   Γ. ΤΟ ΣΥΜΠΑΓΕΣ — οι προπονήσεις σε μία γραμμή
+   ============================================================ */
+.s3-stack { display:grid; gap:22px; width:min(340px,100%); }
+.s3-sheet { position:relative; padding:20px 24px 12px; background:var(--paper-soft); box-shadow:5px 7px 0 rgba(21,19,13,.13); }
+.s3-sheet.alt { transform:rotate(.5deg); }
+.s3-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.s3-head h3 { margin:0; font:900 1.2rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.s3-flow { display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px; row-gap:3px; margin-top:9px; padding:8px 0; border-top:2px solid var(--ink); border-bottom:1px solid rgba(77,63,36,.2); }
+.s3-flow span { font:700 .74rem/1.3 "Roboto Slab"; text-transform:uppercase; letter-spacing:.06em; }
+.s3-flow i { font-style:normal; color:var(--faded); font-weight:400; }
+.s3-foot { display:flex; justify-content:space-between; align-items:center; margin-top:9px; }
+.s3-acts .act { width:26px; height:26px; }
+.s3-acts .act svg { width:15px; height:15px; }
+
+/* ============================================================
+   Δ. ΤΟ ΣΚΟΥΡΟ SETLIST — μελανί χαρτί, χρυσή υπογράμμιση
+   ============================================================ */
+.s4-sheet { position:relative; width:min(340px,100%); padding:26px 26px 14px; background:var(--ink); color:var(--paper); box-shadow:6px 8px 0 rgba(21,19,13,.18); border:1px solid #3d3828; transform:rotate(.4deg); }
+.s4-sheet .tape { background:rgba(224,215,194,.55); }
+.s4-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding-bottom:8px; border-bottom:2px solid var(--gold); }
+.s4-head h3 { margin:0; font:900 1.35rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.s4-list { margin:2px 0 0; padding:0; list-style:none; }
+.s4-list li { padding:8px 2px 7px; border-bottom:1px solid rgba(239,232,216,.12); font:700 .82rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:.06em; }
+.s4-list li small { margin-left:8px; color:var(--faded); font:500 .62rem "Alegreya Sans"; letter-spacing:.14em; }
+.s4-foot { display:flex; justify-content:space-between; align-items:center; margin-top:11px; }
+.s4-foot .dur { color:var(--faded); }
+.s4-foot .dur b { color:var(--gold); }
+.s4-acts { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(239,232,216,.3); justify-content:space-between; }
+
+/* ============================================================
+   Ε. ΜΕ ΤΗ ΣΦΡΑΓΙΔΑ — ενεργό/ανενεργό δίπλα-δίπλα
+   ============================================================ */
+.s5-pair { grid-column:1 / -1; width:100%; display:flex; flex-wrap:wrap; gap:26px; justify-content:center; }
+.s5-sheet { position:relative; flex:0 1 300px; padding:24px 24px 12px; background:var(--paper-soft); box-shadow:5px 7px 0 rgba(21,19,13,.13); }
+.s5-sheet.on { transform:rotate(-.7deg); }
+.s5-sheet.off { transform:rotate(.8deg); opacity:.94; }
+.s5-head { padding-bottom:7px; border-bottom:3px solid var(--ink); }
+.s5-head h3 { margin:0; font:900 1.25rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.s5-list { margin:2px 0 0; padding:0; list-style:none; }
+.s5-list li { padding:7px 2px 6px; border-bottom:1px solid rgba(77,63,36,.14); font:700 .78rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:.06em; }
+.s5-foot { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+.s5-stamp { position:absolute; right:14px; top:52px; width:86px; height:86px; display:grid; place-items:center; text-align:center; border:3px solid var(--danger); border-radius:50%; color:var(--danger); transform:rotate(-12deg); opacity:.78; mix-blend-mode:multiply; pointer-events:none; }
+.s5-stamp::before { content:""; position:absolute; inset:5px; border:1px solid var(--danger); border-radius:50%; }
+.s5-stamp b { font:800 .78rem "Alegreya Sans"; letter-spacing:.2em; }
+.s5-stamp small { display:block; font-size:.48rem; font-weight:800; letter-spacing:.12em; margin-top:2px; }
+.s5-acts { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); justify-content:space-between; }
+.s5-acts .act { width:27px; height:27px; }
+
+@media(prefers-reduced-motion:reduce){ .act,.act:hover { transition:none; transform:none; } }
+@media(max-width:600px){ .stage { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΠΡΟΓΡΑΜΜΑ — Η' ΓΥΡΟΣ</p>
+  <h1>Το Setlist<br>σε <em>πεντε</em> εκδοχες</h1>
+  <p>Επιλέχθηκε η Ιδέα 4 του Ζ' γύρου. Κανόνες από το feedback: καμία αρίθμηση (ούτε «Νο», ούτε 1/2/3/4), χωρίς «Έναρξη», μόνο «ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ», και οι προπονήσεις ορατές με μικρότερα γράμματα. Οι εκδοχές δοκιμάζουν πώς στέκεται η λίστα χωρίς αριθμούς και πόσο μαζεύει η κάρτα.</p>
+</header>
+
+<!-- ═══════════════ Α ═══════════════ -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ Α</b><span>ΤΟ ΗΣΥΧΟ — σκέτες γραμμές τετραδίου, μικρά slab ονόματα</span></div>
+<section class="stage">
+  <article class="s1-sheet">
+    <span class="tape tl" aria-hidden="true"></span>
+    <span class="tape br" aria-hidden="true"></span>
+    <div class="s1-head"><h3>Push Pull Legs</h3></div>
+    <ul class="s1-list">
+      <li>Push</li>
+      <li>Pull</li>
+      <li>Legs</li>
+      <li>Push — Β</li>
+    </ul>
+    <div class="s1-foot"><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+    <div class="acts acts-light s1-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> ό,τι ζητήθηκε, στην πιο καθαρή του μορφή. Οι προπονήσεις σε <b>μικρό slab</b> (.82rem αντί για 1.05) πάνω σε λεπτές γραμμές τετραδίου — καμία αρίθμηση, κανένα σύμβολο· η σειρά διαβάζεται από τη θέση στη λίστα. Κάτω μόνο η <b>ΔΙΑΡΚΕΙΑ</b>. Οι χαρτοταινίες στις γωνίες κρατούν την ταυτότητα του setlist.</p>
+</section>
+
+<!-- ═══════════════ Β ═══════════════ -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ Β</b><span>ΟΙ ΠΑΥΛΕΣ — ένα σημάδι στυλό μπροστά από κάθε προπόνηση</span></div>
+<section class="stage">
+  <article class="s2-sheet">
+    <span class="tape tc" aria-hidden="true"></span>
+    <div class="s2-head"><h3>Push Pull Legs</h3></div>
+    <ul class="s2-list">
+      <li><svg viewBox="0 0 22 10" aria-hidden="true"><path d="M2 6c5-3 13-3 18-1"/></svg>Push</li>
+      <li><svg viewBox="0 0 22 10" aria-hidden="true"><path d="M2 5c6-2 12 0 18-2"/></svg>Pull</li>
+      <li><svg viewBox="0 0 22 10" aria-hidden="true"><path d="M2 4c5 2 13 1 18 0"/></svg>Legs</li>
+      <li><svg viewBox="0 0 22 10" aria-hidden="true"><path d="M2 6c7-4 11 1 18-3"/></svg>Push — Β</li>
+    </ul>
+    <div class="s2-foot"><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+    <div class="acts acts-light s2-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> αντί για αριθμούς, μια <b>χειρόγραφη παύλα με pen-blue</b> μπροστά από κάθε προπόνηση — κάθε μία ελαφρώς διαφορετική καμπύλη, σαν τραβηγμένη με το χέρι. Τα ονόματα σε μικρά Alegreya Sans κεφαλαία, όχι slab — η πιο «σημειωματάριο» αίσθηση του γύρου. Μία χαρτοταινία στο κέντρο πάνω, σαν σελίδα κολλημένη βιαστικά.</p>
+</section>
+
+<!-- ═══════════════ Γ ═══════════════ -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ Γ</b><span>ΤΟ ΣΥΜΠΑΓΕΣ — οι προπονήσεις σε μία ροή· η πιο χαμηλή κάρτα</span></div>
+<section class="stage">
+  <div class="s3-stack">
+    <article class="s3-sheet">
+      <span class="tape tl" aria-hidden="true"></span>
+      <div class="s3-head"><h3>Push Pull Legs</h3><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+      <div class="s3-flow">
+        <span>Push</span><i>·</i><span>Pull</span><i>·</i><span>Legs</span><i>·</i><span>Push — Β</span>
+      </div>
+      <div class="s3-foot">
+        <div class="acts acts-light s3-acts">
+          <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+          <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+          <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+          <button class="act" title="Μετονομασία">✎</button>
+          <button class="act" title="Διαγραφή">×</button>
+        </div>
+      </div>
+    </article>
+    <article class="s3-sheet alt">
+      <span class="tape br" aria-hidden="true"></span>
+      <div class="s3-head"><h3>Upper Lower</h3><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+      <div class="s3-flow">
+        <span>Άνω κορμός</span><i>·</i><span>Κάτω κορμός</span><i>·</i><span>Άνω κορμός</span><i>·</i><span>Κάτω κορμός</span>
+      </div>
+      <div class="s3-foot">
+        <div class="acts acts-light s3-acts">
+          <button class="act star" aria-pressed="false" title="Ορισμός ως ενεργό">☆</button>
+          <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+          <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+          <button class="act" title="Μετονομασία">✎</button>
+          <button class="act" title="Διαγραφή">×</button>
+        </div>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Η ιδέα:</b> οι προπονήσεις δεν είναι λίστα αλλά <b>μία ροή σε γραμμή</b>, χωρισμένες με ξεθωριασμένες τελείες — μαζεύει την κάρτα στο μισό ύψος. Η ΔΙΑΡΚΕΙΑ ανεβαίνει δίπλα στον τίτλο. Δείχνονται δύο κάρτες μαζί για να φανεί το κέρδος: στο καρουζέλ ή σε λίστα, χωράνε πολλά προγράμματα χωρίς κύλισμα. Με πολλές προπονήσεις η ροή απλώς τυλίγει σε δεύτερη γραμμή.</p>
+</section>
+
+<!-- ═══════════════ Δ ═══════════════ -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ Δ</b><span>ΤΟ ΣΚΟΥΡΟ SETLIST — η σημερινή σκούρα ταυτότητα με τη νέα δομή</span></div>
+<section class="stage">
+  <article class="s4-sheet">
+    <span class="tape tl" aria-hidden="true"></span>
+    <span class="tape br" aria-hidden="true"></span>
+    <div class="s4-head"><h3>Push Pull Legs</h3></div>
+    <ul class="s4-list">
+      <li>Push</li>
+      <li>Pull</li>
+      <li>Legs</li>
+      <li>Push — Β</li>
+    </ul>
+    <div class="s4-foot"><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+    <div class="acts acts-dark s4-acts">
+      <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+      <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+      <button class="act" title="Μετονομασία">✎</button>
+      <button class="act" title="Διαγραφή">×</button>
+    </div>
+  </article>
+  <p class="notes"><b>Η ιδέα:</b> η ίδια δομή με την Α αλλά σε <b>μελανί χαρτί</b> — κρατά τη σκούρα ταυτότητα που έχουν σήμερα οι κάρτες στο καρουζέλ, με χρυσή υπογράμμιση στον τίτλο και χρυσό το «7 ΗΜΕΡΕΣ». Οι χαρτοταινίες μισοδιάφανες πάνω στο σκούρο. Αν το καρουζέλ μείνει ως έχει, αυτή είναι η εκδοχή με τη μικρότερη αλλαγή ταυτότητας.</p>
+</section>
+
+<!-- ═══════════════ Ε ═══════════════ -->
+<div class="attempt-label"><b>ΕΚΔΟΧΗ Ε</b><span>ΜΕ ΤΗ ΣΦΡΑΓΙΔΑ — το ενεργό δείχνεται με σφραγίδα, όχι μόνο με αστέρι· ενεργό/ανενεργό δίπλα-δίπλα</span></div>
+<section class="stage">
+  <div class="s5-pair">
+    <article class="s5-sheet on">
+      <span class="tape tl" aria-hidden="true"></span>
+      <div class="s5-head"><h3>Push Pull Legs</h3></div>
+      <ul class="s5-list">
+        <li>Push</li>
+        <li>Pull</li>
+        <li>Legs</li>
+        <li>Push — Β</li>
+      </ul>
+      <div class="s5-foot"><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+      <span class="s5-stamp" aria-hidden="true"><span><b>ΕΝΕΡΓΟ</b><small>ΣΕ ΙΣΧΥ</small></span></span>
+      <div class="acts acts-light s5-acts">
+        <button class="act star" aria-pressed="true" title="Ενεργό πρόγραμμα">★</button>
+        <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+        <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+        <button class="act" title="Μετονομασία">✎</button>
+        <button class="act" title="Διαγραφή">×</button>
+      </div>
+    </article>
+    <article class="s5-sheet off">
+      <span class="tape br" aria-hidden="true"></span>
+      <div class="s5-head"><h3>Full Body</h3></div>
+      <ul class="s5-list">
+        <li>Ολόσωμη — Α</li>
+        <li>Ολόσωμη — Β</li>
+        <li>Ολόσωμη — Γ</li>
+      </ul>
+      <div class="s5-foot"><span class="dur">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></span></div>
+      <div class="acts acts-light s5-acts">
+        <button class="act star" aria-pressed="false" title="Ορισμός ως ενεργό">☆</button>
+        <button class="act" title="Προβολή πλάνου"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+        <button class="act" title="Προσθήκη προπόνησης"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="act" title="Αντιγραφή"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg></button>
+        <button class="act" title="Μετονομασία">✎</button>
+        <button class="act" title="Διαγραφή">×</button>
+      </div>
+    </article>
+  </div>
+  <p class="notes"><b>Η ιδέα:</b> η δομή της Α, με την <b>κόκκινη στρογγυλή σφραγίδα ΣΕ ΙΣΧΥ</b> από την ιδέα του συμβολαίου πάνω στη λίστα του ενεργού προγράμματος — φαίνεται από μακριά, όχι μόνο από το χρυσό αστέρι. Δίπλα το ανενεργό Full Body για σύγκριση: καθαρό, χωρίς σφραγίδα, με άδειο αστέρι. Οι δύο κάρτες πιο στενές (300px), όπως θα στέκονταν σε πραγματική λίστα.</p>
+</section>
+
+<footer class="intro" style="border-bottom:0;border-top:3px solid var(--ink);box-shadow:0 -6px 0 -5px var(--ink)">
+  <p class="eyebrow">ΣΗΜΕΙΩΣΗ ΣΧΕΔΙΑΣΤΗ</p>
+  <p style="max-width:640px;margin:0;color:var(--muted);line-height:1.55">Και οι πέντε τηρούν τους κανόνες: χωρίς αρίθμηση, χωρίς «Έναρξη», μόνο <b style="color:var(--ink)">ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ</b>, προπονήσεις μικρότερες κατά ~30%. Οι εκδοχές συνδυάζονται: η σφραγίδα της <b style="color:var(--ink)">Ε</b> μπαίνει σε όποια αρέσει, η ροή της <b style="color:var(--ink)">Γ</b> μπορεί να γίνει η mobile μορφή της <b style="color:var(--ink)">Α</b>, και η <b style="color:var(--ink)">Δ</b> δείχνει όλη τη δομή σε σκούρο αν μείνει η σημερινή ταυτότητα του καρουζέλ.</p>
+</footer>
+
+</body>
+</html>
