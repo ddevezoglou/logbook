@@ -216,6 +216,58 @@ npm.cmd run test:e2e
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
+## Αξιολόγηση 0.9.6 — Ιούλιος 2026
+
+Πλήρες review της εφαρμογής (κώδικας, ασφάλεια, design, tests, εμπορική ετοιμότητα) με τη μεθοδολογία των code-review, security-review και frontend-design plugins σε ολόκληρο το codebase. Κατά το review τα 207/207 unit/integration tests πέρασαν πράσινα. Τα παρακάτω ευρήματα **δεν** επικαλύπτουν τα υπάρχοντα TODO.
+
+| Τομέας | Βαθμός | Σχόλιο |
+|---|---|---|
+| Ασφάλεια & data layer | 8.5/10 | Υποδειγματικό RLS, κανένα ευρεθέν vulnerability· λείπει CSP και όριο μεγέθους payload |
+| Testing & CI/CD | 9/10 | Πλήρες gate, e2e+a11y, allowlisted deploy artifact |
+| UI/UX & Design | 9/10 | Αυθεντική, αναγνωρίσιμη ταυτότητα· λείπει dark mode |
+| PWA & offline | 8.5/10 | Σωστό offline-first, καθαρό service worker lifecycle |
+| Αρχιτεκτονική κώδικα | 7.5/10 | Υψηλή ποιότητα, αλλά monolith (γνωστό TODO) και δομικά θέματα παρακάτω |
+| Εμπορική ετοιμότητα | 5/10 | Auth-gate friction, χωρίς monetization, νομικά έγγραφα ή product analytics |
+
+**Συνολικά: 8/10 ως engineering, 5/10 ως εμπορικό προϊόν σήμερα.**
+
+### Ευρήματα ασφάλειας (hardening, όχι ευπάθειες)
+
+Δεν βρέθηκε καμία HIGH ή MEDIUM ευπάθεια. Δυνατά σημεία: πλήρες RLS με revoke από `anon`, `security definer` RPCs με έλεγχο `auth.uid()` και καθαρό `search_path`, συνεπές HTML escaping με `esc()` παντού, προστασία από CSV injection στο export, self-hosted pinned Supabase bundle.
+
+1. **CSP meta tag:** στο GitHub Pages δεν ελέγχουμε headers, αλλά ένα `<meta http-equiv="Content-Security-Policy">` (`default-src 'self'; connect-src 'self' https://hixnqtjsjcndeatxhpgd.supabase.co; img-src 'self' data:`) δίνει δεύτερη γραμμή άμυνας πάνω από το escaping.
+2. **Όριο μεγέθους στο `user_sync_state.payload`:** δεν υπάρχει server-side CHECK στο μέγεθος του jsonb· ένα `check (pg_column_size(payload) < 2*1024*1024)` κλείνει το θέμα.
+3. **Νεκρό attack surface:** οι πίνακες `profiles`, `routines`, `sessions` έχουν πλήρη CRUD grants αλλά ο client δεν τους χρησιμοποιεί — όλο το sync περνά από το `user_sync_state`. Είτε να αξιοποιηθούν είτε να αφαιρεθούν.
+4. **Cache άλλου χρήστη σε κοινή συσκευή:** το `logbookCloudCache:<userId>` του προηγούμενου χρήστη παραμένει στο localStorage μετά από εναλλαγή λογαριασμού. Συνειδητό local-first trade-off, αλλά αξίζει είτε καθάρισμα στο sign-out είτε ρητή τεκμηρίωση.
+5. **Χαμένα error events:** στο `error-tracking.js`, αν το RPC αποτύχει, το event χάνεται αντί να επιστρέφει στην ουρά.
+
+### Ευρήματα κώδικα
+
+1. **Avatars ως base64 μέσα στο sync payload:** έως 6 εικόνες 480px αποθηκεύονται ως data-URLs στο `userProfile` και ταξιδεύουν με κάθε snapshot. Φουσκώνουν το localStorage (όριο ~5MB μαζί με sessions ετών), κάθε sync και το jsonb στη βάση. Το schema έχει ήδη `avatar_path` στο `profiles` — μεταφορά σε Supabase Storage ή τουλάχιστον εξαίρεση του gallery από το snapshot. Η πιο σημαντική τεχνική σύσταση του review.
+2. **Το Ιστορικό δεν κάνει pagination:** το `renderOverview` χτίζει innerHTML για όλες τις sessions κάθε φορά· με 2–3 χρόνια δεδομένων θα πονέσει σε mid-range κινητό. Windowing ή «φόρτωση παλαιότερων».
+3. **Μία προπόνηση ανά ημέρα:** επιβάλλεται client-side και με unique index. Πραγματικός περιορισμός προϊόντος για two-a-days· αν είναι συνειδητή απόφαση να καταγραφεί, αλλιώς θα χρειαστεί migration αργότερα.
+4. **Hardcoded ελληνικά default ονόματα ως λογική:** τα «Το πρόγραμμά μου»/«Πρόγραμμα 1» λειτουργούν ως σήμα placeholder σε app.js και cloud-sync.js. Αν το default όνομα γίνει ποτέ localized, η προστασία από empty snapshot σπάει σιωπηλά· ένα boolean flag `isPlaceholder` είναι ανθεκτικότερο.
+5. **`store.read` επιστρέφει `[]` ως fallback για τα πάντα**, και για objects — παγίδα για κάθε νέο module στο επερχόμενο split του app.js.
+
+### Ευρήματα design/UX
+
+Η μεταφορά «χάρτινο ημερολόγιο» διατρέχει συνεπώς όλη την εφαρμογή (βιβλίο-auth gate, ribbon μενού, σελίδες sessions, απόδειξη-export, σφραγίδες rewards) με επιλεγμένη τυπογραφία και σωστά empty states και reduced-motion. Το design είναι asset με εμπορική αξία και διαφοροποιεί από Strong/Hevy/Jefit.
+
+1. **Dark mode / «νυχτερινή σελίδα»:** η paper αισθητική είναι αμιγώς φωτεινή, ενώ το gym use-case είναι συχνά βραδινό. Ένα «blackout page» theme πάνω στο υπάρχον `--ink`/`--paper` token system κρατά την ταυτότητα και λύνει πραγματικό πρόβλημα χρήσης.
+2. **Print stylesheet:** η σελίδα προπόνησης και το πλάνο τυπώνονται φυσικά στη μεταφορά του προϊόντος· φθηνό feature με «wow».
+3. **Το auth gate ως πρώτη εμπειρία είναι friction:** ο νέος επισκέπτης βλέπει υποχρεωτικό login πριν δει την εφαρμογή. Guest/demo mode (local-only, με προτροπή sync αργότερα) είναι ο μεγαλύτερος μοχλός conversion που λείπει — και η local-first αρχιτεκτονική το υποστηρίζει σχεδόν δωρεάν.
+
+### Ετυμηγορία για official release με στόχο κέρδος
+
+Όχι ακόμα — και το 0.9.x το αποτυπώνει σωστά. Ό,τι λείπει δεν είναι τεχνικό:
+
+1. **Μοντέλο εσόδων:** καμία υποδομή πληρωμών ή απόφαση free/premium. Το πιθανότερο βιώσιμο μοντέλο στην αγορά (Strong, Hevy με ισχυρά free tiers) είναι freemium με premium analytics/ιστορικό — πρέπει να σχεδιαστεί πριν το 1.0 γιατί καθορίζει τι κλειδώνεται.
+2. **Νομική ετοιμότητα:** αποθηκεύονται email, ημερομηνία γέννησης και φωτογραφίες χρηστών στην ΕΕ — απαιτούνται privacy policy και όροι χρήσης πριν από εμπορικό launch (το Google OAuth verification θα τα ζητήσει ούτως ή άλλως). Τα θεμέλια GDPR υπάρχουν (CSV export, πλήρης διαγραφή λογαριασμού)· λείπουν μόνο τα έγγραφα.
+3. **Conversion funnel:** guest mode και στοιχειώδη product analytics — το υπάρχον error tracking είναι privacy-υποδειγματικό αλλά δεν μετρά χρήση.
+4. Το P1 physical-device QA παραμένει προαπαιτούμενο.
+
+Ρεαλιστική εκτίμηση: με guest mode, νομικά έγγραφα, το P1 QA και απόφαση monetization, βάσιμο 1.0 σε 2–3 κύκλους δουλειάς. Δυνατά χαρτιά το τεχνικό προϊόν και το design· το δύσκολο είναι η απόκτηση χρηστών απέναντι σε δωρεάν εδραιωμένους ανταγωνιστές, όπου η χειροποίητη ταυτότητα και η ελληνική/ευρωπαϊκή τοπικοποίηση είναι η πιο πιστευτή διαφοροποίηση.
+
 ## TODO
 
 Η σειρά δηλώνει προτεραιότητα, όχι απαραίτητα το release στο οποίο θα ολοκληρωθεί κάθε εργασία.
