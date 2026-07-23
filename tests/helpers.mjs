@@ -26,6 +26,7 @@ export function loadApp(seed = {}, options = {}) {
   for (const [key, value] of Object.entries(seed)) {
     window.localStorage.setItem(key, key === 'logbookLanguage' ? value : JSON.stringify(value));
   }
+  options.beforeApp?.(window);
   window.eval(quotesSource);
   window.eval(i18nSource);
   window.eval(appSource);

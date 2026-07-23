@@ -29,7 +29,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.4');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.5');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -1534,6 +1534,109 @@ test('profile weight unit switches log, history, progress and personal records t
     click(document, `[data-language="${language}"]`);
     assert.deepEqual([...logRow.querySelector('.weight-mode').options].map(option => option.textContent), expected);
   });
+});
+
+test('history CSV export downloads UTF-8 data and neutralizes spreadsheet formulas', () => {
+  const sessions = [{
+    id:'s1',
+    date:'2026-07-22',
+    type:'free',
+    workoutName:'+Smoke',
+    comments:'@SUM(1, 2), "note"',
+    exercises:[{
+      exercise:'=1+1',
+      comments:'-line one\nline two',
+      sets:[{ reps:5, weight:100, weightMode:'kg', plates:'\t=2' }],
+    }],
+  }];
+  let exportedBlob = null;
+  let revokedUrl = null;
+  let downloadClick = null;
+  const { document } = loadApp({ trainingSessions:sessions }, {
+    beforeApp(window) {
+      window.Blob = class {
+        constructor(parts, options) {
+          this.parts = parts;
+          this.type = options?.type;
+        }
+      };
+      window.URL.createObjectURL = blob => {
+        exportedBlob = blob;
+        return 'blob:logbook-export';
+      };
+      window.URL.revokeObjectURL = url => { revokedUrl = url; };
+      window.HTMLAnchorElement.prototype.click = function () {
+        downloadClick = { href:this.href, download:this.download };
+      };
+    },
+  });
+
+  click(document, '#export-history-button');
+
+  assert.equal(exportedBlob.type, 'text/csv;charset=utf-8;');
+  const csv = exportedBlob.parts.join('');
+  assert.ok(csv.startsWith('\uFEFFΗμερομηνία,Προπόνηση,Άσκηση'));
+  assert.ok(csv.includes(",'+Smoke,'=1+1,1,5,100,kg,'\t=2,"));
+  assert.ok(csv.includes('"\'-line one\nline two"'));
+  assert.ok(csv.includes('"\'@SUM(1, 2), ""note"""'));
+  assert.match(downloadClick.download, /^logbook-istoriko-\d{4}-\d{2}-\d{2}\.csv$/);
+  assert.equal(downloadClick.href, 'blob:logbook-export');
+  assert.equal(revokedUrl, 'blob:logbook-export');
+  assert.equal(document.querySelector('#export-history-button').getAttribute('aria-expanded'), 'true');
+  assert.ok(document.querySelector('#export-history-count').textContent.endsWith('1'));
+  assert.ok(document.querySelector('#export-history-filename').textContent.includes(downloadClick.download));
+});
+
+test('history CSV export reports an empty history without creating a download', () => {
+  let createdDownloads = 0;
+  const { document } = loadApp({}, {
+    beforeApp(window) {
+      window.URL.createObjectURL = () => {
+        createdDownloads += 1;
+        return 'blob:unexpected';
+      };
+    },
+  });
+
+  click(document, '#export-history-button');
+
+  assert.equal(createdDownloads, 0);
+  assert.equal(document.querySelector('#toast').textContent, 'Δεν υπάρχουν καταγεγραμμένες προπονήσεις για εξαγωγή.');
+  assert.ok(document.querySelector('#toast').classList.contains('toast-error'));
+});
+
+test('history CSV export reports browser download failures', () => {
+  const sessions = [{
+    id:'s1',
+    date:'2026-07-22',
+    type:'free',
+    workoutName:'Smoke',
+    comments:'',
+    exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:5, weight:100, weightMode:'kg' }] }],
+  }];
+  let revokedUrl = null;
+  const { document, window } = loadApp({ trainingSessions:sessions }, {
+    beforeApp(window) {
+      window.Blob = class {
+        constructor(parts, options) {
+          this.parts = parts;
+          this.type = options?.type;
+        }
+      };
+      window.URL.createObjectURL = () => 'blob:failed-export';
+      window.URL.revokeObjectURL = url => { revokedUrl = url; };
+      window.HTMLAnchorElement.prototype.click = function () { throw new Error('download unavailable'); };
+    },
+  });
+
+  click(document, '[data-language="en"]');
+  click(document, '#export-history-button');
+  window.LogbookI18n.translate(document);
+
+  assert.equal(document.querySelector('#toast').textContent, 'History could not be exported.');
+  assert.ok(document.querySelector('#toast').classList.contains('toast-error'));
+  assert.equal(document.querySelector('#export-history-filename').textContent, 'FILE: —');
+  assert.equal(revokedUrl, 'blob:failed-export');
 });
 
 test('pound entries are converted back to kilograms for stable storage', () => {

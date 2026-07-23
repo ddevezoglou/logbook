@@ -133,7 +133,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version" aria-label="Application version 0.9.4"><i>VERSION</i><b>0.9.4</b></span>
+      <span class="app-version" aria-label="Application version 0.9.5"><i>VERSION</i><b>0.9.5</b></span>
     </div>
   </aside>
 
@@ -407,6 +407,20 @@
             </div>
           </fieldset>
 
+          <div class="receipt-wrap">
+            <button id="export-history-button" class="receipt-btn" type="button" aria-expanded="false" aria-controls="export-history-print"><span>Εξαγωγή ιστορικού</span><span class="arrow" aria-hidden="true">↓</span></button>
+            <div class="receipt-print" id="export-history-print">
+              <div class="receipt-print-inner">
+                <div class="receipt-tape">
+                  <p id="export-history-count">ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΠΡΟΠΟΝΗΣΕΙΣ .. 0</p>
+                  <hr class="rule">
+                  <p id="export-history-filename">ΑΡΧΕΙΟ: —</p>
+                  <div class="stamp-row"><span id="export-history-stamp">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <aside id="profile-name-slip" class="profile-slip hidden" aria-label="Όνομα">
             <div class="profile-slip-head"><strong>ΟΝΟΜΑ</strong><button class="profile-slip-close" type="button" data-close-slip="name">ΚΛΕΙΣΙΜΟ</button></div>
             <label class="profile-slip-field">Όνομα<input id="profile-name" type="text" maxlength="50" placeholder="π.χ. Δημήτρης" autocomplete="name"></label>
@@ -512,6 +526,7 @@
   <script src="i18n.js"></script>
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
+  <script src="error-tracking.js"></script>
   <script src="auth.js"></script>
   <script src="cloud-sync.js"></script>
   <script src="pwa.js"></script>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Κουμπί Εξαγωγής Ιστορικού — Προτάσεις</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700&family=Caveat:wght@500;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#6d6551; --line:#b6ad97; --faded:#a89f86; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ink); color:var(--paper); font-family:"Alegreya Sans",sans-serif; }
+button { font-family:inherit; }
+button:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome ===== */
+.intro { padding:56px 5vw 30px; border-bottom:1px solid #3d3828; }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--gold); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2.1rem,4.6vw,3.8rem)/.95 "Roboto Slab",serif; margin:0; letter-spacing:-.04em; text-transform:uppercase; }
+.intro h1 em { color:var(--gold); font-style:normal; }
+.intro>p:last-child { max-width:640px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--gold); color:var(--faded); line-height:1.55; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.attempt-label.pick { background:#241d0c; }
+.attempt-label.pick b { color:var(--gold); }
+.attempt-label.pick b::before { content:"★ "; }
+.stage { padding:clamp(46px,6vw,74px) 5vw 70px; background:var(--paper); background-image:linear-gradient(rgba(21,19,13,.045) 1px,transparent 1px); background-size:100% 30px; display:grid; justify-items:center; gap:28px; color:var(--ink); }
+.notes-wrap { padding:0 5vw 74px; background:var(--ink); }
+.notes { max-width:660px; margin:0 auto; padding:18px 22px; border:1px dashed #4b4537; background:rgba(255,255,255,.04); color:var(--faded); font-size:.92rem; line-height:1.6; }
+.notes b { color:var(--gold); }
+
+/* ===== context: mini profile card + real weight-unit control, unchanged ===== */
+.ctx { width:min(470px,100%); display:grid; gap:22px; }
+.mini-card { position:relative; color:var(--paper); min-height:150px; padding:16px 22px 20px; border-radius:8px 16px 16px 8px; background:linear-gradient(118deg,#1b1913 0%,#0d0c09 58%); box-shadow:0 1px 0 rgba(255,255,255,.06) inset, -9px 0 0 -4px #060504, 16px 24px 48px rgba(21,19,13,.35); display:grid; align-content:space-between; }
+.mini-card::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(120% 90% at 18% 6%,rgba(255,255,255,.05),transparent 55%); pointer-events:none; }
+.mini-card-top { position:relative; z-index:2; display:flex; justify-content:space-between; align-items:flex-start; font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:rgba(201,162,39,.7); }
+.mini-card-name { position:relative; z-index:2; font:600 1.3rem "Caveat"; color:var(--paper); }
+.mini-card-foot { position:relative; z-index:2; font-size:.55rem; font-weight:800; letter-spacing:.35em; color:rgba(239,232,216,.45); text-align:center; }
+
+.profile-weight-unit { width:100%; margin:0; padding:0; border:0; }
+.profile-weight-unit legend { margin-bottom:8px; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+.profile-weight-unit-options { display:grid; grid-template-columns:1fr 1fr; gap:3px; padding:3px; border:1px solid rgba(21,19,13,.5); background:rgba(21,19,13,.035); }
+.profile-weight-unit label { display:block; margin:0; cursor:pointer; }
+.profile-weight-unit input { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
+.profile-weight-unit span { display:flex; min-height:44px; align-items:center; justify-content:center; padding:8px 14px; color:var(--muted); font-size:.78rem; font-weight:800; letter-spacing:.12em; }
+.profile-weight-unit input:checked + span { background:var(--gold); color:var(--ink); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); }
+
+.slot-label { font-size:.62rem; font-weight:800; letter-spacing:.2em; color:var(--muted); text-align:center; }
+.slot-label b { color:var(--orange); }
+
+/* ============================================================
+   1 — «ΑΝΤΙΓΡΑΦΟ ΚΑΡΜΠΟΝ» — προτεινόμενο
+   ============================================================ */
+.carbon-wrap { position:relative; width:100%; padding:0 0 10px 10px; }
+.carbon-ply { position:absolute; inset:0 0 10px 10px; border:1px solid rgba(21,19,13,.35); }
+.carbon-ply.ply-1 { background:#e4d9b8; transform:translate(7px,7px); }
+.carbon-ply.ply-2 { background:#d7c9e0; transform:translate(4px,4px); }
+.carbon-btn { position:relative; z-index:2; width:100%; display:flex; align-items:center; gap:14px; min-height:58px; padding:10px 18px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; text-align:left; transition:transform .18s ease, box-shadow .18s ease; box-shadow:3px 3px 0 rgba(21,19,13,.001); }
+.carbon-btn:hover, .carbon-btn:focus-visible { transform:translate(-3px,-3px); box-shadow:6px 6px 0 rgba(21,19,13,.18); }
+.carbon-btn:active { transform:translate(0,0); box-shadow:none; }
+.carbon-mark { flex:none; width:30px; height:30px; display:grid; place-items:center; border:1px solid rgba(201,162,39,.5); border-radius:50%; }
+.carbon-mark svg { width:14px; height:14px; }
+.carbon-text strong { display:block; font:800 .8rem "Alegreya Sans"; letter-spacing:.11em; text-transform:uppercase; }
+.carbon-text small { display:block; margin-top:2px; font-size:.68rem; color:var(--faded); font-weight:500; letter-spacing:.02em; }
+.carbon-tag { margin-left:auto; flex:none; align-self:flex-start; margin-top:2px; font:700 .56rem "Roboto Slab"; letter-spacing:.14em; color:rgba(201,162,39,.85); border:1px solid rgba(201,162,39,.4); padding:3px 6px; }
+
+/* ============================================================
+   2 — «ΑΠΟΔΕΙΞΗ» — ρολό ταμειακής
+   ============================================================ */
+.receipt-wrap { width:100%; }
+.receipt-btn { position:relative; z-index:2; width:100%; display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:52px; padding:10px 18px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; font:800 .78rem "Alegreya Sans"; letter-spacing:.11em; text-transform:uppercase; transition:background .18s ease; }
+.receipt-btn:hover, .receipt-btn:focus-visible { background:var(--orange); }
+.receipt-btn .arrow { font-size:.9rem; }
+.receipt-print { margin:0 14px; display:grid; grid-template-rows:0fr; transition:grid-template-rows .55s cubic-bezier(.16,1,.3,1); }
+.receipt-print.show { grid-template-rows:1fr; }
+.receipt-print-inner { overflow:hidden; min-height:0; }
+.receipt-tape { position:relative; background:var(--paper-soft); padding:12px 16px 16px; box-shadow:0 6px 12px rgba(21,19,13,.18); clip-path:polygon(0 0,100% 0,100% 92%,96% 100%,92% 92%,88% 100%,84% 92%,80% 100%,76% 92%,72% 100%,68% 92%,64% 100%,60% 92%,56% 100%,52% 92%,48% 100%,44% 92%,40% 100%,36% 92%,32% 100%,28% 92%,24% 100%,20% 92%,16% 100%,12% 92%,8% 100%,4% 92%,0 100%); }
+.receipt-tape p { margin:0; font:400 .78rem/1.7 "Courier Prime",monospace; color:var(--pen); white-space:pre; }
+.receipt-tape .rule { border:none; border-top:1px dashed var(--line); margin:8px 0; }
+.receipt-tape .stamp-row { display:flex; justify-content:flex-end; align-items:baseline; margin-top:10px; font:700 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--orange); }
+
+/* ============================================================
+   3 — «ΣΦΡΑΓΙΔΑ» — στάμπα εξαγωγής
+   ============================================================ */
+.stamp-wrap { width:100%; display:grid; justify-items:center; padding:6px 0; }
+.stamp-btn { position:relative; width:100%; min-height:64px; padding:10px 18px; border:2px solid var(--danger); border-radius:3px; background:transparent; color:var(--danger); cursor:pointer; transform:rotate(-1.4deg); transition:transform .18s ease, opacity .18s ease; opacity:.86; }
+.stamp-btn::before { content:""; position:absolute; inset:4px; border:1px solid var(--danger); border-radius:2px; opacity:.6; }
+.stamp-btn::after { content:""; position:absolute; inset:0; opacity:.5; mix-blend-mode:multiply; background-image:radial-gradient(rgba(122,51,37,.55) 1px,transparent 1.3px); background-size:3px 3px; border-radius:inherit; pointer-events:none; }
+.stamp-btn:hover, .stamp-btn:focus-visible { transform:rotate(0deg) scale(1.015); opacity:1; }
+.stamp-inner { position:relative; z-index:2; display:grid; gap:2px; }
+.stamp-inner strong { font:800 1.05rem "Roboto Slab"; letter-spacing:.16em; }
+.stamp-inner small { font:700 .58rem "Alegreya Sans"; letter-spacing:.22em; }
+
+/* ============================================================
+   4 — «ΑΠΟΚΟΜΜΑ» — διάτρητο δελτίο
+   ============================================================ */
+.stub-wrap { width:100%; }
+.stub-btn { position:relative; z-index:2; width:100%; display:grid; grid-template-columns:56px 1fr; align-items:stretch; min-height:56px; border:1px solid var(--ink); background:var(--paper-soft); color:var(--ink); cursor:pointer; overflow:visible; transition:background .18s ease; }
+.stub-btn:hover, .stub-btn:focus-visible { background:#fff; }
+.stub-icon { display:grid; place-items:center; background:var(--ink); color:var(--gold); font-size:1.1rem; }
+.stub-body { display:flex; flex-direction:column; justify-content:center; padding:8px 16px; position:relative; }
+.stub-body::before { content:""; position:absolute; left:0; top:6px; bottom:6px; border-left:1px dashed var(--line); }
+.stub-body strong { padding-left:14px; font:800 .78rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; }
+.stub-body small { padding-left:14px; margin-top:2px; font-size:.66rem; color:var(--muted); }
+.stub-btn::before, .stub-btn::after { content:""; position:absolute; top:50%; width:16px; height:16px; background:var(--paper); border-radius:50%; transform:translateY(-50%); }
+.stub-btn::before { left:-8px; }
+.stub-btn::after { right:-8px; }
+
+@media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+@media (max-width:520px) {
+  .carbon-text small { display:none; }
+  .receipt-tape p { font-size:.66rem; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN EXPLORATION — ΠΡΟΦΙΛ · ΚΟΥΜΠΙ ΕΞΑΓΩΓΗΣ ΙΣΤΟΡΙΚΟΥ</p>
+  <h1>ΠΑΡΕ ΤΟ <em>ΑΝΤΙΓΡΑΦΟ.</em></h1>
+  <p>Το κουμπί μπαίνει στη σελίδα Προφίλ, ακριβώς κάτω από το «Μονάδα μέτρησης». Δεν είναι ένα ακόμα download button — είναι το σημείο όπου το ημερολόγιο προπόνησης βγάζει ένα αντίγραφο του εαυτού του προς τα έξω. Τέσσερις προτάσεις, ίδιο υλικό (χαρτί, μελάνι, κάρμπον), διαφορετική μεταφορά.</p>
+</header>
+
+<!-- ============ 1 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 1</b><span>«ΑΝΤΙΓΡΑΦΟ ΚΑΡΜΠΟΝ»</span></div>
+<section class="stage">
+  <div class="ctx">
+    <div class="mini-card">
+      <div class="mini-card-top"><span>LOGBOOK / IDENTITY</span></div>
+      <div class="mini-card-name">Δημήτρης</div>
+      <div class="mini-card-foot">TRAIN . LOG . REPEAT</div>
+    </div>
+    <fieldset class="profile-weight-unit">
+      <legend>Μονάδα μέτρησης</legend>
+      <div class="profile-weight-unit-options">
+        <label><input type="radio" name="wu1" checked><span>KG</span></label>
+        <label><input type="radio" name="wu1"><span>LBS</span></label>
+      </div>
+    </fieldset>
+    <div class="carbon-wrap">
+      <span class="carbon-ply ply-1" aria-hidden="true"></span>
+      <span class="carbon-ply ply-2" aria-hidden="true"></span>
+      <button class="carbon-btn" type="button">
+        <span class="carbon-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M6.5 10.5 12 16l5.5-5.5"/><path d="M4 20h16"/></svg>
+        </span>
+        <span class="carbon-text">
+          <strong>Εξαγωγή ιστορικού</strong>
+          <small>Όλες οι καταγραφές σου, σε ένα αρχείο</small>
+        </span>
+        <span class="carbon-tag">.CSV</span>
+      </button>
+    </div>
+  </div>
+  <p class="notes"><b>Γιατί δουλεύει:</b> κάθε φύλλο invoice/παραγγελιοληψίας παλιού τύπου έχει από κάτω το καρμπόν αντίγραφο — εδώ γίνεται κυριολεκτικό: το κουμπί «ΕΞΑΓΩΓΗ» είναι το πάνω φύλλο, και ξεπροβάλλουν δύο ξέχωρα φύλλα-αντίγραφα (μπεζ + λιλά, χρώματα κλασικού carbon paper) 4px και 7px πιο κάτω-δεξιά. Στο hover το κουμπί «τραβιέται» πάνω-αριστερά, σαν να αποσπάται το πάνω φύλλο και αποκαλύπτονται περισσότερο τα αντίγραφα — μικρή, νοηματική κίνηση, όχι διακοσμητική. Η ετικέτα <b>.CSV</b> λειτουργεί σαν το «Νο» πάνω σε παλιά μπλοκ παραγγελιών. Ταιριάζει 1-1 με την ήδη υπάρχουσα γλώσσα του app (ink/gold/paper, Alegreya Sans, ίδιο ύψος με το btn2 pattern).</p>
+</section>
+
+<!-- ============ 2 — επιλεγμένο ============ -->
+<div class="attempt-label pick"><b>ΠΡΟΤΑΣΗ 2</b><span>«ΑΠΟΔΕΙΞΗ» — επιλεγμένη κατεύθυνση, διαδραστική</span></div>
+<section class="stage">
+  <div class="ctx">
+    <div class="mini-card">
+      <div class="mini-card-top"><span>LOGBOOK / IDENTITY</span></div>
+      <div class="mini-card-name">Δημήτρης</div>
+      <div class="mini-card-foot">TRAIN . LOG . REPEAT</div>
+    </div>
+    <fieldset class="profile-weight-unit">
+      <legend>Μονάδα μέτρησης</legend>
+      <div class="profile-weight-unit-options">
+        <label><input type="radio" name="wu2" checked><span>KG</span></label>
+        <label><input type="radio" name="wu2"><span>LBS</span></label>
+      </div>
+    </fieldset>
+    <div class="receipt-wrap">
+      <button class="receipt-btn" type="button" id="receiptBtn" aria-expanded="false" aria-controls="receiptPrint"><span>Εξαγωγή ιστορικού</span><span class="arrow" aria-hidden="true">↓</span></button>
+      <div class="receipt-print" id="receiptPrint">
+        <div class="receipt-print-inner">
+          <div class="receipt-tape">
+            <p>ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΠΡΟΠΟΝΗΣΕΙΣ .. 128</p>
+            <hr class="rule">
+            <p>ΑΡΧΕΙΟ: historiko.csv</p>
+            <div class="stamp-row"><span id="receiptStamp">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="notes"><b>Πάτα το κουμπί</b> — η απόδειξη «τυπώνεται» από κάτω (κρυφή μέχρι τότε, ανοίγει με animation ύψους σαν να βγαίνει από ρολό εκτυπωτή). Μόνο δύο γραμμές: πόσες προπονήσεις καταγράφηκαν και το όνομα του αρχείου — όχι «λογαριασμός», όχι ενεργές ασκήσεις. Δόντια χαρτιού στο κάτω άκρο (clip-path zigzag), σαν κομμένη από το ρολό. Ξαναπάτημα κρύβει/ξανατυπώνει. <b>Σημείωση:</b> δεύτερη γραμματοσειρά (Courier Prime, monospace) μόνο εδώ — σκόπιμο, δίνει «ταμειακή» αίσθηση στο αντίγραφο.</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 3</b><span>«ΣΦΡΑΓΙΔΑ» — στάμπα εξαγωγής</span></div>
+<section class="stage">
+  <div class="ctx">
+    <div class="mini-card">
+      <div class="mini-card-top"><span>LOGBOOK / IDENTITY</span></div>
+      <div class="mini-card-name">Δημήτρης</div>
+      <div class="mini-card-foot">TRAIN . LOG . REPEAT</div>
+    </div>
+    <fieldset class="profile-weight-unit">
+      <legend>Μονάδα μέτρησης</legend>
+      <div class="profile-weight-unit-options">
+        <label><input type="radio" name="wu3" checked><span>KG</span></label>
+        <label><input type="radio" name="wu3"><span>LBS</span></label>
+      </div>
+    </fieldset>
+    <div class="stamp-wrap">
+      <button class="stamp-btn" type="button">
+        <span class="stamp-inner">
+          <strong>EXPORT</strong>
+          <small>ΙΣΤΟΡΙΚΟ ΠΡΟΠΟΝΗΣΕΩΝ</small>
+        </span>
+      </button>
+    </div>
+  </div>
+  <p class="notes"><b>Ιδέα:</b> δανείζεται τη γλώσσα της σφραγίδας που ήδη υπάρχει στα personal records (κόκκινο-σκουριά <code>--danger</code>, τραχιά υφή μισότονου, ελαφριά κλίση). Πολύ θεματικό, αλλά το κόκκινο ίνκι σπάει τον χρυσό/μπεζ κώδικα χρώματος που κρατά ήρεμο το προφίλ — ταιριάζει καλύτερα σε στιγμιαία επιβεβαίωση («ΕΞΗΧΘΗ») παρά σε μόνιμο κουμπί φόρμας.</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<div class="attempt-label"><b>ΠΡΟΤΑΣΗ 4</b><span>«ΑΠΟΚΟΜΜΑ» — διάτρητο δελτίο</span></div>
+<section class="stage">
+  <div class="ctx">
+    <div class="mini-card">
+      <div class="mini-card-top"><span>LOGBOOK / IDENTITY</span></div>
+      <div class="mini-card-name">Δημήτρης</div>
+      <div class="mini-card-foot">TRAIN . LOG . REPEAT</div>
+    </div>
+    <fieldset class="profile-weight-unit">
+      <legend>Μονάδα μέτρησης</legend>
+      <div class="profile-weight-unit-options">
+        <label><input type="radio" name="wu4" checked><span>KG</span></label>
+        <label><input type="radio" name="wu4"><span>LBS</span></label>
+      </div>
+    </fieldset>
+    <button class="stub-btn" type="button">
+      <span class="stub-icon" aria-hidden="true">↓</span>
+      <span class="stub-body">
+        <strong>Εξαγωγή ιστορικού</strong>
+        <small>Αποκόμματος με όλες τις καταγραφές σου</small>
+      </span>
+    </button>
+  </div>
+  <p class="notes"><b>Ιδέα:</b> το κουμπί σαν απόκομμα εισιτηρίου — διάτρητη διαχωριστική γραμμή ανάμεσα στο εικονίδιο και το κείμενο, με τις δύο ημικυκλικές «τρύπες» στα άκρα σαν να έχει κοπεί από μπλοκάκι. Ήρεμο, boxed, κοντά στη σημερινή γλώσσα φορμών — το πιο «ασφαλές» από τα τέσσερα, αλλά και το λιγότερο απομνημόνευτο.</p>
+</section>
+
+<div class="notes-wrap">
+  <p class="notes"><b>Επιλέχθηκε:</b> Πρόταση 2 «Απόδειξη», με τη λογική: πάτημα → «τυπώνεται» απόδειξη με μόνο δύο γραμμές (καταγεγραμμένες προπονήσεις + όνομα αρχείου), χωρίς «λογαριασμό» ή ενεργές ασκήσεις. Ξαναπάτημα κρύβει την απόδειξη. Η ετικέτα αρχείου μπορεί να αλλάξει ανάλογα με τη μορφή εξαγωγής που θα υλοποιηθεί.</p>
+</div>
+
+
+<script>
+(() => {
+  const btn = document.getElementById('receiptBtn');
+  const print = document.getElementById('receiptPrint');
+  const stamp = document.getElementById('receiptStamp');
+  if (!btn || !print) return;
+  btn.addEventListener('click', () => {
+    const open = !print.classList.contains('show');
+    print.classList.toggle('show', open);
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      const now = new Date();
+      stamp.textContent = now.toLocaleString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+  });
+})();
+</script>
+</body>
+</html>
