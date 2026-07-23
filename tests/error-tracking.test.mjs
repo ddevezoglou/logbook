@@ -52,7 +52,7 @@ test('client error reports contain only allowlisted operational metadata', async
     'event_online',
     'event_source',
   ]);
-  assert.equal(client.calls[0].values.event_app_version, '0.9.6');
+  assert.equal(client.calls[0].values.event_app_version, '0.9.7');
   assert.equal(client.calls[0].values.event_error_name, 'TypeError');
   assert.doesNotMatch(JSON.stringify(client.calls[0]), /Bench Press|private@example\.com|bearer-token/);
   window.close();

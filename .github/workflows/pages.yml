@@ -44,6 +44,7 @@ jobs:
           mkdir _site
           cp index.html manifest.webmanifest favicon.svg fonts.css styles.css _site/
           cp quotes.js i18n.js supabase-config.js supabase-client.js error-tracking.js auth.js cloud-sync.js app.js pwa.js service-worker.js _site/
+          cp -R modules _site/modules
           cp -R assets _site/assets
           touch _site/.nojekyll
 

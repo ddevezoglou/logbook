@@ -6,6 +6,7 @@ const deleteMigration = readFileSync(new URL('../supabase/migrations/20260718000
 const initialSchema = readFileSync(new URL('../supabase/migrations/202607160001_initial_logbook_schema.sql', import.meta.url), 'utf8');
 const syncSchema = readFileSync(new URL('../supabase/migrations/202607170001_user_sync_state.sql', import.meta.url), 'utf8');
 const errorTrackingSchema = readFileSync(new URL('../supabase/migrations/202607220001_client_error_events.sql', import.meta.url), 'utf8');
+const snapshotSchema = readFileSync(new URL('../supabase/migrations/202607230001_user_sync_snapshots.sql', import.meta.url), 'utf8');
 
 test('delete_own_account is restricted to the authenticated user', () => {
   assert.match(deleteMigration, /create or replace function public\.delete_own_account\(\)/i);
@@ -24,4 +25,5 @@ test('deleting an auth user cascades through every Logbook cloud data table', ()
   assert.match(initialSchema, /public\.sessions[\s\S]*references auth\.users \(id\) on delete cascade/i);
   assert.match(syncSchema, /public\.user_sync_state[\s\S]*references auth\.users \(id\) on delete cascade/i);
   assert.match(errorTrackingSchema, /public\.client_error_events[\s\S]*references auth\.users \(id\) on delete cascade/i);
+  assert.match(snapshotSchema, /public\.user_sync_snapshots[\s\S]*references auth\.users \(id\) on delete cascade/i);
 });

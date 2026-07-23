@@ -5,6 +5,7 @@ import { loadApp, click, setValue } from './helpers.mjs';
 
 const styles = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+const i18nSource = readFileSync(new URL('../i18n.js', import.meta.url), 'utf8');
 
 const routineWith = plan => [{ id: 'r1', name: 'Test Routine', isActive: true, plan }];
 const planDay = (day, exercise, extra = {}) => ({ id: `p-${day}-${exercise}`, day, workoutName: `${day} Workout`, exercise, workSets: 3, cues: '', ...extra });
@@ -29,7 +30,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.6');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.9.7');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -238,6 +239,20 @@ test('program ticket controls move one ticket left or right', () => {
   pointer('pointerdown', 220);
   pointer('pointerup', 120);
   assert.equal(list.querySelector('[data-carousel-position="0"]').dataset.routineId, 'r2');
+});
+
+test('navigation arrows use the shared SVG sprite and keep accessible labels', () => {
+  const { document } = loadApp();
+  const controls = [
+    ...document.querySelectorAll('.routine-carousel-controls button, .history-week-arrow, .deck-arrow'),
+  ];
+  assert.ok(controls.length >= 6);
+  controls.forEach(control => {
+    assert.ok(control.getAttribute('aria-label'));
+    assert.equal(control.querySelector('svg')?.getAttribute('aria-hidden'), 'true');
+    assert.match(control.querySelector('use')?.getAttribute('href') || '', /^#(?:arrow|chevron)-(?:left|right)-icon$/);
+    assert.doesNotMatch(control.textContent, /[←→‹›]/);
+  });
 });
 
 test('clicking a side ticket centers it without rebuilding the carousel', () => {
@@ -1005,6 +1020,24 @@ test('language picker switches all supported languages and persists the choice',
   click(document, '[data-language="el"]');
   assert.equal(document.querySelector('.nav-button[data-view="overview"]').textContent, 'Ιστορικό');
   assert.equal(document.querySelector('#routine-form > label').childNodes[0].textContent, 'Όνομα προγράμματος');
+});
+
+test('stable message IDs survive source-copy changes and format composite aria labels', () => {
+  const { window, document } = loadApp();
+  assert.match(i18nSource, /'message\.0194':\['Αρχική','Home'/);
+  assert.doesNotMatch(i18nSource, /^\s*'Αρχική':\[/m);
+
+  const homeNavigation = document.querySelector('.nav-button[data-view="home"]');
+  homeNavigation.textContent = 'Νεότερη ελληνική διατύπωση';
+  window.LogbookI18n.setLanguage('en');
+  assert.equal(homeNavigation.textContent, 'Home');
+  assert.equal(
+    window.LogbookI18n.tId('aria.weight-set', {
+      unit:window.LogbookI18n.tId('message.0366'),
+      number:1,
+    }),
+    'lbs, set 1'
+  );
 });
 
 test('English section mottos omit articles while Greek keeps the revised Today motto', () => {

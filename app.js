@@ -1,10 +1,12 @@
-const store = {
-  read(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } },
-  write(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-    window.dispatchEvent(new CustomEvent('logbook:local-data-changed', { detail:{ key } }));
-  }
-};
+import * as StorageMigrations from './modules/storage-migrations.js';
+import * as RoutineModel from './modules/routines.js';
+import * as SessionModel from './modules/sessions.js';
+import * as ProgressRewards from './modules/progress-rewards.js';
+import * as UI from './modules/ui.js';
+
+const store = StorageMigrations.createStore(localStorage, {
+  onWrite:key => window.dispatchEvent(new CustomEvent('logbook:local-data-changed', { detail:{ key } })),
+});
 
 // A cloud payload was just written into localStorage. A blind reload here would
 // wipe any half-typed workout, plan day or profile edit, so reload only when the
@@ -34,10 +36,7 @@ window.addEventListener('logbook:cloud-data-applied', () => {
 });
 
 function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.') {
-  try {
-    store.write(key, value);
-    return true;
-  } catch {
+  return StorageMigrations.writeSafely(store, key, value, () => {
     const notification = document.querySelector('#toast');
     if (notification) {
       notification.textContent = message;
@@ -45,171 +44,69 @@ function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η �
       notification.classList.add('show');
       setTimeout(() => notification.classList.remove('show'), 2200);
     }
-    return false;
-  }
+  });
 }
 
-const days = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
-const planOrder = ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
-const MIN_CYCLE_LENGTH = 3;
-const MAX_CYCLE_LENGTH = 10;
-const clampCycleLength = value => Math.max(MIN_CYCLE_LENGTH, Math.min(MAX_CYCLE_LENGTH, Number(value) || 7));
-const dateParts = value => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
-  return match ? match.slice(1).map(Number) : null;
-};
-const dateFromParts = parts => parts ? new Date(parts[0], parts[1] - 1, parts[2]) : null;
-const inputDateValue = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-const mondayFor = (value = inputDateValue()) => {
-  const date = dateFromParts(dateParts(value)) || new Date();
-  date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-  return inputDateValue(date);
-};
-const legacyCycleDay = day => { const index = planOrder.indexOf(day); return index >= 0 ? index + 1 : null; };
-const validCycleDay = (value, length) => Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= length ? Number(value) : null;
-function normalizeRoutine(routine = {}, index = 0) {
-  const cycleLength = clampCycleLength(routine.cycleLength);
-  const cycleAnchorDate = dateParts(routine.cycleAnchorDate) ? routine.cycleAnchorDate : mondayFor();
-  const usesWeekdays = routine.usesWeekdays !== false;
-  const plan = Array.isArray(routine.plan) ? routine.plan.map(item => {
-    const cycleDay = validCycleDay(item.cycleDay, cycleLength) || validCycleDay(legacyCycleDay(item.day), cycleLength);
-    return cycleDay ? { ...item, cycleDay } : null;
-  }).filter(Boolean) : [];
-  return { id:routine.id || crypto.randomUUID(), name:routine.name || `Πρόγραμμα ${index + 1}`, isActive:Boolean(routine.isActive), cycleLength, cycleAnchorDate, usesWeekdays, plan };
-}
-const cycleDayForDate = (routine, value) => {
-  const anchor = dateParts(routine?.cycleAnchorDate);
-  const current = dateParts(value);
-  if (!anchor || !current) return 1;
-  const difference = Math.round((Date.UTC(...[current[0], current[1] - 1, current[2]]) - Date.UTC(...[anchor[0], anchor[1] - 1, anchor[2]])) / 86400000);
-  const length = clampCycleLength(routine?.cycleLength);
-  return ((difference % length) + length) % length + 1;
-};
-const weekdayForCycleDay = (routine, cycleDay) => {
-  const anchor = dateFromParts(dateParts(routine?.cycleAnchorDate)) || new Date();
-  anchor.setDate(anchor.getDate() + Number(cycleDay) - 1);
-  return days[anchor.getDay()];
-};
-const itemCycleDay = (item, routine) => validCycleDay(item?.cycleDay, clampCycleLength(routine?.cycleLength)) || legacyCycleDay(item?.day);
-const planItemsForCycleDay = (routine, cycleDay) => (routine?.plan || []).filter(item => itemCycleDay(item, routine) === Number(cycleDay));
-const declaredWeekdayForCycleDay = (routine, cycleDay) => planItemsForCycleDay(routine, cycleDay)[0]?.day || weekdayForCycleDay(routine, cycleDay);
-const weekdayDeclarationCount = (routine, weekday, excludedCycleDay = null) => [
-  ...new Set((routine?.plan || []).map(item => itemCycleDay(item, routine)).filter(Boolean)),
-].filter(cycleDay => cycleDay !== Number(excludedCycleDay) && declaredWeekdayForCycleDay(routine, cycleDay) === weekday).length;
-const cycleDayLabel = (routine, cycleDay) => routine?.usesWeekdays === false
-  ? planItemsForCycleDay(routine, cycleDay)[0]?.workoutName || 'Προπόνηση'
-  : declaredWeekdayForCycleDay(routine, cycleDay);
-const oldLogs = store.read('trainingLogs');
-const savedSessions = store.read('trainingSessions');
-const savedProfile = store.read('userProfile');
-const legacyPlan = store.read('trainingPlan');
-const savedRoutines = store.read('trainingRoutines');
-const migratedRoutine = normalizeRoutine({ id:crypto.randomUUID(), name:'Το πρόγραμμά μου', isActive:true, cycleLength:7, cycleAnchorDate:mondayFor(), plan:Array.isArray(legacyPlan) ? legacyPlan : [] });
-const routines = Array.isArray(savedRoutines) && savedRoutines.length
-  ? savedRoutines.map(normalizeRoutine)
-  : [migratedRoutine];
-if (!routines.some(routine => routine.isActive)) routines[0].isActive = true;
-let foundActiveRoutine = false;
-routines.forEach(routine => { if (routine.isActive && !foundActiveRoutine) foundActiveRoutine = true; else if (routine.isActive) routine.isActive = false; });
-// A bad sync merge can strip a routine's plan while its workout history survives;
-// without plan days the reward track and plan board go blank. Rebuild the plan
-// from the logged sessions of that routine.
-let rebuiltPlans = false;
-routines.forEach(routine => {
-  if (routine.plan.length) return;
-  const history = (Array.isArray(savedSessions) ? savedSessions : []).filter(session =>
-    session?.routineId != null && String(session.routineId) === String(routine.id) && session.type !== 'free' && session.date);
-  if (history.length < 3) return;
-  const latestByCycleDay = new Map();
-  [...history].sort((a, b) => String(a.date).localeCompare(String(b.date))).forEach(session => {
-    const cycleDay = validCycleDay(session.cycleDay, routine.cycleLength)
-      || validCycleDay(legacyCycleDay(session.workoutDay), routine.cycleLength);
-    if (cycleDay) latestByCycleDay.set(cycleDay, session);
-  });
-  if (!latestByCycleDay.size) return;
-  routine.plan = [...latestByCycleDay.entries()].sort((a, b) => a[0] - b[0]).flatMap(([cycleDay, session]) =>
-    (session.exercises?.length ? session.exercises : [{ exercise:'Προπόνηση' }]).map(entry => ({
-      id:crypto.randomUUID(),
-      day:routine.usesWeekdays === false ? null : session.workoutDay || null,
-      cycleDay,
-      workoutName:session.workoutName || session.workoutDay || 'Προπόνηση',
-      exercise:entry.exercise || 'Άσκηση',
-      workSets:entry.sets?.length || 3,
-      cues:'',
-    })));
-  rebuiltPlans = true;
+const {
+  DAYS:days,
+  PLAN_ORDER:planOrder,
+  MIN_CYCLE_LENGTH,
+  MAX_CYCLE_LENGTH,
+  clampCycleLength,
+  dateParts,
+  inputDateValue,
+  mondayFor,
+  legacyCycleDay,
+  validCycleDay,
+  normalizeRoutine,
+  cycleDayForDate,
+  weekdayForCycleDay,
+  itemCycleDay,
+  planItemsForCycleDay,
+  declaredWeekdayForCycleDay,
+  weekdayDeclarationCount,
+  cycleDayLabel,
+} = RoutineModel;
+const oldLogs = store.read('trainingLogs', []);
+const savedSessions = store.read('trainingSessions', []);
+const savedProfile = store.read('userProfile', null);
+const legacyPlan = store.read('trainingPlan', []);
+const savedRoutines = store.read('trainingRoutines', []);
+const { state, repairs } = StorageMigrations.migrateLocalData({
+  oldLogs,
+  savedSessions,
+  savedProfile,
+  legacyPlan,
+  savedRoutines,
+  randomUUID:() => crypto.randomUUID(),
 });
-const placeholderRoutineNames = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
-const matchingSessionCount = routine => (Array.isArray(savedSessions) ? savedSessions : []).filter(session =>
-  session?.routineId != null && String(session.routineId) === String(routine.id) && session.type !== 'free'
-).length;
-const staleActiveRoutine = routines.find(routine => routine.isActive
-  && placeholderRoutineNames.has(routine.name)
-  && !routine.plan.length
-  && matchingSessionCount(routine) === 0);
-if (staleActiveRoutine) {
-  const historicalRoutine = routines
-    .filter(routine => routine.id !== staleActiveRoutine.id && routine.plan.length && matchingSessionCount(routine) > 0)
-    .sort((a, b) => matchingSessionCount(b) - matchingSessionCount(a))[0];
-  if (historicalRoutine) {
-    staleActiveRoutine.isActive = false;
-    historicalRoutine.isActive = true;
-  }
-}
-if (rebuiltPlans) safeStoreWrite('trainingRoutines', routines);
-const state = { routines, selectedRoutineId:routines.find(routine => routine.isActive)?.id ?? routines[0]?.id ?? null, editingRoutineId:null, sessions: savedSessions.length ? savedSessions : oldLogs.map(log => ({ id:log.id, date:log.date, type:'free', comments:'', exercises:[{ exercise:log.exercise, comments:log.comments || '', sets:log.sets || [] }] })), profile:(!Array.isArray(savedProfile) && savedProfile) ? savedProfile : null, mode: 'scheduled', editingDay:null, editingSessionId:null, copyingSessionId:null, selectedPlanDay:null, openSessionId:null, selectedHistoryDate:null, historyWeekOffset:0 };
 let customAvatarData = state.profile?.customImage || '';
 let routineCarouselIndex = 0;
 let routineSwipeStartX = null;
 let historySwipe = null;
-if (!savedSessions.length && oldLogs.length) safeStoreWrite('trainingSessions', state.sessions);
-if (!(Array.isArray(savedRoutines) && savedRoutines.length) || JSON.stringify(savedRoutines) !== JSON.stringify(state.routines)) safeStoreWrite('trainingRoutines', state.routines);
+if (repairs.sessionsChanged) safeStoreWrite('trainingSessions', state.sessions);
+if (repairs.routinesChanged) safeStoreWrite('trainingRoutines', state.routines);
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 
-const KG_TO_LBS = 2.2046226218;
-const profileWeightUnit = profile => profile?.weightUnit === 'lbs' ? 'lbs' : 'kg';
+const {
+  WEIGHT_MODES,
+  localDateInputValue,
+  localDate,
+  dayForDate,
+  profileWeightUnit,
+  nonNegativeNumber,
+  numericInputValue,
+  inferredWeightMode,
+  safeWeightMode,
+  csvEscape,
+} = SessionModel;
 const weightUnit = () => profileWeightUnit(state.profile);
-const weightUnitName = (unit = weightUnit()) => unit === 'lbs' ? 'Λίβρες' : 'Κιλά';
-const weightUnitSymbol = (unit = weightUnit()) => unit === 'lbs' ? 'lbs' : 'kg';
-const WEIGHT_MODES = ['kg','plates','mixed','bodyweight','bodyweight_extra'];
-const nonNegativeNumber = (value, { integer = false } = {}) => {
-  if (!['number','string'].includes(typeof value) || (typeof value === 'string' && !value.trim())) return null;
-  const number = Number(value);
-  return Number.isFinite(number) && number >= 0 && (!integer || Number.isInteger(number)) ? number : null;
-};
-const numericInputValue = (value, options) => {
-  const number = nonNegativeNumber(value, options);
-  return number === null ? '' : String(number);
-};
-const inferredWeightMode = value => {
-  const plates = nonNegativeNumber(value.plates, { integer:true });
-  const weight = nonNegativeNumber(value.weight);
-  return plates !== null ? (weight !== null ? 'mixed' : 'plates') : 'kg';
-};
-const safeWeightMode = value => WEIGHT_MODES.includes(value) ? value : null;
-const roundWeight = value => Number(Number(value).toFixed(6));
-const formatWeightDisplay = value => Number(Number(value).toFixed(2));
-const storedWeightToDisplay = (value, unit = weightUnit()) => {
-  const stored = nonNegativeNumber(value);
-  if (stored === null) return '';
-  const converted = unit === 'lbs' ? stored * KG_TO_LBS : stored;
-  // Displayed inputs stay readable in either unit. Re-saving a converted value can therefore
-  // shift the canonical kg value by at most 0.005 kg, while storage otherwise keeps 6 decimals.
-  return formatWeightDisplay(converted);
-};
-const inputWeightToStored = (value, unit = weightUnit()) => {
-  const entered = nonNegativeNumber(value);
-  if (entered === null) return null;
-  return roundWeight(unit === 'lbs' ? entered / KG_TO_LBS : entered);
-};
-const weightModeSourceLabel = (mode, unit = weightUnit()) => ({
-  kg:weightUnitName(unit),
-  plates:'Πλάκες',
-  mixed:`Πλάκες+${weightUnitName(unit)}`,
-  bodyweight:'Bodyweight',
-  bodyweight_extra:`Bodyweight+${weightUnitName(unit)}`
-}[mode] || mode);
+const weightUnitName = (unit = weightUnit()) => SessionModel.weightUnitName(unit);
+const weightUnitSymbol = (unit = weightUnit()) => SessionModel.weightUnitSymbol(unit);
+const storedWeightToDisplay = (value, unit = weightUnit()) => SessionModel.storedWeightToDisplay(value, unit);
+const inputWeightToStored = (value, unit = weightUnit()) => SessionModel.inputWeightToStored(value, unit);
+const weightModeSourceLabel = (mode, unit = weightUnit()) => SessionModel.weightModeSourceLabel(mode, unit);
 
 function refreshWeightUnitUI(previousUnit = weightUnit()) {
   const unit = weightUnit(), symbol = weightUnitSymbol(unit), unitName = weightUnitName(unit);
@@ -224,7 +121,10 @@ function refreshWeightUnitUI(previousUnit = weightUnit()) {
       input.placeholder = symbol;
       input.step = 'any';
       const setPosition = Number(row.querySelector('.set-number')?.textContent) || 1;
-      input.setAttribute('aria-label', `${unitName} σετ ${setPosition}`);
+      input.setAttribute('aria-label', window.LogbookI18n?.tId?.('aria.weight-set', {
+        unit:window.LogbookI18n?.tId?.(unit === 'lbs' ? 'message.0366' : 'message.0365') || unitName,
+        number:setPosition,
+      }) || `${unitName} σετ ${setPosition}`);
     }
     row.querySelectorAll('.weight-mode option').forEach(option => { option.textContent = weightModeSourceLabel(option.value, unit); });
     window.LogbookI18n?.translate(row);
@@ -259,11 +159,8 @@ function renderHome() {
   renderHomeProfileCard();
   renderHomeRoutineCard();
 }
-const esc = (value = '') => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const esc = UI.escapeHtml;
 const id = () => crypto.randomUUID();
-const localDateInputValue = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-const localDate = date => date ? new Date(`${date}T12:00:00`) : null;
-const dayForDate = date => date ? days[localDate(date).getDay()] : 'Χωρίς ημέρα';
 const formatDate = date => date ? localDate(date).toLocaleDateString(window.LogbookI18n?.getLocale() || 'el-GR', { day:'numeric', month:'short', year:'numeric' }) : 'Χωρίς ημερομηνία';
 const selectedRoutine = () => state.routines.find(routine => routine.id === state.selectedRoutineId) || state.routines[0];
 const activeRoutine = () => state.routines.find(routine => routine.isActive) || state.routines[0];
@@ -354,35 +251,12 @@ function switchRewardRoutine(previousId, nextId) {
 }
 
 function routineReward(routine = activeRoutine()) {
-  const plannedDays = new Set((routine?.plan || []).map(item => itemCycleDay(item, routine)));
-  const target = plannedDays.size;
-  if (!routine || !target) return { stage:0, streak:0, target:0, completedThisWeek:0, label:rewardLabels[0], routine };
-  const completions = new Map();
-  state.sessions.forEach(session => {
-    if (!scheduledForRoutine(session, routine) || !session.date) return;
-    const cycle = cycleStartKey(routine, session.date);
-    if (!completions.has(cycle)) completions.set(cycle, new Set());
-    const cycleDay = validCycleDay(session.cycleDay, routine.cycleLength) || legacyCycleDay(session.workoutDay) || cycleDayForDate(routine, session.date);
-    completions.get(cycle).add(plannedDays.has(cycleDay) ? cycleDay : `date:${session.date}`);
+  const reward = ProgressRewards.calculateRoutineReward({
+    routine,
+    sessions:state.sessions,
+    rewardTracking,
   });
-  const currentWeek = cycleStartKey(routine, localDateInputValue());
-  const periods = rewardTracking.periods[routine.id] || [];
-  let streak = 0, maxStreak = 0;
-  const processed = new Set();
-  periods.forEach(period => {
-    const cappedEnd = !period.end || period.end > currentWeek ? currentWeek : period.end;
-    for (let week = cycleStartKey(routine, period.start); week <= cappedEnd; week = shiftCycle(routine, week, 1)) {
-      if (processed.has(week)) continue;
-      processed.add(week);
-      const completed = (completions.get(week)?.size || 0) >= target;
-      const partialBoundary = week === cappedEnd && (week === currentWeek || period.end !== null);
-      if (completed) { streak += 1; maxStreak = Math.max(maxStreak, streak); }
-      else if (!partialBoundary) streak = 0;
-    }
-  });
-  // GYMRAT is permanent for a routine after 12 completed microcycles.
-  const stage = maxStreak >= 12 ? 4 : streak >= 4 ? 3 : streak >= 1 ? 2 : 1;
-  return { stage, streak, target, completedThisWeek:Math.min(target, completions.get(currentWeek)?.size || 0), label:rewardLabels[stage], routine };
+  return { ...reward, label:rewardLabels[reward.stage], routine };
 }
 
 function renderRewards() {
@@ -737,9 +611,9 @@ function refreshWorkoutDayOptions(preferredDay) {
 function deckShellHTML(cardsHTML) {
   return `<div class="exercise-deck-shell" tabindex="0">
     <div class="deck-head">
-      <button class="deck-arrow deck-arrow-prev" type="button" aria-label="Προηγούμενη άσκηση">‹</button>
+      <button class="deck-arrow deck-arrow-prev" type="button" aria-label="Προηγούμενη άσκηση" data-i18n-aria-label="message.0349"><svg aria-hidden="true"><use href="#chevron-left-icon"/></svg></button>
       <span class="deck-stamp" role="status"></span>
-      <button class="deck-arrow deck-arrow-next" type="button" aria-label="Επόμενη άσκηση">›</button>
+      <button class="deck-arrow deck-arrow-next" type="button" aria-label="Επόμενη άσκηση" data-i18n-aria-label="message.0350"><svg aria-hidden="true"><use href="#chevron-right-icon"/></svg></button>
     </div>
     <div class="exercise-deck">${cardsHTML}</div>
     <div class="deck-progress"><i></i></div>
@@ -978,12 +852,6 @@ function sessionWorkoutName(session) {
   return routinePlan.find(item => itemCycleDay(item, routine) === cycleDay)?.workoutName || 'Προπόνηση';
 }
 
-const csvEscape = value => {
-  const raw = String(value ?? '');
-  const str = /^[\t\r]|^\s*[=+@-]/.test(raw) ? `'${raw}` : raw;
-  return /["\r\n,;]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-};
-
 function sessionsToCsvRows() {
   const rows = [['Ημερομηνία', 'Προπόνηση', 'Άσκηση', 'Σετ', 'Επαναλήψεις', 'Βάρος', 'Μονάδα', 'Πλάκες', 'Σχόλια άσκησης', 'Σχόλια προπόνησης']];
   [...state.sessions].sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach(session => {
@@ -1171,15 +1039,13 @@ function renderOverview() {
 
 function renderPersonalBests() {
   const bests = new Map();
-  const performanceScore = set => set.weightMode === 'bodyweight' ? [Number(set.reps)||0] : set.weightMode === 'mixed' ? [Number(set.plates)||0,Number(set.weight)||0,Number(set.reps)||0] : set.weightMode === 'plates' ? [Number(set.plates)||0,Number(set.reps)||0] : [Number(set.weight)||0,Number(set.reps)||0];
-  const isBetter = (candidate, current) => !current || performanceScore(candidate).some((value,index) => value !== performanceScore(current)[index] && performanceScore(candidate).slice(0,index).every((prior,i) => prior === performanceScore(current)[i]) && value > performanceScore(current)[index]);
   state.sessions.forEach(session => session.exercises.forEach(ex => ex.sets.forEach(set => {
     const mode = set.weightMode || 'kg';
     if (!(Number(set.reps) > 0)) return;
     const hasValidLoad = mode === 'bodyweight' || (['kg','bodyweight_extra'].includes(mode) && Number(set.weight) > 0) || (mode === 'plates' && Number(set.plates) > 0) || (mode === 'mixed' && (Number(set.plates) > 0 || Number(set.weight) > 0));
     if (!hasValidLoad) return;
     const key = `${normalizedName(ex.exercise)}::${mode}`;
-    if (isBetter({ ...set, weightMode:mode }, bests.get(key)?.set)) bests.set(key, { name:ex.exercise, mode, set:{ ...set, weightMode:mode } });
+    if (ProgressRewards.isBetterPerformance({ ...set, weightMode:mode }, bests.get(key)?.set)) bests.set(key, { name:ex.exercise, mode, set:{ ...set, weightMode:mode } });
   })));
   const ranked = [...bests.values()].sort((a,b) => a.name.localeCompare(b.name,'el'));
   const bestValue = best => {
@@ -1189,10 +1055,10 @@ function renderPersonalBests() {
   $('#personal-bests').innerHTML = ranked.length ? ranked.map(best => `<article><div><strong data-i18n-user>${esc(best.name)}</strong><small>${best.set.reps} επαναλήψεις</small></div><b>${bestValue(best)}</b></article>`).join('') : '<div class="empty"><span>Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σας.</span></div>';
 }
 
-const normalizedName = value => String(value || '').trim().toLocaleLowerCase('el-GR').replace(/\s+/g, ' ');
+const normalizedName = ProgressRewards.normalizedName;
 const modeLabel = mode => ({ kg:weightUnitSymbol(), plates:'πλάκες', mixed:`πλάκες + ${weightUnitSymbol()}`, bodyweight:'Bodyweight', bodyweight_extra:'Bodyweight + Extra Βάρος' }[mode] || mode);
 // Πλάκες and Πλάκες + Κιλά share the plates scale; Bodyweight and Bodyweight + kg share the extra-kg scale.
-const weightModeGroup = mode => mode === 'kg' ? 'kg' : ['plates','mixed'].includes(mode) ? 'plates' : 'bodyweight';
+const weightModeGroup = ProgressRewards.weightModeGroup;
 const groupLabel = group => ({ kg:weightUnitSymbol(), plates:`Πλάκες (+ ${weightUnitSymbol()})`, bodyweight:`Bodyweight (+ ${weightUnitSymbol()})` }[group] || group);
 
 function progressWorkouts() {
@@ -1262,25 +1128,8 @@ function renderProgressChart() {
   // Bodyweight-only history has no load to chart, so the line tracks reps instead.
   const primaryUnit = comparableGroup === 'kg' ? weightUnitSymbol() : comparableGroup === 'plates' ? 'πλάκες' : points.some(item => item.value > 0) ? `extra ${weightUnitSymbol()}` : null;
   const linePoints = points.map((item,i) => ({ x:x(i), y:y(chartValue(item)) }));
-  const smoothPath = series => {
-    if (series.length < 2) return '';
-    // Monotone cubic (Fritsch–Carlson): smooth without overshooting past the data points.
-    const count = series.length, gaps = [], slopes = [], tangents = new Array(count);
-    for (let i = 0; i < count - 1; i++) { gaps.push(series[i + 1].x - series[i].x); slopes.push((series[i + 1].y - series[i].y) / (gaps[i] || 1)); }
-    tangents[0] = slopes[0]; tangents[count - 1] = slopes[count - 2];
-    for (let i = 1; i < count - 1; i++) tangents[i] = slopes[i - 1] * slopes[i] <= 0 ? 0 : (slopes[i - 1] + slopes[i]) / 2;
-    for (let i = 0; i < count - 1; i++) {
-      if (slopes[i] === 0) { tangents[i] = 0; tangents[i + 1] = 0; continue; }
-      const a = tangents[i] / slopes[i], b = tangents[i + 1] / slopes[i], size = a * a + b * b;
-      if (size > 9) { const scale = 3 / Math.sqrt(size); tangents[i] = scale * a * slopes[i]; tangents[i + 1] = scale * b * slopes[i]; }
-    }
-    return `M ${series[0].x} ${series[0].y} ${series.slice(1).map((point, i) => {
-      const previous = series[i], third = gaps[i] / 3;
-      return `C ${previous.x + third} ${previous.y + third * tangents[i]} ${point.x - third} ${point.y - third * tangents[i + 1]} ${point.x} ${point.y}`;
-    }).join(' ')}`;
-  };
   const mainPoints = primaryUnit ? linePoints : points.map((item,i) => ({ x:x(i), y:repY(item.reps) }));
-  const smoothLine = smoothPath(mainPoints);
+  const smoothLine = ProgressRewards.smoothPath(mainPoints);
   const exerciseName = points[0]?.session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey)?.exercise || '';
   const pointLabel = (item, { fullReps = false } = {}) => {
     const repsUnit = fullReps ? 'επαναλήψεις' : 'επαν.';
@@ -1811,25 +1660,11 @@ function showView(view, { skipSessionWarning = false } = {}) {
 }
 
 function syncNavigation(view) {
-  $$('.nav-button').forEach(button => {
-    const active = button.dataset.view === view;
-    button.classList.toggle('active', active);
-    if (active) button.setAttribute('aria-current', 'page');
-    else button.removeAttribute('aria-current');
-  });
+  UI.syncNavigationState(document, view);
 }
 
 function setMenu(open) {
-  const menu = $('#side-menu');
-  const wasOpen = menu.classList.contains('open');
-  menu.classList.toggle('open', open);
-  $('#menu-backdrop').classList.toggle('open', open);
-  menu.setAttribute('aria-hidden', String(!open));
-  menu.toggleAttribute('inert', !open);
-  $('#open-menu').setAttribute('aria-expanded', String(open));
-  document.body.style.overflow = open ? 'hidden' : '';
-  if (open) requestAnimationFrame(() => $('#close-menu').focus());
-  else if (wasOpen) $('#open-menu').focus();
+  UI.setMenuState(document, open);
 }
 function closeMenu() { setMenu(false); }
 

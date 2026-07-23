@@ -137,6 +137,7 @@
     }
     if (document.querySelector('script[data-logbook-app]')) return;
     const script = document.createElement('script');
+    script.type = 'module';
     script.src = 'app.js';
     script.dataset.logbookApp = '';
     script.addEventListener('load', () => {

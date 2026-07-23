@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.9.6';
+const CACHE_VERSION = 'logbook-0.9.7';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
 const APP_SHELL = [
   './',
@@ -15,6 +15,11 @@ const APP_SHELL = [
   './auth.js',
   './cloud-sync.js',
   './app.js',
+  './modules/storage-migrations.js',
+  './modules/routines.js',
+  './modules/sessions.js',
+  './modules/progress-rewards.js',
+  './modules/ui.js',
   './pwa.js',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

@@ -69,6 +69,11 @@ test('service worker precaches the complete local shell without development seed
     './fonts.css',
     './styles.css',
     './app.js',
+    './modules/storage-migrations.js',
+    './modules/routines.js',
+    './modules/sessions.js',
+    './modules/progress-rewards.js',
+    './modules/ui.js',
     './auth.js',
     './cloud-sync.js',
     './error-tracking.js',
@@ -109,6 +114,7 @@ test('GitHub Pages workflow publishes a production-only artifact', () => {
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /path: _site/);
   assert.match(workflow, /cp .*error-tracking\.js.* _site\//, 'the deployed shell includes error tracking');
+  assert.match(workflow, /cp -R modules _site\/modules/, 'the deployed shell includes ES modules');
   assert.doesNotMatch(workflow, /cp .*seed/);
   assert.doesNotMatch(workflow, /cp .*tests/);
   assert.doesNotMatch(workflow, /cp .*designs/);

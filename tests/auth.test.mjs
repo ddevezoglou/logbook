@@ -108,6 +108,7 @@ test('an existing session waits for initial sync before loading the application'
   const appScript = document.querySelector('script[data-logbook-app]');
   assert.ok(appScript);
   assert.equal(appScript.getAttribute('src'), 'app.js');
+  assert.equal(appScript.getAttribute('type'), 'module');
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'loading');
 
   appScript.dispatchEvent(new window.Event('load'));

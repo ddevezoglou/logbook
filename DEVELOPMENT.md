@@ -1,10 +1,10 @@
 # Logbook — Development Guide
 
-Το `DEVELOPMENT.md` είναι ο τεχνικός οδηγός του Logbook: περιγράφει την αρχιτεκτονική, την τοπική εκτέλεση, το quality gate, τη διαδικασία release και το ενεργό τεχνικό roadmap.
+Το `DEVELOPMENT.md` είναι ο τεχνικός οδηγός του Logbook: περιγράφει την αρχιτεκτονική, την τοπική εκτέλεση, το quality gate, τη διαδικασία release και την τρέχουσα τεχνική κατάσταση.
 
 | Στοιχείο | Τρέχουσα κατάσταση |
 |---|---|
-| Έκδοση | **0.9.6** |
+| Έκδοση | **0.9.7** |
 | Runtime | Node.js 22 |
 | Client | HTML, CSS και JavaScript χωρίς build step |
 | Αποθήκευση | Local-first με `localStorage` και Supabase sync |
@@ -63,12 +63,16 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 - Προγραμματισμένες και ελεύθερες προπονήσεις με ασκήσεις, σετ, επαναλήψεις, βάρη, cues και σχόλια. Η αποθήκευση βάρους γίνεται σε κανονικοποιημένα kg, ενώ η καταχώριση και η εμφάνιση υποστηρίζουν συνεπή εναλλαγή kg/lb.
 - Ιστορικό με ασφαλή εξαγωγή σε CSV, προσωπικά ρεκόρ, στατιστικά, γραφήματα προόδου και rewards συνέπειας.
 - Προφίλ αθλητή και ελληνικό, αγγλικό, γαλλικό και γερμανικό interface, με ελεγμένη φυσική διατύπωση και πλήρη κάλυψη των translation keys.
-- Supabase Auth με email/κωδικό ή Google και συγχρονισμό πολλών συσκευών.
+- Supabase Auth με email/κωδικό ή Google και συγχρονισμό πολλών συσκευών, με optimistic revision checks, αυτόματο merge και conflict retry.
+- Ιδιωτικό ιστορικό ημερήσιων cloud recovery snapshots, χωρίς πρόσβαση από τον client και με αυτόματο pruning μετά από 30 ημέρες.
 - Αυτόματη μεταφορά παλιότερων τοπικών δεδομένων στο τρέχον μοντέλο.
 - Installable PWA με offline shell και responsive mobile UI.
+- Modular ES αρχιτεκτονική με σαφή όρια για storage/migrations, routines, sessions, progress/rewards και κοινά UI primitives.
+- Κοινό SVG sprite για τα navigation controls και σταθερά `message.NNNN` i18n IDs για DOM, ARIA και σύνθετα labels.
 - Self-hosted και pinned Supabase browser bundle `2.110.7`, με καταγεγραμμένο SHA-256, άδεια MIT και offline/integrity tests.
 - Κανονικοποίηση των αριθμητικών τιμών και escaping του περιεχομένου χρήστη πριν από απόδοση σε HTML, μαζί με βαθύ validation των local/cloud payloads.
-- Release hygiene που αποκλείει debug logging και test artifacts από τον production κώδικα και τα releases.
+- Ελεγχόμενο version bump που ενημερώνει μαζί package metadata, UI version, service-worker cache, tests και documentation.
+- Release hygiene και ενιαίο quality gate που αποκλείουν debug logging και test artifacts από τον production κώδικα και τα releases.
 - Privacy-safe error tracking για sync, PWA και πραγματικά unhandled client failures, μόνο με allowlisted τεχνικά metadata, rate limit 10 συμβάντων ανά ώρα και διατήρηση 30 ημερών.
 
 ### Χάρτης βασικών αρχείων
@@ -77,7 +81,12 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 |---|---|
 | `index.html` | Βασικό markup, dialogs και script loading |
 | `styles.css` | Design system και responsive layouts |
-| `app.js` | Κύρια εφαρμογή και UI orchestration· παραμένει προσωρινά monolithic |
+| `app.js` | Κύρια εφαρμογή και UI orchestration πάνω από τα domain modules |
+| `modules/storage-migrations.js` | Typed local storage, ασφαλείς εγγραφές και migrations παλιών δεδομένων |
+| `modules/routines.js` | Μοντέλο προγραμμάτων, μικρόκυκλοι και αντιστοίχιση ημερών |
+| `modules/sessions.js` | Ημερομηνίες, μονάδες βάρους, validation και ασφαλής CSV μορφοποίηση |
+| `modules/progress-rewards.js` | Συγκρίσεις επιδόσεων, καμπύλες γραφημάτων και rewards |
+| `modules/ui.js` | Κοινά UI primitives για escaping, navigation και menu state |
 | `i18n.js` | Μεταφράσεις και αλλαγή γλώσσας |
 | `auth.js` | Authentication gate και φόρτωση της εφαρμογής |
 | `cloud-sync.js` | Local/cloud merge και versioned synchronization |
@@ -86,12 +95,12 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 | `service-worker.js` | Offline app shell και runtime caching |
 | `tests/` | Unit και integration tests |
 | `e2e/` | Playwright mobile και accessibility tests |
-| `supabase/migrations/` | Schema, RLS policies και account deletion RPC |
+| `supabase/migrations/` | Schema, RLS policies, ημερήσια cloud snapshots, retention και account deletion RPC |
 | `.github/workflows/` | CI, Pages deployment και tagged releases |
 
 ## Supabase και authentication
 
-Οι migrations δημιουργούν τους πίνακες `profiles`, `routines`, `sessions` και το versioned `user_sync_state`. Ενεργοποιούν Row Level Security και περιορίζουν κάθε εγγραφή στον συνδεδεμένο χρήστη.
+Οι migrations δημιουργούν τους πίνακες `profiles`, `routines`, `sessions`, το versioned `user_sync_state` και το ιδιωτικό `user_sync_snapshots`. Ενεργοποιούν Row Level Security και περιορίζουν κάθε εγγραφή στον συνδεδεμένο χρήστη. Το snapshot trigger κρατά το πολύ ένα recovery point ανά χρήστη και UTC ημέρα, ενώ καθημερινό Supabase Cron job αφαιρεί όσα είναι παλαιότερα από 30 ημέρες. Τα snapshots δεν εκτίθενται στον client και δεν υπάρχει user-facing επαναφορά.
 
 Η πρώτη online φόρτωση απαιτεί επιβεβαιωμένη συνεδρία και επιτυχημένο αρχικό sync. Στη συνέχεια οι αλλαγές γράφονται πρώτα τοπικά. Το UI εμφανίζει την κατάσταση του συγχρονισμού και παρέχει χειροκίνητο **Συγχρονισμό τώρα**.
 
@@ -140,6 +149,14 @@ npx.cmd playwright install chromium webkit
 ```powershell
 npm.cmd test
 ```
+
+Ελεγχόμενο version bump χωρίς εγγραφή αρχείων:
+
+```powershell
+npm.cmd run version:bump -- 0.9.7 --dry-run
+```
+
+Αφαίρεσε το `--dry-run` μόνο όταν θέλεις να ενημερωθούν μαζί package metadata, UI version, service-worker cache, tests και ο παρών οδηγός.
 
 Μόνο τα browser tests:
 
@@ -210,15 +227,15 @@ npm.cmd run test:e2e
 
 Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.6.0`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
 
-## Γνωστοί περιορισμοί της 0.9.6
+## Γνωστοί περιορισμοί της 0.9.7
 
-- Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry, αλλά όχι UI χειροκίνητης επίλυσης ταυτόχρονων αλλαγών στο ίδιο αντικείμενο.
+- Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry και αυτόματο merge. Η σχεδιαστική παραδοχή είναι ότι η καταγραφή γίνεται από μία ενεργή συσκευή κάθε φορά, επομένως δεν προβλέπεται UI χειροκίνητης επίλυσης conflicts.
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
-## Αξιολόγηση 0.9.6 — Ιούλιος 2026
+## Αξιολόγηση 0.9.7 — Ιούλιος 2026
 
-Πλήρες review της εφαρμογής (κώδικας, ασφάλεια, design, tests, εμπορική ετοιμότητα) με τη μεθοδολογία των code-review, security-review και frontend-design plugins σε ολόκληρο το codebase. Κατά το review τα 207/207 unit/integration tests πέρασαν πράσινα. Τα παρακάτω ευρήματα **δεν** επικαλύπτουν τα υπάρχοντα TODO.
+Πλήρες review της εφαρμογής (κώδικας, ασφάλεια, design, tests, εμπορική ετοιμότητα) με τη μεθοδολογία των code-review, security-review και frontend-design plugins σε ολόκληρο το codebase. Κατά το review τα 207/207 unit/integration tests πέρασαν πράσινα. Οι ολοκληρωμένες εργασίες του review έχουν ενσωματωθεί στην τρέχουσα λειτουργική βάση παραπάνω· τα υπόλοιπα σημεία διατηρούνται ως τεχνικές και προϊοντικές παρατηρήσεις.
 
 | Τομέας | Βαθμός | Σχόλιο |
 |---|---|---|
@@ -226,7 +243,7 @@ npm.cmd run test:e2e
 | Testing & CI/CD | 9/10 | Πλήρες gate, e2e+a11y, allowlisted deploy artifact |
 | UI/UX & Design | 9/10 | Αυθεντική, αναγνωρίσιμη ταυτότητα· λείπει dark mode |
 | PWA & offline | 8.5/10 | Σωστό offline-first, καθαρό service worker lifecycle |
-| Αρχιτεκτονική κώδικα | 7.5/10 | Υψηλή ποιότητα, αλλά monolith (γνωστό TODO) και δομικά θέματα παρακάτω |
+| Αρχιτεκτονική κώδικα | 8.5/10 | Σαφή domain modules και ανεξάρτητα tests, με το `app.js` να παραμένει ο κεντρικός orchestrator |
 | Εμπορική ετοιμότητα | 5/10 | Auth-gate friction, χωρίς monetization, νομικά έγγραφα ή product analytics |
 
 **Συνολικά: 8/10 ως engineering, 5/10 ως εμπορικό προϊόν σήμερα.**
@@ -268,25 +285,42 @@ npm.cmd run test:e2e
 
 Ρεαλιστική εκτίμηση: με guest mode, νομικά έγγραφα, το P1 QA και απόφαση monetization, βάσιμο 1.0 σε 2–3 κύκλους δουλειάς. Δυνατά χαρτιά το τεχνικό προϊόν και το design· το δύσκολο είναι η απόκτηση χρηστών απέναντι σε δωρεάν εδραιωμένους ανταγωνιστές, όπου η χειροποίητη ταυτότητα και η ελληνική/ευρωπαϊκή τοπικοποίηση είναι η πιο πιστευτή διαφοροποίηση.
 
-## TODO
+## Σε εξέλιξη αυτή την περίοδο
 
-Η σειρά δηλώνει προτεραιότητα, όχι απαραίτητα το release στο οποίο θα ολοκληρωθεί κάθε εργασία.
+Roadmap με άξονα το εμπορικό μοντέλο: **φάση 1 δωρεάν προϊόν (όχι open source), τελικός στόχος κέρδος**. Επικαιροποιήθηκε στο review της 23ης Ιουλίου 2026 (223/223 unit/integration tests πράσινα).
 
-### P1 — Production hardening
+### P1 — Launch blockers για το δωρεάν προϊόν
 
 - [ ] **Physical-device QA:** smoke test σε τουλάχιστον ένα πρόσφατο Android και ένα iPhone, με έμφαση σε εγκατάσταση PWA, offline boot, safe areas, virtual keyboard και OAuth επιστροφή.
+- [ ] **Guest/demo mode:** local-only χρήση χωρίς λογαριασμό, με προτροπή δημιουργίας λογαριασμού για sync. Ο μεγαλύτερος μοχλός conversion που λείπει· η local-first αρχιτεκτονική το υποστηρίζει σχεδόν δωρεάν.
+- [ ] **Privacy policy & Όροι χρήσης:** αποθηκεύονται email, ημερομηνία γέννησης και φωτογραφίες χρηστών στην ΕΕ. Απαιτούνται πριν από δημόσια διάθεση και θα ζητηθούν από το Google OAuth verification. Τα GDPR θεμέλια (CSV export, διαγραφή λογαριασμού) υπάρχουν ήδη.
+- [ ] **Καθεστώς «δωρεάν αλλά όχι open source»:** το repo σήμερα είναι δημόσιο για το GitHub Pages. Χρειάζεται είτε ρητό LICENSE «All rights reserved» με όρους χρήσης, είτε μεταφορά σε private repo με hosting που υποστηρίζει private πηγή (π.χ. Cloudflare Pages) — απόφαση πριν το launch.
+- [ ] **CSP meta tag:** `<meta http-equiv="Content-Security-Policy">` με `default-src 'self'; connect-src 'self' https://hixnqtjsjcndeatxhpgd.supabase.co; img-src 'self' data:` — δεύτερη γραμμή άμυνας πάνω από το escaping.
+- [ ] **Όριο μεγέθους payload στη βάση:** `check (pg_column_size(payload) < 2*1024*1024)` στο `user_sync_state` (και στα snapshots μέσω trigger).
+- [ ] **Avatars εκτός sync payload:** μεταφορά του gallery σε Supabase Storage (το schema έχει ήδη `avatar_path`) ή τουλάχιστον εξαίρεσή του από το snapshot. Σήμερα έως 6 εικόνες base64 ταξιδεύουν με κάθε sync και πιέζουν το όριο του localStorage.
 
-### P2 — Πριν από την επόμενη μεγάλη λειτουργία
+### P2 — Conversion & retention (αμέσως μετά το launch)
 
-- [ ] **Διάσπαση του `app.js`:** μεταφορά σε μικρά ES modules με σαφή όρια για storage/migrations, routines, sessions, progress/rewards και UI rendering. Η αλλαγή να γίνει σταδιακά, με τα υπάρχοντα tests πράσινα σε κάθε βήμα.
-- [ ] **Αυτοματοποιημένο version bump:** script που ενημερώνει package metadata, UI version, service-worker cache, tests και documentation ως μία ελεγχόμενη πράξη.
-- [ ] **Στοχευμένα module tests:** διατήρηση των integration tests και προσθήκη μικρότερων tests στα νέα module boundaries.
-- [ ] **SVG navigation icons:** αντικατάσταση των text glyphs πλοήγησης με το υπάρχον SVG icon set χωρίς accessibility regression.
-- [ ] **Σταθερά i18n keys:** τα translation keys είναι σήμερα τα ίδια τα ελληνικά strings, οπότε κάθε αλλαγή ελληνικού κειμένου σπάει σιωπηλά τις μεταφράσεις (το v0.9.3 diff το έδειξε: «Πλάκες+kg» → «Πλάκες+Κιλά» απαίτησε rename των keys). Μετάβαση σε σταθερά IDs ανά φράση. Στο ίδιο πέρασμα, κάλυψη των σύνθετων aria-labels (π.χ. «Λίβρες σετ 1») που δεν αντιστοιχούν σε translation keys.
+- [ ] **Product analytics με σεβασμό στο privacy:** ελάχιστα allowlisted usage events (activation, retention, feature use) πάνω στο υπάρχον privacy-safe RPC pattern ή με self-hosted Plausible/Umami. Χωρίς μέτρηση δεν σχεδιάζεται freemium.
+- [ ] **Δημόσια landing εμπειρία:** ο νέος επισκέπτης σήμερα βλέπει μόνο login. Μία σελίδα με screenshots/επίδειξη της χάρτινης ταυτότητας πριν (ή δίπλα από) το auth gate — δουλεύει μαζί με το guest mode.
+- [ ] **Dark mode «νυχτερινή σελίδα»:** blackout theme πάνω στο υπάρχον `--ink`/`--paper` token system. Το gym use-case είναι συχνά βραδινό· κρατά την ταυτότητα και λύνει πραγματικό πρόβλημα.
+- [ ] **Print stylesheet:** η σελίδα προπόνησης και το πλάνο τυπώνονται φυσικά στη μεταφορά του προϊόντος· φθηνό feature με «wow».
+- [ ] **Pagination/windowing στο Ιστορικό:** το `renderOverview` χτίζει innerHTML για όλες τις sessions· με 2–3 χρόνια δεδομένων θα πονέσει σε mid-range κινητό.
+- [ ] **Απόφαση για «μία προπόνηση ανά ημέρα»:** πραγματικός περιορισμός για two-a-days· είτε καταγράφεται ως συνειδητή απόφαση είτε σχεδιάζεται migration πριν αποκτήσει μεγάλο ιστορικό χρηστών.
 
-### P3 — Product roadmap
+### P3 — Προετοιμασία monetization (πριν το 1.0)
 
-- [ ] Ιστορικό cloud snapshots, χειροκίνητη επαναφορά και προηγμένη επίλυση conflicts.
+- [ ] **Σχεδιασμός freemium ορίων:** τι μένει δωρεάν (γρήγορη καταγραφή, βασικό ιστορικό — το core promise) και τι γίνεται premium (προχωρημένα analytics, απεριόριστα προγράμματα, βιβλιοθήκη ασκήσεων, themes/print). Καθορίζει τι χτίζεται κλειδώσιμο από τώρα.
+- [ ] **Ενιαία βιβλιοθήκη ασκήσεων:** οι ασκήσεις είναι ελεύθερο κείμενο· χωρίς κανονικοποίηση δεν στέκονται αξιόπιστα premium analytics ανά άσκηση. Προαπαιτούμενο του premium tier.
+- [ ] **Υποδομή entitlements & πληρωμών:** πίνακας entitlements με RLS στο Supabase και πάροχος πληρωμών φιλικός σε EU sole trader (Stripe ή Lemon Squeezy/Paddle ως merchant of record για ΦΠΑ). Πρώτο βήμα χαμηλού ρίσκου: προαιρετικό «supporter» tier.
+- [ ] **Εμφάνιση billing κατάστασης** στο account dialog όταν ενεργοποιηθεί το premium.
+
+### Τεχνικό backlog (hardening, όχι blockers)
+
+- [ ] **Χαμένα error events:** στο `error-tracking.js`, αποτυχία του RPC πετά το event αντί να το επιστρέφει στην ουρά `pending`.
+- [ ] **Καθάρισμα `logbookCloudCache:<userId>` στο sign-out** ή ρητή τεκμηρίωση του trade-off για κοινές συσκευές.
+- [ ] **`isPlaceholder` flag αντί για hardcoded ονόματα:** τα «Το πρόγραμμά μου»/«Πρόγραμμα 1» λειτουργούν ως λογική σε `cloud-sync.js` και `modules/storage-migrations.js`· αν το default όνομα γίνει localized, η προστασία από empty snapshot σπάει σιωπηλά.
+- [ ] **Νεκρό attack surface:** οι πίνακες `profiles`, `routines`, `sessions` έχουν CRUD grants αλλά δεν χρησιμοποιούνται από τον client — αξιοποίηση (avatars/exercise library) ή αφαίρεση grants.
 
 ## Definition of Done
 

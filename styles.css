@@ -1364,3 +1364,23 @@ button,input,select,textarea { -webkit-tap-highlight-color:transparent; }
   .exercise-deck > .workout-exercise { transition-duration:.01s; }
   .deck-progress i { transition:none; }
 }
+
+.history-week-arrow svg,
+.routine-carousel-controls button svg,
+.deck-arrow svg {
+  fill:none;
+  stroke:currentColor;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+}
+.history-week-arrow svg { width:25px; height:25px; stroke-width:1.8; }
+.routine-carousel-controls button svg {
+  width:26px;
+  height:26px;
+  stroke-width:1.8;
+  transition:transform .58s cubic-bezier(.16,1,.3,1);
+}
+.routine-carousel-controls button:first-child:hover svg { transform:translateX(-3px); }
+.routine-carousel-controls button:last-child:hover svg { transform:translateX(3px); }
+.deck-arrow svg { width:18px; height:18px; stroke-width:2; }

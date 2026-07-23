@@ -2,12 +2,21 @@ import { JSDOM } from 'jsdom';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import * as StorageMigrations from '../modules/storage-migrations.js';
+import * as RoutineModel from '../modules/routines.js';
+import * as SessionModel from '../modules/sessions.js';
+import * as ProgressRewards from '../modules/progress-rewards.js';
+import * as UI from '../modules/ui.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
 const quotesSource = readFileSync(join(root, 'quotes.js'), 'utf8');
 const i18nSource = readFileSync(join(root, 'i18n.js'), 'utf8');
 const appSource = readFileSync(join(root, 'app.js'), 'utf8');
+const executableAppSource = appSource.replace(
+  /^import \* as (\w+) from '[^']+';$/gm,
+  'const $1 = window.__LogbookModules.$1;'
+);
 
 // Loads the app inside a fresh jsdom window. `seed` pre-populates localStorage
 // (values are JSON-stringified). Returns { window, document, localStorage }.
@@ -29,7 +38,8 @@ export function loadApp(seed = {}, options = {}) {
   options.beforeApp?.(window);
   window.eval(quotesSource);
   window.eval(i18nSource);
-  window.eval(appSource);
+  window.__LogbookModules = { StorageMigrations, RoutineModel, SessionModel, ProgressRewards, UI };
+  window.eval(executableAppSource);
   return { window, document: window.document, localStorage: window.localStorage };
 }
 
