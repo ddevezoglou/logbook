@@ -1234,50 +1234,6 @@ test('copying a history session creates a new workout without comments and prese
   assert.equal(duplicate.exercises[0].sets[0].reps, 9);
 });
 
-test('increasing sets on a copied free workout preserves every existing set and only allows reductions through deletion', () => {
-  const session = {
-    id:'s1',
-    date:'2026-07-06',
-    type:'free',
-    comments:'',
-    exercises:[{
-      exercise:'Dips',
-      comments:'',
-      sets:[
-        { reps:10, weight:20, weightMode:'kg', plates:null },
-        { reps:9, weight:22, weightMode:'kg', plates:null },
-        { reps:8, weight:24, weightMode:'kg', plates:null },
-        { reps:7, weight:26, weightMode:'kg', plates:null },
-      ],
-    }],
-  };
-  const { document } = loadApp({ trainingSessions:[session] });
-
-  click(document, '[data-copy-session="s1"]');
-  const card = document.querySelector('#free-exercises [data-exercise]');
-  const counter = card.querySelector('.free-set-count');
-  assert.equal(counter.min, '4');
-
-  counter.value = '';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
-  assert.equal(card.querySelectorAll('[data-set]').length, 4, 'clearing the number while typing does not remove sets');
-
-  counter.value = '5';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
-  let rows = card.querySelectorAll('[data-set]');
-  assert.equal(rows.length, 5);
-  assert.deepEqual([...rows].slice(0, 4).map(row => row.querySelector('.set-reps').value), ['10', '9', '8', '7']);
-  assert.deepEqual([...rows].slice(0, 4).map(row => row.querySelector('.set-weight').value), ['20', '22', '24', '26']);
-  assert.equal(counter.min, '5');
-
-  counter.value = '3';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
-  counter.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
-  rows = card.querySelectorAll('[data-set]');
-  assert.equal(rows.length, 5, 'the counter cannot remove existing sets');
-  assert.equal(counter.value, '5');
-});
-
 test('copying keeps the source workout when the selected date has a different planned workout', () => {
   const source = { id:'source', date:'2026-07-06', type:'scheduled', routineId:'r1', cycleDay:1, workoutDay:'Δευτέρα', workoutName:'Upper A', comments:'Source notes', exercises:[{ exercise:'Bench Press', planExerciseId:'upper', comments:'Pause', sets:[{ reps:8, weight:60, weightMode:'kg', plates:null }] }] };
   const { document, localStorage } = loadApp({
@@ -1481,6 +1437,60 @@ test('saving a plan day through the form stores exercises on the selected routin
   const plan = JSON.parse(localStorage.getItem('trainingRoutines'))[0].plan;
   assert.equal(plan.length, 3);
   assert.ok(plan.every(item => item.cycleDay === 3 && item.day === 'Τετάρτη' && item.workoutName === 'Push'));
+});
+
+test('editing a program workout can add exercises without losing existing ones and only deletes through the remove action', () => {
+  const plan = Array.from({ length:5 }, (_, index) => planDay(null, `Exercise ${index + 1}`, {
+    id:`p${index + 1}`,
+    cycleDay:3,
+    workoutName:'Wednesday Workout',
+  }));
+  const { document } = loadApp({
+    trainingRoutines:[{
+      id:'r1',
+      name:'Test Routine',
+      isActive:true,
+      cycleLength:7,
+      cycleAnchorDate:'2026-07-06',
+      usesWeekdays:false,
+      plan,
+    }],
+  });
+
+  click(document, '[data-edit-day="3"]');
+  const counter = document.querySelector('#exercise-count');
+  assert.equal(counter.value, '5');
+  assert.equal(counter.min, '5');
+
+  counter.value = '';
+  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
+  assert.equal(document.querySelectorAll('.plan-exercise-fields').length, 5, 'clearing the number while typing does not remove exercises');
+
+  counter.value = '6';
+  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
+  let cards = [...document.querySelectorAll('.plan-exercise-fields')];
+  assert.equal(cards.length, 6);
+  assert.deepEqual(cards.slice(0, 5).map(card => card.querySelector('.builder-name').value), [
+    'Exercise 1',
+    'Exercise 2',
+    'Exercise 3',
+    'Exercise 4',
+    'Exercise 5',
+  ]);
+  assert.equal(counter.min, '6');
+
+  counter.value = '4';
+  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
+  counter.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
+  assert.equal(document.querySelectorAll('.plan-exercise-fields').length, 6, 'the number field cannot delete exercises');
+  assert.equal(counter.value, '6');
+
+  click(document, cards[5].querySelector('.remove-plan-exercise'));
+  click(document, '#confirm-delete-accept');
+  cards = [...document.querySelectorAll('.plan-exercise-fields')];
+  assert.equal(cards.length, 5);
+  assert.equal(counter.value, '5');
+  assert.equal(counter.min, '5');
 });
 
 test('renaming a workout during day edit can sync old sessions to the new name', () => {
@@ -2243,7 +2253,7 @@ test('removing a planned exercise from the log form renumbers the rest', () => {
   assert.equal(cards[0].querySelector('.exercise-order').textContent, 'ΑΣΚΗΣΗ 1');
 });
 
-test('increasing the free set count appends rows without losing entered values', () => {
+test('changing the free set count rebuilds rows without losing entered values', () => {
   const { document } = loadApp();
   setValue(document, '#log-date', '2026-07-06');
   click(document, '[data-mode="free"]');
@@ -2251,9 +2261,6 @@ test('increasing the free set count appends rows without losing entered values',
   card.querySelector('.set-reps').value = '10';
   card.querySelector('.set-weight').value = '25';
   const counter = card.querySelector('.free-set-count');
-  counter.value = '';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles: true }));
-  assert.equal(card.querySelectorAll('[data-set]').length, 3);
   counter.value = '5';
   counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles: true }));
   const rows = card.querySelectorAll('[data-set]');

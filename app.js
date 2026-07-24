@@ -312,10 +312,7 @@ function renumberSetRows(card) {
     row.querySelector('.set-weight').setAttribute('aria-label', `${weightUnitName()} σετ ${setPosition}`);
   });
   const freeSetCount = card.querySelector('.free-set-count');
-  if (freeSetCount) {
-    freeSetCount.value = rows.length;
-    freeSetCount.min = rows.length;
-  }
+  if (freeSetCount) freeSetCount.value = rows.length;
   const plannedTag = card.querySelector('.planned-tag');
   if (plannedTag) plannedTag.textContent = `${rows.length} σετ`;
   refreshCopySetButton(card);
@@ -406,8 +403,13 @@ function refreshDayOptions(preferred = null) {
 }
 
 function renderPlanExercises() {
+  const countInput = $('#exercise-count');
   const old = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId, exercise:card.querySelector('.builder-name').value, workSets:card.querySelector('.builder-sets').value, cues:card.querySelector('.builder-cues').value }));
-  const count = Math.max(1, Math.min(15, Number($('#exercise-count').value) || 1));
+  if (countInput.value === '') return;
+  const requestedCount = Math.trunc(Number(countInput.value));
+  if (!Number.isFinite(requestedCount)) return;
+  const count = Math.max(1, Math.min(15, requestedCount));
+  if (state.editingDay && count < old.length) return;
   $('#plan-exercises-container').innerHTML = Array.from({ length:count }, (_, i) => `<article class="plan-exercise-fields" data-plan-id="${esc(old[i]?.id || id())}">
     <span class="builder-number">${String(i + 1).padStart(2,'0')}</span>
     <label>Άσκηση<input class="builder-name" type="text" value="${esc(old[i]?.exercise || '')}" placeholder="π.χ. Bench Press" required></label>
@@ -415,6 +417,8 @@ function renderPlanExercises() {
     <label class="builder-cue">Cues<input class="builder-cues" type="text" value="${esc(old[i]?.cues || '')}" placeholder="π.χ. ώμοι πίσω, σταθερά πόδια"></label>
     <button class="remove-plan-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button>
   </article>`).join('');
+  countInput.value = count;
+  if (state.editingDay) countInput.min = count;
 }
 
 function renderPlan() {
@@ -575,15 +579,14 @@ function duplicateRoutine(routineId) {
 }
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
-  const setCount = exercise.sets?.length || 3;
   return `<article class="workout-exercise" data-exercise data-id="${esc(exercise.id || id())}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}">
     <span class="exercise-tape" aria-hidden="true"></span>
     <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${exercise.sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
     ${exercise.cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
-    ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="${setCount}" max="20" value="${setCount}"></label>` : ''}
+    ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${exercise.sets?.length || 3}"></label>` : ''}
     <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ / ΜΕΤΡΗΣΗ</span><span></span></div>
-    <div class="exercise-sets">${setRows(setCount, exercise.sets || [])}</div>
+    <div class="exercise-sets">${setRows(exercise.sets?.length || 3, exercise.sets || [])}</div>
     <div class="set-actions"><button class="mini-button copy-first-set hidden" type="button" aria-label="Αντιγραφή του πρώτου σετ στα υπόλοιπα">ΑΝΤΙΓΡΑΦΗ</button>${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}</div>
     <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" data-i18n-user rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
     <input class="exercise-source-name" type="hidden" value="${esc(exercise.exercise || '')}">
@@ -806,6 +809,8 @@ function loadDayForEdit(day) {
   refreshDayOptions(cycleDay);
   $('#workout-name').value = items[0].workoutName || 'Προπόνηση';
   $('#exercise-count').value = items.length;
+  $('#exercise-count').min = items.length;
+  $('#plan-exercises-container').innerHTML = '';
   renderPlanExercises();
   $$('.plan-exercise-fields').forEach((card, index) => {
     card.dataset.planId = items[index].id || id();
@@ -824,6 +829,7 @@ function resetPlanForm() {
   state.editingDay = null;
   $('#plan-form').reset();
   $('#exercise-count').value = 3;
+  $('#exercise-count').min = 1;
   refreshDayOptions();
   $('#plan-exercises-container').innerHTML = '';
   renderPlanExercises();
@@ -1772,6 +1778,12 @@ $('#log-date').addEventListener('change', () => {
 });
 $('#workout-day-select').addEventListener('change', event => { if (state.editingSessionId) return; renderScheduledSession(event.target.value); });
 $('#exercise-count').addEventListener('input', renderPlanExercises);
+$('#exercise-count').addEventListener('change', event => {
+  if (!state.editingDay) return;
+  const count = $$('.plan-exercise-fields').length;
+  event.target.value = count;
+  event.target.min = count;
+});
 $('#routine-form').addEventListener('submit', event => {
   event.preventDefault();
   const name = $('#routine-name').value.trim();
@@ -1935,24 +1947,13 @@ document.addEventListener('input', event => {
   if (!event.target.matches('.free-set-count')) return;
   const card = event.target.closest('[data-exercise]');
   const rows = card.querySelector('.exercise-sets');
-  const currentCount = rows.querySelectorAll('[data-set]').length;
-  if (event.target.value === '') return;
-  const requestedCount = Math.trunc(Number(event.target.value));
-  if (!Number.isFinite(requestedCount) || requestedCount <= currentCount) return;
-  const count = Math.min(20, requestedCount);
-  rows.insertAdjacentHTML('beforeend', setRows(count - currentCount, [], '', { startIndex:currentCount }));
-  event.target.value = count;
-  event.target.min = count;
+  const values = [...rows.querySelectorAll('[data-set]')].map(row => ({ reps:row.querySelector('.set-reps').value, weightMode:row.querySelector('.weight-mode').value, weight:inputWeightToStored(row.querySelector('.set-weight').value), plates:row.querySelector('.set-plates').value }));
+  const count = Math.max(1, Math.min(20, Number(event.target.value) || 1));
+  rows.innerHTML = setRows(count, values);
   refreshCopySetButton(card);
 });
 
 document.addEventListener('change', event => {
-  if (event.target.matches('.free-set-count')) {
-    const count = event.target.closest('[data-exercise]').querySelectorAll('.exercise-sets [data-set]').length;
-    event.target.value = count;
-    event.target.min = count;
-    return;
-  }
   if (event.target.matches('.weight-mode')) {
     const row = event.target.closest('[data-set]');
     const mode = event.target.value;
@@ -2080,6 +2081,7 @@ document.addEventListener('click', event => {
       const cards = $$('.plan-exercise-fields');
       cards.forEach((item, index) => { item.querySelector('.builder-number').textContent = String(index + 1).padStart(2,'0'); });
       $('#exercise-count').value = cards.length;
+      if (state.editingDay) $('#exercise-count').min = cards.length;
       toast('Η άσκηση αφαιρέθηκε από το Πρόγραμμα');
     });
   }
