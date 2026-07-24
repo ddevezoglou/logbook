@@ -4,7 +4,7 @@
 
 | Στοιχείο | Τρέχουσα κατάσταση |
 |---|---|
-| Έκδοση | **0.9.7** |
+| Έκδοση | **0.2.1** |
 | Runtime | Node.js 22 |
 | Client | HTML, CSS και JavaScript χωρίς build step |
 | Αποθήκευση | Local-first με `localStorage` και Supabase sync |
@@ -153,7 +153,7 @@ npm.cmd test
 Ελεγχόμενο version bump χωρίς εγγραφή αρχείων:
 
 ```powershell
-npm.cmd run version:bump -- 0.9.7 --dry-run
+npm.cmd run version:bump -- 0.2.2 --dry-run
 ```
 
 Αφαίρεσε το `--dry-run` μόνο όταν θέλεις να ενημερωθούν μαζί package metadata, UI version, service-worker cache, tests και ο παρών οδηγός.
@@ -209,9 +209,9 @@ npm.cmd run test:e2e
 
 | Αλλαγή | Παράδειγμα | Χρήση |
 |---|---|---|
-| Minor | `0.6.0` → `0.7.0` | Νέα λειτουργία ή σημαντική λειτουργική ενότητα |
-| Patch | `0.6.0` → `0.6.1` | Διόρθωση ή μικρή συμβατή βελτίωση |
-| Prerelease | `0.7.0-alpha.1` | Draft· απαιτεί πρώτα υποστήριξη από το release verifier |
+| Minor | `0.2.0` → `0.3.0` | Νέα λειτουργία ή σημαντική λειτουργική ενότητα |
+| Patch | `0.2.0` → `0.2.1` | Διόρθωση ή μικρή συμβατή βελτίωση |
+| Prerelease | `0.3.0-alpha.1` | Draft· απαιτεί πρώτα υποστήριξη από το release verifier |
 | Stable | `1.0.0` | Πρώτη επίσημη, σταθερή γραμμή προϊόντος |
 
 Πριν από release πρέπει να συμφωνούν:
@@ -225,15 +225,15 @@ npm.cmd run test:e2e
 
 Το τρέχον automated gate δέχεται μόνο την αριθμητική μορφή `X.Y.Z`. Prerelease labels όπως `-alpha.1` δεν πρέπει να χρησιμοποιηθούν πριν ενημερωθούν το `verify-release.mjs` και τα σχετικά tests.
 
-Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.6.0`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
+Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.2.1`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
 
-## Γνωστοί περιορισμοί της 0.9.7
+## Γνωστοί περιορισμοί της 0.2.1
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry και αυτόματο merge. Η σχεδιαστική παραδοχή είναι ότι η καταγραφή γίνεται από μία ενεργή συσκευή κάθε φορά, επομένως δεν προβλέπεται UI χειροκίνητης επίλυσης conflicts.
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
-## Αξιολόγηση 0.9.7 — Ιούλιος 2026
+## Αξιολόγηση 0.2.1 — Ιούλιος 2026
 
 Πλήρες review της εφαρμογής (κώδικας, ασφάλεια, design, tests, εμπορική ετοιμότητα) με τη μεθοδολογία των code-review, security-review και frontend-design plugins σε ολόκληρο το codebase. Κατά το review τα 207/207 unit/integration tests πέρασαν πράσινα. Οι ολοκληρωμένες εργασίες του review έχουν ενσωματωθεί στην τρέχουσα λειτουργική βάση παραπάνω· τα υπόλοιπα σημεία διατηρούνται ως τεχνικές και προϊοντικές παρατηρήσεις.
 

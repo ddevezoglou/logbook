@@ -82,6 +82,7 @@ const { state, repairs } = StorageMigrations.migrateLocalData({
 });
 let customAvatarData = state.profile?.customImage || '';
 let routineCarouselIndex = 0;
+let planExerciseDrafts = [];
 let routineSwipeStartX = null;
 let historySwipe = null;
 if (repairs.sessionsChanged) safeStoreWrite('trainingSessions', state.sessions);
@@ -402,23 +403,27 @@ function refreshDayOptions(preferred = null) {
     : '<option value="" selected disabled>Έχουν δηλωθεί όλες οι ημέρες</option>';
 }
 
+function readPlanExerciseCards() {
+  return $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId, exercise:card.querySelector('.builder-name').value, workSets:card.querySelector('.builder-sets').value, cues:card.querySelector('.builder-cues').value }));
+}
+
 function renderPlanExercises() {
   const countInput = $('#exercise-count');
-  const old = $$('.plan-exercise-fields').map(card => ({ id:card.dataset.planId, exercise:card.querySelector('.builder-name').value, workSets:card.querySelector('.builder-sets').value, cues:card.querySelector('.builder-cues').value }));
+  const visible = readPlanExerciseCards();
+  // Οι ασκήσεις πέρα από τις ορατές μένουν στο πρόχειρο, ώστε μια προσωρινή μείωση του αριθμού να μη χάνει δεδομένα.
+  planExerciseDrafts = [...visible, ...planExerciseDrafts.slice(visible.length)];
   if (countInput.value === '') return;
   const requestedCount = Math.trunc(Number(countInput.value));
   if (!Number.isFinite(requestedCount)) return;
   const count = Math.max(1, Math.min(15, requestedCount));
-  if (state.editingDay && count < old.length) return;
-  $('#plan-exercises-container').innerHTML = Array.from({ length:count }, (_, i) => `<article class="plan-exercise-fields" data-plan-id="${esc(old[i]?.id || id())}">
+  $('#plan-exercises-container').innerHTML = Array.from({ length:count }, (_, i) => `<article class="plan-exercise-fields" data-plan-id="${esc(planExerciseDrafts[i]?.id || id())}">
     <span class="builder-number">${String(i + 1).padStart(2,'0')}</span>
-    <label>Άσκηση<input class="builder-name" type="text" value="${esc(old[i]?.exercise || '')}" placeholder="π.χ. Bench Press" required></label>
-    <label>Εργάσιμα σετ<input class="builder-sets" type="number" min="1" max="20" value="${esc(old[i]?.workSets || 3)}" required></label>
-    <label class="builder-cue">Cues<input class="builder-cues" type="text" value="${esc(old[i]?.cues || '')}" placeholder="π.χ. ώμοι πίσω, σταθερά πόδια"></label>
+    <label>Άσκηση<input class="builder-name" type="text" value="${esc(planExerciseDrafts[i]?.exercise || '')}" placeholder="π.χ. Bench Press" required></label>
+    <label>Εργάσιμα σετ<input class="builder-sets" type="number" min="1" max="20" value="${esc(planExerciseDrafts[i]?.workSets || 3)}" required></label>
+    <label class="builder-cue">Cues<input class="builder-cues" type="text" value="${esc(planExerciseDrafts[i]?.cues || '')}" placeholder="π.χ. ώμοι πίσω, σταθερά πόδια"></label>
     <button class="remove-plan-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button>
   </article>`).join('');
   countInput.value = count;
-  if (state.editingDay) countInput.min = count;
 }
 
 function renderPlan() {
@@ -638,14 +643,16 @@ function deckIndex(deck) {
 
 function measureDeck(deck) {
   const cards = deckCards(deck);
-  const heights = cards.map(card => Math.max(card.offsetHeight, card.scrollHeight));
-  const height = Math.max(0, ...heights);
-  if (height) {
-    deck.style.height = `${height + 18}px`;
-    const activeCard = cards[deckIndex(deck)];
-    const activeHeight = Math.max(activeCard.offsetHeight, activeCard.scrollHeight);
-    deck.closest('.exercise-deck-shell').style.setProperty('--deck-arrow-y', `${deck.offsetTop + activeCard.offsetTop + activeHeight / 2}px`);
-  }
+  if (!cards.length) return;
+  const activeCard = cards[deckIndex(deck)];
+  if (activeCard.style.height) activeCard.style.height = '';
+  const activeHeight = Math.max(activeCard.offsetHeight, activeCard.scrollHeight);
+  if (!activeHeight) return;
+  // Οι κάρτες πίσω κόβονται στο ύψος της ενεργής, ώστε να ξεπροβάλλουν μόνο ελαφρώς και να μη φαίνεται το περιεχόμενό τους.
+  const clipped = `${activeHeight}px`;
+  cards.forEach(card => { if (card !== activeCard && card.style.height !== clipped) card.style.height = clipped; });
+  deck.style.height = `${activeHeight + 18}px`;
+  deck.closest('.exercise-deck-shell').style.setProperty('--deck-arrow-y', `${deck.offsetTop + activeCard.offsetTop + activeHeight / 2}px`);
 }
 
 function layoutDeck(shell) {
@@ -809,15 +816,15 @@ function loadDayForEdit(day) {
   refreshDayOptions(cycleDay);
   $('#workout-name').value = items[0].workoutName || 'Προπόνηση';
   $('#exercise-count').value = items.length;
-  $('#exercise-count').min = items.length;
+  $('#exercise-count').min = 1;
   $('#plan-exercises-container').innerHTML = '';
+  planExerciseDrafts = items.map(item => ({
+    id:item.id || id(),
+    exercise:item.exercise,
+    workSets:item.sets?.length || item.workSets || 3,
+    cues:item.cues || '',
+  }));
   renderPlanExercises();
-  $$('.plan-exercise-fields').forEach((card, index) => {
-    card.dataset.planId = items[index].id || id();
-    card.querySelector('.builder-name').value = items[index].exercise;
-    card.querySelector('.builder-sets').value = items[index].sets?.length || items[index].workSets || 3;
-    card.querySelector('.builder-cues').value = items[index].cues || '';
-  });
   $('#plan-form-title').textContent = `Επεξεργασία · ${cycleDayLabel(routine, cycleDay)}`;
   $('#plan-submit').innerHTML = `${routine.usesWeekdays === false ? 'Ενημέρωση προπόνησης' : 'Ενημέρωση ημέρας'}`;
   $('#cancel-plan-edit').classList.remove('hidden');
@@ -832,6 +839,7 @@ function resetPlanForm() {
   $('#exercise-count').min = 1;
   refreshDayOptions();
   $('#plan-exercises-container').innerHTML = '';
+  planExerciseDrafts = [];
   renderPlanExercises();
   const routine = selectedRoutine();
   $('#plan-form-title').textContent = routine?.usesWeekdays === false ? 'Νέα προπόνηση' : 'Νέα προπόνηση ημέρας';
@@ -1779,10 +1787,9 @@ $('#log-date').addEventListener('change', () => {
 $('#workout-day-select').addEventListener('change', event => { if (state.editingSessionId) return; renderScheduledSession(event.target.value); });
 $('#exercise-count').addEventListener('input', renderPlanExercises);
 $('#exercise-count').addEventListener('change', event => {
-  if (!state.editingDay) return;
-  const count = $$('.plan-exercise-fields').length;
-  event.target.value = count;
-  event.target.min = count;
+  if (event.target.value !== '') return renderPlanExercises();
+  event.target.value = $$('.plan-exercise-fields').length || 1;
+  renderPlanExercises();
 });
 $('#routine-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -2080,8 +2087,9 @@ document.addEventListener('click', event => {
       card.remove();
       const cards = $$('.plan-exercise-fields');
       cards.forEach((item, index) => { item.querySelector('.builder-number').textContent = String(index + 1).padStart(2,'0'); });
+      // Η ρητή διαγραφή είναι οριστική: το πρόχειρο ξαναχτίζεται από τις ασκήσεις που έμειναν.
+      planExerciseDrafts = readPlanExerciseCards();
       $('#exercise-count').value = cards.length;
-      if (state.editingDay) $('#exercise-count').min = cards.length;
       toast('Η άσκηση αφαιρέθηκε από το Πρόγραμμα');
     });
   }

@@ -30,7 +30,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.9.7');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.1');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -1439,7 +1439,7 @@ test('saving a plan day through the form stores exercises on the selected routin
   assert.ok(plan.every(item => item.cycleDay === 3 && item.day === 'Τετάρτη' && item.workoutName === 'Push'));
 });
 
-test('editing a program workout can add exercises without losing existing ones and only deletes through the remove action', () => {
+test('editing a program workout keeps existing exercises while the number of exercises changes', () => {
   const plan = Array.from({ length:5 }, (_, index) => planDay(null, `Exercise ${index + 1}`, {
     id:`p${index + 1}`,
     cycleDay:3,
@@ -1459,38 +1459,37 @@ test('editing a program workout can add exercises without losing existing ones a
 
   click(document, '[data-edit-day="3"]');
   const counter = document.querySelector('#exercise-count');
+  const names = () => [...document.querySelectorAll('.builder-name')].map(input => input.value);
+  const setCount = value => {
+    counter.value = value;
+    counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
+  };
   assert.equal(counter.value, '5');
-  assert.equal(counter.min, '5');
+  assert.equal(counter.min, '1');
 
-  counter.value = '';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
+  setCount('');
   assert.equal(document.querySelectorAll('.plan-exercise-fields').length, 5, 'clearing the number while typing does not remove exercises');
 
-  counter.value = '6';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
+  setCount('6');
+  assert.equal(document.querySelectorAll('.plan-exercise-fields').length, 6);
+  assert.deepEqual(names().slice(0, 5), ['Exercise 1', 'Exercise 2', 'Exercise 3', 'Exercise 4', 'Exercise 5']);
+
+  setCount('4');
+  assert.deepEqual(names(), ['Exercise 1', 'Exercise 2', 'Exercise 3', 'Exercise 4'], 'lowering the number drops the last exercises');
+  assert.equal(counter.value, '4');
+
+  setCount('6');
+  assert.deepEqual(names().slice(0, 5), ['Exercise 1', 'Exercise 2', 'Exercise 3', 'Exercise 4', 'Exercise 5'], 'raising the number again brings the dropped exercises back');
+
   let cards = [...document.querySelectorAll('.plan-exercise-fields')];
-  assert.equal(cards.length, 6);
-  assert.deepEqual(cards.slice(0, 5).map(card => card.querySelector('.builder-name').value), [
-    'Exercise 1',
-    'Exercise 2',
-    'Exercise 3',
-    'Exercise 4',
-    'Exercise 5',
-  ]);
-  assert.equal(counter.min, '6');
-
-  counter.value = '4';
-  counter.dispatchEvent(new (document.defaultView.Event)('input', { bubbles:true }));
-  counter.dispatchEvent(new (document.defaultView.Event)('change', { bubbles:true }));
-  assert.equal(document.querySelectorAll('.plan-exercise-fields').length, 6, 'the number field cannot delete exercises');
-  assert.equal(counter.value, '6');
-
-  click(document, cards[5].querySelector('.remove-plan-exercise'));
+  click(document, cards[4].querySelector('.remove-plan-exercise'));
   click(document, '#confirm-delete-accept');
   cards = [...document.querySelectorAll('.plan-exercise-fields')];
   assert.equal(cards.length, 5);
   assert.equal(counter.value, '5');
-  assert.equal(counter.min, '5');
+
+  setCount('6');
+  assert.deepEqual(names(), ['Exercise 1', 'Exercise 2', 'Exercise 3', 'Exercise 4', '', ''], 'a deleted exercise never comes back');
 });
 
 test('renaming a workout during day edit can sync old sessions to the new name', () => {

@@ -1,6 +1,6 @@
 # Mobile distribution decision
 
-Status: accepted for version 0.4.0.
+Status: accepted for version 0.2.1.
 
 ## Decision
 
@@ -26,4 +26,4 @@ If a wrapper becomes necessary, prefer Capacitor around the existing web client 
 - [Apple’s web app guidance](https://developer.apple.com/videos/play/wwdc2023/10120/) documents standalone Home Screen web apps, separate storage, push and badging on iOS/iPadOS.
 - [Capacitor documentation](https://capacitorjs.com/docs) describes its native container and plugin access for existing web apps.
 
-Review this decision after physical-device QA for version 0.4.0 or when one of the triggers above enters the committed roadmap.
+Review this decision after physical-device QA for version 0.2.1 or when one of the triggers above enters the committed roadmap.
