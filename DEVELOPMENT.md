@@ -1,4 +1,4 @@
-# Logbook — Development Guide
+Π# Logbook — Development Guide
 
 Το `DEVELOPMENT.md` είναι ο τεχνικός οδηγός του Logbook: περιγράφει την αρχιτεκτονική, την τοπική εκτέλεση, το quality gate, τη διαδικασία release και την τρέχουσα τεχνική κατάσταση.
 

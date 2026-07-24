@@ -312,7 +312,10 @@ function renumberSetRows(card) {
     row.querySelector('.set-weight').setAttribute('aria-label', `${weightUnitName()} σετ ${setPosition}`);
   });
   const freeSetCount = card.querySelector('.free-set-count');
-  if (freeSetCount) freeSetCount.value = rows.length;
+  if (freeSetCount) {
+    freeSetCount.value = rows.length;
+    freeSetCount.min = rows.length;
+  }
   const plannedTag = card.querySelector('.planned-tag');
   if (plannedTag) plannedTag.textContent = `${rows.length} σετ`;
   refreshCopySetButton(card);
@@ -572,14 +575,15 @@ function duplicateRoutine(routineId) {
 }
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0) {
+  const setCount = exercise.sets?.length || 3;
   return `<article class="workout-exercise" data-exercise data-id="${esc(exercise.id || id())}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}">
     <span class="exercise-tape" aria-hidden="true"></span>
     <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${exercise.sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
     ${exercise.cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
-    ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${exercise.sets?.length || 3}"></label>` : ''}
+    ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="${setCount}" max="20" value="${setCount}"></label>` : ''}
     <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ / ΜΕΤΡΗΣΗ</span><span></span></div>
-    <div class="exercise-sets">${setRows(exercise.sets?.length || 3, exercise.sets || [])}</div>
+    <div class="exercise-sets">${setRows(setCount, exercise.sets || [])}</div>
     <div class="set-actions"><button class="mini-button copy-first-set hidden" type="button" aria-label="Αντιγραφή του πρώτου σετ στα υπόλοιπα">ΑΝΤΙΓΡΑΦΗ</button>${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}</div>
     <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" data-i18n-user rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
     <input class="exercise-source-name" type="hidden" value="${esc(exercise.exercise || '')}">
@@ -1931,13 +1935,24 @@ document.addEventListener('input', event => {
   if (!event.target.matches('.free-set-count')) return;
   const card = event.target.closest('[data-exercise]');
   const rows = card.querySelector('.exercise-sets');
-  const values = [...rows.querySelectorAll('[data-set]')].map(row => ({ reps:row.querySelector('.set-reps').value, weightMode:row.querySelector('.weight-mode').value, weight:inputWeightToStored(row.querySelector('.set-weight').value), plates:row.querySelector('.set-plates').value }));
-  const count = Math.max(1, Math.min(20, Number(event.target.value) || 1));
-  rows.innerHTML = setRows(count, values);
+  const currentCount = rows.querySelectorAll('[data-set]').length;
+  if (event.target.value === '') return;
+  const requestedCount = Math.trunc(Number(event.target.value));
+  if (!Number.isFinite(requestedCount) || requestedCount <= currentCount) return;
+  const count = Math.min(20, requestedCount);
+  rows.insertAdjacentHTML('beforeend', setRows(count - currentCount, [], '', { startIndex:currentCount }));
+  event.target.value = count;
+  event.target.min = count;
   refreshCopySetButton(card);
 });
 
 document.addEventListener('change', event => {
+  if (event.target.matches('.free-set-count')) {
+    const count = event.target.closest('[data-exercise]').querySelectorAll('.exercise-sets [data-set]').length;
+    event.target.value = count;
+    event.target.min = count;
+    return;
+  }
   if (event.target.matches('.weight-mode')) {
     const row = event.target.closest('[data-set]');
     const mode = event.target.value;
