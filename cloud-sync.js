@@ -14,6 +14,10 @@
   const OWNER_KEY = 'logbookCloudOwner';
   const SYNC_DELAY = 700;
   const WEIGHT_MODES = new Set(['kg', 'plates', 'mixed', 'bodyweight', 'bodyweight_extra']);
+  const PROFILE_AVATARS = new Set(['custom', 'male', 'female']);
+  const PROFILE_WEIGHT_UNITS = new Set(['kg', 'lbs']);
+  const MAX_SYNC_AVATAR_DATA_URL_LENGTH = 512 * 1024;
+  const LEGACY_PLACEHOLDER_NAMES = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
   let client = null;
   let userId = null;
   let syncTimer = null;
@@ -90,7 +94,32 @@
     if (!isRecord(value)) return null;
     const routine = normalizeTextFields(value, ['name', 'cycleAnchorDate']);
     routine.plan = Array.isArray(value.plan) ? value.plan.map(normalizePlanItem).filter(Boolean) : [];
+    routine.isPlaceholder = typeof value.isPlaceholder === 'boolean'
+      ? value.isPlaceholder
+      : LEGACY_PLACEHOLDER_NAMES.has(routine.name) && !routine.plan.length;
     return routine;
+  }
+
+  function normalizeProfile(value) {
+    if (!isRecord(value)) return null;
+    const profile = {};
+    if (typeof value.name === 'string') profile.name = value.name.trim().slice(0, 50);
+    if (typeof value.birthdate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.birthdate)) profile.birthdate = value.birthdate;
+    if (typeof value.hideAge === 'boolean') profile.hideAge = value.hideAge;
+    const weight = normalizeNumber(value.weight);
+    if (weight !== null && weight <= 1000) profile.weight = weight;
+    if (PROFILE_WEIGHT_UNITS.has(value.weightUnit)) profile.weightUnit = value.weightUnit;
+    if (PROFILE_AVATARS.has(value.avatar)) profile.avatar = value.avatar;
+    if (value.customImage === '') {
+      profile.customImage = '';
+    } else if (
+      typeof value.customImage === 'string'
+      && value.customImage.length <= MAX_SYNC_AVATAR_DATA_URL_LENGTH
+      && /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/]+={0,2}$/i.test(value.customImage)
+    ) {
+      profile.customImage = value.customImage;
+    }
+    return profile;
   }
 
   function normalizePayload(value = {}) {
@@ -98,12 +127,22 @@
     return {
       trainingRoutines:Array.isArray(payload.trainingRoutines) ? payload.trainingRoutines.map(normalizeRoutine).filter(Boolean) : [],
       trainingSessions:Array.isArray(payload.trainingSessions) ? payload.trainingSessions.map(normalizeSession).filter(Boolean) : [],
-      userProfile:payload.userProfile && typeof payload.userProfile === 'object' && !Array.isArray(payload.userProfile) ? payload.userProfile : null,
+      userProfile:normalizeProfile(payload.userProfile),
       routineRewardTracking:payload.routineRewardTracking && typeof payload.routineRewardTracking === 'object' && !Array.isArray(payload.routineRewardTracking) ? payload.routineRewardTracking : null,
       homeProfileCardPosition:payload.homeProfileCardPosition && typeof payload.homeProfileCardPosition === 'object' && !Array.isArray(payload.homeProfileCardPosition) ? payload.homeProfileCardPosition : null,
       homeRoutineCardPosition:payload.homeRoutineCardPosition && typeof payload.homeRoutineCardPosition === 'object' && !Array.isArray(payload.homeRoutineCardPosition) ? payload.homeRoutineCardPosition : null,
       logbookLanguage:['el', 'en', 'fr', 'de'].includes(payload.logbookLanguage) ? payload.logbookLanguage : 'el',
     };
+  }
+
+  function profileForLocalStorage(profile, preserveLocalGallery) {
+    if (!profile) return null;
+    const localProfile = preserveLocalGallery ? readJsonStorage('userProfile', null) : null;
+    const gallery = Array.isArray(localProfile?.imageGallery)
+      ? localProfile.imageGallery.filter(image => typeof image === 'string' && image)
+      : [];
+    if (profile.customImage && !gallery.includes(profile.customImage)) gallery.unshift(profile.customImage);
+    return gallery.length ? { ...profile, imageGallery:gallery.slice(0, 6) } : profile;
   }
 
   function collectLocalPayload() {
@@ -141,8 +180,7 @@
     if (data.trainingSessions.length || data.userProfile || data.trainingRoutines.length > 1) return true;
     const routine = data.trainingRoutines[0];
     if (!routine) return false;
-    const defaultNames = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
-    return Boolean(routine.plan?.length || (routine.name && !defaultNames.has(routine.name)));
+    return Boolean(routine.plan?.length || !routine.isPlaceholder);
   }
 
   function mergeCollection(remoteItems, localItems, resolveConflict = null) {
@@ -168,9 +206,8 @@
 
   function isEmptyPlaceholder(routine, sessions) {
     if (!routine) return false;
-    const defaultNames = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
     const hasSessions = sessions.some(session => session?.routineId != null && String(session.routineId) === String(routine.id));
-    return defaultNames.has(routine.name) && !routine.plan?.length && !hasSessions;
+    return routine.isPlaceholder && !routine.plan?.length && !hasSessions;
   }
 
   function mergePayloads(remotePayload, localPayload) {
@@ -193,10 +230,12 @@
     });
   }
 
-  function applyPayload(payload) {
+  function applyPayload(payload, { preserveLocalGallery = true } = {}) {
     const data = normalizePayload(payload);
     DATA_KEYS.forEach(key => {
-      const value = data[key];
+      const value = key === 'userProfile'
+        ? profileForLocalStorage(data[key], preserveLocalGallery)
+        : data[key];
       if (key === 'logbookLanguage') {
         localStorage.setItem(key, value);
       } else if (value === null) {
@@ -229,6 +268,14 @@
       .maybeSingle();
     if (error) throw error;
     return data;
+  }
+
+  function isPayloadTooLargeError(error) {
+    return error?.code === '23514'
+      && (
+        error?.constraint === 'user_sync_state_payload_size_check'
+        || /user_sync_state_payload_size_check|pg_column_size\(payload\)/i.test(`${error?.message || ''} ${error?.details || ''}`)
+      );
   }
 
   async function insertRemote(id, payload) {
@@ -269,7 +316,7 @@
     const merged = mergePayloads(latest.payload, payload);
     saved = await updateRemote(id, merged, latest.revision);
     if (!saved) throw new Error('SYNC_CONFLICT');
-    return saved;
+    return { ...saved, conflictMerged:true };
   }
 
   function announceApplied() {
@@ -306,7 +353,7 @@
     if (!remote) {
       remote = await saveWithConflictRetry(id, local, null);
       if (switchingUser) {
-        applyPayload(remote.payload);
+        applyPayload(remote.payload, { preserveLocalGallery:false });
         applied = true;
       }
     } else if (switchingUser) {
@@ -314,7 +361,7 @@
         remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, cached), remote);
       }
       applied = payloadHash(collectLocalPayload()) !== payloadHash(remote.payload);
-      applyPayload(remote.payload);
+      applyPayload(remote.payload, { preserveLocalGallery:false });
     } else if (!meta) {
       if (hasMeaningfulData(local)) {
         const merged = mergePayloads(remote.payload, local);
@@ -343,6 +390,10 @@
       }
     }
 
+    if (remote.conflictMerged && payloadHash(collectLocalPayload()) !== payloadHash(remote.payload)) {
+      applyPayload(remote.payload);
+      applied = true;
+    }
     writeMeta(id, remote);
     setStatus('Συγχρονισμένο σε όλες τις συσκευές.', 'success');
     if (applied) announceApplied();
@@ -368,7 +419,12 @@
           ? 'sync_conflict'
           : (!navigator.onLine || error?.name === 'TypeError' ? 'sync_network_failure' : 'sync_failure');
         window.LogbookErrorTracking?.report('sync', errorCode, error);
-        setStatus('Δεν ολοκληρώθηκε ο συγχρονισμός. Οι αλλαγές παραμένουν ασφαλείς στη συσκευή.', 'error');
+        setStatus(
+          isPayloadTooLargeError(error)
+            ? 'Τα δεδομένα είναι πολύ μεγάλα για συγχρονισμό. Αφαιρέστε παλιές φωτογραφίες ή περιττές καταχωρήσεις και δοκιμάστε ξανά.'
+            : 'Δεν ολοκληρώθηκε ο συγχρονισμός. Οι αλλαγές παραμένουν ασφαλείς στη συσκευή.',
+          'error'
+        );
         return false;
       })
       .finally(() => {

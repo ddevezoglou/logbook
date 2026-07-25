@@ -71,8 +71,10 @@
     }
     try {
       const { error } = await client.rpc('report_client_error', event);
+      if (error) queue(event);
       return !error;
     } catch {
+      queue(event);
       return false;
     }
   }

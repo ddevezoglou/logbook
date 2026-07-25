@@ -21,6 +21,33 @@
   let syncWatchdog = null;
   let offlineSessionActive = false;
   const SYNC_WATCHDOG_MS = 25000;
+  const CLOUD_STORAGE_PREFIXES = ['logbookCloudCache:', 'logbookCloudMeta:'];
+  const CLOUD_OWNER_KEY = 'logbookCloudOwner';
+
+  function clearCloudSessionStorage() {
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && CLOUD_STORAGE_PREFIXES.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+    localStorage.removeItem(CLOUD_OWNER_KEY);
+  }
+
+  async function signOutEverywhere() {
+    let globalError = null;
+    try {
+      ({ error:globalError } = await client.auth.signOut({ scope:'global' }));
+    } catch (error) {
+      globalError = error;
+    }
+    if (!globalError) return true;
+
+    try {
+      const { error } = await client.auth.signOut({ scope:'local' });
+      return !error;
+    } catch {
+      return false;
+    }
+  }
 
   function setStatus(message = '', kind = 'neutral') {
     status.textContent = message ? t(message) : '';
@@ -392,9 +419,10 @@
     if (!client) return;
     const button = $('#account-signout');
     button.disabled = true;
-    const { error } = await client.auth.signOut({ scope:'local' });
+    const signedOut = await signOutEverywhere();
     button.disabled = false;
-    if (error) return;
+    if (!signedOut) return;
+    clearCloudSessionStorage();
     dialog.close();
     renderSession(null);
   });
@@ -422,6 +450,7 @@
     }
 
     try { await client.auth.signOut({ scope:'local' }); } catch { /* The account is already deleted. */ }
+    clearCloudSessionStorage();
     acceptButton.disabled = false;
     cancelButton.disabled = false;
     if (deleteDialog.open) deleteDialog.close();

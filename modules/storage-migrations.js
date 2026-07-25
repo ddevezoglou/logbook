@@ -6,13 +6,19 @@ import {
 } from './routines.js';
 
 export function createStore(storage, { onWrite } = {}) {
+  const matchesType = (value, type) => {
+    if (type === 'any') return true;
+    if (type === 'array') return Array.isArray(value);
+    if (type === 'object') return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+    return typeof value === type;
+  };
   return {
-    read(key, fallback = null) {
+    read(key, { type = 'any', fallback = null } = {}) {
       try {
         const raw = storage.getItem(key);
         if (raw === null) return fallback;
         const parsed = JSON.parse(raw);
-        return parsed ?? fallback;
+        return parsed !== null && parsed !== undefined && matchesType(parsed, type) ? parsed : fallback;
       } catch {
         return fallback;
       }
@@ -47,6 +53,7 @@ export function migrateLocalData({
     id:randomUUID(),
     name:'Το πρόγραμμά μου',
     isActive:true,
+    isPlaceholder:true,
     cycleLength:7,
     cycleAnchorDate:mondayFor(),
     plan:Array.isArray(legacyPlan) ? legacyPlan : [],
@@ -93,7 +100,6 @@ export function migrateLocalData({
     rebuiltPlans = true;
   });
 
-  const placeholderRoutineNames = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
   const matchingSessionCount = routine => sessions.filter(session =>
     session?.routineId != null
     && String(session.routineId) === String(routine.id)
@@ -101,7 +107,7 @@ export function migrateLocalData({
   ).length;
   const staleActiveRoutine = routines.find(routine =>
     routine.isActive
-    && placeholderRoutineNames.has(routine.name)
+    && routine.isPlaceholder
     && !routine.plan.length
     && matchingSessionCount(routine) === 0);
   if (staleActiveRoutine) {
@@ -144,6 +150,7 @@ export function migrateLocalData({
       openSessionId:null,
       selectedHistoryDate:null,
       historyWeekOffset:0,
+      historyVisibleCount:30,
     },
     repairs:{
       sessionsChanged:!sessions.length && Array.isArray(oldLogs) && oldLogs.length > 0,

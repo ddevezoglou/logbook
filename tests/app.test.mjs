@@ -1355,6 +1355,84 @@ test('adding a free exercise keeps existing input and places the new card on top
   assert.equal(cards[1].hasAttribute('aria-hidden'), false);
 });
 
+test('a scheduled program workout accepts a free-form exercise and saves it with the session', () => {
+  const { document, localStorage } = loadApp({
+    trainingRoutines:routineWith([planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Push Day' })]),
+  });
+  setValue(document, '#log-date', '2026-07-06');
+  click(document, '#scheduled-session .add-session-exercise');
+
+  const customCard = document.querySelector('#scheduled-session [data-custom-exercise="true"]');
+  assert.ok(customCard);
+  assert.ok(customCard.querySelector('.exercise-name'));
+  assert.ok(customCard.querySelector('.free-set-count'));
+  assert.equal(document.querySelector('#scheduled-session .exercise-deck').dataset.currentIndex, '1');
+  setValue(document, '#scheduled-session [data-custom-exercise="true"] .exercise-name', 'Cable Fly');
+  setValue(document, '#scheduled-session [data-custom-exercise="true"] .free-set-count', '2', 'input');
+  document.querySelectorAll('#scheduled-session [data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '12';
+    row.querySelector('.set-weight').value = '20';
+  });
+  click(document, '#save-session');
+
+  const saved = JSON.parse(localStorage.getItem('trainingSessions'))[0];
+  assert.deepEqual(saved.exercises.map(exercise => exercise.exercise), ['Bench Press', 'Cable Fly']);
+  assert.equal(saved.exercises[1].sets.length, 2);
+  assert.equal(saved.exercises[1].isCustom, true);
+});
+
+test('a copied scheduled workout accepts another free-form exercise before it is logged', () => {
+  const source = {
+    id:'copy-source',
+    date:'2026-07-06',
+    type:'scheduled',
+    routineId:'r1',
+    cycleDay:1,
+    workoutDay:'Δευτέρα',
+    workoutName:'Push Day',
+    comments:'',
+    exercises:[{ exercise:'Bench Press', planExerciseId:'p1', comments:'', sets:[{ reps:8, weight:60, weightMode:'kg', plates:null }] }],
+  };
+  const { document, localStorage } = loadApp({
+    trainingRoutines:routineWith([planDay('Δευτέρα', 'Bench Press', { id:'p1', cycleDay:1, workoutName:'Push Day' })]),
+    trainingSessions:[source],
+  });
+
+  click(document, '[data-copy-session="copy-source"]');
+  click(document, '#scheduled-session .add-session-exercise');
+  setValue(document, '#scheduled-session [data-custom-exercise="true"] .exercise-name', 'Triceps Pushdown');
+  document.querySelectorAll('#scheduled-session [data-custom-exercise="true"] [data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '15';
+    row.querySelector('.set-weight').value = '25';
+  });
+  click(document, '#save-session');
+
+  const sessions = JSON.parse(localStorage.getItem('trainingSessions'));
+  const duplicate = sessions.find(session => session.id !== source.id);
+  assert.equal(sessions.length, 2);
+  assert.deepEqual(duplicate.exercises.map(exercise => exercise.exercise), ['Bench Press', 'Triceps Pushdown']);
+  assert.equal(duplicate.exercises[1].isCustom, true);
+});
+
+test('history renders sessions in pages and progressively reveals the remainder', () => {
+  const trainingSessions = Array.from({ length:65 }, (_, index) => ({
+    id:`session-${index}`,
+    date:`2026-${String(7 - Math.floor(index / 28)).padStart(2, '0')}-${String(28 - (index % 28)).padStart(2, '0')}`,
+    type:'free',
+    comments:'',
+    exercises:[{ exercise:`Exercise ${index}`, comments:'', sets:[{ reps:5, weight:50, weightMode:'kg' }] }],
+  }));
+  const { document } = loadApp({ trainingSessions });
+
+  assert.equal(document.querySelectorAll('.session-card').length, 30);
+  assert.match(document.querySelector('[data-load-more-history]').textContent, /ΑΠΟΜΕΝΟΥΝ 35/);
+  click(document, '[data-load-more-history]');
+  assert.equal(document.querySelectorAll('.session-card').length, 60);
+  click(document, '[data-load-more-history]');
+  assert.equal(document.querySelectorAll('.session-card').length, 65);
+  assert.equal(document.querySelector('[data-load-more-history]'), null);
+});
+
 test('horizontal deck swipe changes exercises while preserving all card inputs', () => {
   const plan = [
     planDay('Δευτέρα', 'Bench Press', { cycleDay:1, workoutName:'Push Day' }),

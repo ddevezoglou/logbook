@@ -65,13 +65,16 @@ test('the page uses only local fonts and declares its install metadata', () => {
 test('service worker precaches the complete local shell without development seed tools', () => {
   for (const path of [
     './index.html',
+    './privacy.html',
     './manifest.webmanifest',
     './fonts.css',
     './styles.css',
+    './legal.css',
     './app.js',
     './modules/storage-migrations.js',
     './modules/routines.js',
     './modules/sessions.js',
+    './modules/progress-chart.js',
     './modules/progress-rewards.js',
     './modules/ui.js',
     './auth.js',
@@ -114,6 +117,7 @@ test('GitHub Pages workflow publishes a production-only artifact', () => {
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /path: _site/);
   assert.match(workflow, /cp .*error-tracking\.js.* _site\//, 'the deployed shell includes error tracking');
+  assert.match(workflow, /cp .*privacy\.html.* _site\//, 'the deployed artifact includes the privacy policy');
   assert.match(workflow, /cp -R modules _site\/modules/, 'the deployed shell includes ES modules');
   assert.doesNotMatch(workflow, /cp .*seed/);
   assert.doesNotMatch(workflow, /cp .*tests/);

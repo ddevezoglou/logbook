@@ -80,7 +80,8 @@ test('seeded data feeds the overview, progress personal bests and plan board', (
   const { routines, sessions } = runSeed();
   const { document } = loadApp({ trainingRoutines: routines, trainingSessions: sessions });
   assert.equal(document.querySelector('#plan-count').textContent, '4/7 ημέρες');
-  assert.equal(document.querySelectorAll('#session-cards .session-card').length, planOffsets.length * pastWeeks + expectedThisWeek);
+  assert.equal(document.querySelectorAll('#session-cards .session-card').length, 30);
+  assert.ok(document.querySelector('[data-load-more-history]'), 'the remaining seeded history is windowed behind the load-more control');
   click(document, '.nav-button[data-view="progress"]');
   const bests = document.querySelector('#personal-bests').textContent;
   assert.ok(document.querySelector('#progress-view #personal-bests'), 'personal bests live in progress');

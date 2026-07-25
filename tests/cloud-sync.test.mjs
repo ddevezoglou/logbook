@@ -8,7 +8,7 @@ const syncSource = readFileSync(new URL('../cloud-sync.js', import.meta.url), 'u
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const clone = value => value === null || value === undefined ? value : structuredClone(value);
 
-function createClient({ session = null, row = null } = {}) {
+function createClient({ session = null, row = null, writeError = null } = {}) {
   let storedRow = clone(row);
   let authListener = null;
   const calls = { select:0, insert:0, update:0 };
@@ -28,6 +28,7 @@ function createClient({ session = null, row = null } = {}) {
           return { data:clone(storedRow), error:null };
         }
         calls.update += 1;
+        if (writeError) return { data:null, error:writeError };
         const revision = filters.find(([column]) => column === 'revision')?.[1];
         const user = filters.find(([column]) => column === 'user_id')?.[1];
         if (!storedRow || storedRow.user_id !== user || Number(storedRow.revision) !== Number(revision)) {
@@ -38,6 +39,7 @@ function createClient({ session = null, row = null } = {}) {
       },
       async single() {
         calls.insert += 1;
+        if (writeError) return { data:null, error:writeError };
         if (storedRow) return { data:null, error:{ code:'23505' } };
         storedRow = { user_id:values.user_id, payload:clone(values.payload), revision:1, updated_at:'2026-07-17T12:00:00Z' };
         return { data:clone(storedRow), error:null };
@@ -61,22 +63,24 @@ function createClient({ session = null, row = null } = {}) {
   };
 }
 
-async function loadSync({ seed = {}, session = null, row = null, online = true } = {}) {
+async function loadSync({ seed = {}, session = null, row = null, online = true, writeError = null } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
   Object.defineProperty(window.navigator, 'onLine', { configurable:true, value:online });
   for (const [key, value] of Object.entries(seed)) {
     window.localStorage.setItem(key, ['logbookLanguage', 'logbookCloudOwner'].includes(key) ? value : JSON.stringify(value));
   }
-  const client = createClient({ session, row });
+  const client = createClient({ session, row, writeError });
   const initialSyncEvents = [];
+  const syncStatusEvents = [];
   window.addEventListener('logbook:initial-sync-complete', event => initialSyncEvents.push(event.detail));
+  window.addEventListener('logbook:sync-status', event => syncStatusEvents.push(event.detail));
   window.LogbookSupabase = client;
   window.eval(syncSource);
   await flush();
   await window.LogbookCloudSync.sync();
   await flush();
-  return { window, localStorage:window.localStorage, client, initialSyncEvents };
+  return { window, localStorage:window.localStorage, client, initialSyncEvents, syncStatusEvents };
 }
 
 test('first connected device uploads existing local data and records its cloud revision', async () => {
@@ -89,7 +93,7 @@ test('first connected device uploads existing local data and records its cloud r
   });
 
   assert.equal(client.calls.insert, 1);
-  assert.deepEqual(client.row.payload.trainingRoutines, routines);
+  assert.deepEqual(client.row.payload.trainingRoutines, routines.map(routine => ({ ...routine, isPlaceholder:false })));
   assert.deepEqual(client.row.payload.trainingSessions, sessions);
   assert.equal(localStorage.getItem('logbookCloudOwner'), 'user-a');
   assert.equal(JSON.parse(localStorage.getItem('logbookCloudMeta:user-a')).revision, 1);
@@ -168,7 +172,7 @@ test('an empty newer cloud snapshot cannot erase meaningful device data', async 
     },
   });
 
-  assert.deepEqual(JSON.parse(localStorage.getItem('trainingRoutines')), routines);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingRoutines')), routines.map(routine => ({ ...routine, isPlaceholder:false })));
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
   assert.deepEqual(JSON.parse(localStorage.getItem('userProfile')), profile);
   assert.deepEqual(client.row.payload.trainingSessions, sessions);
@@ -215,6 +219,52 @@ test('cloud payload normalization validates nested exercises and set fields', as
     { reps:5, weight:100.25, plates:null, weightMode:'kg' },
     { reps:null, weight:null, plates:4, weightMode:'kg' },
   ]);
+});
+
+test('cloud profile uses an allowlist, omits the local gallery and stays below 100KB with an active avatar', async () => {
+  const { window } = await loadSync();
+  const activeAvatar = `data:image/jpeg;base64,${'A'.repeat(70 * 1024)}`;
+  const normalized = window.LogbookCloudSync.mergePayloads({}, {
+    userProfile:{
+      name:'  Athlete  ',
+      birthdate:'1990-01-01',
+      hideAge:false,
+      weight:80,
+      weightUnit:'kg',
+      avatar:'custom',
+      customImage:activeAvatar,
+      imageGallery:[activeAvatar, `data:image/jpeg;base64,${'B'.repeat(70 * 1024)}`],
+      injected:{ arbitrary:'payload' },
+    },
+  });
+
+  assert.deepEqual(Object.keys(normalized.userProfile).sort(), [
+    'avatar', 'birthdate', 'customImage', 'hideAge', 'name', 'weight', 'weightUnit',
+  ]);
+  assert.equal(normalized.userProfile.name, 'Athlete');
+  assert.equal(normalized.userProfile.customImage, activeAvatar);
+  assert.equal('imageGallery' in normalized.userProfile, false);
+  assert.ok(JSON.stringify(normalized).length < 100 * 1024);
+
+  const oversized = window.LogbookCloudSync.mergePayloads({}, {
+    userProfile:{ customImage:`data:image/jpeg;base64,${'C'.repeat(513 * 1024)}` },
+  });
+  assert.equal('customImage' in oversized.userProfile, false);
+  window.close();
+});
+
+test('payload size constraint failures surface a friendly sync status', async () => {
+  const session = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const writeError = {
+    code:'23514',
+    constraint:'user_sync_state_payload_size_check',
+    message:'new row violates check constraint',
+  };
+  const { syncStatusEvents, window } = await loadSync({ session, writeError });
+
+  assert.equal(syncStatusEvents.at(-1).kind, 'error');
+  assert.match(syncStatusEvents.at(-1).message, /πολύ μεγάλα για συγχρονισμό/);
+  window.close();
 });
 
 test('merge does not let an empty local placeholder replace the remote active program', async () => {

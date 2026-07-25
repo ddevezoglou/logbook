@@ -10,7 +10,7 @@ const cloudSync = readFileSync(new URL('../cloud-sync.js', import.meta.url), 'ut
 const pwa = readFileSync(new URL('../pwa.js', import.meta.url), 'utf8');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
-function createClient(session = { user:{ id:'user-a', email:'private@example.com' } }) {
+function createClient(session = { user:{ id:'user-a', email:'private@example.com' } }, rpcResults = []) {
   let authListener = null;
   const calls = [];
   return {
@@ -21,15 +21,18 @@ function createClient(session = { user:{ id:'user-a', email:'private@example.com
     },
     async rpc(name, values) {
       calls.push({ name, values:structuredClone(values) });
+      const result = rpcResults[calls.length - 1];
+      if (result === 'throw') throw new Error('network failure');
+      if (result) return { data:null, error:result };
       return { data:true, error:null };
     },
     emitAuth(nextSession) { authListener?.('SIGNED_IN', nextSession); },
   };
 }
 
-async function loadTracker(session) {
+async function loadTracker(session, rpcResults) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only' });
-  const client = createClient(session);
+  const client = createClient(session, rpcResults);
   dom.window.LogbookSupabase = client;
   dom.window.eval(source);
   await flush();
@@ -92,6 +95,23 @@ test('anonymous errors are not attached to a user who signs in later', async () 
   await window.LogbookErrorTracking.flush();
 
   assert.equal(client.calls.length, 0);
+  window.close();
+});
+
+test('failed RPC error events return to the bounded queue and flush after recovery', async () => {
+  const { window, client } = await loadTracker(
+    { user:{ id:'user-a', email:'private@example.com' } },
+    [new Error('temporary failure')]
+  );
+
+  assert.equal(await window.LogbookErrorTracking.report('sync', 'sync_failure', new window.Error()), false);
+  assert.equal(client.calls.length, 1);
+
+  await window.LogbookErrorTracking.flush();
+
+  assert.equal(client.calls.length, 2);
+  assert.deepEqual(client.calls[1].values, client.calls[0].values);
+  assert.match(source, /const MAX_PENDING = 10/);
   window.close();
 });
 

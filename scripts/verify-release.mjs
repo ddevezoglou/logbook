@@ -16,6 +16,7 @@ const productionScripts = [
   'error-tracking.js',
   'i18n.js',
   'modules/progress-rewards.js',
+  'modules/progress-chart.js',
   'modules/routines.js',
   'modules/sessions.js',
   'modules/storage-migrations.js',

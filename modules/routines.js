@@ -2,6 +2,7 @@ export const DAYS = Object.freeze(['Κυριακή','Δευτέρα','Τρίτη
 export const PLAN_ORDER = Object.freeze(['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']);
 export const MIN_CYCLE_LENGTH = 3;
 export const MAX_CYCLE_LENGTH = 10;
+const LEGACY_PLACEHOLDER_NAMES = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
 
 export const clampCycleLength = value =>
   Math.max(MIN_CYCLE_LENGTH, Math.min(MAX_CYCLE_LENGTH, Number(value) || 7));
@@ -43,6 +44,9 @@ export function normalizeRoutine(routine = {}, index = 0, randomUUID = () => glo
     id:routine.id || randomUUID(),
     name:routine.name || `Πρόγραμμα ${index + 1}`,
     isActive:Boolean(routine.isActive),
+    isPlaceholder:typeof routine.isPlaceholder === 'boolean'
+      ? routine.isPlaceholder
+      : LEGACY_PLACEHOLDER_NAMES.has(routine.name || `Πρόγραμμα ${index + 1}`) && !plan.length,
     cycleLength,
     cycleAnchorDate,
     usesWeekdays,

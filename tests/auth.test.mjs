@@ -9,7 +9,7 @@ const configSource = readFileSync(new URL('../supabase-config.js', import.meta.u
 const authSource = readFileSync(new URL('../auth.js', import.meta.url), 'utf8');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
-async function loadAuth({ initialSession = null, signupSession = null, oauthError = null, deleteError = null, onWindow = null } = {}) {
+async function loadAuth({ initialSession = null, signupSession = null, oauthError = null, deleteError = null, signOutFailures = [], onWindow = null } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
   const calls = { signin:[], signup:[], oauth:[], reset:[], update:[], signout:[], rpc:[] };
@@ -54,6 +54,9 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
       },
       async signOut(options) {
         calls.signout.push(options);
+        const failure = signOutFailures[calls.signout.length - 1];
+        if (failure === 'throw') throw new Error('offline');
+        if (failure) return { error:failure };
         authListener?.('SIGNED_OUT', null);
         return { error:null };
       },
@@ -308,19 +311,45 @@ test('password recovery link opens the new-password form and updates the user', 
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
 });
 
-test('local sign out preserves workout data stored in the browser', async () => {
-  const initialSession = { user:{ email:'athlete@example.com' } };
+test('global sign out clears cloud caches and preserves workout data stored in the browser', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
   const { document, localStorage, calls } = await loadAuth({ initialSession });
   const sessions = [{ id:'s1', date:'2026-07-17' }];
   localStorage.setItem('trainingSessions', JSON.stringify(sessions));
+  localStorage.setItem('logbookCloudCache:user-a', JSON.stringify({ trainingSessions:sessions }));
+  localStorage.setItem('logbookCloudMeta:user-a', JSON.stringify({ revision:2, hash:'abc' }));
+  localStorage.setItem('logbookCloudCache:user-b', JSON.stringify({ trainingSessions:[] }));
+  localStorage.setItem('logbookCloudOwner', 'user-a');
 
   click(document, '#account-signout');
   await flush();
 
   assert.equal(calls.signout.length, 1);
-  assert.equal(calls.signout[0].scope, 'local');
+  assert.equal(calls.signout[0].scope, 'global');
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
+  assert.deepEqual(
+    [...Array(localStorage.length)].map((_, index) => localStorage.key(index)).filter(key => key.startsWith('logbookCloud')),
+    []
+  );
   assert.equal(document.querySelector('#account-menu-status').textContent, 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ');
+});
+
+test('offline global sign out falls back to local sign out and still clears cloud caches', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { document, localStorage, calls } = await loadAuth({
+    initialSession,
+    signOutFailures:['throw'],
+  });
+  localStorage.setItem('logbookCloudCache:user-a', '{}');
+  localStorage.setItem('logbookCloudMeta:user-a', '{}');
+  localStorage.setItem('logbookCloudOwner', 'user-a');
+
+  click(document, '#account-signout');
+  await flush();
+  await flush();
+
+  assert.deepEqual(calls.signout.map(call => call.scope), ['global', 'local']);
+  assert.equal([...Array(localStorage.length)].some((_, index) => localStorage.key(index).startsWith('logbookCloud')), false);
 });
 
 test('account deletion requires explicit confirmation and cancellation makes no request', async () => {

@@ -474,6 +474,7 @@
     'message.0467':['Να διαγραφεί οριστικά η προπόνηση','Permanently delete the workout','Supprimer définitivement la séance','Das Training endgültig löschen'],
     'message.0468':['Το ','','',''],
     'message.0469':['Η ','','',''],
+    'message.0470':['Πολιτική απορρήτου','Privacy policy','Politique de confidentialité','Datenschutzerklärung'],
     'aria.weight-set':['{unit} σετ {number}','{unit}, set {number}','{unit}, série {number}','{unit}, Satz {number}']
   };
 

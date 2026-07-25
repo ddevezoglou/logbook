@@ -20,6 +20,7 @@ import {
   smoothPath,
   weightModeGroup,
 } from '../modules/progress-rewards.js';
+import { buildProgressChartMarkup } from '../modules/progress-chart.js';
 import { escapeHtml, setMenuState, syncNavigationState } from '../modules/ui.js';
 
 test('typed storage fallbacks preserve object and array boundaries', () => {
@@ -30,11 +31,12 @@ test('typed storage fallbacks preserve object and array boundaries', () => {
   };
   const writes = [];
   const store = createStore(storage, { onWrite:key => writes.push(key) });
-  assert.deepEqual(store.read('missing-array', []), []);
-  assert.equal(store.read('missing-object', null), null);
-  assert.deepEqual(store.read('broken', {}), {});
+  assert.deepEqual(store.read('missing-array', { type:'array', fallback:[] }), []);
+  assert.equal(store.read('missing-object', { type:'object', fallback:null }), null);
+  assert.deepEqual(store.read('broken', { type:'object', fallback:{} }), {});
   assert.equal(writeSafely(store, 'profile', { name:'Alex' }), true);
-  assert.deepEqual(store.read('profile', null), { name:'Alex' });
+  assert.deepEqual(store.read('profile', { type:'object', fallback:null }), { name:'Alex' });
+  assert.deepEqual(store.read('profile', { type:'array', fallback:[] }), [], 'a valid JSON value with the wrong shape uses the typed fallback');
   assert.deepEqual(writes, ['profile']);
 });
 
@@ -113,6 +115,28 @@ test('progress and reward helpers keep comparisons and chart math independent fr
   });
   assert.equal(reward.stage, 2);
   assert.equal(reward.streak, 1);
+});
+
+test('progress chart module returns complete escaped markup without a DOM', () => {
+  const workout = {
+    sessions:[
+      { date:'2026-07-01', exercises:[{ exercise:'Bench <Press>', sets:[{ reps:8, weight:60, weightMode:'kg' }] }] },
+      { date:'2026-07-08', exercises:[{ exercise:'Bench <Press>', sets:[{ reps:9, weight:60, weightMode:'kg' }] }] },
+    ],
+  };
+  const markup = buildProgressChartMarkup({
+    workout,
+    exerciseKey:'bench <press>',
+    setIndex:0,
+    panelWidth:600,
+    weightSymbol:'kg',
+    formatDate:value => value,
+  });
+
+  assert.match(markup, /class="progress-chart"/);
+  assert.match(markup, /class="cycle-bracket"/);
+  assert.match(markup, /Bench &lt;Press&gt;/);
+  assert.doesNotMatch(markup, /<h2>Bench <Press><\/h2>/);
 });
 
 test('UI helpers escape content and own navigation/menu state', () => {
