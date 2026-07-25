@@ -4,7 +4,7 @@
 
 | Στοιχείο | Τρέχουσα κατάσταση |
 |---|---|
-| Έκδοση | **0.2.1** |
+| Έκδοση | **0.2.2** |
 | Runtime | Node.js 22 |
 | Client | HTML, CSS και JavaScript χωρίς build step |
 | Αποθήκευση | Local-first με `localStorage` και Supabase sync |
@@ -227,13 +227,13 @@ npm.cmd run test:e2e
 
 Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.2.1`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
 
-## Γνωστοί περιορισμοί της 0.2.1
+## Γνωστοί περιορισμοί της 0.2.2
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry και αυτόματο merge. Η σχεδιαστική παραδοχή είναι ότι η καταγραφή γίνεται από μία ενεργή συσκευή κάθε φορά, επομένως δεν προβλέπεται UI χειροκίνητης επίλυσης conflicts.
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
 
-## Αξιολόγηση 0.2.1 — 25 Ιουλίου 2026
+## Αξιολόγηση 0.2.2 — 25 Ιουλίου 2026
 
 Δεύτερο πλήρες review ολόκληρου του codebase με τη μεθοδολογία των security-review, code-review και frontend-design, αυτή τη φορά με ρητό κριτήριο **το κέρδος από το mobile app**. Κατά το review τα **224/224** unit/integration tests πέρασαν πράσινα. Το review δεν στηρίχθηκε σε diff — σαρώθηκαν τα SQL migrations, ο client (`app.js`, `auth.js`, `cloud-sync.js`, `error-tracking.js`, `supabase-client.js`, `service-worker.js`, `modules/`), το `styles.css` και τα CI workflows.
 

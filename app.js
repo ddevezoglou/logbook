@@ -1639,6 +1639,7 @@ function showView(view, { skipSessionWarning = false } = {}) {
     syncNavigation(view);
     $(`#${view}-view`).classList.add('active');
     if (view === 'home') renderHome();
+    if (view === 'log') refreshSessionDecks();
     if (view === 'overview') renderOverview();
     if (view === 'progress') renderProgressSelectors();
     if (view === 'profile') renderProfilePreview();

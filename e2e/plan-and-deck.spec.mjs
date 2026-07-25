@@ -91,13 +91,27 @@ test('cards behind the active one only peek out of the deck', async ({ page }) =
   await page.locator('#side-menu [data-view="log"]').click();
   const deck = page.locator('#scheduled-session .exercise-deck');
   await expect(deck.locator('.workout-exercise')).toHaveCount(3);
-  await page.waitForTimeout(600);
 
-  const boxes = await deck.locator('.workout-exercise').evaluateAll(list => list.map(card => {
-    const rect = card.getBoundingClientRect();
-    return { top:Math.round(rect.top), bottom:Math.round(rect.bottom) };
-  }));
-  const deckBottom = await deck.evaluate(element => Math.round(element.getBoundingClientRect().bottom));
+  const geometry = async () => {
+    const boxes = await deck.locator('.workout-exercise').evaluateAll(list => list.map(card => {
+      const rect = card.getBoundingClientRect();
+      return { top:Math.round(rect.top), bottom:Math.round(rect.bottom) };
+    }));
+    const deckBottom = await deck.evaluate(element => Math.round(element.getBoundingClientRect().bottom));
+    return { boxes, deckBottom };
+  };
+  await expect.poll(async () => {
+    const { boxes, deckBottom } = await geometry();
+    return boxes.length === 3
+      && boxes[1].bottom <= boxes[0].bottom
+      && boxes[2].bottom <= boxes[0].bottom
+      && deckBottom - boxes[0].bottom <= 20
+      && boxes[0].top - boxes[1].top >= 6;
+  }, {
+    message:'the visible deck should finish measuring and clipping its background cards',
+  }).toBe(true);
+
+  const { boxes, deckBottom } = await geometry();
   const detail = JSON.stringify({ boxes, deckBottom });
   expect(boxes[1].bottom, detail).toBeLessThanOrEqual(boxes[0].bottom);
   expect(boxes[2].bottom, detail).toBeLessThanOrEqual(boxes[0].bottom);
