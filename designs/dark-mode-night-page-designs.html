@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="el" data-mode="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dark mode — Η νυχτερινή σελίδα</title>
+<link rel="stylesheet" href="../fonts.css">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   ΝΥΧΤΕΡΙΝΗ ΣΕΛΙΔΑ — spec sheet
+   Το studio (αυτή η σελίδα) μένει σταθερό. Τα mockups αλλάζουν φως
+   με το κορδόνι της λάμπας πάνω δεξιά.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Tokens: ΗΜΕΡΑ (αντιγραφή από styles.css :root) ───────────────── */
+:root {
+  --f-ink:#15130d;
+  --f-paper:#efe8d8;
+  --f-paper-soft:#f8f3e4;
+  --f-paper-field:#f7f1e3;
+  --f-paper-quote:#f4eee0;
+  --f-raised:#15130d;          /* controls = μελανί */
+  --f-on-raised:#efe8d8;
+  --f-accent:#8a6a1c;
+  --f-gold:#c9a227;
+  --f-pen-blue:#1f6493;
+  --f-danger:#7a3325;
+  --f-muted:#6d6551;
+  --f-line:#b6ad97;
+  --f-line-soft:rgba(138,106,28,.3);
+  --f-rule:rgba(77,63,36,.09);
+  --f-grid:rgba(21,19,13,.05);
+  --f-stamp:rgba(138,106,28,.6);
+  --f-shadow:rgba(21,19,13,.14);
+  --f-warning-bg:#e8dcc1;
+  --f-tape:rgba(201,162,39,.3);
+  --f-lamp:0 0 90px 30px rgba(255,238,196,.16);
+  --f-blend:multiply;
+}
+/* ── Tokens: ΝΥΧΤΑ (η πρόταση) ────────────────────────────────────── */
+:root[data-mode="night"] {
+  --f-ink:#ece2c9;             /* το μελάνι γίνεται το φως */
+  --f-paper:#17140e;
+  --f-paper-soft:#1f1b14;
+  --f-paper-field:#100e09;     /* πεδία: βυθισμένα */
+  --f-paper-quote:#1c1811;
+  --f-raised:#2e2a1f;          /* controls: ανασηκωμένα (= --cover-top) */
+  --f-on-raised:#f2ead4;
+  --f-accent:#e0a94a;
+  --f-gold:#d4ae33;
+  --f-pen-blue:#74aed6;
+  --f-danger:#cf7a63;
+  --f-muted:#9a917a;
+  --f-line:#3a3428;
+  --f-line-soft:rgba(212,174,51,.24);
+  --f-rule:rgba(212,174,51,.07);
+  --f-grid:rgba(236,226,201,.045);
+  --f-stamp:rgba(224,169,74,.5);
+  --f-shadow:rgba(0,0,0,.5);
+  --f-warning-bg:#2a2419;
+  --f-tape:rgba(212,174,51,.16);
+  --f-lamp:0 0 70px 10px rgba(255,238,196,.05);
+  --f-blend:normal;
+}
+
+/* ── Το studio ────────────────────────────────────────────────────── */
+* { box-sizing:border-box; }
+body {
+  margin:0; padding:0 0 120px;
+  background:#0d0b07;
+  background-image:linear-gradient(90deg,rgba(236,226,201,.028) 1px,transparent 1px),linear-gradient(rgba(236,226,201,.028) 1px,transparent 1px);
+  background-size:96px 96px;
+  color:#d9cfb5;
+  font-family:"Alegreya Sans",sans-serif;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap { width:min(1180px,92vw); margin:0 auto; }
+.eyebrow { margin:0 0 14px; font:800 .7rem "Alegreya Sans"; letter-spacing:.24em; text-transform:uppercase; color:#e0a94a; }
+h1,h2,h3 { font-family:"Roboto Slab",serif; text-transform:uppercase; margin:0; }
+p { line-height:1.6; }
+
+/* Hero */
+.masthead { padding:clamp(64px,10vw,140px) 0 clamp(10px,2vw,24px); position:relative; }
+.masthead h1 { font:700 clamp(2.6rem,7vw,5.6rem)/.86 "Roboto Slab"; letter-spacing:-.045em; color:#f2ead4; }
+.masthead h1 em { font-style:normal; color:#e0a94a; }
+.masthead .lede { max-width:56ch; margin:26px 0 0; color:#a99f86; font-size:1.05rem; }
+.masthead .meta { margin-top:34px; display:flex; flex-wrap:wrap; gap:10px 26px; font:800 .64rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:#7d735d; }
+
+/* Κορδόνι λάμπας — signature */
+.cord { position:fixed; top:0; right:clamp(18px,5vw,64px); z-index:90; width:54px; height:auto; border:0; padding:0 0 14px; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; font-family:inherit; }
+.cord .chain { width:4px; height:clamp(120px,18vh,190px); background:repeating-linear-gradient(180deg,#c2a24a 0 2px,#8a7331 2px 4px,#3d3214 4px 7px); box-shadow:0 0 5px rgba(0,0,0,.6); transition:height .3s cubic-bezier(.34,1.56,.64,1); }
+.cord .knob { width:15px; height:26px; border-radius:8px 8px 9px 9px; background:linear-gradient(160deg,#c9a227,#5f4a12 60%,#33280a); box-shadow:0 3px 7px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.35); }
+.cord .cap { margin-top:12px; font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:#8e8368; white-space:nowrap; }
+.cord:hover .chain { height:calc(clamp(120px,18vh,190px) + 12px); }
+.cord:active .chain { height:calc(clamp(120px,18vh,190px) + 22px); }
+.cord:focus-visible { outline:2px solid #e0a94a; outline-offset:6px; }
+:root[data-mode="day"] .cord .cap::after { content:"ΗΜΕΡΑ"; }
+:root[data-mode="night"] .cord .cap::after { content:"ΝΥΧΤΑ"; }
+
+/* Ενότητες */
+section.block { padding:clamp(48px,7vw,90px) 0 0; }
+.block-head { border-top:1px solid #2a2419; padding-top:22px; margin-bottom:38px; display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:14px 30px; }
+.block-head h2 { font:700 clamp(1.5rem,3vw,2.3rem)/1 "Roboto Slab"; letter-spacing:-.03em; color:#f2ead4; }
+.block-head p { margin:0; max-width:46ch; color:#8e8368; font-size:.92rem; }
+
+/* Κανόνες */
+.rules { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:22px; }
+.rule-card { padding:26px 24px 28px; background:#151209; border:1px solid #2a2419; }
+.rule-card b { display:block; font:700 .72rem "Alegreya Sans"; letter-spacing:.2em; color:#e0a94a; margin-bottom:14px; }
+.rule-card h3 { font:700 1.12rem/1.2 "Roboto Slab"; letter-spacing:-.01em; color:#f2ead4; margin-bottom:10px; }
+.rule-card p { margin:0; font-size:.9rem; color:#9a9078; }
+.rule-card .demo { margin-top:18px; display:flex; gap:8px; align-items:center; }
+.rule-card .demo i { display:block; width:34px; height:34px; border:1px solid #3a3428; }
+.rule-card .demo span { font:800 .58rem "Alegreya Sans"; letter-spacing:.12em; color:#7d735d; }
+
+/* Πίνακας tokens */
+.tokens { width:100%; border-collapse:collapse; font-size:.85rem; }
+.tokens th { text-align:left; padding:0 14px 12px 0; font:800 .6rem "Alegreya Sans"; letter-spacing:.18em; text-transform:uppercase; color:#7d735d; border-bottom:1px solid #2a2419; }
+.tokens td { padding:11px 14px 11px 0; border-bottom:1px solid #1c1811; vertical-align:middle; }
+.tokens code { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.8rem; color:#cfc4a8; }
+.tokens .sw { display:inline-flex; align-items:center; gap:9px; }
+.tokens .sw i { width:20px; height:20px; border:1px solid #3a3428; flex:0 0 auto; }
+.tokens .ratio { font:800 .72rem "Alegreya Sans"; letter-spacing:.06em; }
+.tokens .ok { color:#8fbf7a; }
+.tokens .no { color:#cf7a63; }
+.note { margin:22px 0 0; padding:18px 20px; border-left:2px solid #e0a94a; background:#151209; font-size:.9rem; color:#9a9078; max-width:78ch; }
+.note b { color:#e0d3ae; }
+
+/* ── Πλαίσιο mockup ───────────────────────────────────────────────── */
+.shots { display:grid; gap:clamp(34px,5vw,62px); }
+.shot { }
+.shot-cap { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 18px; margin-bottom:16px; }
+.shot-cap strong { font:700 1.05rem "Roboto Slab"; text-transform:uppercase; letter-spacing:.01em; color:#f2ead4; }
+.shot-cap span { font-size:.88rem; color:#8e8368; }
+.stage {
+  position:relative; overflow:hidden;
+  background:var(--f-paper); color:var(--f-ink);
+  border:1px solid var(--f-line);
+  box-shadow:var(--f-lamp),0 30px 60px -20px rgba(0,0,0,.8);
+  transition:background .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease;
+}
+.stage, .stage * { transition:background-color .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease; }
+.stage.tall { min-height:460px; }
+
+/* κοινά primitives μέσα στα mockups */
+.pg-grid { background-image:linear-gradient(90deg,var(--f-grid) 1px,transparent 1px); background-size:128px 128px; }
+.ruled { background-image:repeating-linear-gradient(0deg,transparent 0 26px,var(--f-rule) 26px 27px); }
+.m-hero { padding:44px 40px 30px; border-bottom:1px solid var(--f-line); display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
+.m-hero h1 { font:700 clamp(1.8rem,4vw,2.9rem)/.9 "Roboto Slab"; letter-spacing:-.045em; color:var(--f-ink); }
+.m-hero h1 em { font-style:normal; color:var(--f-accent); }
+.m-stamp { width:44px; height:44px; border:2.5px solid var(--f-stamp); border-radius:50%; display:grid; place-items:center; color:var(--f-stamp); font:700 1.2rem "Roboto Slab"; transform:rotate(-8deg); mix-blend-mode:var(--f-blend); flex:0 0 auto; }
+.m-btn { border:0; padding:17px 22px; background:var(--f-raised); color:var(--f-on-raised); font:800 .76rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; box-shadow:4px 4px 0 var(--f-shadow),inset 0 -3px 0 var(--f-line-soft); cursor:default; }
+.m-btn2 { border:1px solid var(--f-line); padding:14px 18px; background:var(--f-paper-soft); color:var(--f-ink); font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; text-transform:uppercase; box-shadow:3px 3px 0 var(--f-shadow); cursor:default; }
+.m-field { display:grid; gap:6px; font:800 .62rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; color:var(--f-muted); }
+.m-field i { display:block; min-height:42px; padding:12px 14px; border:1px solid var(--f-line); background:var(--f-paper-field); color:var(--f-ink); font:500 .95rem "Alegreya Sans"; font-style:normal; letter-spacing:0; text-transform:none; }
+.m-eyebrow { font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; text-transform:uppercase; color:var(--f-accent); }
+.m-muted { color:var(--f-muted); font:800 .62rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; }
+.m-ribbon { position:absolute; top:-4px; width:19px; height:260px; z-index:2; transform:rotate(.8deg);
+  background:linear-gradient(104deg,#6b5518,#463a14 52%,#2e2710);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 13px),0 100%);
+  filter:drop-shadow(4px 6px 5px rgba(0,0,0,.35)); }
+:root[data-mode="night"] .m-ribbon { filter:drop-shadow(4px 6px 6px rgba(0,0,0,.6)) brightness(.82); }
+
+/* ── Menu mockup ──────────────────────────────────────────────────── */
+.menu-shot { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,360px); min-height:600px; }
+.menu-page { position:relative; padding:40px; }
+.menu-page .backdrop { position:absolute; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(1px); }
+:root[data-mode="night"] .menu-page .backdrop { background:rgba(0,0,0,.5); }
+.menu-tab { position:absolute; top:0; right:26px; width:32px; height:96px; z-index:3;
+  background:linear-gradient(180deg,#26221a,var(--f-raised) 70%);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 14px),0 100%); box-shadow:0 10px 18px rgba(0,0,0,.45); }
+:root[data-mode="night"] .menu-tab { background:linear-gradient(180deg,#3a3529,#2e2a1f 70%); }
+.menu-tab::before { content:""; position:absolute; inset:5px 5px 20px; border-left:1px dashed rgba(201,162,39,.55); border-right:1px dashed rgba(201,162,39,.55); }
+.menu-tab i { position:absolute; left:50%; top:28px; width:14px; height:2px; background:var(--f-gold); transform:translateX(-50%); box-shadow:0 7px 0 var(--f-gold),0 14px 0 var(--f-gold); }
+.menu-panel { position:relative; z-index:4; padding:24px 28px 26px; display:flex; flex-direction:column;
+  background:#15130d; color:#efe8d8; box-shadow:-18px 0 40px rgba(0,0,0,.5); }
+:root[data-mode="night"] .menu-panel { background:#2e2a1f; color:#f2ead4; }
+.menu-panel .head { display:flex; justify-content:space-between; align-items:center; padding-bottom:18px; border-bottom:1px solid rgba(236,226,201,.16); }
+.menu-panel .head b { font:800 .8rem "Alegreya Sans"; letter-spacing:.2em; }
+.menu-panel .head em { font-style:normal; width:32px; height:32px; border:1px solid rgba(236,226,201,.22); display:grid; place-items:center; font-size:1.1rem; }
+.menu-panel nav { display:flex; flex-direction:column; margin-top:8px; }
+.menu-panel nav b { padding:13px 0; border-bottom:1px solid rgba(236,226,201,.14); font:700 1.18rem "Roboto Slab"; text-transform:uppercase; }
+.menu-panel nav b.on { color:var(--f-gold); }
+.menu-panel .acct { margin-top:22px; padding:14px 16px; border:1px solid rgba(236,226,201,.16); font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; color:#a89f86; }
+/* ζώνη ρυθμίσεων του μενού: γλώσσα + darkmode */
+.menu-foot { margin-top:auto; }
+.pick { padding:13px 0 11px; border-top:1px solid rgba(236,226,201,.16); display:flex; align-items:center; gap:4px; }
+.pick>span { margin-right:auto; font:800 .62rem "Alegreya Sans"; letter-spacing:.2em; color:#948b73; }
+.pick b { min-width:36px; padding:7px 6px 6px; border:1px solid transparent; text-align:center; font:800 .58rem "Alegreya Sans"; letter-spacing:.1em; color:#948b73; }
+.pick b.on { border-color:#5b5234; background:rgba(201,162,39,.07); color:var(--f-gold); }
+.pick.dm b { min-width:46px; }
+:root[data-mode="night"] .pick.dm .dm-on { border-color:#5b5234; background:rgba(201,162,39,.07); color:var(--f-gold); }
+:root[data-mode="day"] .pick.dm .dm-off { border-color:#5b5234; background:rgba(201,162,39,.07); color:var(--f-gold); }
+.menu-brand { padding:14px 0 2px; border-top:1px solid rgba(236,226,201,.16); display:flex; align-items:center; gap:11px; font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:#948b73; }
+.menu-brand .mk { display:flex; align-items:center; gap:2px; }
+.menu-brand .mk i { display:block; width:3px; height:13px; background:#efe8d8; }
+.menu-brand .mk i:first-child,.menu-brand .mk i:last-child { width:5px; height:19px; }
+.menu-brand .mk i:nth-child(3) { width:27px; height:4px; background:var(--f-gold); }
+.menu-brand .ver { margin-left:auto; text-align:right; line-height:1.25; }
+.menu-brand .ver b { display:block; color:#cfc6ac; font-size:.66rem; }
+.menu-priv { margin-top:10px; text-align:right; font:800 .62rem "Alegreya Sans"; letter-spacing:.08em; color:#a89f86; text-decoration:underline; }
+
+/* ── Home mockup ──────────────────────────────────────────────────── */
+.home-shot { position:relative; padding:44px 40px 46px 92px; display:grid; grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr); gap:40px; align-items:start; }
+.home-margin { position:absolute; left:22px; top:44px; bottom:46px; width:40px; display:flex; flex-direction:column; align-items:center; gap:24px; }
+.home-date { writing-mode:vertical-rl; transform:rotate(180deg); font:800 .62rem "Alegreya Sans"; letter-spacing:.22em; color:var(--f-muted); }
+.home-vol { width:40px; height:40px; border:2px solid var(--f-stamp); border-radius:50%; display:grid; place-items:center; color:var(--f-stamp); font:800 .56rem "Alegreya Sans"; transform:rotate(-12deg); }
+.home-left { display:flex; flex-direction:column; gap:12px; position:relative; z-index:2; }
+.home-pageno { align-self:flex-end; font:700 .72rem "Roboto Slab"; letter-spacing:.14em; color:var(--f-muted); }
+.home-cards { position:relative; height:212px; margin-bottom:6px; }
+.card-routine { position:absolute; left:8px; top:6px; width:250px; padding:13px 16px 14px; transform:rotate(-1.4deg);
+  border:1px solid var(--f-line); background:var(--f-warning-bg); color:var(--f-ink); box-shadow:5px 8px 16px var(--f-shadow); }
+.card-routine .hd { font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:var(--f-muted); }
+.card-routine strong { display:block; margin:6px 0 10px; font:700 1.05rem "Roboto Slab"; text-transform:uppercase; }
+.card-routine ol { margin:0; padding:0 0 10px; list-style:none; display:grid; gap:5px; font-size:.78rem; color:var(--f-muted); }
+.card-routine ol li { display:flex; justify-content:space-between; border-bottom:1px dotted var(--f-line); padding-bottom:3px; }
+.card-routine .open { margin-top:2px; padding:8px 0; border-top:1px solid var(--f-line); font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--f-accent); }
+.card-profile { position:absolute; right:0; top:52px; width:206px; padding:14px; transform:rotate(2.2deg);
+  border:1px solid var(--f-line); background:var(--f-paper-soft); box-shadow:3px 5px 12px var(--f-shadow);
+  display:flex; align-items:center; gap:12px; opacity:.86; }
+:root[data-mode="night"] .card-profile { opacity:.94; }
+.card-profile .face { width:52px; height:52px; border-radius:50%; background:linear-gradient(160deg,#7b6ea8,#df9271); flex:0 0 auto; filter:saturate(.7); }
+:root[data-mode="night"] .card-profile .face { filter:saturate(.55) brightness(.8); }
+.card-profile b { font:700 .9rem/1.15 "Roboto Slab"; text-transform:uppercase; }
+.home-start { display:flex; justify-content:space-between; align-items:center; max-width:430px; }
+.home-quick { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:430px; }
+.home-quick .m-btn2 { display:block; }
+.quote { position:relative; padding:22px 22px 18px; transform:rotate(1.4deg); background:var(--f-paper-quote);
+  border:2px solid var(--f-line-soft); box-shadow:7px 7px 0 var(--f-shadow); }
+.quote::after { content:""; position:absolute; top:-11px; left:50%; width:86px; height:21px; transform:translateX(-50%) rotate(-2.5deg); background:var(--f-tape); }
+.quote .qm { display:flex; justify-content:space-between; padding-bottom:10px; border-bottom:1px solid var(--f-line-soft); color:var(--f-accent); font:800 .56rem "Alegreya Sans"; letter-spacing:.18em; }
+.quote blockquote { margin:16px 0 12px; font:500 1.18rem/1.28 "Roboto Slab"; letter-spacing:-.03em; }
+.quote footer { font:800 .62rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--f-muted); }
+.quote cite { font-style:normal; color:var(--f-accent); }
+.quote .mark { position:absolute; right:12px; bottom:2px; font:700 4.4rem/1 "Roboto Slab"; color:var(--f-line-soft); }
+
+/* ── Log mockup ───────────────────────────────────────────────────── */
+.log-body { padding:32px 40px 40px; display:grid; gap:20px; }
+.log-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
+.ex-card { border:1px solid var(--f-line); background:var(--f-paper-soft); padding:18px 20px 20px; box-shadow:4px 4px 0 var(--f-shadow); }
+.ex-card .top { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:12px; border-bottom:1px solid var(--f-line); }
+.ex-card .top strong { font:700 1.05rem "Roboto Slab"; text-transform:uppercase; }
+.set-line { display:grid; grid-template-columns:44px 1fr 1fr; gap:12px; align-items:center; padding:11px 0; border-bottom:1px solid var(--f-rule); }
+.set-line b { font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--f-muted); }
+.set-line i { font-style:normal; display:block; padding:9px 12px; border-bottom:1px solid var(--f-line); background:var(--f-paper-field); font:500 .95rem "Alegreya Sans"; }
+.hand { font-family:"Playpen Sans",cursive; color:var(--f-pen-blue); font-size:.9rem; }
+
+/* ── Plan mockup ──────────────────────────────────────────────────── */
+.plan-body { padding:30px 40px 40px; display:grid; grid-template-columns:minmax(220px,.85fr) minmax(0,1.15fr); gap:26px; align-items:start; }
+.plan-form { display:grid; gap:14px; padding:20px; border:1px solid var(--f-line); background:var(--f-paper-soft); }
+.setlist { position:relative; padding:22px 24px 20px; border:1px solid var(--f-line); background:var(--f-paper-soft); box-shadow:5px 6px 0 var(--f-shadow); }
+.setlist .lbl { font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:var(--f-muted); }
+.setlist h3 { margin:8px 0 4px; font:700 1.5rem "Roboto Slab"; letter-spacing:-.02em; }
+.setlist .dur { font:800 .58rem "Alegreya Sans"; letter-spacing:.16em; color:var(--f-muted); }
+.setlist ol { margin:16px 0 0; padding:0; list-style:none; display:grid; gap:7px; }
+.setlist ol li { display:flex; gap:10px; align-items:baseline; font-size:.9rem; }
+.setlist ol li em { font-style:normal; color:var(--f-pen-blue); font-family:"Playpen Sans",cursive; }
+.setlist .active { position:absolute; right:18px; top:16px; padding:5px 10px 4px; border:2px solid var(--f-stamp); color:var(--f-stamp);
+  font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-6deg); mix-blend-mode:var(--f-blend); }
+.plan-acts { margin-top:18px; padding-top:14px; border-top:1px solid var(--f-line); display:flex; flex-wrap:wrap; gap:8px; }
+.plan-acts b { padding:8px 12px; border:1px solid var(--f-line); font:800 .58rem "Alegreya Sans"; letter-spacing:.12em; color:var(--f-muted); }
+.motto { margin-top:22px; display:flex; align-items:center; justify-content:center; gap:12px; padding:10px; border:2px solid var(--f-stamp); color:var(--f-stamp);
+  font:800 .68rem "Alegreya Sans"; letter-spacing:.2em; transform:rotate(-1.2deg); mix-blend-mode:var(--f-blend); }
+
+/* ── History mockup ───────────────────────────────────────────────── */
+.hist-body { padding:26px 40px 40px; }
+.week { display:flex; gap:8px; margin-bottom:24px; }
+.week b { flex:1; padding:12px 8px; border:1px solid var(--f-line); background:var(--f-paper-soft); text-align:center; font:800 .6rem "Alegreya Sans"; letter-spacing:.1em; color:var(--f-muted); }
+.week b.on { background:var(--f-raised); color:var(--f-on-raised); border-color:var(--f-raised); }
+.week b i { display:block; font-style:normal; margin-top:5px; font:700 1.1rem "Roboto Slab"; color:inherit; }
+.sess { display:grid; gap:14px; }
+.sess article { border:1px solid var(--f-line); background:var(--f-paper-soft); padding:16px 20px; display:flex; justify-content:space-between; align-items:center; gap:16px; box-shadow:3px 3px 0 var(--f-shadow); }
+.sess article strong { display:block; font:700 1.02rem "Roboto Slab"; text-transform:uppercase; }
+.sess article small { display:block; margin-top:4px; color:var(--f-muted); font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; }
+.counter { display:inline-flex; align-items:center; gap:9px; padding:9px 15px; border:2px solid var(--f-stamp); color:var(--f-stamp);
+  font:800 .64rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:var(--f-blend); }
+
+/* ── Progress mockup ──────────────────────────────────────────────── */
+.prog-body { padding:28px 40px 40px; display:grid; gap:22px; }
+.chart { border:1px solid var(--f-line); background:var(--f-paper-soft); padding:22px 24px 16px; }
+.chart-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+.legend { display:flex; gap:16px; font:800 .58rem "Alegreya Sans"; letter-spacing:.12em; }
+.legend span { display:inline-flex; align-items:center; gap:6px; color:var(--f-muted); }
+.legend i { width:16px; height:3px; display:block; }
+.pr { display:inline-flex; align-items:center; gap:9px; padding:10px 16px; border:2px solid var(--f-stamp); color:var(--f-stamp);
+  font:800 .66rem "Alegreya Sans"; letter-spacing:.16em; transform:rotate(-2deg); mix-blend-mode:var(--f-blend); }
+
+/* ── Profile mockup ───────────────────────────────────────────────── */
+.prof-body { padding:32px 40px 44px; display:grid; grid-template-columns:minmax(230px,300px) minmax(0,1fr); gap:34px; align-items:start; }
+.prof-card { position:relative; padding:16px 16px 0; border:1px solid var(--f-line); background:var(--f-paper-soft); box-shadow:6px 8px 18px var(--f-shadow); }
+.prof-card .top { display:flex; justify-content:space-between; align-items:center; font:800 .56rem "Alegreya Sans"; letter-spacing:.16em; color:var(--f-muted); }
+.polaroid { margin:14px 0 0; padding:14px 14px 18px; background:var(--f-paper-quote); border:1px solid var(--f-line); text-align:center; position:relative; }
+.polaroid .tape { position:absolute; top:-9px; left:50%; width:70px; height:18px; transform:translateX(-50%) rotate(-3deg); background:var(--f-tape); }
+.ring { width:108px; height:108px; margin:6px auto 12px; border-radius:50%; display:grid; place-items:center;
+  background:conic-gradient(var(--f-gold) 0 50%,var(--f-line) 50% 100%); padding:5px; }
+.ring i { width:100%; height:100%; border-radius:50%; background:linear-gradient(160deg,#7b6ea8,#df9271); display:block; }
+:root[data-mode="night"] .ring i { filter:saturate(.6) brightness(.82); }
+.polaroid b { display:block; font:700 1.05rem "Roboto Slab"; text-transform:uppercase; }
+.polaroid small { display:block; margin-top:8px; font:800 .56rem "Alegreya Sans"; letter-spacing:.16em; color:var(--f-muted); }
+.prof-card .foot { padding:12px 0; text-align:center; font:800 .56rem "Alegreya Sans"; letter-spacing:.24em; color:var(--f-muted); border-top:1px solid var(--f-line); margin-top:14px; }
+.receipt { border:1px dashed var(--f-line); background:var(--f-paper-field); padding:16px 18px; font:800 .6rem/1.9 "Alegreya Sans"; letter-spacing:.1em; color:var(--f-muted); }
+.receipt hr { border:0; border-top:1px dashed var(--f-line); margin:8px 0; }
+.seg { display:inline-flex; width:max-content; justify-self:start; border:1px solid var(--f-line); }
+.seg b { padding:11px 22px; font:800 .62rem "Alegreya Sans"; letter-spacing:.14em; color:var(--f-muted); }
+.seg b.on { background:var(--f-raised); color:var(--f-on-raised); }
+
+/* ── Dialogs / toast ──────────────────────────────────────────────── */
+.dlg-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; padding:34px 40px; }
+.dlg { padding:24px 24px 22px; background:var(--f-paper-soft); border:1px solid var(--f-line); box-shadow:8px 10px 0 var(--f-shadow); }
+.dlg .mk { width:38px; height:38px; border:2px solid var(--f-danger); color:var(--f-danger); border-radius:50%; display:grid; place-items:center; font:700 1.2rem "Roboto Slab"; margin-bottom:14px; }
+.dlg h3 { font:700 1.15rem "Roboto Slab"; margin-bottom:8px; }
+.dlg p { margin:0 0 18px; font-size:.88rem; color:var(--f-muted); }
+.dlg .acts { display:flex; gap:10px; flex-wrap:wrap; }
+.dlg .danger { padding:13px 18px; border:1px solid var(--f-danger); background:transparent; color:var(--f-danger); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; }
+.toast { display:inline-flex; flex-direction:column; gap:4px; padding:14px 20px; background:#15130d; color:#efe8d8; box-shadow:6px 6px 0 rgba(0,0,0,.35); }
+:root[data-mode="night"] .toast { background:#2e2a1f; }
+.toast b { font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:#e8d9a8; }
+
+/* ── Auth gate ────────────────────────────────────────────────────── */
+.gate { padding:44px 36px; background:#15130d; background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:64px 64px; display:grid; place-items:center; }
+:root[data-mode="night"] .gate { background-color:#0b0906; }
+.book { position:relative; width:min(620px,100%); display:grid; grid-template-columns:1fr 1fr; filter:drop-shadow(0 18px 34px rgba(0,0,0,.6)); }
+.book .pg { position:relative; z-index:1; min-height:230px; padding:28px 26px; background:var(--f-paper); color:var(--f-ink); }
+.book .pg.r { background-image:repeating-linear-gradient(0deg,transparent 0 24px,var(--f-rule) 24px 25px); }
+.book h3 { font:700 1.5rem/.9 "Roboto Slab"; letter-spacing:-.04em; }
+.book h3 em { font-style:normal; color:var(--f-accent); }
+.book .cover { position:absolute; inset:-13px; z-index:0; background:linear-gradient(120deg,#3a3529,#211d15); border-radius:14px; box-shadow:inset 0 1px 0 rgba(255,255,255,.07); }
+
+/* ── Παραδοτέο / checklist ────────────────────────────────────────── */
+.todo { display:grid; gap:12px; }
+.todo li { list-style:none; display:grid; grid-template-columns:26px 1fr; gap:14px; padding:16px 18px; background:#151209; border:1px solid #2a2419; font-size:.92rem; color:#a99f86; }
+.todo li b { color:#e0a94a; font:800 .72rem "Alegreya Sans"; letter-spacing:.1em; }
+.todo li code { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.82rem; color:#e0d3ae; }
+.todo li strong { color:#f2ead4; }
+
+footer.end { margin-top:70px; padding-top:24px; border-top:1px solid #2a2419; font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; text-transform:uppercase; color:#6d6551; }
+
+@media(max-width:860px){
+  .menu-shot { grid-template-columns:1fr; }
+  .menu-page { min-height:150px; }
+  .home-shot { grid-template-columns:1fr; padding:36px 24px 36px 74px; }
+  .plan-body,.prof-body { grid-template-columns:1fr; }
+  .m-hero { padding:30px 24px 22px; }
+  .log-body,.hist-body,.prog-body,.dlg-row { padding-left:24px; padding-right:24px; }
+  .book { grid-template-columns:1fr; }
+  .cord { display:none; }
+  .mobile-toggle { display:inline-flex !important; }
+}
+.mobile-toggle { display:none; position:fixed; right:16px; bottom:16px; z-index:90; padding:14px 18px; border:1px solid #4a3d19; background:#1c1811; color:#e0a94a; font:800 .64rem "Alegreya Sans"; letter-spacing:.16em; }
+
+@media(prefers-reduced-motion:reduce){
+  .stage,.stage *,.cord .chain { transition:none !important; }
+}
+</style>
+</head>
+<body>
+
+<button class="cord" id="cord" type="button" aria-pressed="true" aria-label="Εναλλαγή ημέρας και νύχτας στα mockups">
+  <span class="chain" aria-hidden="true"></span>
+  <span class="knob" aria-hidden="true"></span>
+  <span class="cap" aria-hidden="true"></span>
+</button>
+<button class="mobile-toggle" id="cord-m" type="button">ΗΜΕΡΑ / ΝΥΧΤΑ</button>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Dark mode / πρόταση σχεδίασης</p>
+    <h1>Η ΝΥΧΤΕΡΙΝΗ<br><em>ΣΕΛΙΔΑ.</em></h1>
+    <p class="lede">Το logbook δεν αποκτά δεύτερη ταυτότητα στο σκοτάδι. Είναι το ίδιο τετράδιο, στο ίδιο θρανίο, με λιγότερο φως στο δωμάτιο — και το μελάνι είναι πλέον αυτό που φωτίζει. Τραβήξτε το κορδόνι της λάμπας για να δείτε κάθε οθόνη και στις δύο καταστάσεις.</p>
+    <p class="meta"><span>Όλα τα sections</span><span>Μενού &amp; dialogs</span><span>Token layer, όχι search &amp; replace</span><span>Δεν υλοποιήθηκε κώδικας</span></p>
+  </header>
+
+  <!-- ═══ ΟΙ ΚΑΝΟΝΕΣ ═══ -->
+  <section class="block">
+    <div class="block-head">
+      <h2>Τρεις κανόνες</h2>
+      <p>Αυτά είναι που κάνουν το dark mode σχεδιαστική απόφαση αντί για φίλτρο αντιστροφής. Κάθε άλλη τιμή προκύπτει από αυτά.</p>
+    </div>
+    <div class="rules">
+
+      <article class="rule-card">
+        <b>01</b>
+        <h3>Το σκοτάδι ανοίγει, δεν βαθαίνει</h3>
+        <p>Σήμερα το «ΚΑΤΑΓΡΑΦΗ ΠΡΟΠΟΝΗΣΗΣ», το μενού και το εξώφυλλο είναι το πιο μαύρο πράγμα στη σελίδα. Τη νύχτα θα εξαφανίζονταν μέσα της. Αντιστρέφουν φορά: γίνονται το <code>--cover-top</code> που ήδη υπάρχει στο σύστημα. Το εξώφυλλο γίνεται η ανασηκωμένη επιφάνεια.</p>
+        <div class="demo">
+          <i style="background:#15130d"></i><i style="background:#2e2a1f"></i>
+          <span>#15130d → #2e2a1f</span>
+        </div>
+      </article>
+
+      <article class="rule-card">
+        <b>02</b>
+        <h3>Το ύψος το δίνει το φως</h3>
+        <p>Στο χαρτί τα πεδία είναι πιο ανοιχτά από τη σελίδα και τα κουμπιά πιο σκούρα. Στη νύχτα ισχύει το ανάποδο: τα πεδία <em>βυθίζονται</em> (#100e09) και τα κουμπιά <em>ανασηκώνονται</em>. Η ίδια ιεραρχία, με αντεστραμμένο πρόσημο — γι' αυτό η νύχτα δεν χρειάζεται νέες σκιές.</p>
+        <div class="demo">
+          <i style="background:#100e09"></i><i style="background:#17140e"></i><i style="background:#2e2a1f"></i>
+          <span>πεδίο · σελίδα · control</span>
+        </div>
+      </article>
+
+      <article class="rule-card">
+        <b>03</b>
+        <h3>Τα αντικείμενα δεν αλλάζουν χρώμα</h3>
+        <p>Η κορδέλα-σελιδοδείκτης, ο ορείχαλκος και το χρυσό είναι υλικά, όχι χρώματα διεπαφής. Δεν επαναχρωματίζονται — απλώς πιάνουν λιγότερο φως (<code>brightness(.82)</code>). Οι σφραγίδες χάνουν το <code>mix-blend-mode:multiply</code>, που στο σκούρο τις έσβηνε.</p>
+        <div class="demo">
+          <i style="background:linear-gradient(104deg,#6b5518,#463a14 52%,#2e2710)"></i>
+          <i style="background:linear-gradient(104deg,#6b5518,#463a14 52%,#2e2710);filter:brightness(.82)"></i>
+          <span>ίδιο υλικό, λιγότερο φως</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══ TOKENS ═══ -->
+  <section class="block">
+    <div class="block-head">
+      <h2>Το token layer</h2>
+      <p>Οι τιμές που αλλάζουν στο <code>:root</code>. Οι αναλογίες αντίθεσης μετρημένες πάνω στο αντίστοιχο χαρτί κάθε κατάστασης.</p>
+    </div>
+    <table class="tokens">
+      <thead><tr><th>Token</th><th>Ημέρα</th><th>Νύχτα</th><th>Αντίθεση νύχτας</th><th>Ρόλος</th></tr></thead>
+      <tbody>
+        <tr><td><code>--paper</code></td>
+          <td><span class="sw"><i style="background:#efe8d8"></i><code>#efe8d8</code></span></td>
+          <td><span class="sw"><i style="background:#17140e"></i><code>#17140e</code></span></td>
+          <td class="ratio">—</td><td>Η σελίδα</td></tr>
+        <tr><td><code>--ink</code></td>
+          <td><span class="sw"><i style="background:#15130d"></i><code>#15130d</code></span></td>
+          <td><span class="sw"><i style="background:#ece2c9"></i><code>#ece2c9</code></span></td>
+          <td class="ratio ok">14.5:1</td><td>Κείμενο</td></tr>
+        <tr><td><code>--paper-soft</code></td>
+          <td><span class="sw"><i style="background:#f8f3e4"></i><code>#f8f3e4</code></span></td>
+          <td><span class="sw"><i style="background:#1f1b14"></i><code>#1f1b14</code></span></td>
+          <td class="ratio">—</td><td>Κάρτες</td></tr>
+        <tr><td><code>--paper-field</code></td>
+          <td><span class="sw"><i style="background:#f7f1e3"></i><code>#f7f1e3</code></span></td>
+          <td><span class="sw"><i style="background:#100e09"></i><code>#100e09</code></span></td>
+          <td class="ratio">—</td><td>Πεδία (βυθισμένα)</td></tr>
+        <tr><td><code>--cover-top</code></td>
+          <td><span class="sw"><i style="background:#2e2a1f"></i><code>#2e2a1f</code></span></td>
+          <td><span class="sw"><i style="background:#2e2a1f"></i><code>#2e2a1f</code></span></td>
+          <td class="ratio">1.28:1 vs σελίδα</td><td>Controls, μενού</td></tr>
+        <tr><td><code>--orange</code></td>
+          <td><span class="sw"><i style="background:#8a6a1c"></i><code>#8a6a1c</code></span></td>
+          <td><span class="sw"><i style="background:#e0a94a"></i><code>#e0a94a</code></span></td>
+          <td class="ratio ok">8.8:1</td><td>Accent, eyebrow, cite</td></tr>
+        <tr><td><code>--gold</code></td>
+          <td><span class="sw"><i style="background:#c9a227"></i><code>#c9a227</code></span></td>
+          <td><span class="sw"><i style="background:#d4ae33"></i><code>#d4ae33</code></span></td>
+          <td class="ratio ok">8.8:1</td><td>Ενεργό, rewards</td></tr>
+        <tr><td><code>--pen-blue</code></td>
+          <td><span class="sw"><i style="background:#1f6493"></i><code>#1f6493</code></span></td>
+          <td><span class="sw"><i style="background:#74aed6"></i><code>#74aed6</code></span></td>
+          <td class="ratio ok">7.8:1</td><td>Χειρόγραφο, επαναλήψεις</td></tr>
+        <tr><td><code>--danger</code></td>
+          <td><span class="sw"><i style="background:#7a3325"></i><code>#7a3325</code></span></td>
+          <td><span class="sw"><i style="background:#cf7a63"></i><code>#cf7a63</code></span></td>
+          <td class="ratio ok">5.9:1</td><td>Διαγραφή, σφάλματα</td></tr>
+        <tr><td><code>--muted</code></td>
+          <td><span class="sw"><i style="background:#6d6551"></i><code>#6d6551</code></span></td>
+          <td><span class="sw"><i style="background:#9a917a"></i><code>#9a917a</code></span></td>
+          <td class="ratio ok">5.9:1</td><td>Δευτερεύον κείμενο</td></tr>
+        <tr><td><code>--line</code></td>
+          <td><span class="sw"><i style="background:#b6ad97"></i><code>#b6ad97</code></span></td>
+          <td><span class="sw"><i style="background:#3a3428"></i><code>#3a3428</code></span></td>
+          <td class="ratio">—</td><td>Περιγράμματα</td></tr>
+      </tbody>
+    </table>
+    <p class="note"><b>Γιατί αλλάζει το accent:</b> το σημερινό <code>#8a6a1c</code> δίνει 4.1:1 πάνω στο χαρτί της ημέρας, αλλά μόνο <span class="no">3.7:1</span> πάνω στη νυχτερινή σελίδα — κάτω από το όριο για κείμενο. Το <code>#e0a94a</code> κρατά τον ίδιο τόνο ώχρας και ανεβάζει σε 8.8:1. Είναι το ίδιο μελάνι κάτω από άλλη λάμπα, όχι άλλο χρώμα μάρκας.</p>
+  </section>
+
+  <!-- ═══ MOCKUPS ═══ -->
+  <section class="block">
+    <div class="block-head">
+      <h2>Οι οθόνες</h2>
+      <p>Κάθε section όπως θα φαίνεται. Τραβήξτε το κορδόνι για σύγκριση — τα mockups αλλάζουν όλα μαζί.</p>
+    </div>
+
+    <div class="shots">
+
+      <!-- ── ΜΕΝΟΥ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Μενού, κορδέλα &amp; ο διακόπτης</strong><span>Εδώ ζει το DARKMODE: αμέσως κάτω από τη ΓΛΩΣΣΑ, με τα ίδια κουμπιά. Προεπιλογή OFF. Το μενού σταματά να είναι «η σκοτεινή έκπληξη» και γίνεται η ανασηκωμένη επιφάνεια πάνω από τη σελίδα.</span></div>
+        <div class="stage menu-shot">
+          <div class="menu-page pg-grid">
+            <span class="menu-tab" aria-hidden="true"><i></i></span>
+            <p class="m-eyebrow" style="margin:0 0 12px">LOGBOOK / TODAY</p>
+            <h1 style="font:700 1.9rem/.9 'Roboto Slab';letter-spacing:-.04em;color:var(--f-ink)">ΤΟ ΣΗΜΕΡΑ.<br><em style="font-style:normal;color:var(--f-accent)">ΜΕΤΡΑΕΙ.</em></h1>
+            <span class="backdrop" aria-hidden="true"></span>
+          </div>
+          <div class="menu-panel">
+            <div class="head"><b>LOGBOOK</b><em>×</em></div>
+            <nav>
+              <b class="on">ΑΡΧΙΚΗ</b>
+              <b>ΚΑΤΑΓΡΑΦΗ</b>
+              <b>ΠΡΟΓΡΑΜΜΑ</b>
+              <b>ΙΣΤΟΡΙΚΟ</b>
+              <b>ΕΠΙΒΛΕΨΗ</b>
+              <b>ΠΡΟΦΙΛ</b>
+            </nav>
+            <div class="acct">ΣΥΝΔΕΔΕΜΕΝΟΣ · MEMBER</div>
+            <div class="menu-foot">
+              <div class="pick">
+                <span>ΓΛΩΣΣΑ</span>
+                <b class="on">EL</b><b>EN</b><b>FR</b><b>DE</b>
+              </div>
+              <div class="pick dm">
+                <span>DARKMODE</span>
+                <b class="dm-on">ON</b><b class="dm-off">OFF</b>
+              </div>
+              <div class="menu-brand">
+                <span class="mk" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+                <span>LOGBOOK</span>
+                <span class="ver">VERSION<b>0.2.2</b></span>
+              </div>
+              <div class="menu-priv">ΠΟΛΙΤΙΚΗ ΑΠΟΡΡΗΤΟΥ</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── ΑΡΧΙΚΗ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Αρχική</strong><span>Το περιθώριο, η κορδέλα και οι μετακινούμενες κάρτες μένουν ακριβώς εκεί που είναι. Οι γραμμές του τετραδίου γίνονται χρυσές στο 7% αντί για καφέ στο 9%.</span></div>
+        <div class="stage home-shot pg-grid ruled">
+          <span class="m-ribbon" style="left:58px" aria-hidden="true"></span>
+          <div class="home-margin">
+            <span class="home-date">ΠΑΡΑΣΚΕΥΗ 25 ΙΟΥΛΙΟΥ</span>
+            <span class="home-vol">VOL 1</span>
+          </div>
+          <div class="home-left">
+            <span class="home-pageno">PAGE 001</span>
+            <div class="home-cards">
+              <article class="card-routine">
+                <span class="hd">ΠΡΟΓΡΑΜΜΑ</span>
+                <strong>PUSH PULL LEGS</strong>
+                <ol>
+                  <li><span>ΗΜΕΡΑ 1</span><span>PUSH</span></li>
+                  <li><span>ΗΜΕΡΑ 2</span><span>PULL</span></li>
+                  <li><span>ΗΜΕΡΑ 3</span><span>LEGS</span></li>
+                </ol>
+                <div class="open">ΑΝΟΙΓΜΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</div>
+              </article>
+              <article class="card-profile">
+                <span class="face" aria-hidden="true"></span>
+                <b>ΔΗΜΗΤΡΗΣ</b>
+              </article>
+            </div>
+            <button class="m-btn home-start" type="button" tabindex="-1"><span>ΚΑΤΑΓΡΑΦΗ ΠΡΟΠΟΝΗΣΗΣ</span><span aria-hidden="true">→</span></button>
+            <div class="home-quick">
+              <span class="m-btn2">ΠΡΟΓΡΑΜΜΑ</span>
+              <span class="m-btn2">ΙΣΤΟΡΙΚΟ</span>
+            </div>
+          </div>
+          <article class="quote">
+            <div class="qm"><span>QUOTE OF THE DAY</span><span>№ 118</span></div>
+            <blockquote>Η πειθαρχία είναι απλώς η επιλογή ανάμεσα σε αυτό που θέλεις τώρα και σε αυτό που θέλεις περισσότερο.</blockquote>
+            <footer>— <cite>ΑΓΝΩΣΤΟΣ</cite></footer>
+            <span class="mark" aria-hidden="true">“</span>
+          </article>
+        </div>
+      </article>
+
+      <!-- ── ΚΑΤΑΓΡΑΦΗ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Καταγραφή</strong><span>Η σελίδα όπου κρίνεται το dark mode: γράφεται στο γυμναστήριο, συχνά βράδυ. Τα πεδία βυθίζονται, το χειρόγραφο μπλε ανεβαίνει σε #74aed6 για να διαβάζεται.</span></div>
+        <div class="stage">
+          <div class="m-hero">
+            <h1>ΤΟ ΣΗΜΕΡΑ.<br><em>ΜΕΤΡΑΕΙ.</em></h1>
+            <span class="m-stamp">i</span>
+          </div>
+          <div class="log-body">
+            <div class="log-row">
+              <label class="m-field">Ημερομηνία<i>25 / 07 / 2026</i></label>
+              <label class="m-field">Πρόγραμμα<i>Push Pull Legs</i></label>
+              <label class="m-field">Προπόνηση ημέρας<i>Ημέρα 1 — Push</i></label>
+            </div>
+            <article class="ex-card">
+              <div class="top"><strong>ΠΙΕΣΕΙΣ ΠΑΓΚΟΥ</strong><span class="m-muted">3 ΣΕΤ · KG</span></div>
+              <div class="set-line"><b>ΣΕΤ 1</b><i>12 επαναλήψεις</i><i>60 kg</i></div>
+              <div class="set-line"><b>ΣΕΤ 2</b><i>10 επαναλήψεις</i><i>65 kg</i></div>
+              <div class="set-line" style="border-bottom:0"><b>ΣΕΤ 3</b><i>8 επαναλήψεις</i><i>70 kg</i></div>
+              <p class="hand" style="margin:14px 0 0">το τελευταίο σετ βγήκε καθαρό — ανεβάζω 2.5 την επόμενη</p>
+            </article>
+            <label class="m-field">Σχόλια προπόνησης<i style="min-height:70px">Πώς πήγε συνολικά η σημερινή προπόνηση;</i></label>
+            <button class="m-btn" type="button" tabindex="-1" style="justify-self:stretch;text-align:center">ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── ΠΡΟΓΡΑΜΜΑ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Πρόγραμμα</strong><span>Το setlist και οι σφραγίδες. Στο σκούρο το <code>mix-blend-mode:multiply</code> πέφτει σε <code>normal</code>, αλλιώς η σφραγίδα «ΣΕ ΙΣΧΥ» εξαφανίζεται.</span></div>
+        <div class="stage">
+          <div class="m-hero">
+            <h1>ΤΟ ΠΛΑΝΟ<br><em>ΟΔΗΓΕΙ.</em></h1>
+            <span class="m-stamp">i</span>
+          </div>
+          <div class="plan-body">
+            <form class="plan-form" onsubmit="return false">
+              <label class="m-field">Όνομα προγράμματος<i>π.χ. Push Pull Legs</i></label>
+              <label class="m-field">Διάρκεια (σε ημέρες)<i>7</i></label>
+              <div class="m-field">Δήλωση ημερών
+                <span class="seg" style="margin-top:2px"><b class="on">ΟΧΙ</b><b>ΝΑΙ</b></span>
+              </div>
+              <span class="m-btn2" style="text-align:center">＋ ΔΗΜΙΟΥΡΓΙΑ</span>
+            </form>
+            <div>
+              <article class="setlist">
+                <span class="active">ΣΕ ΙΣΧΥ</span>
+                <span class="lbl">TRAINING SPLIT</span>
+                <h3>PUSH PULL LEGS</h3>
+                <span class="dur">ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ</span>
+                <ol>
+                  <li><em>—</em> PUSH · στήθος, ώμοι, τρικέφαλοι</li>
+                  <li><em>—</em> PULL · πλάτη, δικέφαλοι</li>
+                  <li><em>—</em> LEGS · τετρακέφαλοι, δικέφαλοι μηριαίοι</li>
+                  <li><em>—</em> ΞΕΚΟΥΡΑΣΗ</li>
+                </ol>
+                <div class="plan-acts">
+                  <b>ΑΝΟΙΓΜΑ</b><b>ΕΠΕΞΕΡΓΑΣΙΑ</b><b>ΑΝΤΙΓΡΑΦΗ</b><b>ΕΝΕΡΓΟ</b><b>ΜΕΤΟΝΟΜΑΣΙΑ</b><b>ΔΙΑΓΡΑΦΗ</b>
+                </div>
+              </article>
+              <div class="motto">STRONGER EVERY SESSION</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── ΙΣΤΟΡΙΚΟ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Ιστορικό</strong><span>Η επιλεγμένη ημέρα στο week strip ήταν μελανί πάνω σε χαρτί· τη νύχτα γίνεται η ανασηκωμένη επιφάνεια και κρατά την ίδια έμφαση.</span></div>
+        <div class="stage">
+          <div class="m-hero">
+            <h1>Η ΔΟΥΛΕΙΑ<br><em>ΜΙΛΑΕΙ.</em></h1>
+            <span class="counter">✎ 128 LOGGED WORKOUTS</span>
+          </div>
+          <div class="hist-body">
+            <div class="week">
+              <b>ΔΕΥ<i>20</i></b><b>ΤΡΙ<i>21</i></b><b>ΤΕΤ<i>22</i></b><b>ΠΕΜ<i>23</i></b><b class="on">ΠΑΡ<i>24</i></b><b>ΣΑΒ<i>25</i></b><b>ΚΥΡ<i>26</i></b>
+            </div>
+            <div class="sess">
+              <article><div><strong>PUSH · ΗΜΕΡΑ 1</strong><small>24 ΙΟΥΛ · 6 ΑΣΚΗΣΕΙΣ · 18 ΣΕΤ</small></div><span class="m-muted">ΑΝΟΙΓΜΑ →</span></article>
+              <article><div><strong>PULL · ΗΜΕΡΑ 2</strong><small>22 ΙΟΥΛ · 5 ΑΣΚΗΣΕΙΣ · 15 ΣΕΤ</small></div><span class="m-muted">ΑΝΟΙΓΜΑ →</span></article>
+              <article><div><strong>LEGS · ΗΜΕΡΑ 3</strong><small>20 ΙΟΥΛ · 5 ΑΣΚΗΣΕΙΣ · 16 ΣΕΤ</small></div><span class="m-muted">ΑΝΟΙΓΜΑ →</span></article>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── ΕΠΙΒΛΕΨΗ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Επίβλεψη</strong><span>Το γράφημα είναι το μόνο σημείο με υποχρεωτικά νέα χρώματα σειρών: το #8a6a1c και το #1f6493 δεν διαβάζονται σε σκούρο φόντο.</span></div>
+        <div class="stage">
+          <div class="m-hero">
+            <h1>Η ΠΟΡΕΙΑ<br><em>ΦΑΙΝΕΤΑΙ.</em></h1>
+            <span class="m-stamp">i</span>
+          </div>
+          <div class="prog-body">
+            <div class="log-row">
+              <label class="m-field">Προπόνηση<i>Push · Ημέρα 1</i></label>
+              <label class="m-field">Άσκηση<i>Πιέσεις πάγκου</i></label>
+              <label class="m-field">Σετ<i>Σετ 1</i></label>
+            </div>
+            <div class="chart">
+              <div class="chart-head">
+                <span class="m-eyebrow">ΠΟΡΕΙΑ ΦΟΡΤΙΟΥ · 8 ΕΒΔΟΜΑΔΕΣ</span>
+                <span class="legend">
+                  <span><i style="background:var(--f-accent)"></i>ΚΙΛΑ</span>
+                  <span><i style="background:var(--f-pen-blue)"></i>ΕΠΑΝΑΛΗΨΕΙΣ</span>
+                </span>
+              </div>
+              <svg viewBox="0 0 640 190" width="100%" height="190" role="img" aria-label="Γράφημα πορείας φορτίου και επαναλήψεων">
+                <g stroke="var(--f-line)" stroke-width="1" opacity=".7">
+                  <line x1="0" y1="40" x2="640" y2="40"/><line x1="0" y1="90" x2="640" y2="90"/>
+                  <line x1="0" y1="140" x2="640" y2="140"/><line x1="0" y1="176" x2="640" y2="176"/>
+                </g>
+                <polyline fill="none" stroke="var(--f-pen-blue)" stroke-width="2.5" stroke-dasharray="5 4"
+                  points="30,132 117,120 204,126 291,104 378,110 465,88 552,94 612,76"/>
+                <polyline fill="none" stroke="var(--f-accent)" stroke-width="3.5"
+                  points="30,150 117,142 204,128 291,120 378,98 465,86 552,64 612,48"/>
+                <g fill="var(--f-accent)">
+                  <circle cx="30" cy="150" r="4"/><circle cx="117" cy="142" r="4"/><circle cx="204" cy="128" r="4"/>
+                  <circle cx="291" cy="120" r="4"/><circle cx="378" cy="98" r="4"/><circle cx="465" cy="86" r="4"/>
+                  <circle cx="552" cy="64" r="4"/><circle cx="612" cy="48" r="5.5"/>
+                </g>
+                <text x="612" y="34" text-anchor="end" fill="var(--f-ink)" font-family="Roboto Slab" font-size="15" font-weight="700">82.5 KG</text>
+              </svg>
+            </div>
+            <div><span class="pr">🏆 PERSONAL RECORDS</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── ΠΡΟΦΙΛ ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Προφίλ</strong><span>Η κάρτα-πολαρόιντ, το δαχτυλίδι επιβράβευσης και η απόδειξη εξαγωγής. Ο διακόπτης δεν μπαίνει εδώ — ζει στο μενού, δίπλα στη γλώσσα.</span></div>
+        <div class="stage">
+          <div class="m-hero">
+            <h1>ΤΟ ΑΠΟΤΥΠΩΜΑ<br><em>ΜΕΝΕΙ.</em></h1>
+            <span class="m-stamp">i</span>
+          </div>
+          <div class="prof-body">
+            <div class="prof-card">
+              <div class="top"><span>▮▮▬▮▮</span><small>MEMBER</small></div>
+              <figure class="polaroid" style="margin:14px 0 0">
+                <span class="tape" aria-hidden="true"></span>
+                <span class="ring" aria-hidden="true"><i></i></span>
+                <b>ΔΗΜΗΤΡΗΣ</b>
+                <small>ΗΛΙΚΙΑ · 34</small>
+              </figure>
+              <div class="foot">TRAIN . LOG . REPEAT</div>
+            </div>
+            <div style="display:grid;gap:24px">
+              <div class="m-field">Μονάδα μέτρησης
+                <span class="seg" style="margin-top:4px"><b class="on">KG</b><b>LBS</b></span>
+              </div>
+              <div class="receipt">
+                ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΠΡΟΠΟΝΗΣΕΙΣ .. 128
+                <hr>
+                ΑΡΧΕΙΟ: logbook-history-2026-07-25.csv
+                <hr>
+                <span style="color:var(--f-accent)">ΕΞΑΓΩΓΗ ΙΣΤΟΡΙΚΟΥ ↓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── DIALOGS ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Dialogs, toast &amp; επιβεβαιώσεις</strong><span>Τα dialogs ήταν χαρτί πάνω σε χαρτί με σκιά· τη νύχτα η σκιά δεν αρκεί, οπότε ξεχωρίζουν με περίγραμμα και ανασηκωμένη επιφάνεια.</span></div>
+        <div class="stage">
+          <div class="dlg-row">
+            <div class="dlg">
+              <div class="mk">!</div>
+              <p class="m-eyebrow">ΕΠΙΒΕΒΑΙΩΣΗ</p>
+              <h3>Διαγραφή άσκησης</h3>
+              <p>Η άσκηση «Πιέσεις πάγκου» θα αφαιρεθεί από την προπόνηση. Το ιστορικό δεν αλλάζει.</p>
+              <div class="acts"><span class="m-btn2">ΑΚΥΡΩΣΗ</span><span class="danger">ΔΙΑΓΡΑΦΗ</span></div>
+            </div>
+            <div style="display:grid;gap:20px;align-content:start">
+              <div class="dlg" style="box-shadow:8px 10px 0 var(--f-shadow)">
+                <p class="m-eyebrow">ΛΟΓΑΡΙΑΣΜΟΣ</p>
+                <h3 style="margin-bottom:14px">MEMBER</h3>
+                <div class="receipt" style="border-style:solid">dimitris@example.com<hr>ΣΥΓΧΡΟΝΙΣΜΟΣ .. ΕΝΕΡΓΟΣ</div>
+                <div class="acts" style="margin-top:16px"><span class="m-btn2">ΑΠΟΣΥΝΔΕΣΗ</span></div>
+              </div>
+              <div><span class="toast"><b>ΑΠΟΘΗΚΕΥΤΗΚΕ</b>Η προπόνηση καταγράφηκε στο ιστορικό.</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── AUTH GATE ── -->
+      <article class="shot">
+        <div class="shot-cap"><strong>Είσοδος</strong><span>Το μόνο σημείο που ήδη ζούσε στο σκοτάδι. Στη νύχτα αλλάζουν μόνο οι δύο σελίδες του βιβλίου — το εξώφυλλο και το πλέγμα μένουν ίδια, και το gate γίνεται επιτέλους συνεπές με την υπόλοιπη εφαρμογή.</span></div>
+        <div class="stage" style="border:0">
+          <div class="gate">
+            <div class="book">
+              <span class="cover" aria-hidden="true"></span>
+              <div class="pg">
+                <p class="m-eyebrow">EST. 2025</p>
+                <h3>LOG<em>BOOK.</em></h3>
+                <p style="margin:18px 0 0;font:700 1.15rem 'Roboto Slab';text-transform:uppercase;letter-spacing:-.02em">ΚΑΛΩΣ ΗΡΘΑΤΕ<span style="display:inline-block;width:.5em;height:1em;background:var(--f-accent);transform:translateY(.12em);margin-left:4px"></span></p>
+              </div>
+              <div class="pg r">
+                <div class="seg" style="margin-bottom:16px"><b class="on">ΣΥΝΔΕΣΗ</b><b>ΕΓΓΡΑΦΗ</b></div>
+                <div style="display:grid;gap:12px">
+                  <label class="m-field">Email<i>name@example.com</i></label>
+                  <label class="m-field">Κωδικός<i>••••••••</i></label>
+                  <span class="m-btn" style="text-align:center">ΣΥΝΔΕΣΗ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══ ΤΙ ΧΡΕΙΑΖΕΤΑΙ ═══ -->
+  <section class="block">
+    <div class="block-head">
+      <h2>Τι απαιτεί η υλοποίηση</h2>
+      <p>Δεν γράφτηκε κώδικας. Αυτά είναι όσα σηκώνει η μετάβαση, με τη σειρά που έχουν νόημα.</p>
+    </div>
+    <ul class="todo">
+      <li><b>01</b><span><strong>Tokenization πρώτα.</strong> Τα 92 σκόρπια hex literals του <code>styles.css</code> πρέπει να περάσουν από μεταβλητή. Όσο μένουν σκόρπια, κάθε mockup εδώ είναι ανέφικτο χωρίς search &amp; replace.</span></li>
+      <li><b>02</b><span><strong>Δύο χρώματα εκτός CSS.</strong> Το <code>theme-color</code> meta στο <code>index.html:7</code> και το <code>fillStyle</code> του avatar canvas στο <code>app.js:1454</code> δεν διαβάζουν tokens — χρειάζονται ρητό χειρισμό στο toggle.</span></li>
+      <li><b>03</b><span><strong>Blend modes.</strong> Κάθε <code>mix-blend-mode:multiply</code> (σφραγίδες, info-stamp, motto) πρέπει να γίνεται <code>normal</code> στη νύχτα, αλλιώς το στοιχείο σβήνει.</span></li>
+      <li><b>04</b><span><strong>Εικόνες χρήστη.</strong> Οι φωτογραφίες προφίλ δεν αλλάζουν, αλλά χρειάζονται ελαφρύ <code>brightness(.9)</code> ώστε να μη «καίνε» δίπλα στο σκούρο χαρτί.</span></li>
+      <li><b>05</b><span><strong>Προεπιλογή OFF, στο μενού κάτω από τη ΓΛΩΣΣΑ.</strong> Ο διακόπτης ακολουθεί το μοτίβο του <code>.language-picker</code>: δύο κουμπιά με <code>aria-pressed</code>, ίδιο μέγεθος αφής, ίδια χρυσή ενεργή κατάσταση. Η επιλογή επιμένει τοπικά και εφαρμόζεται πριν το πρώτο paint, ώστε να μη γίνεται flash στο boot.</span></li>
+      <li><b>06</b><span><strong>Συνέπεια της προεπιλογής OFF:</strong> το <code>prefers-color-scheme</code> δεν εφαρμόζεται αυτόματα — η νύχτα ανάβει μόνο ρητά. Είναι σκόπιμη απόφαση και διαφέρει από το σημερινό TODO του <code>DEVELOPMENT.md</code>, που περιέγραφε αυτόματη ανίχνευση συστήματος.</span></li>
+      <li><b>07</b><span><strong>Τα χρώματα του λογοτύπου Google μένουν literal.</strong> Δεν είναι tokens της εφαρμογής και δεν επιτρέπεται να αλλάξουν σε καμία κατάσταση.</span></li>
+    </ul>
+  </section>
+
+  <footer class="end">Logbook · designs/dark-mode-night-page-designs.html · υλοποιήθηκε στην έκδοση 0.2.3</footer>
+</div>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  function flip(){
+    var night = root.getAttribute('data-mode') === 'night';
+    root.setAttribute('data-mode', night ? 'day' : 'night');
+    cord.setAttribute('aria-pressed', String(!night));
+  }
+  var cord = document.getElementById('cord');
+  cord.addEventListener('click', flip);
+  document.getElementById('cord-m').addEventListener('click', flip);
+})();
+</script>
+</body>
+</html>

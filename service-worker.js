@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.2.2';
+const CACHE_VERSION = 'logbook-0.2.3';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
 const APP_SHELL = [
   './',
@@ -7,9 +7,13 @@ const APP_SHELL = [
   './manifest.webmanifest',
   './favicon.svg',
   './fonts.css',
-  './styles.css',
+  './tokens.css',
+  './base.css',
+  './components.css',
+  './views.css',
   './legal.css',
   './quotes.js',
+  './theme.js',
   './i18n.js',
   './supabase-config.js',
   './supabase-client.js',

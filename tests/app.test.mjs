@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadApp, click, setValue } from './helpers.mjs';
 
-const styles = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+const styles = ['tokens.css', 'base.css', 'components.css', 'views.css']
+  .map(file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'))
+  .join('\n');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 const i18nSource = readFileSync(new URL('../i18n.js', import.meta.url), 'utf8');
 
@@ -30,7 +32,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.2.2');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.3');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -49,8 +51,8 @@ test('athlete profile card shows the notebook cover with brand mark, polaroid an
   assert.equal(document.querySelector('.profile-hide-age small'), null);
   assert.match(styles, /\.profile-hide-age\s*\{[^}]*flex-direction:row;/);
   assert.match(styles, /\.profile-card-foot span\s*\{[^}]*white-space:nowrap;/);
-  assert.match(styles, /@media\(min-width:701px\)\s*\{[\s\S]*?\.profile-card\s*\{\s*min-height:610px;/);
-  assert.match(styles, /@media\(max-width:700px\)\s*\{[\s\S]*?#profile-view \.profile-hero\s*\{\s*display:grid;\s*min-height:164px;/);
+  assert.match(styles, /@media\(min-width:601px\)\s*\{[\s\S]*?\.profile-card\s*\{\s*min-height:610px;/);
+  assert.match(styles, /@media\(max-width:600px\)\s*\{[\s\S]*?#profile-view \.profile-hero\s*\{\s*display:grid;\s*min-height:164px;/);
   assert.match(styles, /#profile-view #profile-preview-age-unit\s*\{\s*display:none;/);
   assert.match(styles, /#profile-view \.profile-card\s*\{[^}]*width:min\(100%,360px\);[^}]*min-height:clamp\(430px,120vw,475px\);/);
   assert.match(styles, /\.profile-hero \.info-panel\s*\{\s*top:calc\(76px \+ env\(safe-area-inset-top\)\);\s*\}/);
@@ -420,7 +422,7 @@ test('home rest stamp appears after a workout is logged today', () => {
 });
 
 test('desktop home program paper grows with its workout list without an internal scrollbar', () => {
-  assert.match(styles, /@media\(min-width:701px\)\s*\{\.home-routine-days\s*\{max-height:none;overflow:visible\}\}/);
+  assert.match(styles, /@media\(min-width:601px\)\s*\{\.home-routine-days\s*\{max-height:none;overflow:visible\}\}/);
 });
 
 test('home page number counts unique logged days plus one', () => {
@@ -2065,9 +2067,14 @@ test('opening a history workout reveals a read-only modal over the overview', ()
   ] };
   const { document } = loadApp({ trainingSessions: [session, { ...session, id:'s2', date:'2026-06-29', workoutName:'Upper B' }] });
   click(document, '.nav-button[data-view="overview"]');
-  assert.equal(document.querySelector('button[data-view-session="s1"]'), null, 'the card has no separate open button');
-  assert.equal(document.querySelector('[data-view-session="s1"]').textContent.includes('ΑΝΟΙΓΜΑ ΣΕΛΙΔΑΣ'), false);
-  click(document, '[data-view-session="s1"] .card-body');
+  const summary = document.querySelector('.session-summary[data-view-session="s1"]');
+  const openButton = summary.querySelector('h3 button[data-view-session="s1"]');
+  assert.equal(summary.getAttribute('role'), null, 'the card summary is not an interactive container');
+  assert.equal(summary.getAttribute('tabindex'), null, 'the card summary stays out of the tab order');
+  assert.equal(openButton.getAttribute('aria-controls'), 'session-detail-dialog');
+  assert.equal(openButton.getAttribute('aria-haspopup'), 'dialog');
+  assert.equal(openButton.textContent, 'Upper A');
+  click(document, openButton);
   assert.ok(document.querySelector('#overview-view').classList.contains('active'), 'history stays on screen');
   assert.equal(document.querySelector('#log-view').classList.contains('active'), false, 'read-only view does not open the workout form');
   assert.equal(document.querySelector('#session-detail-dialog').open, true, 'the workout opens as a modal');
@@ -2085,7 +2092,7 @@ test('opening a history workout reveals a read-only modal over the overview', ()
   click(document, '[data-view-session="s1"] .card-body');
   document.querySelector('#session-detail-dialog').dispatchEvent(new document.defaultView.Event('cancel', { cancelable:true }));
   assert.equal(document.querySelector('#session-detail-dialog').open, false, 'Escape/cancel closes the modal');
-  assert.equal(document.activeElement, document.querySelector('[data-view-session="s1"]'), 'focus returns to the opened card');
+  assert.equal(document.activeElement, openButton, 'focus returns to the explicit open button');
 });
 
 test('the daily quote is deterministic within the same day', () => {

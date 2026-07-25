@@ -1,0 +1,468 @@
+/* Design tokens. Κάθε χρώμα του UI ορίζεται εδώ και μόνο εδώ, ώστε το :root
+   να είναι το ενιαίο σημείο override για dark mode, high contrast και print. */
+
+/* Κλίμακα breakpoints. Ήταν δεκατέσσερα διαφορετικά πλάτη — 380, 430, 520, 600,
+   650, 700, 760, 850, 900, 950, 1000, 1100 και οι min-width αντίστροφές τους —
+   που είχαν προκύψει το καθένα από τη στιγμή του, όχι από απόφαση. Έμειναν τρία,
+   και το καθένα απαντά σε διαφορετική ερώτηση:
+
+   ≤600px  «Ένα χέρι.» Το κινητό. Μία στήλη παντού, το μενού γίνεται κορδέλα, οι
+           κάρτες χάνουν τα οριζόντια πλέγματά τους και τα controls πιάνουν όλο
+           το πλάτος. Εδώ μαζεύτηκαν τα παλιά 430, 520, 650 και 700.
+   ≤850px  «Χωρίς δεύτερη στήλη.» Ταμπλέτα και στενό laptop: η σελίδα χωράει
+           άνετα, αλλά όχι δίπλα-δίπλα πάνελ. Εδώ μαζεύτηκαν τα 760, 900 και 950.
+   ≤1000px «Χωρίς περιθώριο.» Η οθόνη χωράει τα πάντα εκτός από τα διακοσμητικά
+           περιθώρια του τετραδίου. Εδώ μαζεύτηκε το 1100.
+
+   Μία τεκμηριωμένη εξαίρεση: το ≤380px κρατά τη γραμμή του σετ σε μία στήλη. Δεν
+   είναι διάταξη αλλά όριο περιεχομένου — τρία αριθμητικά πεδία δίπλα-δίπλα δεν
+   χωρούν σε 380px χωρίς να γίνουν άπατα. Αν ανέβαινε στα 600, κάθε κινητό θα
+   πλήρωνε τριπλάσιο ύψος στην οθόνη που ο χρήστης κοιτάζει μέσα στο γυμναστήριο.
+
+   Τα υπόλοιπα @media δεν είναι breakpoints πλάτους: prefers-reduced-motion,
+   prefers-contrast, prefers-color-scheme, print, pointer:coarse, hover:none και
+   orientation απαντούν σε συσκευή ή προτίμηση, όχι σε μέγεθος. */
+:root {
+  color-scheme:light;
+  /* Βάση ταυτότητας και controls */
+  --ink:#15130d;
+  --paper:#efe8d8;
+  --paper-soft:#f8f3e4;
+  --paper-dark:#e0d7c2;
+  --gold:#c9a227;
+  /* Το accent κουβαλά και κείμενο (ΑΣΚΗΣΗ 1, SET 01, CUES, EXTRA) σε 10–12px bold
+     πάνω στα ανοιχτά washes του χαρτιού. Στο #8a6a1c η αναλογία έπεφτε στο 4.29:1
+     πάνω στο --wash-45 και στο 4.02:1 πάνω στην κορδέλα του cue — κάτω από το 4.5:1
+     του AA. Βαθύτερο κατά μία σκιά, ίδια ώχρα: 4.70:1 και 5.01:1 αντίστοιχα, και
+     κάθε γέμισμα με λευκό από πάνω κερδίζει κι αυτό (5.05:1 → 5.90:1). */
+  --orange:#7d601a;
+  --pen-blue:#1f6493;
+  --danger:#7a3325;
+  --steel:#676a63;
+  --recovery:#64705a;
+  --muted:#6d6551;
+  --line:#b6ad97;
+  --pen:#4d3f24;
+  --ink-line:#3d3828;
+  --ink-muted:#a89f86;
+  --ink-faint:#6f695a;
+  --warning-bg:#e8dcc1;
+  --control-height:46px;
+  --control-height-compact:44px;
+  --control-height-primary:56px;
+  --control-pad:18px;
+  --control-font:.76rem;
+  --control-tracking:.09em;
+  --control-shadow:4px 4px 0 rgba(var(--shadow-rgb),.13);
+  --control-shadow-hover:6px 6px 0 rgba(var(--shadow-rgb),.16);
+  --control-speed:.2s;
+
+  /* Φωτεινές επιφάνειες χαρτιού */
+  --paper-field-focus:#fdf6e3;
+  --paper-field:#f7f1e3;
+  --paper-page:#f6f0df;
+  --paper-quote:#f4eee0;
+  --paper-deck:#f3ecdc;
+  --paper-portrait-disc:#f2eee5;
+  --paper-portrait-halo:#e5dfd2;
+  --paper-board:#d7cdb7;
+
+  /* Γραμμές και περιγράμματα σε χαρτί */
+  --line-comment:#cabfa4;
+  --line-page:#c8bda5;
+  --line-card:#c7bca3;
+  --line-page-shadow:#c1b59e;
+  --line-field:#b8ad95;
+
+  /* Κείμενο σε χαρτί */
+  --muted-soft:#8a8168;
+  --muted-strong:#554e3e;
+  --ink-hand:#1f1c14;
+
+  /* Κείμενο σε σκοτεινές επιφάνειες */
+  --ink-lede:#cfc6ac;
+  --ink-label:#b9af96;
+  --ink-meta:#948b73;
+  --ink-tile-label:#928971;
+  --ink-caption:#918873;
+  --ink-tile-text:#8f866e;
+  --ink-placeholder:#8d846f;
+  --ink-clip:#8b8474;
+
+  /* Περιγράμματα σε σκοτεινές επιφάνειες */
+  --ink-mark-dot:#777164;
+  --ink-mark-dash:#71694f;
+  --ink-border-bright:#625b48;
+  --ink-border-action:#5b5443;
+  --ink-border-active:#5b5234;
+  --ink-mark-border:#5a5444;
+  --ink-border-strong:#514a3b;
+  --ink-border:#4b4537;
+  --ink-border-tile:#494231;
+
+  /* Σκοτεινές επιφάνειες */
+  --cover-top:#2e2a1f;
+  --cover-bottom:#211d15;
+  --ink-raised:#1c1a12;
+  --card-dark-top:#1b1913;
+  --card-dark-bottom:#0d0c09;
+  --card-dark-edge:#060504;
+
+  /* Κορδέλα σελιδοδείκτη */
+  --ribbon-top:#6b5518;
+  --ribbon-mid:#463a14;
+  --ribbon-bottom:#2e2710;
+
+  /* Μεταλλικό και ορειχάλκινο σήμα */
+  --mark-metal-top:#3d392c;
+  --mark-metal-mid:#302c22;
+  --mark-metal-bottom:#211f18;
+  --mark-brass-top:#5f4a12;
+  --mark-brass-mid:#453510;
+  --mark-brass-bottom:#33280a;
+
+  /* Λαστιχάκι προφίλ */
+  --elastic-1:#2a2413;
+  --elastic-2:#242012;
+  --elastic-3:#181408;
+  --elastic-4:#1c170b;
+  --elastic-5:#0a0805;
+  --elastic-6:#050403;
+  --elastic-7:#030202;
+
+  /* Δείκτες rewards */
+  --gold-bright:#e0b936;
+  --gold-glow:#d9b02e;
+  --ring-segment:#504a38;
+  --ring-track:#393529;
+
+  /* Καταστάσεις */
+  --alert-bg:#e5d7b7;
+  --warning-text:#5f4439;
+  --recovery-text:#3f4938;
+  --success-text:#44503d;
+  --toast-label:#e8d9a8;
+  --toast-label-error:#eecfc0;
+  --danger-soft:#c58a78;
+
+  /* Πορτρέτα avatar */
+  --portrait-bg:#d9c8d4;
+  --portrait-shirt:#7b6ea8;
+  --portrait-face:#df9271;
+  --portrait-neck:#cf8165;
+  --portrait-hair:#243541;
+  --portrait-detail:#8f4437;
+  --portrait-silhouette:#5c5c5e;
+
+  /* Ουδέτερο λευκό */
+  --surface-white:#fff;
+  --on-accent:#fff;
+  --photo-cell:#fff;
+
+  /* Κανάλια RGB για τα χρώματα που χρησιμοποιούνται και με διαφάνεια. Το μελανί
+     εξυπηρετούσε τρεις ρόλους κάτω από το ίδιο literal, που τη νύχτα πηγαίνουν σε
+     αντίθετες κατευθύνσεις: το --ink-rgb είναι χρώμα πάνω στο χαρτί (γραμμές,
+     περιγράμματα, ραφές) και ακολουθεί το μελάνι, ενώ το --shadow-rgb και το
+     --veil-rgb είναι βάθος και σκοτάδι και μένουν πάντα στη σκοτεινή πλευρά. */
+  --ink-rgb:21,19,13;
+  --shadow-rgb:21,19,13;
+  --veil-rgb:21,19,13;
+  --orange-rgb:125,96,26;
+  --gold-rgb:201,162,39;
+
+  /* Το μελανί ως ΕΠΙΦΑΝΕΙΑ, ξεχωριστά από το μελάνι που γράφει. Την ημέρα είναι το
+     ίδιο χρώμα· τη νύχτα το μελάνι γίνεται ivory ενώ η επιφάνεια ανοίγει σε γραφίτη
+     και μένει σκοτεινή, οπότε το --on-ink κρατά το κείμενό της αναγνώσιμο. */
+  --ink-surface:#15130d;
+  --on-ink:#efe8d8;
+
+  /* Χαρτοταινίες. Υλικό, όχι χρώμα διεπαφής — αλλά ένα υλικό σε σκοτεινό δωμάτιο
+     πιάνει λιγότερο φως αντί να λάμπει, οπότε τη νύχτα χαμηλώνει η έντασή του. */
+  /* Το χρυσό είναι ανοιχτό χρώμα και στη νύχτα, οπότε το κείμενο πάνω του μένει
+     σκούρο σε κάθε κατάσταση — με το --ink θα γινόταν ώχρα πάνω σε ώχρα. */
+  --on-gold:#15130d;
+
+  --tape-warm-soft:rgba(213,194,145,.62);
+  --tape-warm:rgba(213,194,145,.72);
+  --tape-sheer:rgba(239,232,216,.26);
+  --tape-solid:rgba(224,215,194,.88);
+
+  /* Wash: το φως που κάθεται πάνω στο χαρτί και ανοίγει μια επιφάνεια χωρίς να
+     της αλλάξει χρώμα. Κλίμακα κατά αδιαφάνεια — το όνομα είναι η τιμή, ώστε η
+     αντιστοίχιση σε κάθε component να μένει ρητή. Δεν αφορά τα highlights πάνω
+     σε σκοτεινές επιφάνειες: εκεί το λευκό είναι φως, όχι χαρτί, και μένει literal. */
+  --wash-18:rgba(255,255,255,.18);
+  --wash-2:rgba(255,255,255,.2);
+  --wash-22:rgba(255,255,255,.22);
+  --wash-25:rgba(255,255,255,.25);
+  --wash-27:rgba(255,255,255,.27);
+  --wash-28:rgba(255,255,255,.28);
+  --wash-3:rgba(255,255,255,.3);
+  --wash-34:rgba(255,255,255,.34);
+  --wash-35:rgba(255,255,255,.35);
+  --wash-36:rgba(255,255,255,.36);
+  --wash-4:rgba(255,255,255,.4);
+  --wash-45:rgba(255,255,255,.45);
+  --wash-48:rgba(255,255,255,.48);
+}
+
+/* Νυχτερινή σελίδα. Το ίδιο τετράδιο με λιγότερο φως στο δωμάτιο, όχι δεύτερη
+   ταυτότητα. Τρεις κανόνες παράγουν κάθε τιμή αυτού του block:
+   1. Οι σκοτεινές επιφάνειες της ημέρας ΑΝΟΙΓΟΥΝ αντί να βαθαίνουν. Το μενού και
+      τα controls ήταν το πιο μαύρο πράγμα της σελίδας· τη νύχτα θα χάνονταν μέσα
+      της, οπότε γίνονται η ανασηκωμένη επιφάνεια.
+   2. Το ύψος το δίνει το φως, άρα αντιστρέφεται: τα πεδία βυθίζονται κάτω από τη
+      σελίδα και τα controls ανασηκώνονται πάνω της.
+   3. Τα υλικά δεν επαναχρωματίζονται. Κορδέλα, ορείχαλκος, μεταλλικό σήμα,
+      λαστιχάκι και πορτρέτα είναι αντικείμενα, όχι χρώματα διεπαφής, και λείπουν
+      σκόπιμα από εδώ. Το ίδιο και το --surface-white, που κρατά το λογότυπο Google. */
+:root[data-theme="night"] {
+  /* Τα native controls του browser — ημερολόγιο, λίστες select, scrollbars — δεν
+     διαβάζουν tokens. Αυτή η μία γραμμή τα γυρνά κι εκείνα στη νύχτα. */
+  color-scheme:dark;
+
+  /* Βάση ταυτότητας και controls */
+  --ink:#ece2c9;
+  --paper:#17140e;
+  --paper-soft:#1f1b14;
+  --paper-dark:#100e09;
+  --gold:#d4ae33;
+  --orange:#e0a94a;
+  --pen-blue:#74aed6;
+  --danger:#cf7a63;
+  --steel:#8e918a;
+  --recovery:#8a9a7e;
+  --muted:#9a917a;
+  --line:#3a3428;
+  --pen:#b9a97e;
+  --ink-line:#4a4436;
+  --ink-faint:#8a8474;
+  --warning-bg:#2a2419;
+  --control-shadow:4px 4px 0 rgba(0,0,0,.45);
+  --control-shadow-hover:6px 6px 0 rgba(0,0,0,.55);
+
+  /* Επιφάνειες χαρτιού: βυθισμένες, με το focus να σηκώνεται προς το φως */
+  --paper-field-focus:#1c1811;
+  --paper-field:#100e09;
+  --paper-page:#191610;
+  --paper-quote:#1c1811;
+  --paper-deck:#1a1710;
+  --paper-portrait-disc:#221e16;
+  --paper-portrait-halo:#2a2519;
+  --paper-board:#0d0b08;
+
+  /* Γραμμές σε χαρτί: ανοιχτότερες από τη σελίδα για να παραμείνουν ορατές */
+  --line-comment:#322c22;
+  --line-page:#353024;
+  --line-card:#383226;
+  --line-page-shadow:#2b2619;
+  --line-field:#423b2c;
+
+  /* Κείμενο σε χαρτί */
+  /* Ο μόνος καταναλωτής είναι το `.card-date small`, που στη νύχτα κάθεται πάνω
+     στην ανασηκωμένη --ink-surface και όχι πάνω στη σελίδα: εκεί το #8b8269
+     έπεφτε στο 3.74:1. Μία σκιά ανοιχτότερα το ανεβάζει στο 4.67:1. */
+  --muted-soft:#9c9377;
+  --muted-strong:#c8bda0;
+  --ink-hand:#e6dcc3;
+
+  /* Περιγράμματα σε σκοτεινές επιφάνειες: ανοίγουν όσο άνοιξε η επιφάνεια από κάτω */
+  --ink-mark-dot:#8a8375;
+  --ink-mark-dash:#857c60;
+  --ink-border-bright:#756d57;
+  --ink-border-action:#6d6552;
+  --ink-border-active:#6d6340;
+  --ink-mark-border:#6c6553;
+  --ink-border-strong:#635b49;
+  --ink-border:#5c5544;
+  --ink-border-tile:#5a523e;
+
+  /* Σκοτεινές επιφάνειες: ο κανόνας 1 */
+  --cover-top:#3a3529;
+  --cover-bottom:#2b2619;
+  --ink-raised:#2e2a1f;
+  --card-dark-top:#262117;
+  --card-dark-bottom:#1b1811;
+  --card-dark-edge:#100e0a;
+
+  /* Δείκτες rewards */
+  --ring-segment:#6a6248;
+  --ring-track:#2c2820;
+
+  /* Καταστάσεις */
+  --alert-bg:#2e2717;
+  --warning-text:#e0a98f;
+  --recovery-text:#a9bd97;
+  --success-text:#a7bd99;
+  --danger-soft:#d9a08d;
+
+  /* Κείμενο πάνω σε accent: το accent είναι πλέον ανοιχτό, άρα το κείμενο σκουραίνει */
+  --on-accent:#17140e;
+  --photo-cell:#241f16;
+
+  /* Το μελάνι με διαφάνεια ακολουθεί το μελάνι· η σκιά και το πέπλο γίνονται
+     καθαρό μαύρο, γιατί πάνω σε σκοτεινή σελίδα μόνο το μαύρο δίνει ακόμη βάθος. */
+  --ink-rgb:236,226,201;
+  --shadow-rgb:0,0,0;
+  --veil-rgb:0,0,0;
+  --orange-rgb:224,169,74;
+  --gold-rgb:212,174,51;
+
+  /* Ο κανόνας 1 σε μία γραμμή: η μελανί επιφάνεια δεν βαθαίνει, ανοίγει. */
+  --ink-surface:#2e2a1f;
+  --on-ink:#f2ead4;
+
+  --on-gold:#17140e;
+
+  /* Η ίδια χαρτοταινία, με το ένα τρίτο του φωτός πάνω της */
+  --tape-warm-soft:rgba(151,136,101,.3);
+  --tape-warm:rgba(151,136,101,.36);
+  --tape-sheer:rgba(190,181,161,.12);
+  --tape-solid:rgba(146,138,118,.44);
+
+  /* Wash: το φως πέφτει από ivory αντί για λευκό, στο ένα δέκατο της έντασης */
+  --wash-18:rgba(236,226,201,.022);
+  --wash-2:rgba(236,226,201,.025);
+  --wash-22:rgba(236,226,201,.028);
+  --wash-25:rgba(236,226,201,.032);
+  --wash-27:rgba(236,226,201,.035);
+  --wash-28:rgba(236,226,201,.036);
+  --wash-3:rgba(236,226,201,.04);
+  --wash-34:rgba(236,226,201,.045);
+  --wash-35:rgba(236,226,201,.047);
+  --wash-36:rgba(236,226,201,.048);
+  --wash-4:rgba(236,226,201,.055);
+  --wash-45:rgba(236,226,201,.062);
+  --wash-48:rgba(236,226,201,.066);
+}
+/* Το multiply είναι ο τρόπος που μια σφραγίδα ποτίζει το χαρτί — πάνω σε σκοτεινή
+   σελίδα το ίδιο μοντέλο τη σβήνει εντελώς. Τη νύχτα η μελάνη κάθεται πάνω στη
+   σελίδα αντί να απορροφάται από αυτήν. */
+:root[data-theme="night"] .auth-gate-page-right::after,
+:root[data-theme="night"] .home-profile-card,
+:root[data-theme="night"] .info-stamp,
+:root[data-theme="night"] .progress-hero .info-stamp,
+:root[data-theme="night"] .profile-hero .info-stamp,
+:root[data-theme="night"] .deck-stamp { mix-blend-mode:normal; }
+/* Η κάρτα αθλητή είναι σκόπιμα ξεθωριασμένη σαν παλιά φωτογραφία. Το sepia πάνω σε
+   σκοτεινό φόντο τη βουλιάζει, οπότε τη νύχτα κρατά μόνο το ξεθώριασμα. */
+:root[data-theme="night"] .home-profile-card { filter:grayscale(.2) contrast(.95); background:rgba(46,42,31,.9); color:var(--ink-lede); border-color:var(--ink-border); }
+:root[data-theme="night"] .home-profile-card:hover,
+:root[data-theme="night"] .home-profile-card:focus-visible { filter:grayscale(.08) contrast(1); }
+/* Αυξημένη αντίθεση. Ούτε τρίτο θέμα ούτε δεύτερη ταυτότητα: περισσότερο μελάνι
+   στο ίδιο χαρτί. Δύο κανόνες παράγουν κάθε τιμή εδώ:
+   1. Οι επιφάνειες δεν κουνιούνται. Το χαρτί μένει χαρτί και το μελανί μένει
+      μελανί — αλλιώς θα άλλαζε το φως του δωματίου, που είναι δουλειά του dark
+      mode. Αλλάζει μόνο ό,τι γράφεται ή χαράζεται ΠΑΝΩ τους.
+   2. Κάθε ξεθωριασμένος ρόλος καταρρέει προς το βασικό κείμενο του υποστρώματός
+      του: τα γκρίζα του χαρτιού βαθαίνουν, τα γκρίζα των σκοτεινών επιφανειών
+      ανοίγουν. Η ιεραρχία δεν χάνεται, στενεύει.
+   Τα υλικά (κορδέλα, ορείχαλκος, σήμα, λαστιχάκι, πορτρέτα) λείπουν σκόπιμα, όπως
+   και από τη νύχτα: είναι αντικείμενα, όχι χρώματα διεπαφής.
+   Στόχος είναι το AAA (7:1), και το `e2e/high-contrast.spec.mjs` το μετρά. */
+@media (prefers-contrast: more) {
+  :root {
+    /* Accent και σημειώσεις σε χαρτί */
+    --orange:#52400f;
+    --orange-rgb:82,64,15;
+    --pen-blue:#164668;
+    --pen:#332a17;
+    --danger:#5c2419;
+    --steel:#454741;
+    --recovery:#414a3b;
+
+    /* Κείμενο σε χαρτί: τα γκρίζα βαθαίνουν προς το μελάνι */
+    --muted:#453f2d;
+    --muted-strong:#332e22;
+    --ink-hand:#15130d;
+    --warning-text:#42301f;
+    --recovery-text:#2b3325;
+    --success-text:#2f3829;
+
+    /* Γραμμές: από υπαινιγμό σε όριο */
+    --line:#6f6752;
+    --line-comment:#7b7359;
+    --line-page:#7a7259;
+    --line-card:#797158;
+    --line-page-shadow:#746c54;
+    --line-field:#6b6350;
+
+    /* Κείμενο σε σκοτεινές επιφάνειες: τα γκρίζα ανοίγουν προς το ivory */
+    --muted-soft:#d6cdb4;
+    --ink-lede:#efe8d8;
+    --ink-label:#e7dfc9;
+    --ink-meta:#ded5bd;
+    --ink-tile-label:#ded5bd;
+    --ink-caption:#dcd3ba;
+    --ink-tile-text:#dcd3ba;
+    --ink-placeholder:#d8cfb6;
+    --ink-clip:#d6cdb4;
+    --ink-muted:#dcd3ba;
+    --ink-faint:#cfc6ac;
+
+    /* Περιγράμματα σε σκοτεινές επιφάνειες */
+    --ink-border:#8c8570;
+    --ink-border-strong:#98917b;
+    --ink-border-bright:#a49d85;
+    --ink-border-action:#948d78;
+    --ink-border-active:#9a9070;
+    --ink-border-tile:#8a836e;
+    --ink-mark-border:#948d78;
+    --ink-mark-dot:#a8a190;
+    --ink-mark-dash:#a09677;
+  }
+
+  :root[data-theme="night"] {
+    /* Η νύχτα κινείται προς την αντίθετη μεριά: το μελάνι της είναι φως, οπότε
+       εδώ δυναμώνει το φως αντί να βαθαίνει το μελάνι. */
+    --ink:#faf5e8;
+    --orange:#f0c274;
+    --orange-rgb:240,194,116;
+    --gold:#e4c250;
+    --pen-blue:#8fc4ea;
+    --pen:#ded3b4;
+    --danger:#e8a08c;
+    --steel:#b9bcb4;
+    --recovery:#b3c0a8;
+
+    /* Κείμενο στη νυχτερινή σελίδα */
+    --muted:#c2b99e;
+    --muted-strong:#e2d9c0;
+    --ink-hand:#f5efdd;
+    --warning-text:#f0d6b6;
+    --recovery-text:#cfe0c2;
+    --success-text:#cfe0c2;
+
+    /* Γραμμές: η νυχτερινή σελίδα δεν έχει σκιά να δώσει, μόνο φως */
+    --line:#7a715a;
+    --line-comment:#6f6752;
+    --line-page:#6f6752;
+    --line-card:#6f6752;
+    --line-page-shadow:#665e4a;
+    --line-field:#7a715a;
+
+    /* Στη νύχτα η --ink-surface είναι ανοιχτότερη από τη σελίδα, οπότε το κείμενό
+       της χρειάζεται ακόμη περισσότερο φως από ό,τι το κείμενο της σελίδας. */
+    --muted-soft:#ded5bd;
+    --ink-lede:#f5efdd;
+    --ink-label:#efe8d8;
+    --ink-meta:#e6ddc5;
+    --ink-tile-label:#e6ddc5;
+    --ink-caption:#e4dbc3;
+    --ink-tile-text:#e4dbc3;
+    --ink-placeholder:#e0d7bf;
+    --ink-clip:#ded5bd;
+    --ink-muted:#e4dbc3;
+    --ink-faint:#d8cfb6;
+
+    --ink-border:#8c8570;
+    --ink-border-strong:#98917b;
+    --ink-border-bright:#a49d85;
+    --ink-border-action:#948d78;
+    --ink-border-active:#9a9070;
+    --ink-border-tile:#8a836e;
+    --ink-mark-border:#948d78;
+    --ink-mark-dot:#a8a190;
+    --ink-mark-dash:#a09677;
+  }
+}

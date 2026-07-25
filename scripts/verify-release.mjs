@@ -26,6 +26,7 @@ const productionScripts = [
   'service-worker.js',
   'supabase-client.js',
   'supabase-config.js',
+  'theme.js',
 ];
 
 assert.match(version, /^\d+\.\d+\.\d+$/, 'package version must use semantic versioning');

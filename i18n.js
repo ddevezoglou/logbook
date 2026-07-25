@@ -475,6 +475,7 @@
     'message.0468':['Το ','','',''],
     'message.0469':['Η ','','',''],
     'message.0470':['Πολιτική απορρήτου','Privacy policy','Politique de confidentialité','Datenschutzerklärung'],
+    'message.0471':['Νυχτερινή εμφάνιση','Night appearance','Apparence nocturne','Nachtdarstellung'],
     'aria.weight-set':['{unit} σετ {number}','{unit}, set {number}','{unit}, série {number}','{unit}, Satz {number}']
   };
 
