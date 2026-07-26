@@ -4,7 +4,7 @@
 
 | Στοιχείο | Τρέχουσα κατάσταση |
 |---|---|
-| Έκδοση | **0.2.4** |
+| Έκδοση | **0.2.5** |
 | Runtime | Node.js 22 |
 | Client | HTML, CSS και JavaScript χωρίς build step |
 | Αποθήκευση | Local-first με `localStorage` και Supabase sync |
@@ -71,7 +71,7 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 - Κοινό SVG sprite για τα navigation controls και σταθερά `message.NNNN` i18n IDs για DOM, ARIA και σύνθετα labels.
 - Ενιαίο token layer χρωμάτων στο `:root` του `tokens.css`, ώστε dark mode, high contrast και print να εκφράζονται ως override του token layer και όχι ως search & replace. Ρόλοι που κρύβονταν κάτω από κοινό χρώμα είναι πλέον χωριστά tokens: μελάνι έναντι μελανί επιφάνειας (`--ink` / `--ink-surface` / `--on-ink`), κείμενο πάνω σε accent και σε χρυσό (`--on-accent` / `--on-gold`), και βάθος έναντι χρώματος στις ημιδιαφανείς χρήσεις (`--ink-rgb` / `--shadow-rgb` / `--veil-rgb`).
 - Νυχτερινή εμφάνιση ως καθαρό override του token layer, με ρητό διακόπτη στο μενού, προεπιλογή OFF και εφαρμογή πριν το πρώτο paint.
-- **Τέσσερα overrides του ίδιου token layer** και όχι τέσσερα θέματα: η ημέρα στο `:root`, η νύχτα σε `:root[data-theme="night"]`, το `prefers-contrast: more` με στόχο AAA (7:1) και το `@media print` που κάνει το χαρτί πραγματικό χαρτί. Κάθε χρώμα ορίζεται μία φορά· `grep -oE "#[0-9a-fA-F]{3,8}"` στα τέσσερα stylesheets επιστρέφει μόνο ορισμούς tokens.
+- **Τέσσερα overrides του ίδιου token layer** και όχι τέσσερα θέματα: η ημέρα στο `:root`, η νύχτα σε `:root[data-theme="night"]`, το `prefers-contrast: more` με στόχο AAA (7:1) και το `@media print` που κάνει το χαρτί πραγματικό χαρτί. Κάθε χρώμα ορίζεται μία φορά· `grep -oE "#[0-9a-fA-F]{3,8}"` σε όλα τα stylesheets της εφαρμογής επιστρέφει μόνο ορισμούς tokens.
 - **Τρία τεκμηριωμένα breakpoints** — `≤600px` «ένα χέρι», `≤850px` «χωρίς δεύτερη στήλη», `≤1000px` «χωρίς περιθώριο» — με μία ρητή εξαίρεση περιεχομένου στα `≤380px` για τη γραμμή σετ.
 - **Λειτουργία επισκέπτη** ως απόφαση της συσκευής και όχι λογαριασμός: δύο τοπικά κλειδιά (`logbookGuest`, `logbookGuestReminderAt`), καμία κλήση στο cloud, καμία κλειδωμένη λειτουργία, και μια μη-blocking λωρίδα υπενθύμισης που επανέρχεται κάθε επτά ημέρες.
 - Εκτυπώσιμη σελίδα προπόνησης και πλάνου, μία προπόνηση ανά φύλλο, με `body:has(dialog[open])` ώστε να τυπώνεται ό,τι είναι ανοιχτό.
@@ -80,7 +80,7 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 - Κανονικοποίηση των αριθμητικών τιμών και escaping του περιεχομένου χρήστη πριν από απόδοση σε HTML, μαζί με βαθύ validation των local/cloud payloads.
 - Ελεγχόμενο version bump που ενημερώνει μαζί package metadata, UI version, service-worker cache, tests και documentation.
 - Release hygiene και ενιαίο quality gate που αποκλείουν debug logging και test artifacts από τον production κώδικα και τα releases.
-- Privacy-safe error tracking για sync, PWA και πραγματικά unhandled client failures, μόνο με allowlisted τεχνικά metadata, rate limit 10 συμβάντων ανά ώρα και διατήρηση 30 ημερών.
+- Privacy-safe error tracking για sync, PWA και πραγματικά unhandled client failures, μόνο με allowlisted τεχνικά metadata, rate limit 10 συμβάντων ανά ώρα και διατήρηση 30 ημερών. Στη λειτουργία επισκέπτη έως 10 αποστειρωμένα events μένουν σε τοπική ουρά και αποστέλλονται μετά την πρώτη επιτυχημένη σύνδεση.
 
 ### Χάρτης βασικών αρχείων
 
@@ -89,7 +89,8 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 | `index.html` | Βασικό markup, dialogs και script loading |
 | `tokens.css` | Το token layer: η ημέρα στο `:root` και τα overrides της για νύχτα και `prefers-contrast: more` |
 | `base.css` | Reset, τυπογραφία, auth gate και τα πλέγματα που κρατούν κάθε view |
-| `components.css` | Κάρτες, controls, μενού, dialogs, σφραγίδες, προφίλ και λογαριασμός |
+| `components.css` | Κάρτες, controls, μενού, σφραγίδες και προφίλ |
+| `dialogs.css` | Κάρτα λογαριασμού, account/confirmation surfaces και το τελικό interaction-hardening layer |
 | `views.css` | Προσαρμογές ανά view και ανά συσκευή, και το print override που πρέπει να μένει τελευταίο |
 | `app.js` | Κύρια εφαρμογή και UI orchestration πάνω από τα domain modules |
 | `modules/storage-migrations.js` | Typed local storage, ασφαλείς εγγραφές και migrations παλιών δεδομένων |
@@ -97,10 +98,12 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 | `modules/sessions.js` | Ημερομηνίες, μονάδες βάρους, validation και ασφαλής CSV μορφοποίηση |
 | `modules/progress-chart.js` | Καθαρή, DOM-free παραγωγή του SVG του γραφήματος προόδου |
 | `modules/progress-rewards.js` | Συγκρίσεις επιδόσεων, καμπύλες γραφημάτων και rewards |
+| `modules/history.js` | DOM-free παραγωγή του Ιστορικού και των καρτών προπόνησης |
 | `modules/ui.js` | Κοινά UI primitives για escaping, navigation και menu state |
 | `i18n.js` | Μεταφράσεις και αλλαγή γλώσσας |
 | `theme.js` | Ημέρα ή νύχτα: ανάγνωση της επιλογής πριν το πρώτο paint, διακόπτης και `theme-color` |
 | `auth.js` | Authentication gate, λειτουργία επισκέπτη και φόρτωση της εφαρμογής |
+| `session-state.js` | Μηχανή των τεσσάρων καταστάσεων συνεδρίας και μοναδικό σημείο μετάβασης ταυτότητας |
 | `privacy.html` / `legal.css` | Δημόσια πολιτική απορρήτου και το ελάχιστο stylesheet της |
 | `cloud-sync.js` | Local/cloud merge και versioned synchronization |
 | `supabase-client.js` | Φόρτωση και αρχικοποίηση του Supabase browser client |
@@ -110,6 +113,8 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 | `e2e/` | Playwright mobile και accessibility tests· το `e2e/fixtures/authenticated-app.mjs` στήνει συνδεδεμένο χρήστη με πρόγραμμα, προπονήσεις και προφίλ, ώστε κάθε view να χτίζεται πραγματικά κατά τον έλεγχο |
 | `supabase/migrations/` | Schema, RLS policies, ημερήσια cloud snapshots, retention και account deletion RPC |
 | `.github/workflows/` | CI, Pages deployment και tagged releases |
+| `scripts/build-production.mjs` | Ρητό production artifact με minification JS/CSS, χωρίς αλλαγή του development runtime |
+| `scripts/check-performance.mjs` / `performance-budget.json` | Mid-range mobile LCP/TBT και όριο μεγέθους app shell με καταγεγραμμένο baseline |
 
 ## Supabase και authentication
 
@@ -189,6 +194,11 @@ npm.cmd run check
 2. Unit και integration tests.
 3. Android Chromium και iOS WebKit end-to-end tests.
 4. WCAG accessibility scan στα κρίσιμα mobile flows.
+5. Production build και performance budget σε emulated mid-range mobile: app shell ≤ 1.300.000 bytes, LCP ≤ 3.500 ms και TBT ≤ 500 ms.
+
+Το axe συμπληρώνεται από το χειροκίνητο [keyboard-only και screen-reader walkthrough](docs/accessibility-walkthrough.md), επειδή η πρόθεση μιας ανακοίνωσης, η χρησιμότητα της σειράς ανάγνωσης και η επιστροφή του focus δεν αποδεικνύονται μόνο από κανόνες DOM.
+
+Το baseline της 26ης Ιουλίου 2026 είναι 1.205.623 bytes production app shell, 1.408 ms LCP και 344 ms TBT (διάμεσος τριών εκτελέσεων, 4× CPU slowdown, 1.600 Kbps download και 150 ms latency). Τα όρια και το προφίλ βρίσκονται στο `performance-budget.json` και η υπέρβασή τους αποτυγχάνει το `npm run check`.
 
 Το ίδιο gate εκτελείται σε pull requests, deployments του `main` και tagged releases. Το `package-lock.json` παραμένει versioned, ενώ το `node_modules/` δημιουργείται τοπικά.
 
@@ -210,11 +220,15 @@ npm.cmd run test:e2e
 
 ## GitHub Pages και PWA
 
-Το `.github/workflows/pages.yml` εκτελεί το πλήρες quality gate σε κάθε push στο `main` και δημιουργεί production artifact από ρητή λίστα runtime αρχείων. Tests, designs, scripts και seed εργαλεία δεν δημοσιεύονται.
+Το `.github/workflows/pages.yml` εκτελεί το πλήρες quality gate σε κάθε push στο `main` και δημιουργεί μέσω του `scripts/build-production.mjs` production artifact από ρητή λίστα runtime αρχείων. Τα JavaScript και CSS assets γίνονται minify με esbuild μόνο για το artifact· η ανάπτυξη συνεχίζει να σερβίρει απευθείας τα αναγνώσιμα source files. Tests, designs, scripts και seed εργαλεία δεν δημοσιεύονται.
+
+Στο baseline της 26ης Ιουλίου το ίδιο allowlisted shell είναι 1.265.953 bytes από τα source files και 1.205.623 bytes στο production artifact: 60.330 bytes ή 4,8% μικρότερο συνολικά, παρότι τα ήδη συμπιεσμένα fonts, icons και το vendored Supabase bundle αποτελούν 675.774 bytes και αντιγράφονται αυτούσια. Ενδεικτικά, μόνο το `app.js` πέφτει από 125.860 σε 98.379 bytes.
 
 Το manifest, τα app icons, οι self-hosted γραμματοσειρές και το offline shell είναι ρυθμισμένα για τη διαδρομή `/logbook/`.
 
 Η απόφαση να παραμείνει το PWA ο canonical mobile client τεκμηριώνεται στο `docs/mobile-distribution.md`. Η επιλογή native wrapper θα επανεξεταστεί μόνο αν προκύψει πραγματική ανάγκη για app-store distribution, native APIs ή background λειτουργίες που δεν καλύπτει αξιόπιστα το PWA.
+
+Το CSP παραμένει σήμερα σε `<meta>` επειδή το GitHub Pages δεν επιτρέπει custom HTTP response headers. Περιλαμβάνει `form-action 'self'`, αλλά δεν μπορεί να επιβάλει `frame-ancestors 'none'` από meta policy. Αυτό καταγράφεται ως αποδεκτό χαμηλό ρίσκο όσο το προϊόν μένει στο GitHub Pages: οι ευαίσθητες ενέργειες απαιτούν authentication και ρητή επιβεβαίωση, και δεν υπάρχει καταστροφική one-click διαδρομή. Αν αλλάξει ο host, το CSP μεταφέρεται υποχρεωτικά σε HTTP header και προστίθεται `frame-ancestors 'none'` πριν από τη διανομή.
 
 ## Versioning και releases
 
@@ -240,16 +254,15 @@ npm.cmd run test:e2e
 
 Το `scripts/verify-release.mjs` ελέγχει τη συνέπεια. Tag της μορφής `v<package-version>`, για παράδειγμα `v0.2.1`, ενεργοποιεί το `.github/workflows/release.yml` και δημιουργεί GitHub Release μόνο αν περάσει ολόκληρο το quality gate.
 
-## Γνωστοί περιορισμοί της 0.2.4
+## Γνωστοί περιορισμοί της 0.2.5
 
 - Το sync είναι snapshot-based και όχι live collaborative editing. Υπάρχει optimistic conflict retry και αυτόματο merge. Η σχεδιαστική παραδοχή είναι ότι η καταγραφή γίνεται από μία ενεργή συσκευή κάθε φορά, επομένως δεν προβλέπεται UI χειροκίνητης επίλυσης conflicts.
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Οι ασκήσεις αποθηκεύονται ως ελεύθερο κείμενο και δεν συνδέονται ακόμη με ενιαία προσωπική βιβλιοθήκη.
-- **Τα τοπικά δεδομένα δεν φέρουν ιδιοκτήτη.** Το `trainingSessions`/`trainingRoutines`/`userProfile` ζουν σε κοινά κλειδιά του `localStorage` χωρίς user id. Δείτε το εύρημα Ασφάλεια #1 της αξιολόγησης παρακάτω· είναι το σοβαρότερο ανοιχτό θέμα της έκδοσης.
-- Καμία μέτρηση απόδοσης δεν υπάρχει στο quality gate. Το `app.js` σερβίρεται ως 128KB μη-minified, μαζί με ~200KB CSS και το Supabase bundle.
+- Το performance gate χρησιμοποιεί επαναλήψιμη browser emulation και όχι εργαστηριακή συσκευή· τα όρια προστατεύουν από regressions, αλλά δεν αντικαθιστούν το physical-device QA.
 - Δεν υπάρχει user-facing πλήρες backup/restore. Το CSV export καλύπτει μόνο το ιστορικό προπονήσεων, όχι τα προγράμματα και το προφίλ.
 
-## Αξιολόγηση 0.2.4 — 26 Ιουλίου 2026
+## Αξιολόγηση 0.2.5 — 26 Ιουλίου 2026
 
 Τρίτο πλήρες review ολόκληρου του codebase με τη μεθοδολογία των security-review, code-review και frontend-design, με το ίδιο ρητό κριτήριο: **το κέρδος από το mobile app**. Κατά το review τα **262/262** unit/integration tests πέρασαν πράσινα και η e2e σουίτα μετρά **24 tests** σε οκτώ αρχεία. Σαρώθηκαν τα SQL migrations, ο client (`app.js`, `auth.js`, `cloud-sync.js`, `error-tracking.js`, `supabase-client.js`, `service-worker.js`, `modules/`), τα τέσσερα stylesheets και τα CI workflows — και επιπλέον, για πρώτη φορά, οι **διαδρομές μεταξύ λογαριασμών στην ίδια συσκευή**, επειδή η λειτουργία επισκέπτη τις έκανε προσβάσιμες.
 
@@ -262,6 +275,8 @@ npm.cmd run test:e2e
 | Εμπορική ετοιμότητα | 5/10 | ↑ 1 | Guest mode και privacy policy· λείπουν άδεια, όροι, μοντέλο και κανάλι |
 
 **Συνολικά: 8/10 ως engineering προϊόν, 5/10 ως εμπορικό mobile προϊόν σήμερα.**
+
+> **Κατάσταση μετά το review:** η παρακάτω αξιολόγηση διατηρείται ως ιστορικό snapshot της 26ης Ιουλίου. Τα πέντε ευρήματα της ενότητας Ασφάλεια, η έλλειψη user-switch E2E και τα πέντε TODO της ενότητας Κώδικας αποκαταστάθηκαν στον αμέσως επόμενο κύκλο· η τρέχουσα υλοποίηση και τα guards περιγράφονται στο roadmap παρακάτω.
 
 Ο προηγούμενος κύκλος ήταν ο παραγωγικότερος του project: έκλεισαν και τα εικοσιτέσσερα TODO των τομέων Α, Β και Γ, με μηχανική επαλήθευση σε κάθε ένα. Η βαθμολογία ασφάλειας παρ' όλα αυτά πέφτει, και πέφτει **εξαιτίας** αυτού του κύκλου: δύο σωστές αλλαγές —το καθάρισμα του cloud cache στο sign-out και η λειτουργία επισκέπτη— συναντήθηκαν σε μια παραδοχή που καμία από τις δύο δεν έλεγξε, ότι κάθε συσκευή έχει έναν χρήστη. Δεν είναι regression σε κώδικα που κάποιος έγραψε λάθος. Είναι η πρώτη φορά που το μοντέλο δεδομένων συναντά δεύτερο πρόσωπο.
 
@@ -334,28 +349,28 @@ Roadmap με άξονα το εμπορικό μοντέλο: **φάση 1 δω�
 
 ### Α. Ασφάλεια
 
-- [ ] **Ιδιοκτησία στα τοπικά δεδομένα.** Το σοβαρότερο ανοιχτό θέμα του project και ρίζα δύο HIGH ευρημάτων. Τα `trainingRoutines`, `trainingSessions`, `userProfile` πρέπει να πάψουν να είναι κοινά κλειδιά: είτε namespacing (`logbook:<userId>:…`, `logbook:guest:…`) με migration των υπαρχόντων, είτε —ως ελάχιστη λύση— ρητό καθάρισμά τους στο sign-out με **διατήρηση** του `logbookCloudOwner`, ώστε το `switchingUser` του `cloud-sync.js` να συνεχίσει να λειτουργεί. *Done όταν:* ένα test επαληθεύει ότι μετά από `sign-out` του Α, ούτε το login του Β ούτε η λειτουργία επισκέπτη βλέπουν έστω μία προπόνηση του Α, και ότι το cloud snapshot του Β δεν τις περιέχει.
-- [ ] **E2E για εναλλαγή χρήστη και για είσοδο επισκέπτη μετά από αποσύνδεση.** Δύο σενάρια σε πραγματικό browser, ως φύλακας του παραπάνω.
-- [ ] **Επιβεβαίωση πριν το merge του επισκέπτη.** Όταν ο επισκέπτης συνδέεται σε λογαριασμό που έχει ήδη ιστορικό, οθόνη με τρεις εξόδους: συγχώνευση, κράτημα μόνο των cloud δεδομένων, ακύρωση. Απαιτείται και για την προστασία από το εύρημα #1.
-- [ ] **Error tracking για τον επισκέπτη**, χωρίς λογαριασμό: είτε τοπική ουρά που αδειάζει στην πρώτη εγγραφή, είτε ανώνυμο RPC με τα ίδια allowlisted πεδία. Σήμερα η νεότερη διαδρομή του προϊόντος δεν αναφέρει τίποτα.
-- [ ] **`validate constraint user_sync_state_payload_size_check`** σε ξεχωριστό migration, αφού επιβεβαιωθεί ότι κανένα row δεν το παραβιάζει.
-- [ ] **`form-action 'self'` στο CSP**, και μετάβαση του CSP σε HTTP header με `frame-ancestors 'none'` **αν** η απόφαση διανομής αλλάξει host. Αν μείνει το GitHub Pages, γράφεται ως αποδεκτό ρίσκο με αιτιολογία.
+- [x] **Ιδιοκτησία στα τοπικά δεδομένα.** Στο επιτυχές sign-out καθαρίζονται όλα τα κοινά domain keys, ενώ διατηρούνται το `logbookCloudOwner` και το user-scoped recovery cache. Έτσι ο επόμενος λογαριασμός ή επισκέπτης δεν βλέπει δεδομένα του προηγούμενου χρήστη και ο ίδιος χρήστης μπορεί να επαναφέρει ασφαλώς τυχόν τελευταίο τοπικό snapshot.
+- [x] **E2E για εναλλαγή χρήστη και για είσοδο επισκέπτη μετά από αποσύνδεση.** Το `e2e/data-isolation.spec.mjs` καλύπτει και τις δύο διαδρομές, μαζί με έλεγχο ότι το snapshot του Β δεν περιέχει προπόνηση του Α.
+- [x] **Επιβεβαίωση πριν το merge του επισκέπτη.** Όταν συνυπάρχουν ουσιαστικά guest και cloud δεδομένα, το initial sync σταματά σε modal με συγχώνευση, κράτημα μόνο των cloud δεδομένων ή ακύρωση. Και οι τρεις έξοδοι καλύπτονται με integration tests.
+- [x] **Error tracking για τον επισκέπτη**, χωρίς λογαριασμό. Bounded τοπική ουρά έως 10 allowlisted και αποστειρωμένων events, η οποία αδειάζει στην πρώτη επιτυχημένη σύνδεση χωρίς να αποθηκεύει message, stack, URL, email, token ή payload.
+- [x] **`validate constraint user_sync_state_payload_size_check`** σε ξεχωριστό migration. Το migration αποτυγχάνει ρητά αν βρει legacy row στα 2 MiB ή πάνω και εκτελεί `validate constraint` μόνο όταν ο προέλεγχος είναι καθαρός.
+- [x] **`form-action 'self'` στο CSP.** Προστέθηκε στο meta CSP και το όριο του GitHub Pages για `frame-ancestors` τεκμηριώνεται παραπάνω ως αποδεκτό ρίσκο με υποχρεωτική μετάβαση σε header CSP αν αλλάξει host.
 
 ### Β. Κώδικας
 
-- [ ] **Μηχανή καταστάσεων για τη συνεδρία.** Τέσσερις ρητές καταστάσεις — άγνωστη, μέλος, offline μέλος, επισκέπτης — με ένα σημείο μετάβασης, αντί για έξι ανεξάρτητες μεταβλητές και τη συνθήκη `guestActive || readFlag(GUEST_KEY)` γραμμένη τρεις φορές. Προαπαιτούμενο της σωστής λύσης του Α#1.
-- [ ] **Η λωρίδα του επισκέπτη να μη σκεπάζει το toast.** Ανύψωση του toast πάνω από τη λωρίδα ή μετατόπισή του όσο είναι ανοιχτή, με safe-area και στα δύο. *Done όταν:* e2e επαληθεύει ότι η επιβεβαίωση αποθήκευσης είναι ορατή με τη λωρίδα ανοιχτή σε φορητό.
-- [ ] **Δεύτερη εξαγωγή από το `app.js`**: το rendering του Ιστορικού και της κάρτας προπόνησης, με τα κριτήρια που δούλεψαν στο `progress-chart.js` — DOM-free συνάρτηση, δικά της unit tests.
-- [ ] **Performance budget στο quality gate.** Ρητά όρια σε μέγεθος app shell και σε LCP/TBT σε emulated mid-range mobile, ως βήμα του `npm run check`. *Done όταν:* το gate κοκκινίζει σε υπέρβαση, με καταγεγραμμένα τα σημερινά νούμερα ως baseline.
-- [ ] **Minification των production assets** στο βήμα του `pages.yml`, χωρίς build step στην ανάπτυξη. Εξαρτάται από την προηγούμενη μέτρηση για να αποδειχθεί ότι αξίζει.
+- [x] **Μηχανή καταστάσεων για τη συνεδρία.** Το `session-state.js` ορίζει μόνο `unknown`, `member`, `offline-member`, `guest`, απαιτεί έγκυρη member session και το `auth.js` περνά κάθε αλλαγή ταυτότητας από το μοναδικό `transitionSession()`.
+- [x] **Η λωρίδα του επισκέπτη να μη σκεπάζει το toast.** Το toast ανέβηκε πάνω από τη λωρίδα (`z-index:40` έναντι `35`) διατηρώντας safe-area positioning· πραγματικό Playwright flow αποθηκεύει mobile guest προπόνηση με ανοιχτή λωρίδα και ελέγχει ορατότητα, μήνυμα, viewport και stacking.
+- [x] **Δεύτερη εξαγωγή από το `app.js`.** Το `modules/history.js` παράγει χωρίς DOM το Ιστορικό και τις κάρτες προπόνησης, με δικά του escaping/pagination unit tests.
+- [x] **Performance budget στο quality gate.** Το `npm run check` χτίζει το production shell και μετρά διάμεσο τριών Chromium runs με 4× CPU slowdown και mobile network emulation. Baseline: 1.205.623 bytes, LCP 1.408 ms, TBT 344 ms· budgets: 1.300.000 bytes, 3.500 ms και 500 ms αντίστοιχα.
+- [x] **Minification των production assets** στο βήμα του `pages.yml`, χωρίς build step στην ανάπτυξη. Το κοινό `npm run build:production` κάνει minify σε όλα τα runtime JS/CSS με esbuild και αντιγράφει μόνο την allowlisted εφαρμογή στο `_site`.
 
 ### Γ. Design & προσβασιμότητα
 
-- [ ] **`aria-live="polite"` στη λωρίδα του επισκέπτη.** Σήμερα εμφανίζεται σιωπηλά για κάθε χρήστη screen reader.
-- [ ] **Αφαίρεση του τέταρτου breakpoint** στα 520px· η αναδίπλωση των κουμπιών λύνεται με `flex-wrap` ή ανεβαίνει στα 600.
+- [x] **`aria-live="polite"` στη λωρίδα του επισκέπτη.** Η labelled region είναι πλέον atomic polite live region, ανακοινώνεται χωρίς να κλέβει focus και καλύπτεται από unit, keyboard-only Playwright και axe έλεγχο.
+- [x] **Αφαίρεση του τέταρτου breakpoint** στα 520px. Η λωρίδα αναδιπλώνει τις ενέργειες με `flex-wrap` σε κάθε πλάτος και test επιτρέπει μόνο τα `600/850/1000px` μαζί με τη ρητή εξαίρεση περιεχομένου στα `380px`.
 - [ ] **Πρώτη οθόνη με περιεχόμενο για τον επισκέπτη.** Το guest mode έλυσε την πόρτα, όχι το άδειο δωμάτιο. Επιλογή σχεδιαστικού γύρου: προτεινόμενο πρόγραμμα-εκκίνησης, ή μια «γεμάτη» σελίδα-δείγμα που σβήνει με την πρώτη πραγματική καταγραφή. *Done όταν:* ο νέος χρήστης βλέπει τη μεταφορά του προϊόντος πριν καταγράψει οτιδήποτε.
-- [ ] **Δεύτερη τομή του `components.css`** (836 γραμμές / 90KB), με το ίδιο κριτήριο διατήρησης της σειράς της cascade. Προφανές όριο: dialogs και κάρτα λογαριασμού.
-- [ ] **Keyboard-only και screen-reader walkthrough** των κρίσιμων flows, ως χειροκίνητο σενάριο δίπλα στο axe. Το εύρημα της λωρίδας δείχνει ότι ο automated έλεγχος δεν πιάνει την απουσία πρόθεσης.
+- [x] **Δεύτερη τομή του `components.css`.** Το component core έμεινε σε 635 γραμμές / 72KB και το συνεχόμενο tail της κάρτας λογαριασμού, των dialogs και του interaction hardening μεταφέρθηκε στο `dialogs.css` (207 γραμμές / 18KB). Η σειρά `components.css → dialogs.css → views.css` διατηρεί ακριβώς την προηγούμενη cascade και ελέγχεται μηχανικά.
+- [x] **Keyboard-only και screen-reader walkthrough** των κρίσιμων flows. Το [χειροκίνητο σενάριο](docs/accessibility-walkthrough.md) καλύπτει gate, guest live announcement, navigation, καταγραφή, history dialog και account confirmations· τα μηχανικά ελέγξιμα focus/live-region contracts τρέχουν δίπλα στο axe. Το πρώτο πέρασμα βρήκε focusable controls μέσα στο κρυμμένο auth gate και η πύλη πλέον γίνεται `inert` μαζί με το `aria-hidden`.
 
 ### Δ. Εμπορικά — προαπαιτούμενα του 1.0
 

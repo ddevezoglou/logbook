@@ -160,7 +160,7 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 .empty { padding:50px 20px; text-align:center; color:var(--muted); border:1px dashed var(--line); }
 
 
-.toast { position:fixed; right:25px; bottom:25px; color:white; z-index:20; transform:translateY(100px); opacity:0; transition:.3s; font-weight:700; }.toast.show { transform:none; opacity:1; }
+.toast { position:fixed; right:25px; bottom:25px; color:white; z-index:40; transform:translateY(100px); opacity:0; transition:.3s; font-weight:700; }.toast.show { transform:none; opacity:1; }
 .hidden { display:none !important; }
 .session-shell { max-width:1180px; margin:0 auto; padding:55px 5vw 80px; }
 .session-toolbar { display:grid; grid-template-columns:190px auto minmax(230px,1fr) auto; align-items:end; gap:22px; padding-bottom:28px; border-bottom:1px solid var(--line); }

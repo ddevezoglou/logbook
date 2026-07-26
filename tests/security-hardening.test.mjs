@@ -15,6 +15,7 @@ test('the application CSP restricts executable resources and permits data URL av
   assert.match(policy, /img-src 'self' data:/);
   assert.match(policy, /object-src 'none'/);
   assert.match(policy, /base-uri 'self'/);
+  assert.match(policy, /form-action 'self'/);
   assert.doesNotMatch(policy, /script-src[^;]*'unsafe-inline'/);
 });
 

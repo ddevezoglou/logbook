@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadApp, click, setValue } from './helpers.mjs';
 
-const styles = ['tokens.css', 'base.css', 'components.css', 'views.css']
+const styles = ['tokens.css', 'base.css', 'components.css', 'dialogs.css', 'views.css']
   .map(file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'))
   .join('\n');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
@@ -32,7 +32,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.2.4');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.5');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });

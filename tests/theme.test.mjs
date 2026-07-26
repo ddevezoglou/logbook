@@ -110,6 +110,8 @@ test('the theme is applied before the first paint, so the night never flashes wh
 test('theme.js ships with the app shell and the release', () => {
   const serviceWorker = readFileSync(new URL('service-worker.js', root), 'utf8');
   const pages = readFileSync(new URL('.github/workflows/pages.yml', root), 'utf8');
+  const builder = readFileSync(new URL('scripts/build-production.mjs', root), 'utf8');
   assert.ok(serviceWorker.includes("'./theme.js'"), 'theme.js must be cached offline');
-  assert.match(pages, /cp [^\n]*\btheme\.js\b/, 'theme.js must be copied into the published site');
+  assert.match(pages, /npm run build:production/, 'Pages must use the production builder');
+  assert.match(builder, /'theme\.js'/, 'theme.js must be copied into the published site');
 });

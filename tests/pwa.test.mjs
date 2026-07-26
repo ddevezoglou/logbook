@@ -71,6 +71,7 @@ test('service worker precaches the complete local shell without development seed
     './tokens.css',
     './base.css',
     './components.css',
+    './dialogs.css',
     './views.css',
     './legal.css',
     './app.js',
@@ -79,8 +80,10 @@ test('service worker precaches the complete local shell without development seed
     './modules/sessions.js',
     './modules/progress-chart.js',
     './modules/progress-rewards.js',
+    './modules/history.js',
     './modules/ui.js',
     './auth.js',
+    './session-state.js',
     './cloud-sync.js',
     './error-tracking.js',
     './pwa.js',
@@ -119,9 +122,12 @@ test('GitHub Pages workflow publishes a production-only artifact', () => {
   assert.match(workflow, /actions\/upload-pages-artifact@v4/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /path: _site/);
-  assert.match(workflow, /cp .*error-tracking\.js.* _site\//, 'the deployed shell includes error tracking');
-  assert.match(workflow, /cp .*privacy\.html.* _site\//, 'the deployed artifact includes the privacy policy');
-  assert.match(workflow, /cp -R modules _site\/modules/, 'the deployed shell includes ES modules');
+  assert.match(workflow, /run: npm run build:production/, 'the deployed artifact comes from the minifying production builder');
+  const builder = readFileSync(new URL('../scripts/build-production.mjs', import.meta.url), 'utf8');
+  assert.match(builder, /'error-tracking\.js'/, 'the deployed shell includes error tracking');
+  assert.match(builder, /'privacy\.html'/, 'the deployed artifact includes the privacy policy');
+  assert.match(builder, /'modules\/history\.js'/, 'the deployed shell includes ES modules');
+  assert.match(builder, /minify:true/, 'production JS and CSS are minified');
   assert.doesNotMatch(workflow, /cp .*seed/);
   assert.doesNotMatch(workflow, /cp .*tests/);
   assert.doesNotMatch(workflow, /cp .*designs/);

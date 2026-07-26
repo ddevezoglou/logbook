@@ -1,0 +1,20 @@
+{
+  "profile": {
+    "name": "emulated mid-range mobile",
+    "viewport": { "width": 393, "height": 851, "deviceScaleFactor": 2.75 },
+    "cpuSlowdownMultiplier": 4,
+    "network": { "latencyMs": 150, "downloadKbps": 1600, "uploadKbps": 750 },
+    "runs": 3
+  },
+  "baseline": {
+    "measuredAt": "2026-07-26",
+    "appShellBytes": 1205623,
+    "lcpMs": 1408,
+    "tbtMs": 344
+  },
+  "budgets": {
+    "appShellBytes": 1300000,
+    "lcpMs": 3500,
+    "tbtMs": 500
+  }
+}

@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const i18nSource = readFileSync(new URL('../i18n.js', import.meta.url), 'utf8');
 const configSource = readFileSync(new URL('../supabase-config.js', import.meta.url), 'utf8');
+const sessionStateSource = readFileSync(new URL('../session-state.js', import.meta.url), 'utf8');
 const authSource = readFileSync(new URL('../auth.js', import.meta.url), 'utf8');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -20,6 +21,7 @@ async function loadAuth({ initialSession = null, signupSession = null, oauthErro
   window.requestAnimationFrame = callback => callback();
   window.eval(i18nSource);
   window.eval(configSource);
+  window.eval(sessionStateSource);
   window.LogbookSupabase = {
     async rpc(name, params) {
       calls.rpc.push({ name, params });
@@ -95,6 +97,7 @@ test('startup exposes only the login gate when there is no saved session', async
   assert.ok(!document.querySelector('#account-guest').classList.contains('hidden'));
   assert.equal(document.querySelector('script[data-logbook-app]'), null);
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'login');
+  assert.equal(document.querySelector('#auth-gate').hasAttribute('inert'), false);
 });
 
 test('an existing session waits for initial sync before loading the application', async () => {
@@ -117,6 +120,7 @@ test('an existing session waits for initial sync before loading the application'
   appScript.dispatchEvent(new window.Event('load'));
   assert.ok(document.body.classList.contains('app-ready'));
   assert.equal(document.querySelector('#auth-gate').getAttribute('aria-hidden'), 'true');
+  assert.equal(document.querySelector('#auth-gate').hasAttribute('inert'), true);
 });
 
 test('account dialog signs in and displays the active email', async () => {
@@ -311,7 +315,7 @@ test('password recovery link opens the new-password form and updates the user', 
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
 });
 
-test('global sign out clears cloud caches and preserves workout data stored in the browser', async () => {
+test('global sign out clears visible user data while preserving owner-scoped recovery state', async () => {
   const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
   const { document, localStorage, calls } = await loadAuth({ initialSession });
   const sessions = [{ id:'s1', date:'2026-07-17' }];
@@ -326,15 +330,16 @@ test('global sign out clears cloud caches and preserves workout data stored in t
 
   assert.equal(calls.signout.length, 1);
   assert.equal(calls.signout[0].scope, 'global');
-  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
-  assert.deepEqual(
-    [...Array(localStorage.length)].map((_, index) => localStorage.key(index)).filter(key => key.startsWith('logbookCloud')),
-    []
-  );
+  assert.equal(localStorage.getItem('trainingSessions'), null);
+  assert.equal(localStorage.getItem('trainingRoutines'), null);
+  assert.equal(localStorage.getItem('userProfile'), null);
+  assert.equal(localStorage.getItem('logbookCloudOwner'), 'user-a');
+  assert.deepEqual(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions, sessions);
+  assert.ok(localStorage.getItem('logbookCloudMeta:user-a'));
   assert.equal(document.querySelector('#account-menu-status').textContent, 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ');
 });
 
-test('offline global sign out falls back to local sign out and still clears cloud caches', async () => {
+test('offline global sign out falls back locally and still isolates visible user data', async () => {
   const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
   const { document, localStorage, calls } = await loadAuth({
     initialSession,
@@ -343,13 +348,16 @@ test('offline global sign out falls back to local sign out and still clears clou
   localStorage.setItem('logbookCloudCache:user-a', '{}');
   localStorage.setItem('logbookCloudMeta:user-a', '{}');
   localStorage.setItem('logbookCloudOwner', 'user-a');
+  localStorage.setItem('trainingSessions', '[{"id":"private-a"}]');
 
   click(document, '#account-signout');
   await flush();
   await flush();
 
   assert.deepEqual(calls.signout.map(call => call.scope), ['global', 'local']);
-  assert.equal([...Array(localStorage.length)].some((_, index) => localStorage.key(index).startsWith('logbookCloud')), false);
+  assert.equal(localStorage.getItem('trainingSessions'), null);
+  assert.equal(localStorage.getItem('logbookCloudOwner'), 'user-a');
+  assert.ok(localStorage.getItem('logbookCloudCache:user-a'));
 });
 
 test('account deletion requires explicit confirmation and cancellation makes no request', async () => {
@@ -368,11 +376,14 @@ test('account deletion requires explicit confirmation and cancellation makes no 
   assert.equal(calls.rpc.length, 0);
 });
 
-test('confirmed account deletion removes the cloud account and preserves local device data', async () => {
+test('confirmed account deletion removes cloud and local account data', async () => {
   const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
   const { document, localStorage, calls } = await loadAuth({ initialSession });
   const sessions = [{ id:'s1', date:'2026-07-17' }];
   localStorage.setItem('trainingSessions', JSON.stringify(sessions));
+  localStorage.setItem('logbookCloudOwner', 'user-a');
+  localStorage.setItem('logbookCloudCache:user-a', JSON.stringify({ trainingSessions:sessions }));
+  localStorage.setItem('logbookCloudMeta:user-a', JSON.stringify({ revision:1, hash:'abc' }));
 
   click(document, '#account-delete');
   click(document, '#account-delete-accept');
@@ -381,7 +392,9 @@ test('confirmed account deletion removes the cloud account and preserves local d
 
   assert.deepEqual(calls.rpc, [{ name:'delete_own_account', params:undefined }]);
   assert.equal(calls.signout.at(-1).scope, 'local');
-  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), sessions);
+  assert.equal(localStorage.getItem('trainingSessions'), null);
+  assert.equal(localStorage.getItem('logbookCloudCache:user-a'), null);
+  assert.equal(localStorage.getItem('logbookCloudMeta:user-a'), null);
   assert.equal(document.querySelector('#account-delete-dialog').open, false);
   assert.equal(document.querySelector('#account-dialog').open, false);
   assert.equal(document.querySelector('#account-menu-status').textContent, 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ');

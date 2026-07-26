@@ -12,6 +12,9 @@
   const META_PREFIX = 'logbookCloudMeta:';
   const CACHE_PREFIX = 'logbookCloudCache:';
   const OWNER_KEY = 'logbookCloudOwner';
+  const GUEST_KEY = 'logbookGuest';
+  const GUEST_IMPORT_KEY = 'logbookGuestImportPending';
+  const GUEST_IMPORT_CANCELLED = 'guest-import-cancelled';
   const SYNC_DELAY = 700;
   const WEIGHT_MODES = new Set(['kg', 'plates', 'mixed', 'bodyweight', 'bodyweight_extra']);
   const PROFILE_AVATARS = new Set(['custom', 'male', 'female']);
@@ -323,6 +326,18 @@
     setTimeout(() => window.dispatchEvent(new CustomEvent('logbook:cloud-data-applied')), 0);
   }
 
+  function requestGuestMergeChoice() {
+    return new Promise(resolve => {
+      let settled = false;
+      const respond = choice => {
+        if (settled) return;
+        settled = true;
+        resolve(['merge', 'cloud', 'cancel'].includes(choice) ? choice : 'cancel');
+      };
+      window.dispatchEvent(new CustomEvent('logbook:guest-merge-required', { detail:{ respond } }));
+    });
+  }
+
   async function performSync(id) {
     if (!client || !id || !navigator.onLine) {
       setStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline');
@@ -330,16 +345,53 @@
     }
     setStatus('Συγχρονισμός δεδομένων…', 'syncing');
     const owner = localStorage.getItem(OWNER_KEY);
-    if (owner && owner !== id) {
-      try { localStorage.setItem(`${CACHE_PREFIX}${owner}`, JSON.stringify(collectLocalPayload())); } catch { /* best effort */ }
+    const guestImportPending = localStorage.getItem(GUEST_IMPORT_KEY) === '1';
+    const visibleLocal = collectLocalPayload();
+    if (owner && owner !== id && !guestImportPending && hasMeaningfulData(visibleLocal)) {
+      try { localStorage.setItem(`${CACHE_PREFIX}${owner}`, JSON.stringify(visibleLocal)); } catch { /* best effort */ }
     }
     const cached = readJsonStorage(`${CACHE_PREFIX}${id}`, null);
     const switchingUser = Boolean(owner && owner !== id);
-    const local = switchingUser ? normalizePayload(cached || {}) : collectLocalPayload();
-    const localHash = payloadHash(local);
     const meta = readMeta(id);
+    let local = switchingUser && !guestImportPending ? normalizePayload(cached || {}) : visibleLocal;
+    if (!switchingUser && !guestImportPending && meta && cached && !hasMeaningfulData(visibleLocal) && hasMeaningfulData(cached)) {
+      local = normalizePayload(cached);
+      applyPayload(local, { preserveLocalGallery:false });
+    }
+    const localHash = payloadHash(local);
     let remote = await fetchRemote(id);
     let applied = false;
+
+    if (guestImportPending) {
+      const guestHasData = hasMeaningfulData(local);
+      const cloudHasData = Boolean(remote && hasMeaningfulData(remote.payload));
+      const choice = guestHasData && cloudHasData ? await requestGuestMergeChoice() : 'merge';
+
+      if (choice === 'cancel') {
+        localStorage.removeItem(GUEST_IMPORT_KEY);
+        localStorage.setItem(GUEST_KEY, '1');
+        setStatus('Τα δεδομένα επισκέπτη παραμένουν μόνο σε αυτή τη συσκευή.', 'neutral');
+        window.dispatchEvent(new CustomEvent('logbook:guest-merge-cancelled'));
+        return GUEST_IMPORT_CANCELLED;
+      }
+
+      if (choice === 'cloud') {
+        applyPayload(remote.payload, { preserveLocalGallery:false });
+        applied = payloadHash(local) !== payloadHash(remote.payload);
+      } else {
+        const nextPayload = remote ? mergePayloads(remote.payload, local) : local;
+        remote = await saveWithConflictRetry(id, nextPayload, remote);
+        applyPayload(remote.payload, { preserveLocalGallery:false });
+        applied = true;
+      }
+
+      localStorage.removeItem(GUEST_IMPORT_KEY);
+      localStorage.removeItem(GUEST_KEY);
+      writeMeta(id, remote);
+      setStatus('Συγχρονισμένο σε όλες τις συσκευές.', 'success');
+      if (applied) announceApplied();
+      return true;
+    }
 
     // A completely empty cloud snapshot is never a valid replacement for a
     // device that still has workouts, a profile or a configured program. This
@@ -463,7 +515,11 @@
       if (userId !== id) return;
       if (!success) initialSyncUserId = null;
       window.dispatchEvent(new CustomEvent('logbook:initial-sync-complete', {
-        detail:{ userId:id, success:Boolean(success) },
+        detail:{
+          userId:id,
+          success:success === GUEST_IMPORT_CANCELLED ? false : Boolean(success),
+          cancelled:success === GUEST_IMPORT_CANCELLED,
+        },
       }));
     });
   }

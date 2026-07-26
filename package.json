@@ -1,6 +1,6 @@
 {
   "name": "logbook",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,13 +8,16 @@
     "test": "npm run test:unit",
     "test:unit": "node --test \"tests/**/*.test.mjs\"",
     "test:e2e": "playwright test",
+    "build:production": "node scripts/build-production.mjs",
+    "check:performance": "node scripts/check-performance.mjs",
     "verify:release": "node scripts/verify-release.mjs",
     "version:bump": "node scripts/bump-version.mjs",
-    "check": "npm run verify:release && npm run test:unit && npm run test:e2e"
+    "check": "npm run verify:release && npm run test:unit && npm run test:e2e && npm run check:performance"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
+    "esbuild": "^0.28.1",
     "jsdom": "^26.0.0"
   }
 }

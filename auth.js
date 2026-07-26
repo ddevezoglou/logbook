@@ -4,13 +4,15 @@
   const t = value => window.LogbookI18n?.t?.(value) || value;
   const dialog = $('#account-dialog');
   const deleteDialog = $('#account-delete-dialog');
+  const guestMergeDialog = $('#guest-merge-dialog');
   const gate = $('#auth-gate');
   const guest = $('#account-guest');
   const member = $('#account-member');
   const guestReminder = $('#guest-reminder');
   const status = $('#account-form-status');
+  const { STATES:SESSION_STATES } = window.LogbookSessionState;
+  const sessionMachine = window.LogbookSessionMachine;
   let client = null;
-  let session = null;
   let mode = 'signin';
   let passwordRecoveryActive = false;
   let pendingSyncUserId = null;
@@ -20,19 +22,30 @@
   // result so a late listener can still consume it instead of hanging on "syncing".
   let lastSyncResult = null;
   let syncWatchdog = null;
-  let offlineSessionActive = false;
   const SYNC_WATCHDOG_MS = 25000;
   const CLOUD_STORAGE_PREFIXES = ['logbookCloudCache:', 'logbookCloudMeta:'];
   const CLOUD_OWNER_KEY = 'logbookCloudOwner';
+  const LOCAL_USER_DATA_KEYS = [
+    'trainingRoutines',
+    'trainingSessions',
+    'userProfile',
+    'routineRewardTracking',
+    'homeProfileCardPosition',
+    'homeRoutineCardPosition',
+  ];
   // Guest mode is a device-local decision, so it lives in localStorage next to the
   // data it describes and is never synced. No session, no user id, no cloud call:
   // cloud-sync.js already no-ops without a user, so "local only" needs no new branch.
   const GUEST_KEY = 'logbookGuest';
+  const GUEST_IMPORT_KEY = 'logbookGuestImportPending';
   // The reminder is not a one-off: it comes back, quietly, for as long as the guest
   // stays without an account. So we store when it last appeared, not that it appeared.
   const GUEST_REMINDER_KEY = 'logbookGuestReminderAt';
   const GUEST_REMINDER_INTERVAL = 7 * 24 * 60 * 60 * 1000;
-  let guestActive = false;
+  let guestMergeRespond = null;
+
+  const currentSession = () => sessionMachine.context.session || null;
+  const sessionIs = state => sessionMachine.is(state);
 
   function readFlag(key) {
     try { return localStorage.getItem(key) === '1'; } catch { return false; }
@@ -56,12 +69,26 @@
     } catch { /* Private mode: the reminder lives as long as this tab does. */ }
   }
 
-  function clearCloudSessionStorage() {
+  function clearCloudSessionStorage({ userId = null } = {}) {
     for (let index = localStorage.length - 1; index >= 0; index -= 1) {
       const key = localStorage.key(index);
-      if (key && CLOUD_STORAGE_PREFIXES.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
+      if (key && userId && CLOUD_STORAGE_PREFIXES.some(prefix => key === `${prefix}${userId}`)) localStorage.removeItem(key);
     }
-    localStorage.removeItem(CLOUD_OWNER_KEY);
+  }
+
+  function archiveCurrentLocalData() {
+    const userId = currentSession()?.user?.id || localStorage.getItem(CLOUD_OWNER_KEY);
+    const payload = window.LogbookCloudSync?.collectLocalPayload?.();
+    if (!userId || !payload) return;
+    try { localStorage.setItem(`logbookCloudCache:${userId}`, JSON.stringify(payload)); } catch { /* best effort */ }
+  }
+
+  function clearLocalUserData() {
+    LOCAL_USER_DATA_KEYS.forEach(key => localStorage.removeItem(key));
+  }
+
+  function prepareGuestImport() {
+    if (sessionIs(SESSION_STATES.GUEST)) writeFlag(GUEST_IMPORT_KEY, true);
   }
 
   async function signOutEverywhere() {
@@ -145,6 +172,7 @@
     document.body.classList.toggle('auth-required', state === 'login' || state === 'error');
     document.body.classList.toggle('app-booting', state !== 'ready' && state !== 'login' && state !== 'error');
     gate.setAttribute('aria-hidden', String(state === 'ready'));
+    gate.toggleAttribute('inert', state === 'ready');
     if (state === 'error') requestAnimationFrame(() => $('#auth-gate-retry')?.focus());
   }
 
@@ -162,7 +190,7 @@
 
   function showPasswordRecovery(nextSession) {
     passwordRecoveryActive = true;
-    session = nextSession || session;
+    if (nextSession?.user?.id) transitionSession(SESSION_STATES.MEMBER, { session:nextSession }, { render:false });
     pendingSyncUserId = null;
     setGateState('login');
     setMode('recovery');
@@ -219,12 +247,9 @@
     $('#account-sync-message').textContent = t(message);
   }
 
-  function renderOfflineSession(nextSession) {
-    if (!nextSession?.user?.id) return;
+  function renderOfflineMember(nextSession) {
     const alreadyReady = document.body.classList.contains('app-ready');
-    offlineSessionActive = true;
-    session = nextSession;
-    const email = session.user.email || '';
+    const email = nextSession.user.email || '';
     guest.classList.add('hidden');
     hideGuestReminder();
     member.classList.remove('hidden');
@@ -259,7 +284,7 @@
   }
 
   function showGuestReminder() {
-    if (!guestActive || !document.body.classList.contains('app-ready')) return;
+    if (!sessionIs(SESSION_STATES.GUEST) || !document.body.classList.contains('app-ready')) return;
     writeStamp(GUEST_REMINDER_KEY, Date.now());
     guestReminder.classList.remove('hidden');
     requestAnimationFrame(() => guestReminder.classList.add('is-open'));
@@ -278,53 +303,81 @@
     window.addEventListener('logbook:app-ready', showGuestReminder, { once:true });
   }
 
-  function enterGuest() {
-    guestActive = true;
-    session = null;
+  function renderMemberAccount(nextSession) {
+    const email = nextSession.user.email || '';
+    guest.classList.add('hidden');
+    member.classList.remove('hidden');
+    $('#account-member-email').textContent = email;
+    $('#account-menu-email').textContent = email;
+    $('#account-menu-email').classList.toggle('hidden', !email);
+    $('#account-menu-status').textContent = 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ';
+    $('#account-menu-status').classList.add('hidden');
+    $('#account-open').classList.add('is-connected');
+    $('#account-open').setAttribute('aria-label', `${t('ΛΟΓΑΡΙΑΣΜΟΣ')}: ${email}`);
+    $('#account-signout').disabled = false;
+    $('#account-delete').disabled = false;
+    waitForInitialSync(nextSession);
+  }
+
+  function renderGuest() {
     pendingSyncUserId = null;
-    writeFlag(GUEST_KEY, true);
     renderGuestAccount();
     queueGuestReminder();
-    window.LogbookI18n?.translate(document);
     if (document.body.classList.contains('app-ready')) return;
     setGateState('loading', 'Ξεκινάμε με τα δεδομένα αυτής της συσκευής.');
     loadApplication();
   }
 
-  function leaveGuest() {
-    guestActive = false;
-    writeFlag(GUEST_KEY, false);
-    hideGuestReminder();
-    if (dialog.open) dialog.close();
+  function renderSessionState() {
+    const { state, context } = sessionMachine.snapshot();
+    if (state === SESSION_STATES.MEMBER) renderMemberAccount(context.session);
+    else if (state === SESSION_STATES.OFFLINE_MEMBER) renderOfflineMember(context.session);
+    else if (state === SESSION_STATES.GUEST) renderGuest();
+    else {
+      if (deleteDialog.open) deleteDialog.close();
+      showLogin();
+    }
+    window.LogbookI18n?.translate(document);
   }
 
-  // Back to the gate with the local data untouched: signing up adopts whatever is
-  // already stored on this device as the new account's first snapshot.
+  // Every identity change passes through this function. Storage, UI and the
+  // observable lifecycle can therefore never disagree about the active state.
+  function transitionSession(nextState, context = {}, { render = true } = {}) {
+    const previousState = sessionMachine.state;
+    const snapshot = sessionMachine.transition(nextState, context);
+    const enteringGuest = nextState === SESSION_STATES.GUEST;
+    writeFlag(GUEST_KEY, enteringGuest);
+    if (!enteringGuest) {
+      hideGuestReminder();
+      if (previousState === SESSION_STATES.GUEST && dialog.open) dialog.close();
+    }
+    window.dispatchEvent(new CustomEvent('logbook:session-state', {
+      detail:{ state:snapshot.state, previousState, userId:snapshot.context.session?.user?.id || null },
+    }));
+    if (render) renderSessionState();
+    return snapshot;
+  }
+
+  function enterGuest() {
+    transitionSession(SESSION_STATES.GUEST);
+  }
+
+  function renderOfflineSession(nextSession) {
+    if (nextSession?.user?.id) transitionSession(SESSION_STATES.OFFLINE_MEMBER, { session:nextSession });
+  }
+
+  // Back to the gate with the local data untouched. Cloud sync will either adopt
+  // it for an empty account or ask before combining it with existing history.
   function returnToGate(nextMode) {
-    leaveGuest();
+    prepareGuestImport();
     setMode(nextMode);
-    showLogin();
+    transitionSession(SESSION_STATES.UNKNOWN);
   }
 
   function renderSession(nextSession) {
-    session = nextSession || null;
-    const email = session?.user?.email || '';
-    const signedIn = Boolean(email);
-    if (signedIn) leaveGuest();
-    guest.classList.toggle('hidden', signedIn);
-    member.classList.toggle('hidden', !signedIn);
-    $('#account-member-email').textContent = email;
-    $('#account-menu-email').textContent = email;
-    $('#account-menu-email').classList.toggle('hidden', !signedIn);
-    $('#account-menu-status').textContent = 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ';
-    $('#account-menu-status').classList.toggle('hidden', signedIn);
-    $('#account-open').classList.toggle('is-connected', signedIn);
-    $('#account-open').setAttribute('aria-label', signedIn ? `${t('ΛΟΓΑΡΙΑΣΜΟΣ')}: ${email}` : t('ΛΟΓΑΡΙΑΣΜΟΣ'));
-    if (!signedIn && deleteDialog.open) deleteDialog.close();
-    if (signedIn) waitForInitialSync(session);
-    else if (guestActive || readFlag(GUEST_KEY)) enterGuest();
-    else showLogin();
-    window.LogbookI18n?.translate(document);
+    if (nextSession?.user?.id) transitionSession(SESSION_STATES.MEMBER, { session:nextSession });
+    else if (readFlag(GUEST_KEY)) transitionSession(SESSION_STATES.GUEST);
+    else transitionSession(SESSION_STATES.UNKNOWN);
   }
 
   async function checkSession() {
@@ -341,7 +394,6 @@
   async function bindClient(nextClient) {
     if (!nextClient || client === nextClient) return;
     client = nextClient;
-    offlineSessionActive = false;
     $('#account-signout').disabled = false;
     $('#account-delete').disabled = false;
     client.auth.onAuthStateChange((event, nextSession) => {
@@ -356,9 +408,9 @@
     $('#close-menu').click();
     // A guest has no account sheet to read: the card is the way back to the gate,
     // where signing in and signing up already live.
-    if (guestActive) return returnToGate('signin');
+    if (sessionIs(SESSION_STATES.GUEST)) return returnToGate('signin');
     dialog.showModal();
-    const focusTarget = offlineSessionActive ? '#account-close' : '#account-signout';
+    const focusTarget = sessionIs(SESSION_STATES.OFFLINE_MEMBER) ? '#account-close' : '#account-signout';
     requestAnimationFrame(() => $(focusTarget)?.focus());
   });
   $('#account-close').addEventListener('click', () => dialog.close());
@@ -391,14 +443,14 @@
   // A guest can keep the app open for days, so a reminder that only fired at boot
   // would never come round again. Coming back to the tab is the next honest moment.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible' || !guestActive) return;
+    if (document.visibilityState !== 'visible' || !sessionIs(SESSION_STATES.GUEST)) return;
     if (guestReminder.classList.contains('is-open') || !guestReminderDue()) return;
     showGuestReminder();
   });
 
   $('#auth-gate-retry').addEventListener('click', () => {
-    if (session?.user?.id) {
-      waitForInitialSync(session);
+    if (currentSession()?.user?.id) {
+      waitForInitialSync(currentSession());
       window.dispatchEvent(new CustomEvent('logbook:initial-sync-requested'));
     } else {
       checkSession();
@@ -442,6 +494,7 @@
     const redirectTo = getAuthRedirectUrl();
     if (!redirectTo) return;
     const button = $('#account-google');
+    prepareGuestImport();
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');
     setStatus('Μεταφορά στη Google…');
@@ -459,6 +512,7 @@
     event.preventDefault();
     const form = event.currentTarget;
     if (!client || !form.reportValidity()) return;
+    prepareGuestImport();
     setBusy(form, true);
     setStatus('Γίνεται σύνδεση…');
     const { data, error } = await client.auth.signInWithPassword({
@@ -475,6 +529,7 @@
     event.preventDefault();
     const form = event.currentTarget;
     if (!client || !form.reportValidity()) return;
+    prepareGuestImport();
     const password = $('#account-signup-password').value;
     if (password !== $('#account-signup-confirm').value) return setStatus('Οι κωδικοί δεν ταιριάζουν.', 'error');
     const emailRedirectTo = getAuthRedirectUrl();
@@ -528,17 +583,19 @@
     if (error) return setStatus('Δεν ήταν δυνατή η αλλαγή του κωδικού. Ζητήστε νέο σύνδεσμο.', 'error');
     form.reset();
     passwordRecoveryActive = false;
-    renderSession(session);
+    renderSession(currentSession());
   });
 
   $('#account-signout').addEventListener('click', async () => {
     if (!client) return;
     const button = $('#account-signout');
     button.disabled = true;
+    archiveCurrentLocalData();
     const signedOut = await signOutEverywhere();
     button.disabled = false;
     if (!signedOut) return;
-    clearCloudSessionStorage();
+    clearLocalUserData();
+    writeFlag(GUEST_IMPORT_KEY, false);
     dialog.close();
     renderSession(null);
   });
@@ -565,8 +622,11 @@
       return;
     }
 
+    const deletedUserId = currentSession()?.user?.id || localStorage.getItem(CLOUD_OWNER_KEY);
     try { await client.auth.signOut({ scope:'local' }); } catch { /* The account is already deleted. */ }
-    clearCloudSessionStorage();
+    clearLocalUserData();
+    clearCloudSessionStorage({ userId:deletedUserId });
+    writeFlag(GUEST_IMPORT_KEY, false);
     acceptButton.disabled = false;
     cancelButton.disabled = false;
     if (deleteDialog.open) deleteDialog.close();
@@ -575,14 +635,40 @@
   });
 
   window.addEventListener('logbook:initial-sync-complete', event => {
-    const { userId, success } = event.detail || {};
+    const { userId, success, cancelled } = event.detail || {};
     if (!userId) return;
+    if (cancelled) return;
     lastSyncResult = { userId, success:Boolean(success) };
     if (!pendingSyncUserId || userId !== pendingSyncUserId) return;
     clearTimeout(syncWatchdog);
     lastSyncResult = null;
     if (success) loadApplication();
     else setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+  });
+  window.addEventListener('logbook:guest-merge-required', event => {
+    if (!guestMergeDialog || typeof event.detail?.respond !== 'function') return;
+    guestMergeRespond = event.detail.respond;
+    guestMergeDialog.showModal();
+    requestAnimationFrame(() => $('#guest-merge-accept')?.focus());
+  });
+  window.addEventListener('logbook:guest-merge-cancelled', async () => {
+    writeFlag(GUEST_IMPORT_KEY, false);
+    writeFlag(GUEST_KEY, true);
+    try { await client?.auth.signOut({ scope:'local' }); } catch { /* The guest data stays local. */ }
+    enterGuest();
+  });
+  function finishGuestMerge(choice) {
+    const respond = guestMergeRespond;
+    guestMergeRespond = null;
+    if (guestMergeDialog?.open) guestMergeDialog.close();
+    respond?.(choice);
+  }
+  $('#guest-merge-accept').addEventListener('click', () => finishGuestMerge('merge'));
+  $('#guest-merge-cloud').addEventListener('click', () => finishGuestMerge('cloud'));
+  $('#guest-merge-cancel').addEventListener('click', () => finishGuestMerge('cancel'));
+  guestMergeDialog.addEventListener('cancel', event => {
+    event.preventDefault();
+    finishGuestMerge('cancel');
   });
   window.addEventListener('logbook:supabase-ready', event => bindClient(event.detail.client));
   window.addEventListener('logbook:offline-session', event => renderOfflineSession(event.detail?.session));
@@ -592,13 +678,13 @@
   });
   window.addEventListener('logbook:supabase-unavailable', () => {
     // A guest never needed the sign-in service, so its absence is not an error here.
-    if (guestActive || readFlag(GUEST_KEY)) return enterGuest();
+    if (sessionIs(SESSION_STATES.GUEST) || readFlag(GUEST_KEY)) return enterGuest();
     setGateState('error', 'Η υπηρεσία σύνδεσης δεν είναι διαθέσιμη. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
   document.addEventListener('logbook:languagechange', () => {
     // While the gate is mid-flow (checking/syncing/loading/error) re-rendering the
     // session would yank it to the login form; only re-translate in place there.
-    if (!['checking', 'syncing', 'loading', 'error'].includes(gate.dataset.state)) renderSession(session);
+    if (!['checking', 'syncing', 'loading', 'error'].includes(gate.dataset.state)) renderSessionState();
     setGateState(gate.dataset.state);
     if (gateMessageSource) $('#auth-gate-message').textContent = t(gateMessageSource);
   });

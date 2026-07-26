@@ -3,6 +3,7 @@ import * as RoutineModel from './modules/routines.js';
 import * as SessionModel from './modules/sessions.js';
 import * as ProgressRewards from './modules/progress-rewards.js';
 import * as ProgressChart from './modules/progress-chart.js';
+import * as HistoryView from './modules/history.js';
 import * as UI from './modules/ui.js';
 
 const store = StorageMigrations.createStore(localStorage, {
@@ -1067,16 +1068,14 @@ function renderOverview() {
   const visibleSessions = state.sessions.slice(0, state.historyVisibleCount);
   $('#history-session-count').textContent = state.sessions.length;
   $('#history-counter').classList.toggle('hidden', !state.sessions.length);
-  const cardsMarkup = visibleSessions.map((session, index) => {
-    const exercises = Array.isArray(session.exercises) ? session.exercises : [];
-    const sessionNumber = state.sessions.length - index;
-    const setCount = exercises.reduce((sum, exercise) => sum + (exercise.sets?.length || 0), 0);
-    return `<article class="session-card" data-session-id="${esc(session.id)}" data-session-date="${esc(session.date || '')}"><div class="session-summary" data-view-session="${esc(session.id)}"><div class="card-date"><span>${dayForDate(session.date)}</span><strong>${formatDate(session.date)}</strong><small>SESSION No ${sessionNumber}</small></div><div class="card-body"><div class="card-stats"><span>${exercises.length} ΑΣΚΗΣΕΙΣ</span><span>${setCount} WORKING SETS</span><span class="card-stamp" aria-hidden="true">LOGGED</span><span class="card-type">${session.type === 'scheduled' ? 'ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ' : 'ΕΛΕΥΘΕΡΗ ΠΡΟΠΟΝΗΣΗ'}</span></div><div class="card-title-row"><h3><button class="session-open" data-view-session="${esc(session.id)}" type="button" aria-haspopup="dialog" aria-controls="session-detail-dialog" aria-label="Άνοιγμα προπόνησης ${esc(sessionWorkoutName(session))}"><span data-i18n-user>${esc(sessionWorkoutName(session))}</span></button></h3></div><p class="card-exercises" data-i18n-user>${exercises.map(ex => esc(ex.exercise)).join(' · ')}</p>${session.comments ? `<p class="card-comment" data-i18n-user>${esc(session.comments)}</p>` : ''}</div><div class="card-actions"><label class="session-select"><input type="checkbox" data-select-session="${esc(session.id)}"><span>ΕΠΙΛΟΓΗ</span></label><div class="card-selection-actions"><button class="card-edit" data-edit-session="${esc(session.id)}" type="button">ΕΠΕΞΕΡΓΑΣΙΑ</button><button class="card-copy" data-copy-session="${esc(session.id)}" type="button">ΑΝΤΙΓΡΑΦΗ</button><button class="card-delete" data-delete-session="${esc(session.id)}" type="button">ΔΙΑΓΡΑΦΗ</button></div></div></div></article>`;
-  }).join('');
-  const remaining = state.sessions.length - visibleSessions.length;
-  $('#session-cards').innerHTML = state.sessions.length
-    ? `${cardsMarkup}${remaining > 0 ? `<button class="history-load-more" type="button" data-load-more-history>ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ ${Math.min(pageSize, remaining)} · ΑΠΟΜΕΝΟΥΝ ${remaining}</button>` : ''}`
-    : '<div class="empty"><span>Ολοκληρώστε την πρώτη προπόνηση και αρχίστε να χτίζετε το αρχείο σας.</span></div>';
+  $('#session-cards').innerHTML = HistoryView.buildHistoryMarkup({
+    sessions:visibleSessions,
+    totalCount:state.sessions.length,
+    pageSize,
+    getWorkoutName:sessionWorkoutName,
+    getDayLabel:dayForDate,
+    formatDate,
+  });
   renderHistoryWeek();
 }
 

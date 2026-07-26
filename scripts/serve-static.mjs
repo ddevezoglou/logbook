@@ -3,7 +3,9 @@ import { createServer } from 'node:http';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const rootFlagIndex = process.argv.indexOf('--root');
+const root = resolve(projectRoot, rootFlagIndex >= 0 ? process.argv[rootFlagIndex + 1] : '.');
 const portFlagIndex = process.argv.indexOf('--port');
 const requestedPort = portFlagIndex >= 0 ? process.argv[portFlagIndex + 1] : undefined;
 const port = Number(requestedPort || process.env.PORT || 4173);

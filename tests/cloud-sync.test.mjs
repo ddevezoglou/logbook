@@ -63,22 +63,28 @@ function createClient({ session = null, row = null, writeError = null } = {}) {
   };
 }
 
-async function loadSync({ seed = {}, session = null, row = null, online = true, writeError = null } = {}) {
+async function loadSync({ seed = {}, session = null, row = null, online = true, writeError = null, onWindow = null, runManualSync = true } = {}) {
   const dom = new JSDOM(html, { url:'http://localhost:3000/', runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
   Object.defineProperty(window.navigator, 'onLine', { configurable:true, value:online });
   for (const [key, value] of Object.entries(seed)) {
-    window.localStorage.setItem(key, ['logbookLanguage', 'logbookCloudOwner'].includes(key) ? value : JSON.stringify(value));
+    window.localStorage.setItem(
+      key,
+      ['logbookLanguage', 'logbookCloudOwner', 'logbookGuest', 'logbookGuestImportPending'].includes(key)
+        ? value
+        : JSON.stringify(value),
+    );
   }
   const client = createClient({ session, row, writeError });
   const initialSyncEvents = [];
   const syncStatusEvents = [];
   window.addEventListener('logbook:initial-sync-complete', event => initialSyncEvents.push(event.detail));
   window.addEventListener('logbook:sync-status', event => syncStatusEvents.push(event.detail));
+  onWindow?.(window);
   window.LogbookSupabase = client;
   window.eval(syncSource);
   await flush();
-  await window.LogbookCloudSync.sync();
+  if (runManualSync) await window.LogbookCloudSync.sync();
   await flush();
   return { window, localStorage:window.localStorage, client, initialSyncEvents, syncStatusEvents };
 }
@@ -303,7 +309,7 @@ test('switching accounts replaces the previous users visible local data', async 
     logbookLanguage:'el',
   };
   const row = { user_id:'user-b', revision:2, payload, updated_at:'2026-07-17T12:00:00Z' };
-  const { localStorage } = await loadSync({
+  const { localStorage, client } = await loadSync({
     session,
     row,
     seed:{
@@ -317,4 +323,115 @@ test('switching accounts replaces the previous users visible local data', async 
   assert.equal(JSON.parse(localStorage.getItem('trainingRoutines'))[0].id, 'b-routine');
   assert.equal(JSON.parse(localStorage.getItem('trainingSessions'))[0].id, 'b-session');
   assert.equal(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions[0].id, 'a-session');
+  assert.deepEqual(client.row.payload.trainingSessions.map(session => session.id), ['b-session']);
+});
+
+test('the same user restores an isolated sign-out cache without exposing common keys', async () => {
+  const session = { user:{ id:'user-a', email:'first@example.com' } };
+  const archived = {
+    trainingRoutines:[],
+    trainingSessions:[{ id:'unsynced-a', date:'2026-07-17' }],
+    userProfile:{ name:'First athlete' },
+    logbookLanguage:'el',
+  };
+  const row = {
+    user_id:'user-a',
+    revision:1,
+    payload:{ trainingRoutines:[], trainingSessions:[], userProfile:null, logbookLanguage:'el' },
+  };
+  const { client, localStorage } = await loadSync({
+    session,
+    row,
+    seed:{
+      logbookCloudOwner:'user-a',
+      'logbookCloudCache:user-a':archived,
+      'logbookCloudMeta:user-a':{ revision:1, hash:'pre-signout' },
+    },
+  });
+
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id), ['unsynced-a']);
+  assert.deepEqual(client.row.payload.trainingSessions.map(item => item.id), ['unsynced-a']);
+});
+
+test('guest data merges only after explicit confirmation when the account already has history', async () => {
+  const session = { user:{ id:'user-b', email:'second@example.com' } };
+  const row = {
+    user_id:'user-b',
+    revision:2,
+    payload:{
+      trainingRoutines:[],
+      trainingSessions:[{ id:'cloud-session', date:'2026-07-16' }],
+      logbookLanguage:'el',
+    },
+  };
+  let prompts = 0;
+  const { client, localStorage } = await loadSync({
+    session,
+    row,
+    seed:{
+      logbookCloudOwner:'user-a',
+      'logbookCloudCache:user-a':{ trainingSessions:[{ id:'private-a', date:'2026-07-15' }] },
+      logbookGuestImportPending:'1',
+      trainingSessions:[{ id:'guest-session', date:'2026-07-17' }],
+    },
+    onWindow(window) {
+      window.addEventListener('logbook:guest-merge-required', event => {
+        prompts += 1;
+        event.detail.respond('merge');
+      });
+    },
+  });
+
+  assert.equal(prompts, 1);
+  assert.deepEqual(client.row.payload.trainingSessions.map(item => item.id).sort(), ['cloud-session', 'guest-session']);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id).sort(), ['cloud-session', 'guest-session']);
+  assert.deepEqual(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions.map(item => item.id), ['private-a']);
+  assert.equal(localStorage.getItem('logbookGuestImportPending'), null);
+});
+
+test('guest import can keep only cloud history without uploading guest workouts', async () => {
+  const session = { user:{ id:'user-b', email:'second@example.com' } };
+  const row = {
+    user_id:'user-b',
+    revision:2,
+    payload:{ trainingRoutines:[], trainingSessions:[{ id:'cloud-session', date:'2026-07-16' }], logbookLanguage:'el' },
+  };
+  const { client, localStorage } = await loadSync({
+    session,
+    row,
+    seed:{ logbookGuestImportPending:'1', trainingSessions:[{ id:'guest-session', date:'2026-07-17' }] },
+    onWindow(window) {
+      window.addEventListener('logbook:guest-merge-required', event => event.detail.respond('cloud'));
+    },
+  });
+
+  assert.deepEqual(client.row.payload.trainingSessions.map(item => item.id), ['cloud-session']);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id), ['cloud-session']);
+  assert.equal(client.calls.update, 0);
+});
+
+test('cancelling guest import leaves both cloud and guest histories untouched', async () => {
+  const session = { user:{ id:'user-b', email:'second@example.com' } };
+  const row = {
+    user_id:'user-b',
+    revision:2,
+    payload:{ trainingRoutines:[], trainingSessions:[{ id:'cloud-session', date:'2026-07-16' }], logbookLanguage:'el' },
+  };
+  let cancelled = false;
+  const { client, localStorage, initialSyncEvents } = await loadSync({
+    session,
+    row,
+    runManualSync:false,
+    seed:{ logbookGuestImportPending:'1', trainingSessions:[{ id:'guest-session', date:'2026-07-17' }] },
+    onWindow(window) {
+      window.addEventListener('logbook:guest-merge-required', event => event.detail.respond('cancel'));
+      window.addEventListener('logbook:guest-merge-cancelled', () => { cancelled = true; });
+    },
+  });
+
+  assert.equal(cancelled, true);
+  assert.deepEqual(client.row.payload.trainingSessions.map(item => item.id), ['cloud-session']);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id), ['guest-session']);
+  assert.equal(localStorage.getItem('logbookGuest'), '1');
+  assert.equal(initialSyncEvents.at(-1)?.cancelled, true);
 });

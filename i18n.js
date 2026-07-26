@@ -255,7 +255,7 @@
     'message.0248':['ΔΙΑΓΡΑΦΗ ΛΟΓΑΡΙΑΣΜΟΥ','DELETE ACCOUNT','SUPPRIMER LE COMPTE','KONTO LÖSCHEN'],
     'message.0249':['ΜΗ ΑΝΑΣΤΡΕΨΙΜΗ ΕΝΕΡΓΕΙΑ','IRREVERSIBLE ACTION','ACTION IRRÉVERSIBLE','UNWIDERRUFLICHE AKTION'],
     'message.0250':['Οριστική διαγραφή λογαριασμού','Permanently delete account','Supprimer définitivement le compte','Konto endgültig löschen'],
-    'message.0251':['Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά τον λογαριασμό σας; Όλα τα συγχρονισμένα δεδομένα σας θα διαγραφούν από τη βάση και δεν θα μπορούν να ανακτηθούν. Τα τοπικά δεδομένα θα παραμείνουν σε αυτή τη συσκευή.','Are you sure you want to permanently delete your account? All your synced data will be deleted from the database and cannot be recovered. Local data will remain on this device.','Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Toutes vos données synchronisées seront supprimées de la base de données et ne pourront pas être récupérées. Les données locales resteront sur cet appareil.','Möchten Sie Ihr Konto wirklich endgültig löschen? Alle synchronisierten Daten werden aus der Datenbank gelöscht und können nicht wiederhergestellt werden. Lokale Daten bleiben auf diesem Gerät.'],
+    'message.0251':['Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά τον λογαριασμό σας; Όλα τα συγχρονισμένα και τοπικά δεδομένα σας θα διαγραφούν και δεν θα μπορούν να ανακτηθούν.','Are you sure you want to permanently delete your account? All synced and local data will be deleted and cannot be recovered.','Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Toutes vos données synchronisées et locales seront supprimées et ne pourront pas être récupérées.','Möchten Sie Ihr Konto wirklich endgültig löschen? Alle synchronisierten und lokalen Daten werden gelöscht und können nicht wiederhergestellt werden.'],
     'message.0252':['ΑΚΥΡΩΣΗ','CANCEL','ANNULER','ABBRECHEN'],
     'message.0253':['ΝΑΙ, ΔΙΑΓΡΑΦΗ','YES, DELETE','OUI, SUPPRIMER','JA, LÖSCHEN'],
     'message.0254':['Γίνεται οριστική διαγραφή του λογαριασμού σας…','Permanently deleting your account…','Suppression définitive de votre compte…','Ihr Konto wird endgültig gelöscht…'],
@@ -483,6 +483,12 @@
     'message.0476':['Ξεκινάμε με τα δεδομένα αυτής της συσκευής.','Starting with the data on this device.','Démarrage avec les données de cet appareil.','Start mit den Daten dieses Geräts.'],
     'message.0477':['ΣΚΟΤΕΙΝΗ ΛΕΙΤΟΥΡΓΙΑ','DARK MODE','MODE SOMBRE','DUNKELMODUS'],
     'message.0478':['ΕΚΔΟΣΗ','VERSION','VERSION','VERSION'],
+    'message.0479':['ΔΕΔΟΜΕΝΑ ΕΠΙΣΚΕΠΤΗ','GUEST DATA','DONNÉES INVITÉ','GASTDATEN'],
+    'message.0480':['ΠΩΣ ΘΕΛΕΤΕ ΝΑ ΣΥΝΕΧΙΣΕΤΕ;','HOW WOULD YOU LIKE TO CONTINUE?','COMMENT SOUHAITEZ-VOUS CONTINUER ?','WIE MÖCHTEN SIE FORTFAHREN?'],
+    'message.0481':['Ο λογαριασμός έχει ήδη προπονήσεις. Επιλέξτε αν θα προστεθούν και τα δεδομένα επισκέπτη ή αν θα κρατήσετε μόνο τα δεδομένα του λογαριασμού.','This account already has workouts. Choose whether to add the guest data or keep only the account data.','Ce compte contient déjà des séances. Choisissez d’ajouter les données invité ou de conserver uniquement celles du compte.','Dieses Konto enthält bereits Trainings. Wählen Sie, ob die Gastdaten hinzugefügt oder nur die Kontodaten behalten werden sollen.'],
+    'message.0482':['ΜΟΝΟ ΔΕΔΟΜΕΝΑ ΛΟΓΑΡΙΑΣΜΟΥ','ACCOUNT DATA ONLY','DONNÉES DU COMPTE UNIQUEMENT','NUR KONTODATEN'],
+    'message.0483':['ΣΥΓΧΩΝΕΥΣΗ','MERGE','FUSIONNER','ZUSAMMENFÜHREN'],
+    'message.0484':['Τα δεδομένα επισκέπτη παραμένουν μόνο σε αυτή τη συσκευή.','Guest data remains on this device only.','Les données invité restent uniquement sur cet appareil.','Gastdaten bleiben nur auf diesem Gerät.'],
     'aria.weight-set':['{unit} σετ {number}','{unit}, set {number}','{unit}, série {number}','{unit}, Satz {number}']
   };
 

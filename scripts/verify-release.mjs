@@ -15,6 +15,8 @@ const productionScripts = [
   'cloud-sync.js',
   'error-tracking.js',
   'i18n.js',
+  'session-state.js',
+  'modules/history.js',
   'modules/progress-rewards.js',
   'modules/progress-chart.js',
   'modules/routines.js',

@@ -55,7 +55,7 @@ test('client error reports contain only allowlisted operational metadata', async
     'event_online',
     'event_source',
   ]);
-  assert.equal(client.calls[0].values.event_app_version, '0.2.4');
+  assert.equal(client.calls[0].values.event_app_version, '0.2.5');
   assert.equal(client.calls[0].values.event_error_name, 'TypeError');
   assert.doesNotMatch(JSON.stringify(client.calls[0]), /Bench Press|private@example\.com|bearer-token/);
   window.close();
@@ -87,14 +87,19 @@ test('invalid and source-mismatched event codes are rejected before the network'
   window.close();
 });
 
-test('anonymous errors are not attached to a user who signs in later', async () => {
+test('anonymous errors use a sanitized local queue that flushes on first sign in', async () => {
   const { window, client } = await loadTracker(null);
 
   await window.LogbookErrorTracking.report('sync', 'sync_failure', new window.Error('anonymous failure'));
+  const queued = JSON.parse(window.localStorage.getItem('logbookGuestErrorQueue'));
+  assert.equal(queued.length, 1);
+  assert.doesNotMatch(JSON.stringify(queued), /anonymous failure/);
   client.emitAuth({ user:{ id:'user-b', email:'later@example.com' } });
   await window.LogbookErrorTracking.flush();
 
-  assert.equal(client.calls.length, 0);
+  assert.equal(client.calls.length, 1);
+  assert.equal(client.calls[0].values.event_code, 'sync_failure');
+  assert.equal(window.localStorage.getItem('logbookGuestErrorQueue'), null);
   window.close();
 });
 

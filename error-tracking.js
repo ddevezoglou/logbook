@@ -14,6 +14,8 @@
     'DOMException',
     'AggregateError',
   ]);
+  const BROWSER_FAMILIES = new Set(['chromium', 'webkit', 'firefox', 'unknown']);
+  const GUEST_QUEUE_KEY = 'logbookGuestErrorQueue';
   const MAX_PENDING = 10;
   const MAX_REPORTS_PER_PAGE = 5;
   const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
@@ -54,8 +56,40 @@
     };
   }
 
+  function safeStoredEvent(value) {
+    if (!value || typeof value !== 'object' || !CODES_BY_SOURCE[value.event_source]?.has(value.event_code)) return null;
+    return {
+      event_source:value.event_source,
+      event_code:value.event_code,
+      event_error_name:ERROR_NAMES.has(value.event_error_name) ? value.event_error_name : 'Error',
+      event_app_version:/^\d+\.\d+\.\d+$/.test(value.event_app_version) ? value.event_app_version : '0.0.0',
+      event_browser_family:BROWSER_FAMILIES.has(value.event_browser_family) ? value.event_browser_family : 'unknown',
+      event_online:Boolean(value.event_online),
+    };
+  }
+
+  function readGuestQueue() {
+    try {
+      const values = JSON.parse(localStorage.getItem(GUEST_QUEUE_KEY) || '[]');
+      return Array.isArray(values) ? values.map(safeStoredEvent).filter(Boolean).slice(-MAX_PENDING) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function writeGuestQueue(values) {
+    try {
+      if (values.length) localStorage.setItem(GUEST_QUEUE_KEY, JSON.stringify(values.slice(-MAX_PENDING)));
+      else localStorage.removeItem(GUEST_QUEUE_KEY);
+    } catch { /* Error reporting must never interrupt the application. */ }
+  }
+
+  function queueGuest(event) {
+    writeGuestQueue([...readGuestQueue(), event]);
+  }
+
   function queue(event) {
-    if (authState === 'anonymous') return;
+    if (authState === 'anonymous') return queueGuest(event);
     if (pending.length >= MAX_PENDING) pending.shift();
     pending.push(event);
   }
@@ -67,6 +101,7 @@
     }
     if (!userId || !navigator.onLine) {
       if (userId) queue(event);
+      else queueGuest(event);
       return false;
     }
     try {
@@ -80,8 +115,10 @@
   }
 
   async function flush() {
-    if (!client || !userId || !navigator.onLine || !pending.length) return;
-    const events = pending.splice(0, pending.length);
+    if (!client || !userId || !navigator.onLine) return;
+    const events = [...readGuestQueue(), ...pending.splice(0, pending.length)];
+    if (!events.length) return;
+    writeGuestQueue([]);
     for (const event of events) await send(event);
   }
 
@@ -98,10 +135,15 @@
 
   function setSession(session) {
     const nextUserId = session?.user?.id || null;
+    const previousUserId = userId;
+    const wasUnknown = authState === 'unknown';
     const changedUser = Boolean(userId && nextUserId && userId !== nextUserId);
     userId = nextUserId;
     authState = userId ? 'authenticated' : 'anonymous';
-    if (!userId || changedUser) pending.length = 0;
+    if (changedUser || (previousUserId && !userId)) pending.length = 0;
+    else if (!userId && wasUnknown && pending.length) {
+      pending.splice(0, pending.length).forEach(queueGuest);
+    }
     if (userId) flush();
   }
 

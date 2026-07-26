@@ -21,7 +21,9 @@ import {
   weightModeGroup,
 } from '../modules/progress-rewards.js';
 import { buildProgressChartMarkup } from '../modules/progress-chart.js';
+import { buildHistoryMarkup, buildSessionCardMarkup } from '../modules/history.js';
 import { escapeHtml, setMenuState, syncNavigationState } from '../modules/ui.js';
+import { readFileSync } from 'node:fs';
 
 test('typed storage fallbacks preserve object and array boundaries', () => {
   const values = new Map([['broken', '{']]);
@@ -139,6 +141,39 @@ test('progress chart module returns complete escaped markup without a DOM', () =
   assert.doesNotMatch(markup, /<h2>Bench <Press><\/h2>/);
 });
 
+test('history module renders escaped workout cards and pagination without a DOM', () => {
+  const sessions = [{
+    id:'s<1>',
+    date:'2026-07-26',
+    type:'scheduled',
+    comments:'Δυνατά <script>',
+    exercises:[{ exercise:'Squat & Press', sets:[{ reps:5 }, { reps:5 }] }],
+  }];
+  const card = buildSessionCardMarkup({
+    session:sessions[0],
+    sessionNumber:31,
+    workoutName:'Legs <A>',
+    dayLabel:'Κυριακή',
+    formattedDate:'26 Ιουλ 2026',
+  });
+  assert.match(card, /class="session-card"/);
+  assert.match(card, /2 WORKING SETS/);
+  assert.match(card, /Legs &lt;A&gt;/);
+  assert.doesNotMatch(card, /<script>/);
+
+  const history = buildHistoryMarkup({
+    sessions,
+    totalCount:61,
+    pageSize:30,
+    getWorkoutName:() => 'Legs',
+    getDayLabel:() => 'Κυριακή',
+    formatDate:value => value,
+  });
+  assert.match(history, /SESSION No 61/);
+  assert.match(history, /ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ 30 · ΑΠΟΜΕΝΟΥΝ 60/);
+  assert.match(buildHistoryMarkup(), /Ολοκληρώστε την πρώτη προπόνηση/);
+});
+
 test('UI helpers escape content and own navigation/menu state', () => {
   const dom = new JSDOM(`
     <body>
@@ -154,4 +189,29 @@ test('UI helpers escape content and own navigation/menu state', () => {
   setMenuState(dom.window.document, true, { focus:false });
   assert.equal(dom.window.document.querySelector('#side-menu').getAttribute('aria-hidden'), 'false');
   assert.equal(dom.window.document.body.style.overflow, 'hidden');
+});
+
+test('session state machine exposes only the four explicit lifecycle states', () => {
+  const dom = new JSDOM('<body></body>', { runScripts:'outside-only' });
+  dom.window.eval(readFileSync(new URL('../session-state.js', import.meta.url), 'utf8'));
+  const { STATES, createSessionStateMachine } = dom.window.LogbookSessionState;
+  const machine = createSessionStateMachine();
+  const transitions = [];
+  machine.subscribe((next, previous) => transitions.push(`${previous.state}->${next.state}`));
+
+  assert.deepEqual(Object.values(STATES), ['unknown', 'member', 'offline-member', 'guest']);
+  machine.transition(STATES.GUEST);
+  machine.transition(STATES.MEMBER, { session:{ user:{ id:'user-a' } } });
+  machine.transition(STATES.OFFLINE_MEMBER, { session:{ user:{ id:'user-a' } } });
+  machine.transition(STATES.UNKNOWN);
+
+  assert.equal(machine.state, STATES.UNKNOWN);
+  assert.deepEqual(transitions, [
+    'unknown->guest',
+    'guest->member',
+    'member->offline-member',
+    'offline-member->unknown',
+  ]);
+  assert.throws(() => machine.transition(STATES.MEMBER), /requires a session/);
+  assert.throws(() => machine.transition('signed-in'), /Unknown session state/);
 });

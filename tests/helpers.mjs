@@ -7,6 +7,7 @@ import * as RoutineModel from '../modules/routines.js';
 import * as SessionModel from '../modules/sessions.js';
 import * as ProgressRewards from '../modules/progress-rewards.js';
 import * as ProgressChart from '../modules/progress-chart.js';
+import * as HistoryView from '../modules/history.js';
 import * as UI from '../modules/ui.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,7 +40,7 @@ export function loadApp(seed = {}, options = {}) {
   options.beforeApp?.(window);
   window.eval(quotesSource);
   window.eval(i18nSource);
-  window.__LogbookModules = { StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, UI };
+  window.__LogbookModules = { StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, HistoryView, UI };
   window.eval(executableAppSource);
   return { window, document: window.document, localStorage: window.localStorage };
 }
