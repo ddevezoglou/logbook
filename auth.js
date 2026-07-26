@@ -7,6 +7,7 @@
   const gate = $('#auth-gate');
   const guest = $('#account-guest');
   const member = $('#account-member');
+  const guestReminder = $('#guest-reminder');
   const status = $('#account-form-status');
   let client = null;
   let session = null;
@@ -23,6 +24,37 @@
   const SYNC_WATCHDOG_MS = 25000;
   const CLOUD_STORAGE_PREFIXES = ['logbookCloudCache:', 'logbookCloudMeta:'];
   const CLOUD_OWNER_KEY = 'logbookCloudOwner';
+  // Guest mode is a device-local decision, so it lives in localStorage next to the
+  // data it describes and is never synced. No session, no user id, no cloud call:
+  // cloud-sync.js already no-ops without a user, so "local only" needs no new branch.
+  const GUEST_KEY = 'logbookGuest';
+  // The reminder is not a one-off: it comes back, quietly, for as long as the guest
+  // stays without an account. So we store when it last appeared, not that it appeared.
+  const GUEST_REMINDER_KEY = 'logbookGuestReminderAt';
+  const GUEST_REMINDER_INTERVAL = 7 * 24 * 60 * 60 * 1000;
+  let guestActive = false;
+
+  function readFlag(key) {
+    try { return localStorage.getItem(key) === '1'; } catch { return false; }
+  }
+
+  function writeFlag(key, value) {
+    try {
+      if (value) localStorage.setItem(key, '1');
+      else localStorage.removeItem(key);
+    } catch { /* Private mode: guest stays valid for this tab only. */ }
+  }
+
+  function readStamp(key) {
+    try { return Number(localStorage.getItem(key)) || 0; } catch { return 0; }
+  }
+
+  function writeStamp(key, value) {
+    try {
+      if (value) localStorage.setItem(key, String(value));
+      else localStorage.removeItem(key);
+    } catch { /* Private mode: the reminder lives as long as this tab does. */ }
+  }
 
   function clearCloudSessionStorage() {
     for (let index = localStorage.length - 1; index >= 0; index -= 1) {
@@ -86,6 +118,7 @@
     $('#account-recovery-form').classList.toggle('hidden', mode !== 'recovery');
     $('#account-login-options').classList.toggle('hidden', !['signin', 'signup'].includes(mode));
     $('#account-tabs').classList.toggle('hidden', !['signin', 'signup'].includes(mode));
+    $('#account-guest-door').classList.toggle('hidden', !['signin', 'signup'].includes(mode));
     setStatus('');
   }
 
@@ -193,6 +226,7 @@
     session = nextSession;
     const email = session.user.email || '';
     guest.classList.add('hidden');
+    hideGuestReminder();
     member.classList.remove('hidden');
     $('#account-member-email').textContent = email;
     $('#account-menu-email').textContent = email;
@@ -208,10 +242,75 @@
     loadApplication();
   }
 
+  function renderGuestAccount() {
+    member.classList.add('hidden');
+    $('#account-member-email').textContent = '';
+    $('#account-menu-email').textContent = '';
+    $('#account-menu-email').classList.add('hidden');
+    $('#account-menu-status').textContent = 'ΧΩΡΙΣ ΣΥΝΔΕΣΗ';
+    $('#account-menu-status').classList.remove('hidden');
+    $('#account-open').classList.remove('is-connected');
+    $('#account-open').setAttribute('aria-label', t('ΛΟΓΑΡΙΑΣΜΟΣ'));
+  }
+
+  function hideGuestReminder() {
+    guestReminder.classList.remove('is-open');
+    guestReminder.classList.add('hidden');
+  }
+
+  function showGuestReminder() {
+    if (!guestActive || !document.body.classList.contains('app-ready')) return;
+    writeStamp(GUEST_REMINDER_KEY, Date.now());
+    guestReminder.classList.remove('hidden');
+    requestAnimationFrame(() => guestReminder.classList.add('is-open'));
+  }
+
+  function guestReminderDue() {
+    const last = readStamp(GUEST_REMINDER_KEY);
+    return !last || Date.now() - last >= GUEST_REMINDER_INTERVAL;
+  }
+
+  // The reminder belongs to the app, not to the gate: waiting for app-ready keeps it
+  // from landing on top of a gate that is still fading out.
+  function queueGuestReminder() {
+    if (!guestReminderDue()) return;
+    if (document.body.classList.contains('app-ready')) return showGuestReminder();
+    window.addEventListener('logbook:app-ready', showGuestReminder, { once:true });
+  }
+
+  function enterGuest() {
+    guestActive = true;
+    session = null;
+    pendingSyncUserId = null;
+    writeFlag(GUEST_KEY, true);
+    renderGuestAccount();
+    queueGuestReminder();
+    window.LogbookI18n?.translate(document);
+    if (document.body.classList.contains('app-ready')) return;
+    setGateState('loading', 'Ξεκινάμε με τα δεδομένα αυτής της συσκευής.');
+    loadApplication();
+  }
+
+  function leaveGuest() {
+    guestActive = false;
+    writeFlag(GUEST_KEY, false);
+    hideGuestReminder();
+    if (dialog.open) dialog.close();
+  }
+
+  // Back to the gate with the local data untouched: signing up adopts whatever is
+  // already stored on this device as the new account's first snapshot.
+  function returnToGate(nextMode) {
+    leaveGuest();
+    setMode(nextMode);
+    showLogin();
+  }
+
   function renderSession(nextSession) {
     session = nextSession || null;
     const email = session?.user?.email || '';
     const signedIn = Boolean(email);
+    if (signedIn) leaveGuest();
     guest.classList.toggle('hidden', signedIn);
     member.classList.toggle('hidden', !signedIn);
     $('#account-member-email').textContent = email;
@@ -223,6 +322,7 @@
     $('#account-open').setAttribute('aria-label', signedIn ? `${t('ΛΟΓΑΡΙΑΣΜΟΣ')}: ${email}` : t('ΛΟΓΑΡΙΑΣΜΟΣ'));
     if (!signedIn && deleteDialog.open) deleteDialog.close();
     if (signedIn) waitForInitialSync(session);
+    else if (guestActive || readFlag(GUEST_KEY)) enterGuest();
     else showLogin();
     window.LogbookI18n?.translate(document);
   }
@@ -254,8 +354,12 @@
 
   $('#account-open').addEventListener('click', () => {
     $('#close-menu').click();
+    // A guest has no account sheet to read: the card is the way back to the gate,
+    // where signing in and signing up already live.
+    if (guestActive) return returnToGate('signin');
     dialog.showModal();
-    requestAnimationFrame(() => $(offlineSessionActive ? '#account-close' : '#account-signout')?.focus());
+    const focusTarget = offlineSessionActive ? '#account-close' : '#account-signout';
+    requestAnimationFrame(() => $(focusTarget)?.focus());
   });
   $('#account-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
@@ -278,6 +382,18 @@
     $('#account-signin-email').value = $('#account-forgot-email').value.trim();
     setMode('signin');
     requestAnimationFrame(() => $('#account-signin-email')?.focus());
+  });
+
+  $('#account-guest-start').addEventListener('click', () => enterGuest());
+  $('#guest-reminder-dismiss').addEventListener('click', () => hideGuestReminder());
+  $('#guest-reminder-signup').addEventListener('click', () => returnToGate('signup'));
+
+  // A guest can keep the app open for days, so a reminder that only fired at boot
+  // would never come round again. Coming back to the tab is the next honest moment.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !guestActive) return;
+    if (guestReminder.classList.contains('is-open') || !guestReminderDue()) return;
+    showGuestReminder();
   });
 
   $('#auth-gate-retry').addEventListener('click', () => {
@@ -475,6 +591,8 @@
     if (message) updateSyncStatus(message, kind);
   });
   window.addEventListener('logbook:supabase-unavailable', () => {
+    // A guest never needed the sign-in service, so its absence is not an error here.
+    if (guestActive || readFlag(GUEST_KEY)) return enterGuest();
     setGateState('error', 'Η υπηρεσία σύνδεσης δεν είναι διαθέσιμη. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
   });
   document.addEventListener('logbook:languagechange', () => {
@@ -489,6 +607,7 @@
   setGateState('checking', 'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.');
   if (window.LogbookSupabase) bindClient(window.LogbookSupabase);
   else if (window.LogbookOfflineSession) renderOfflineSession(window.LogbookOfflineSession);
+  else if (readFlag(GUEST_KEY)) enterGuest();
 
   // Typewriter on the auth gate's left page: types each word, holds, erases, moves on.
   (() => {

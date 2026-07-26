@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guest Mode — Το τετράδιο πριν γραφτεί το όνομα</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --paper-field:#f7f1e3;
+  --gold:#c9a227; --orange:#7d601a; --pen-blue:#1f6493; --danger:#7a3325;
+  --muted:#6d6551; --muted-soft:#8a8168; --muted-strong:#554e3e; --line:#b6ad97; --pen:#4d3f24;
+  --cover-top:#2e2a1f; --cover-bottom:#211d15; --ink-line:#3d3828; --ink-muted:#a89f86; --ink-label:#b9af96;
+  --ribbon-top:#6b5518; --ribbon-mid:#463a14; --ribbon-bottom:#2e2710;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:60; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p.lede { max-width:640px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.55; }
+.intro>p.frozen { max-width:640px; margin:16px 0 0; padding-left:18px; border-left:2px dashed var(--line); color:var(--muted-soft); font-size:.92rem; line-height:1.5; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid var(--ink-line); }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--ink-muted); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.stage.single { grid-template-columns:minmax(0,1fr); }
+.notes { grid-column:1 / -1; justify-self:start; max-width:680px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.58; }
+.notes b { color:var(--ink); }
+.notes.pick { border:1px solid var(--orange); border-left:5px solid var(--orange); background:rgba(255,255,255,.6); }
+.notes.pick::before { content:"Η ΠΡΟΤΑΣΗ"; display:block; margin-bottom:7px; font-size:.66rem; font-weight:800; letter-spacing:.2em; color:var(--orange); }
+.case { display:grid; justify-items:center; gap:14px; }
+.case>figcaption { font:800 .68rem "Alegreya Sans"; letter-spacing:.16em; color:var(--muted-strong); text-transform:uppercase; text-align:center; }
+.case>figcaption b { color:var(--ink); }
+
+/* ===== κοινά: κουμπιά της εφαρμογής ===== */
+.btn { display:grid; place-items:center; min-height:46px; padding:0 18px; border:2px solid var(--ink); background:var(--paper-soft); color:var(--ink); font:800 .76rem "Alegreya Sans"; letter-spacing:.09em; text-transform:uppercase; cursor:pointer; box-shadow:4px 4px 0 rgba(21,19,13,.13); transition:transform .2s ease,box-shadow .2s ease; }
+.btn:hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 rgba(21,19,13,.16); }
+.btn:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.btn.primary { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.btn.ghost { background:transparent; border-color:transparent; box-shadow:none; color:var(--muted-strong); text-decoration:underline; text-underline-offset:4px; }
+.btn.ghost:hover { transform:none; box-shadow:none; color:var(--ink); }
+.btn.block { width:100%; }
+
+/* ===== ΤΟ ΥΠΟΓΡΑΦΟ: η ταμπέλα ιδιοκτησίας (ex libris) ===== */
+.plate { position:relative; padding:13px 15px 11px; border:2px solid var(--ink); background:var(--paper-soft); box-shadow:inset 0 0 0 1px var(--paper-soft),inset 0 0 0 3px rgba(21,19,13,.32); }
+.plate>span.plate-label { display:block; font:800 .56rem "Alegreya Sans"; letter-spacing:.2em; color:var(--muted-soft); text-transform:uppercase; }
+.plate .plate-line { display:flex; align-items:flex-end; gap:8px; min-height:34px; margin-top:7px; border-bottom:1.5px dotted var(--pen); }
+.plate .plate-name { font:400 1.15rem/1 "Playpen Sans",cursive; color:var(--pen-blue); white-space:nowrap; overflow:hidden; max-width:0; transition:max-width .95s cubic-bezier(.6,0,.25,1); }
+.plate .plate-name.signed { max-width:340px; }
+.plate.dark { border-color:var(--ink-line); background:linear-gradient(var(--cover-top),var(--cover-bottom)); box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),inset 0 0 0 3px rgba(185,175,150,.22); }
+.plate.dark>span.plate-label { color:var(--ink-label); }
+.plate.dark .plate-line { border-bottom-color:var(--ink-muted); }
+.plate.dark .plate-name { color:var(--gold); }
+
+/* ===== σφραγίδα ===== */
+.stamp { position:relative; display:grid; place-items:center; text-align:center; width:96px; height:96px; border:3px solid var(--danger); border-radius:50%; color:var(--danger); transform:rotate(-11deg); opacity:.82; mix-blend-mode:multiply; }
+.stamp::before { content:""; position:absolute; inset:5px; border:1px solid currentColor; border-radius:50%; }
+.stamp b { font:800 .74rem "Alegreya Sans"; letter-spacing:.16em; }
+.stamp small { display:block; margin-top:2px; font-size:.46rem; font-weight:800; letter-spacing:.12em; }
+.stamp.ok { border-color:var(--orange); color:var(--orange); transform:rotate(7deg); }
+
+/* ===== Α. Το κατώφλι: το ανοιχτό βιβλίο του auth gate ===== */
+.gate { width:min(560px,100%); padding:26px 20px 22px; background-color:var(--ink); background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:36px 36px; border:1px solid var(--ink-line); }
+.gate-book { position:relative; display:grid; grid-template-columns:1fr 1fr; box-shadow:0 14px 26px rgba(0,0,0,.5); }
+.gate-page { position:relative; min-height:326px; padding:20px 18px; background:var(--paper); }
+.gate-page.left { border-radius:8px 0 0 8px; display:grid; align-content:center; justify-items:start; background-image:linear-gradient(90deg,transparent 0 62%,rgba(21,19,13,.06) 82%,rgba(21,19,13,.3) 100%); }
+.gate-page.right { border-radius:0 8px 8px 0; background-image:linear-gradient(270deg,transparent 0 62%,rgba(21,19,13,.06) 82%,rgba(21,19,13,.3) 100%),repeating-linear-gradient(0deg,transparent 0 21px,rgba(77,63,36,.09) 21px 22px); }
+.gate-ribbon { position:absolute; top:-9px; left:50%; width:14px; height:150px; transform:translateX(-50%); background:linear-gradient(104deg,var(--ribbon-top),var(--ribbon-mid) 52%,var(--ribbon-bottom)); clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 9px),0 100%); z-index:2; }
+.gate-brand { margin:0; font:700 1.7rem/.82 "Roboto Slab"; letter-spacing:-.05em; text-transform:uppercase; }
+.gate-type { margin-top:20px; font:700 1.2rem/1 "Roboto Slab"; letter-spacing:-.03em; text-transform:uppercase; }
+.gate-type i { display:inline-block; width:.5em; height:1em; background:var(--orange); transform:translateY(.12em); font-style:normal; }
+.gate-tabs { display:flex; gap:0; margin-bottom:16px; border-bottom:2px solid var(--ink); }
+.gate-tabs button { flex:1; padding:9px 4px; border:0; background:transparent; color:var(--muted-soft); font:800 .64rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.gate-tabs button[aria-pressed="true"] { color:var(--ink); box-shadow:inset 0 -4px 0 var(--orange); }
+.gate-field { margin-bottom:10px; }
+.gate-field span { display:block; font:800 .56rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin-bottom:3px; }
+.gate-field i { display:block; height:34px; border:1.5px solid var(--line); background:var(--paper-field); }
+.gate-google { display:flex; align-items:center; justify-content:center; gap:9px; min-height:38px; margin-bottom:12px; border:2px solid var(--ink); background:var(--paper-soft); font:800 .62rem "Alegreya Sans"; letter-spacing:.1em; }
+.gate-google svg { width:15px; height:15px; }
+.gate-or { display:flex; align-items:center; gap:8px; margin:12px 0; color:var(--muted-soft); font:800 .55rem "Alegreya Sans"; letter-spacing:.16em; }
+.gate-or::before,.gate-or::after { content:""; flex:1; height:1px; background:var(--line); }
+.gate-cta { min-height:40px; font-size:.66rem; }
+
+/* Α1 — η γραμμή κάτω από τη φόρμα */
+.a1-door { margin-top:16px; padding-top:14px; border-top:1.5px dashed var(--line); text-align:center; }
+.a1-door p { margin:8px 0 0; color:var(--muted); font-size:.74rem; line-height:1.45; }
+/* Α2 — τρίτη καρτέλα */
+.a2-warn { position:absolute; right:10px; top:10px; padding:3px 7px; border:1.5px solid var(--danger); color:var(--danger); font:800 .52rem "Alegreya Sans"; letter-spacing:.12em; transform:rotate(4deg); }
+/* Α3 — η αριστερή σελίδα γίνεται η πόρτα */
+.a3-door { width:100%; margin-top:26px; padding-top:18px; border-top:2px solid var(--ink); }
+.a3-door p.k { margin:0 0 10px; font:800 .58rem "Alegreya Sans"; letter-spacing:.18em; color:var(--orange); text-transform:uppercase; }
+.a3-door p.d { margin:10px 0 0; max-width:26ch; color:var(--muted); font-size:.76rem; line-height:1.45; }
+.gate-page.right .member { position:absolute; right:12px; bottom:10px; padding:4px 8px 3px; border:2px solid rgba(125,96,26,.4); color:rgba(125,96,26,.6); font:800 .5rem "Alegreya Sans"; letter-spacing:.16em; transform:rotate(-6deg); }
+
+/* ===== κινητό ===== */
+.phone { position:relative; width:min(330px,100%); padding:14px 13px 18px; border:3px solid var(--ink); border-radius:26px; background:var(--paper); box-shadow:8px 10px 0 rgba(21,19,13,.14); }
+.phone-bar { display:flex; justify-content:space-between; align-items:center; padding:0 6px 10px; color:var(--muted-soft); font:800 .55rem "Alegreya Sans"; letter-spacing:.12em; }
+.phone-head { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:8px; border-bottom:3px solid var(--ink); }
+.phone-head h4 { margin:0; font:900 1.1rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.phone-head span { font:800 .55rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); }
+
+/* Β. το μενού του επισκέπτη */
+.menu { width:min(300px,100%); padding:20px 18px 24px; background:linear-gradient(var(--cover-top),var(--cover-bottom)); border:1px solid var(--ink-line); color:var(--paper); box-shadow:8px 10px 0 rgba(21,19,13,.2); }
+.menu>p.k { margin:0 0 10px; font:800 .55rem "Alegreya Sans"; letter-spacing:.2em; color:var(--ink-label); }
+.menu nav { display:grid; gap:2px; margin-bottom:18px; }
+.menu nav button { padding:9px 10px; border:0; background:transparent; color:var(--paper); font:800 .72rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; text-align:left; cursor:pointer; }
+.menu nav button.active { background:rgba(201,162,39,.14); box-shadow:inset 3px 0 0 var(--gold); }
+.menu .plate { margin-bottom:14px; }
+.menu .plate .plate-line { min-height:30px; }
+.acct { display:flex; align-items:center; gap:11px; padding:11px 12px; border:1px solid var(--ink-line); background:rgba(0,0,0,.22); }
+.acct i { flex:none; width:26px; height:26px; border:1.5px solid var(--ink-muted); border-radius:50%; }
+.acct strong { display:block; font:800 .68rem "Alegreya Sans"; letter-spacing:.12em; }
+.acct span { display:block; margin-top:2px; font-size:.6rem; letter-spacing:.08em; color:var(--ink-muted); }
+.acct.guest strong { color:var(--gold); }
+
+/* Β. η γραμμή κατάστασης στην Αρχική */
+.strip { display:flex; align-items:center; gap:9px; margin-top:12px; padding:8px 10px; border-left:3px solid var(--orange); background:rgba(125,96,26,.09); font-size:.68rem; font-weight:800; letter-spacing:.09em; color:var(--muted-strong); text-transform:uppercase; }
+.strip button { margin-left:auto; flex:none; padding:4px 9px; border:1.5px solid var(--ink); background:transparent; font:800 .58rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+.tile { margin-top:12px; padding:12px 14px; border:1.5px solid var(--line); background:var(--paper-soft); }
+.tile b { display:block; font:900 1.5rem/1 "Roboto Slab"; }
+.tile span { display:block; margin-top:4px; font:800 .56rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); }
+
+/* Γ. ο διάλογος της στιγμής */
+.dlg { position:relative; width:min(320px,100%); padding:24px 22px 20px; background:var(--paper-soft); border:2px solid var(--ink); box-shadow:9px 11px 0 rgba(21,19,13,.18); }
+.dlg h4 { margin:0 0 10px; font:900 1.22rem/1.05 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.dlg p { margin:0 0 14px; color:var(--muted-strong); font-size:.87rem; line-height:1.5; }
+.dlg p.fine { margin:12px 0 0; color:var(--muted-soft); font-size:.72rem; line-height:1.45; }
+.dlg .acts { display:grid; gap:8px; }
+.dlg.dark { background:linear-gradient(var(--cover-top),var(--cover-bottom)); border-color:var(--ink-line); color:var(--paper); }
+.dlg.dark p { color:var(--ink-label); }
+.dlg.dark p.fine { color:var(--ink-muted); }
+.dlg.dark .btn { background:transparent; border-color:var(--paper); color:var(--paper); box-shadow:none; }
+.dlg.dark .btn.primary { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.dlg.dark .btn.ghost { border-color:transparent; color:var(--ink-muted); }
+.dlg-eyebrow { margin:0 0 8px; font:800 .58rem "Alegreya Sans"; letter-spacing:.2em; color:var(--orange); text-transform:uppercase; }
+
+/* Γ2 — τα δύο φύλλα (καρμπόν) */
+.carbon { position:relative; height:118px; margin-bottom:16px; }
+.carbon i { position:absolute; display:block; width:132px; height:96px; border:2px solid var(--ink); background:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 13px,rgba(77,63,36,.16) 13px 14px); }
+.carbon i.one { left:2px; top:0; transform:rotate(-3deg); }
+.carbon i.two { right:6px; top:16px; border-style:dashed; border-color:var(--muted-soft); background:rgba(255,255,255,.28); background-image:repeating-linear-gradient(0deg,transparent 0 13px,rgba(77,63,36,.07) 13px 14px); }
+.carbon i.two::after { content:"ΚΕΝΟ"; position:absolute; inset:0; display:grid; place-items:center; font:800 .58rem "Alegreya Sans"; letter-spacing:.18em; color:var(--muted-soft); }
+.carbon i.one::after { content:"ΣΗΜΕΡΑ"; position:absolute; left:8px; bottom:6px; font:800 .5rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); }
+
+/* Δ. η ήσυχη υπενθύμιση: συνδετήρας */
+.clip-note { position:relative; width:min(300px,100%); padding:16px 18px 14px; background:var(--paper-soft); border:1px solid var(--line); box-shadow:4px 6px 0 rgba(21,19,13,.1); }
+.clip-note::before { content:""; position:absolute; left:22px; top:-13px; width:16px; height:34px; border:2.5px solid var(--muted-soft); border-radius:9px; border-bottom-color:transparent; }
+.clip-note p { margin:0; font-size:.8rem; line-height:1.5; color:var(--muted-strong); }
+.clip-note p b { color:var(--ink); }
+.clip-note .btn { margin-top:12px; min-height:38px; font-size:.62rem; }
+
+/* Ε. η υπογραφή */
+.sign-stage { display:flex; flex-wrap:wrap; gap:26px; align-items:center; justify-content:center; }
+.sign-card { position:relative; width:min(320px,100%); padding:22px; background:var(--paper-soft); border:2px solid var(--ink); box-shadow:7px 9px 0 rgba(21,19,13,.15); }
+.sign-card .stamp { position:absolute; right:-22px; bottom:-24px; opacity:0; transform:rotate(7deg) scale(1.5); transition:opacity .35s ease .55s,transform .35s cubic-bezier(.3,1.5,.5,1) .55s; background:var(--paper); }
+.sign-card.signed .stamp { opacity:.85; transform:rotate(7deg) scale(1); }
+.sign-card p.sub { margin:12px 0 0; color:var(--muted); font-size:.76rem; line-height:1.45; }
+.sign-ctl { display:grid; gap:10px; justify-items:start; }
+.sign-ctl p { margin:0; max-width:30ch; color:var(--muted); font-size:.82rem; line-height:1.5; }
+
+/* Πίνακας */
+.matrix { grid-column:1 / -1; width:min(760px,100%); border-collapse:collapse; background:rgba(255,255,255,.4); }
+.matrix caption { padding-bottom:12px; font:800 .62rem "Alegreya Sans"; letter-spacing:.2em; color:var(--orange); text-transform:uppercase; text-align:left; }
+.matrix th,.matrix td { padding:9px 12px; border-bottom:1px solid rgba(77,63,36,.18); text-align:left; font-size:.86rem; }
+.matrix thead th { border-bottom:2.5px solid var(--ink); font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; }
+.matrix td.c,.matrix th.c { width:120px; text-align:center; }
+.matrix td.c b { font:900 1rem "Roboto Slab"; color:var(--orange); }
+.matrix td.c i { font-style:normal; color:var(--muted-soft); }
+.matrix tbody tr:last-child td { border-bottom:0; }
+
+.qa { grid-column:1 / -1; width:min(760px,100%); display:grid; gap:14px; }
+.qa div { padding:14px 18px; border-left:3px solid var(--ink); background:rgba(255,255,255,.36); }
+.qa h5 { margin:0 0 6px; font:800 .78rem "Alegreya Sans"; letter-spacing:.06em; text-transform:uppercase; }
+.qa p { margin:0; color:var(--muted); font-size:.86rem; line-height:1.55; }
+.qa p b { color:var(--ink); }
+
+@media(max-width:600px){
+  .gate-book { grid-template-columns:1fr; }
+  .gate-page { min-height:0; }
+  .gate-page.left { border-radius:8px 8px 0 0; background-image:none; }
+  .gate-page.right { border-radius:0 0 8px 8px; }
+  .gate-ribbon { left:auto; right:14%; transform:none; height:90px; }
+  .matrix th,.matrix td { padding:8px 7px; font-size:.78rem; }
+  .matrix td.c,.matrix th.c { width:74px; }
+}
+@media(prefers-reduced-motion:reduce){
+  .plate .plate-name,.sign-card .stamp,.btn { transition:none; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN · GUEST MODE · ΚΥΚΛΟΣ Α</p>
+  <h1>ΤΟ ΤΕΤΡΑΔΙΟ<br>ΠΡΙΝ ΓΡΑΦΤΕΙ<br>ΤΟ <em>ΟΝΟΜΑ</em></h1>
+  <p class="lede">Ο επισκέπτης δεν είναι μισός χρήστης. Παίρνει ολόκληρο το τετράδιο — καταγραφή, προγράμματα, ιστορικό, ρεκόρ, γραφήματα, εκτύπωση. Αυτό που του λείπει είναι ένα πράγμα, και είναι το ίδιο πράγμα που του λείπει σε ένα αληθινό σημειωματάριο: <b>δεν έχει όνομα πάνω του και δεν υπάρχει δεύτερο αντίτυπο</b>. Όλη η πρόταση κρέμεται από μία σελίδα — την ταμπέλα ιδιοκτησίας.</p>
+  <p class="frozen">Το item «Guest/demo mode» είναι σημειωμένο ως <b>παγωμένο με απόφαση, 25 Ιουλίου 2026</b> στο <code>DEVELOPMENT.md</code>. Αυτό το αρχείο δεν το ξεπαγώνει· του δίνει εικόνα ώστε η απόφαση να ξαναπαρθεί μπροστά σε κάτι συγκεκριμένο.</p>
+</header>
+
+<!-- ═══════════════ Α ═══════════════ -->
+<div class="attempt-label"><b>ΣΤΑΘΜΟΣ Α</b><span>Η ΠΟΡΤΑ — πού ζει η είσοδος του επισκέπτη στο auth gate</span></div>
+<section class="stage">
+
+  <figure class="case" style="margin:0">
+    <div class="gate">
+      <div class="gate-book">
+        <span class="gate-ribbon" aria-hidden="true"></span>
+        <div class="gate-page left">
+          <p class="gate-brand">LOGBOOK</p>
+          <p class="gate-type">ΚΑΘΕ ΣΕΤ<i></i></p>
+        </div>
+        <div class="gate-page right">
+          <div class="gate-tabs">
+            <button type="button" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
+            <button type="button" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+          </div>
+          <div class="gate-google"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285f4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path fill="#fbbc05" d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path fill="#ea4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg><span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span></div>
+          <div class="gate-or"><span>Ή ΜΕ EMAIL</span></div>
+          <label class="gate-field"><span>Email</span><i></i></label>
+          <label class="gate-field"><span>Κωδικός</span><i></i></label>
+          <div class="btn primary gate-cta">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</div>
+          <div class="a1-door">
+            <button class="btn ghost" type="button" style="min-height:34px;font-size:.64rem">ΞΕΚΙΝΑ ΧΩΡΙΣ ΛΟΓΑΡΙΑΣΜΟ</button>
+            <p>Γράφεις αμέσως. Το τετράδιο μένει σε αυτή τη συσκευή.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Α1 · <b>Η ΓΡΑΜΜΗ ΚΑΤΩ ΑΠΟ ΤΗ ΦΟΡΜΑ</b></figcaption>
+  </figure>
+
+  <figure class="case" style="margin:0">
+    <div class="gate">
+      <div class="gate-book">
+        <span class="gate-ribbon" aria-hidden="true"></span>
+        <div class="gate-page left">
+          <p class="gate-brand">LOGBOOK</p>
+          <p class="gate-type">ΚΑΘΕ ΣΕΤ<i></i></p>
+        </div>
+        <div class="gate-page right">
+          <span class="a2-warn">ΑΠΟΡΡΙΠΤΕΤΑΙ</span>
+          <div class="gate-tabs">
+            <button type="button" aria-pressed="false">ΣΥΝΔΕΣΗ</button>
+            <button type="button" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+            <button type="button" aria-pressed="true">ΔΟΚΙΜΗ</button>
+          </div>
+          <div style="display:grid;place-items:center;min-height:190px;text-align:center;padding:0 6px">
+            <div>
+              <p style="margin:0 0 14px;color:var(--muted);font-size:.84rem;line-height:1.5">Η τρίτη καρτέλα αδειάζει τη σελίδα: για να δει ο επισκέπτης την πόρτα, πρέπει πρώτα να εξαφανίσει τη φόρμα σύνδεσης.</p>
+              <div class="btn primary gate-cta" style="display:inline-grid">ΑΝΟΙΓΜΑ ΤΕΤΡΑΔΙΟΥ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Α2 · <b>Η ΤΡΙΤΗ ΚΑΡΤΕΛΑ</b> — δείχνεται για να αποκλειστεί</figcaption>
+  </figure>
+
+  <figure class="case" style="margin:0">
+    <div class="gate">
+      <div class="gate-book">
+        <span class="gate-ribbon" aria-hidden="true"></span>
+        <div class="gate-page left">
+          <p class="gate-brand">LOGBOOK</p>
+          <p class="gate-type">ΚΑΘΕ ΣΕΤ<i></i></p>
+          <div class="a3-door">
+            <p class="k">ΠΡΩΤΗ ΦΟΡΑ ΕΔΩ;</p>
+            <div class="btn block" style="min-height:42px;font-size:.68rem">ΑΝΟΙΞΕ ΤΟ ΤΕΤΡΑΔΙΟ</div>
+            <p class="d">Καταγράφεις από το πρώτο σετ, χωρίς λογαριασμό. Μένει σε αυτή τη συσκευή μέχρι να γράψεις το όνομά σου.</p>
+          </div>
+        </div>
+        <div class="gate-page right">
+          <div class="gate-tabs">
+            <button type="button" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
+            <button type="button" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+          </div>
+          <div class="gate-google"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285f4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path fill="#fbbc05" d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path fill="#ea4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg><span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span></div>
+          <div class="gate-or"><span>Ή ΜΕ EMAIL</span></div>
+          <label class="gate-field"><span>Email</span><i></i></label>
+          <label class="gate-field"><span>Κωδικός</span><i></i></label>
+          <div class="btn primary gate-cta">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</div>
+          <span class="member">MEMBER</span>
+        </div>
+      </div>
+    </div>
+    <figcaption>Α3 · <b>Η ΑΡΙΣΤΕΡΗ ΣΕΛΙΔΑ ΓΙΝΕΤΑΙ Η ΠΟΡΤΑ</b></figcaption>
+  </figure>
+
+  <p class="notes pick"><b>Α3.</b> Το βιβλίο είναι ήδη ανοιχτό σε δύο σελίδες και η αριστερή δεν κάνει σήμερα τίποτα — κρατά το λογότυπο και μια γραμμή γραφομηχανής. Εκεί μπαίνει η πόρτα του επισκέπτη: <b>δεν ανταγωνίζεται τη φόρμα, γιατί είναι σε άλλη σελίδα</b>. Η δεξιά σελίδα κρατά τη σφραγίδα <b>MEMBER</b> που υπάρχει ήδη στο <code>base.css</code> και αποκτά επιτέλους νόημα: αριστερά μπαίνεις, δεξιά καταχωρείσαι.<br><br>Στα ≤850px οι δύο σελίδες στοιβάζονται και η αριστερή είναι <b>πάνω</b> — άρα στο κινητό ο επισκέπτης βλέπει την πόρτα πρώτος, χωρίς κύλιση, χωρίς να αλλάξει τίποτα στο layout. Η <b>Α1</b> είναι η φθηνή εναλλακτική αν δεν θέλουμε να πειραχτεί η αριστερή σελίδα. Η <b>Α2</b> αποκλείεται: μια καρτέλα δηλώνει ισότιμη επιλογή και κρύβει τη φόρμα σύνδεσης του χρήστη που επιστρέφει — πληρώνει η λάθος πλευρά.</p>
+</section>
+
+<!-- ═══════════════ Β ═══════════════ -->
+<div class="attempt-label"><b>ΣΤΑΘΜΟΣ Β</b><span>ΜΕΣΑ ΣΤΗΝ ΕΦΑΡΜΟΓΗ — πώς φαίνεται ότι το τετράδιο δεν έχει όνομα</span></div>
+<section class="stage">
+
+  <figure class="case" style="margin:0">
+    <aside class="menu">
+      <p class="k">ΠΛΟΗΓΗΣΗ</p>
+      <nav>
+        <button type="button" class="active">Αρχική</button>
+        <button type="button">Καταγραφή</button>
+        <button type="button">Πρόγραμμα</button>
+        <button type="button">Ιστορικό</button>
+        <button type="button">Επίβλεψη</button>
+        <button type="button">Προφίλ</button>
+      </nav>
+      <div class="plate dark">
+        <span class="plate-label">ΑΥΤΟ ΤΟ ΤΕΤΡΑΔΙΟ ΑΝΗΚΕΙ ΣΕ</span>
+        <span class="plate-line"></span>
+      </div>
+      <div class="acct guest">
+        <i aria-hidden="true"></i>
+        <span class="acct-copy"><strong>ΕΠΙΣΚΕΠΤΗΣ</strong><span>ΤΟΠΙΚΟ ΑΝΤΙΤΥΠΟ · ΧΩΡΙΣ ΑΝΤΙΓΡΑΦΟ</span></span>
+      </div>
+    </aside>
+    <figcaption>Β1 · <b>ΤΟ ΜΕΝΟΥ</b> — η κενή ταμπέλα πάνω από την κάρτα λογαριασμού</figcaption>
+  </figure>
+
+  <figure class="case" style="margin:0">
+    <div class="phone">
+      <div class="phone-bar"><span>LOGBOOK</span><span>≡</span></div>
+      <div class="phone-head"><h4>Αρχική</h4><span>ΤΕΤΑΡΤΗ 26/07</span></div>
+      <div class="strip">ΤΟΠΙΚΟ ΑΝΤΙΤΥΠΟ<button type="button">ΚΡΑΤΑ ΤΟ</button></div>
+      <div class="tile"><b>Push</b><span>ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ · ΜΙΚΡΟΚΥΚΛΟΣ 1/7</span></div>
+      <div class="tile" style="display:flex;gap:14px;align-items:baseline"><div><b>4</b><span>ΠΡΟΠΟΝΗΣΕΙΣ</span></div><div style="opacity:.55"><b>2</b><span>ΡΕΚΟΡ</span></div></div>
+    </div>
+    <figcaption>Β2 · <b>Η ΑΡΧΙΚΗ</b> — μία γραμμή κατάστασης, όχι banner</figcaption>
+  </figure>
+
+  <p class="notes"><b>Δύο σημεία, όχι πέντε.</b> Η κατάσταση επισκέπτη φαίνεται στο μενού (εκεί που ζει σήμερα το <code>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</code>) και σε μία γραμμή στην Αρχική. Πουθενά αλλού: ούτε στην Καταγραφή, ούτε στο Ιστορικό, ούτε στην Επίβλεψη. Ένα προϊόν που θυμίζει σε κάθε οθόνη ότι δεν έχεις πληρώσει με το email σου, δεν διαβάζεται ως ημερολόγιο· διαβάζεται ως paywall.<br><br>Η διατύπωση αποφεύγει τη λέξη «δωρεάν», «δοκιμαστικό» και «περιορισμένο». <b>ΤΟΠΙΚΟ ΑΝΤΙΤΥΠΟ</b> είναι περιγραφή γεγονότος: τα δεδομένα είναι εδώ και μόνο εδώ. Το <code>ΧΩΡΙΣ ΑΝΤΙΓΡΑΦΟ</code> παίρνει τη θέση που έχει σήμερα η κατάσταση συγχρονισμού — ίδια γραμμή, ίδιο βάρος, άλλο περιεχόμενο.</p>
+</section>
+
+<!-- ═══════════════ Γ ═══════════════ -->
+<div class="attempt-label"><b>ΣΤΑΘΜΟΣ Γ</b><span>Η ΣΤΙΓΜΗ — η προτροπή μετά την πρώτη ολοκληρωμένη προπόνηση</span></div>
+<section class="stage">
+
+  <figure class="case" style="margin:0">
+    <div class="dlg">
+      <p class="dlg-eyebrow">ΚΑΤΑΓΡΑΦΗΚΕ</p>
+      <h4>Η πρώτη σου προπόνηση</h4>
+      <p>Υπάρχει σε ένα αντίτυπο, σε αυτή τη συσκευή. Ένας λογαριασμός κρατά δεύτερο και το φέρνει σε όποια συσκευή συνδεθείς.</p>
+      <div class="plate" style="margin-bottom:16px">
+        <span class="plate-label">ΑΥΤΟ ΤΟ ΤΕΤΡΑΔΙΟ ΑΝΗΚΕΙ ΣΕ</span>
+        <span class="plate-line"></span>
+      </div>
+      <div class="acts">
+        <button class="btn primary block" type="button">ΓΡΑΨΕ ΤΟ ΟΝΟΜΑ ΣΟΥ</button>
+        <button class="btn ghost" type="button">ΟΧΙ ΤΩΡΑ</button>
+      </div>
+      <p class="fine">Η προπόνηση είναι ήδη αποθηκευμένη. Δεν χάνεται αν διαλέξεις «Όχι τώρα».</p>
+    </div>
+    <figcaption>Γ1 · <b>Η ΤΑΜΠΕΛΑ</b> — το ίδιο αντικείμενο με το μενού, κενό</figcaption>
+  </figure>
+
+  <figure class="case" style="margin:0">
+    <div class="dlg">
+      <p class="dlg-eyebrow">ΚΑΤΑΓΡΑΦΗΚΕ</p>
+      <h4>Ένα φύλλο, κανένα αντίγραφο</h4>
+      <div class="carbon" aria-hidden="true"><i class="one"></i><i class="two"></i></div>
+      <p>Το δεύτερο φύλλο γεμίζει μόνο με λογαριασμό. Από εκεί επιστρέφει το ιστορικό σου αν χαθεί το κινητό.</p>
+      <div class="acts">
+        <button class="btn primary block" type="button">ΚΡΑΤΑ ΑΝΤΙΓΡΑΦΟ</button>
+        <button class="btn ghost" type="button">ΟΧΙ ΤΩΡΑ</button>
+      </div>
+    </div>
+    <figcaption>Γ2 · <b>ΤΟ ΚΑΡΜΠΟΝ</b> — το κενό φύλλο ως εικόνα του ρίσκου</figcaption>
+  </figure>
+
+  <figure class="case" style="margin:0">
+    <div class="dlg dark">
+      <p class="dlg-eyebrow" style="color:var(--gold)">ΚΑΤΑΓΡΑΦΗΚΕ</p>
+      <h4>Push · 6 ασκήσεις · 18 σετ</h4>
+      <p>Καλή αρχή. Κράτα το τετράδιο σε λογαριασμό για να το βρεις και αύριο, και σε άλλη συσκευή.</p>
+      <div class="acts">
+        <button class="btn primary block" type="button">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
+        <button class="btn block" type="button">ΕΧΩ ΗΔΗ ΛΟΓΑΡΙΑΣΜΟ</button>
+        <button class="btn ghost" type="button">ΟΧΙ ΤΩΡΑ</button>
+      </div>
+    </div>
+    <figcaption>Γ3 · <b>Η ΠΕΡΙΛΗΨΗ</b> — ξεκινά από το κατόρθωμα, όχι από την απώλεια</figcaption>
+  </figure>
+
+  <p class="notes pick"><b>Γ1, με τη δεύτερη επιλογή της Γ3.</b> Η ταμπέλα κερδίζει γιατί ο χρήστης την έχει ήδη δει κενή στο μενού: ο διάλογος δεν εισάγει νέα μεταφορά τη χειρότερη στιγμή, <b>ζητά να συμπληρωθεί κάτι που έλειπε από την αρχή</b>. Η Γ2 είναι πιο έξυπνη εικόνα αλλά μιλά για ρίσκο σε μια στιγμή γιορτής, και η κόλλα «ΚΕΝΟ» θέλει εξήγηση. Η Γ3 κάνει το σωστό στο ένα σημείο που της λείπει και στις άλλες δύο: δίνει ρητή διέξοδο στον χρήστη <b>που έχει ήδη λογαριασμό</b> και ξεκίνησε ως επισκέπτης κατά λάθος.<br><br>Τρεις κανόνες για την υλοποίηση: η προτροπή έρχεται <b>μετά</b> την αποθήκευση και ποτέ πριν· το «Όχι τώρα» δεν κοστίζει τίποτα και το λέει ρητά στα ψιλά· και <b>δεν ξαναεμφανίζεται ως διάλογος</b> — μία φορά, στην πρώτη ολοκληρωμένη προπόνηση, και μετά μόνο ήσυχα (Στάθμος Δ).</p>
+</section>
+
+<!-- ═══════════════ Δ ═══════════════ -->
+<div class="attempt-label"><b>ΣΤΑΘΜΟΣ Δ</b><span>ΜΕΤΑ ΤΟ «ΟΧΙ ΤΩΡΑ» — τι βλέπει όποιος είπε όχι</span></div>
+<section class="stage">
+
+  <figure class="case" style="margin:0">
+    <div class="phone">
+      <div class="phone-bar"><span>LOGBOOK</span><span>≡</span></div>
+      <div class="phone-head"><h4>Ιστορικό</h4><span>12 ΚΑΤΑΓΡΑΦΕΣ</span></div>
+      <div class="tile"><b>Pull</b><span>ΔΕΥΤΕΡΑ 24/07 · 5 ΑΣΚΗΣΕΙΣ</span></div>
+      <div style="margin-top:14px"></div>
+      <div class="clip-note">
+        <p><b>12 προπονήσεις, ένα αντίτυπο.</b> Όλες ζουν στο πρόγραμμα περιήγησης αυτής της συσκευής. Ένας λογαριασμός τις κρατά και αλλού.</p>
+        <button class="btn" type="button" style="width:100%">ΚΡΑΤΑ ΤΟ ΤΕΤΡΑΔΙΟ ΜΟΥ</button>
+      </div>
+    </div>
+    <figcaption>Δ1 · <b>Ο ΣΥΝΔΕΤΗΡΑΣ</b> — στο τέλος του Ιστορικού, μετά τις καταγραφές</figcaption>
+  </figure>
+
+  <p class="notes"><b>Ο αριθμός κάνει τη δουλειά, όχι το επιχείρημα.</b> Η δεύτερη προτροπή δεν είναι διάλογος και δεν διακόπτει τίποτα: είναι ένα χαρτάκι με συνδετήρα στο <b>τέλος</b> του Ιστορικού, εκεί που ο χρήστης μόλις κύλισε πάνω από όσα έχει να χάσει. Ανανεώνεται μόνος του — στις 3 προπονήσεις λέει «3», στις 12 λέει «12».<br><br>Συχνότητα: εμφανίζεται από την 3η καταγραφή και μετά, μία θέση, χωρίς κουμπί κλεισίματος (δεν επικαλύπτει τίποτα, άρα δεν χρειάζεται). Το επιχείρημα «πρόγραμμα περιήγησης» δεν είναι σχήμα λόγου: <b>στο iOS το Safari σβήνει το <code>localStorage</code> μετά από επτά ημέρες χωρίς άνοιγμα της εφαρμογής</b>. Αυτό είναι πραγματική απώλεια δεδομένων και είναι ο μόνος λόγος που η προτροπή δικαιούται να επιμείνει.</p>
+</section>
+
+<!-- ═══════════════ Ε ═══════════════ -->
+<div class="attempt-label"><b>ΣΤΑΘΜΟΣ Ε</b><span>Η ΥΠΟΓΡΑΦΗ — η στιγμή που το τετράδιο αποκτά όνομα</span></div>
+<section class="stage single">
+  <div class="sign-stage">
+    <div class="sign-card" id="signCard">
+      <div class="plate">
+        <span class="plate-label">ΑΥΤΟ ΤΟ ΤΕΤΡΑΔΙΟ ΑΝΗΚΕΙ ΣΕ</span>
+        <span class="plate-line"><span class="plate-name" id="signName">Δημήτρης</span></span>
+      </div>
+      <p class="sub">12 προπονήσεις, 3 προγράμματα και 5 ρεκόρ μεταφέρθηκαν στον λογαριασμό. Τίποτα δεν ξαναγράφτηκε από την αρχή.</p>
+      <span class="stamp ok" aria-hidden="true"><span><b>ΑΝΤΙΓΡΑΦΟ</b><small>ΚΡΑΤΗΘΗΚΕ</small></span></span>
+    </div>
+    <div class="sign-ctl">
+      <p>Η εγγραφή δεν βγάζει τον χρήστη από την εφαρμογή και δεν του δείχνει άδειο τετράδιο. Το ίδιο αντικείμενο που ήταν κενό στο μενού συμπληρώνεται μπροστά του, και η σφραγίδα επιβεβαιώνει ότι το αντίγραφο έφυγε.</p>
+      <button class="btn" type="button" id="signBtn">ΠΑΙΞΕ ΤΗ ΣΤΙΓΜΗ</button>
+    </div>
+  </div>
+  <p class="notes"><b>Η μοναδική κίνηση όλης της πρότασης.</b> Ένα γράψιμο ~0,95δ και μία σφραγίδα που πέφτει μετά. Πουθενά αλλού δεν υπάρχει animation: ούτε στην πόρτα, ούτε στη γραμμή κατάστασης, ούτε στον συνδετήρα. Με <code>prefers-reduced-motion</code> το όνομα και η σφραγίδα εμφανίζονται ήδη γραμμένα.<br><br>Το κρίσιμο τεχνικό σημείο δεν είναι η κίνηση αλλά αυτό που λέει η λεζάντα κάτω από την ταμπέλα: <b>ο επισκέπτης δεν ξαναρχίζει</b>. Το local-first μοντέλο του Logbook το επιτρέπει σχεδόν δωρεάν — τα δεδομένα είναι ήδη στη σωστή μορφή, λείπει μόνο ο ιδιοκτήτης.</p>
+</section>
+
+<!-- ═══════════════ ΣΤ ═══════════════ -->
+<div class="attempt-label"><b>ΣΤΑΘΜΟΣ ΣΤ</b><span>ΤΑ ΟΡΙΑ — τι κάνει ο επισκέπτης και τι χρειάζεται λογαριασμό</span></div>
+<section class="stage single">
+  <table class="matrix">
+    <caption>Η γραμμή μπαίνει σε ένα σημείο: στο αντίγραφο</caption>
+    <thead><tr><th>Λειτουργία</th><th class="c">Επισκέπτης</th><th class="c">Λογαριασμός</th></tr></thead>
+    <tbody>
+      <tr><td>Καταγραφή προπόνησης, σετ, βάρη, cues</td><td class="c"><b>✓</b></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Προγράμματα και μικρόκυκλοι 3–10 ημερών</td><td class="c"><b>✓</b></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Ιστορικό, ρεκόρ, στατιστικά, γραφήματα</td><td class="c"><b>✓</b></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Προφίλ, γλώσσες, νύχτα, εκτύπωση</td><td class="c"><b>✓</b></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Εξαγωγή ιστορικού σε CSV</td><td class="c"><b>✓</b></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Εγκατάσταση ως εφαρμογή, offline χρήση</td><td class="c"><b>✓</b></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Αντίγραφο εκτός συσκευής</td><td class="c"><i>—</i></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Δεύτερη συσκευή, ίδιο ιστορικό</td><td class="c"><i>—</i></td><td class="c"><b>✓</b></td></tr>
+      <tr><td>Επαναφορά μετά από καθάρισμα του browser</td><td class="c"><i>—</i></td><td class="c"><b>✓</b></td></tr>
+    </tbody>
+  </table>
+  <p class="notes pick">Ο επισκέπτης παίρνει <b>ολόκληρο το προϊόν</b>, όχι δείγμα. Αυτό δεν είναι γενναιοδωρία — είναι η μόνη διάταξη που στέκει στο Logbook: η αξία του είναι η <b>γρήγορη και αξιόπιστη καταγραφή</b>, και μια κουτσουρεμένη καταγραφή δεν αποδεικνύει τίποτα σε κανέναν. Ο λογαριασμός δεν πουλά λειτουργίες· πουλά <b>να μη χαθεί ό,τι έγραψες</b>, και αυτό γίνεται πιο ακριβό κάθε εβδομάδα που ο χρήστης γράφει.<br><br>Η γραμμή αυτή είναι επίσης συμβατή με το μελλοντικό premium: τα προχωρημένα analytics και η βιβλιοθήκη ασκήσεων μπαίνουν <b>πάνω</b> από τον δωρεάν λογαριασμό, όχι πάνω από τον επισκέπτη. Δύο ξεχωριστά κατώφλια, δύο ξεχωριστές αποφάσεις.</p>
+</section>
+
+<!-- ═══════════════ Ζ ═══════════════ -->
+<div class="attempt-label"><b>ΑΝΟΙΧΤΑ</b><span>ΟΣΑ ΠΡΕΠΕΙ ΝΑ ΑΠΑΝΤΗΘΟΥΝ ΠΡΙΝ ΓΡΑΦΤΕΙ ΚΩΔΙΚΑΣ</span></div>
+<section class="stage single">
+  <div class="qa">
+    <div>
+      <h5>1. Επισκέπτης που συνδέεται σε λογαριασμό με ιστορικό</h5>
+      <p>Είναι το μόνο σενάριο που μπορεί να καταστρέψει δεδομένα. Ο επισκέπτης έχει 12 τοπικές προπονήσεις και συνδέεται σε λογαριασμό που έχει ήδη 200. <b>Πρόταση:</b> ο ίδιος merge κανόνας του <code>cloud-sync.js</code> — ένωση ανά ημερομηνία, καμία σιωπηλή διαγραφή — αλλά με ρητή <b>οθόνη επιβεβαίωσης πριν</b>, που λέει πόσες εγγραφές έρχονται από πού. Η σιωπηλή συγχώνευση δεν είναι επιλογή όταν ο χρήστης δεν ξέρει καν ότι είχε δύο τετράδια.</p>
+    </div>
+    <div>
+      <h5>2. Πού ζουν τα δεδομένα του επισκέπτη</h5>
+      <p>Τα cloud keys είναι σήμερα <code>logbookCloudCache:&lt;userId&gt;</code>. Ο επισκέπτης δεν έχει <code>userId</code>. <b>Πρόταση:</b> τα τοπικά κλειδιά μένουν ως έχουν (είναι ήδη per-device), και η εγγραφή απλώς <i>υιοθετεί</i> το υπάρχον τοπικό state ως πρώτο snapshot του νέου χρήστη. Κανένα νέο σχήμα αποθήκευσης, καμία migration δεδομένων — μόνο ένα <code>logbookGuest</code> flag.</p>
+    </div>
+    <div>
+      <h5>3. Το sign-out του επισκέπτη</h5>
+      <p>Δεν υπάρχει. Ένας επισκέπτης δεν έχει από πού να αποσυνδεθεί, και ένα κουμπί «Έξοδος» που σβήνει 12 προπονήσεις είναι παγίδα. Η κάρτα λογαριασμού στο μενού δείχνει μόνο <b>ΚΡΑΤΑ ΤΟ ΤΕΤΡΑΔΙΟ</b>. Η διαγραφή τοπικών δεδομένων, αν χρειαστεί, ανήκει στο Προφίλ με τη δική της επιβεβαίωση.</p>
+    </div>
+    <div>
+      <h5>4. Τι μπλοκάρει το CSP και το quality gate</h5>
+      <p>Τίποτα από τα παραπάνω δεν προσθέτει εξωτερικό origin, script ή asset. Χρειάζονται όμως νέα <code>message.NNNN</code> i18n IDs σε τέσσερις γλώσσες, e2e κάλυψη για τη διαδρομή «επισκέπτης → πρώτη προπόνηση → εγγραφή → τα δεδομένα υπάρχουν στο cloud», και έλεγχος ότι το auth gate <b>δεν</b> εμφανίζεται σε επισκέπτη μετά από offline επανεκκίνηση.</p>
+    </div>
+    <div>
+      <h5>5. Σχέση με τη δημόσια landing εμπειρία</h5>
+      <p>Η Α3 δίνει στο auth gate μια δεύτερη δουλειά, όχι δεύτερη σελίδα. Αν αργότερα γίνει κανονική landing σελίδα, η πόρτα του επισκέπτη μετακομίζει εκεί ως κύριο CTA και η αριστερή σελίδα ξαναγίνεται διακοσμητική. <b>Καμία από τις δύο δεν περιμένει την άλλη</b> — και αυτό είναι επιχείρημα να ξεπαγώσει πρώτο το guest mode.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="intro" style="border-bottom:0;border-top:3px solid var(--ink);box-shadow:0 -6px 0 -5px var(--ink)">
+  <p class="eyebrow">ΣΗΜΕΙΩΣΗ ΣΧΕΔΙΑΣΤΗ</p>
+  <p style="max-width:680px;margin:0;color:var(--muted);line-height:1.58">Ολόκληρη η πρόταση είναι <b style="color:var(--ink)">ένα αντικείμενο σε τέσσερις καταστάσεις</b>: η ταμπέλα ιδιοκτησίας εμφανίζεται κενή στο μενού, κενή στον διάλογο, γεμάτη στην υπογραφή. Δεν προστίθεται καμία νέα μεταφορά στο προϊόν και κανένα νέο χρώμα εκτός του υπάρχοντος token layer. Το ρίσκο που παίρνει η πρόταση είναι <b style="color:var(--ink)">η αριστερή σελίδα του auth gate</b> — μια επιφάνεια που σήμερα είναι καθαρά διακοσμητική και γίνεται η κύρια πόρτα εισόδου του προϊόντος.</p>
+</footer>
+
+<script>
+(function () {
+  var card = document.getElementById('signCard');
+  var name = document.getElementById('signName');
+  var btn = document.getElementById('signBtn');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function play() {
+    card.classList.remove('signed');
+    name.classList.remove('signed');
+    void card.offsetWidth;
+    name.classList.add('signed');
+    card.classList.add('signed');
+  }
+  btn.addEventListener('click', play);
+  if (reduced) { name.classList.add('signed'); card.classList.add('signed'); }
+  else { setTimeout(play, 450); }
+})();
+</script>
+</body>
+</html>

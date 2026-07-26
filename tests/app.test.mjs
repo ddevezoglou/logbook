@@ -32,9 +32,19 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.2.3');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.4');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
+});
+
+test('version label follows every supported interface language', () => {
+  const { document } = loadApp();
+  const expected = { el:'ΕΚΔΟΣΗ', en:'VERSION', fr:'VERSION', de:'VERSION' };
+
+  Object.entries(expected).forEach(([language, label]) => {
+    click(document, `[data-language="${language}"]`);
+    assert.equal(document.querySelector('.app-version i').textContent, label);
+  });
 });
 
 test('athlete profile card shows the notebook cover with brand mark, polaroid and motto', () => {

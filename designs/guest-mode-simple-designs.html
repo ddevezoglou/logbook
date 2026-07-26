@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guest Mode — Η απλή εκδοχή</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --paper-field:#f7f1e3;
+  --gold:#c9a227; --orange:#7d601a; --danger:#7a3325;
+  --muted:#6d6551; --muted-soft:#8a8168; --muted-strong:#554e3e; --line:#b6ad97; --pen:#4d3f24;
+  --cover-top:#2e2a1f; --cover-bottom:#211d15; --ink-line:#3d3828; --ink-muted:#a89f86; --ink-label:#b9af96;
+  --ink-mark-border:#5a5444; --ink-mark-dash:#71694f; --ink-mark-dot:#777164; --ink-clip:#8b8474;
+  --ribbon-top:#6b5518; --ribbon-mid:#463a14; --ribbon-bottom:#2e2710;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:60; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro p.lede { max-width:660px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.55; }
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid var(--ink-line); }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--ink-muted); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.stage.single { grid-template-columns:minmax(0,1fr); }
+.notes { grid-column:1 / -1; justify-self:start; max-width:680px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.58; }
+.notes b { color:var(--ink); }
+.notes code { font-size:.86em; color:var(--muted-strong); }
+.notes.pick { border:1px solid var(--orange); border-left:5px solid var(--orange); background:rgba(255,255,255,.6); }
+.notes.pick::before { content:"Η ΠΡΟΤΑΣΗ"; display:block; margin-bottom:7px; font-size:.66rem; font-weight:800; letter-spacing:.2em; color:var(--orange); }
+.case { display:grid; justify-items:center; gap:14px; margin:0; }
+.case figcaption { font:800 .68rem "Alegreya Sans"; letter-spacing:.16em; color:var(--muted-strong); text-transform:uppercase; text-align:center; }
+.case figcaption b { color:var(--ink); }
+
+/* ===== πραγματικά controls της εφαρμογής ===== */
+.primary-button { display:grid; place-items:center; width:100%; min-height:56px; padding:0 18px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); font:800 .76rem "Alegreya Sans"; letter-spacing:.09em; text-transform:uppercase; cursor:pointer; box-shadow:4px 4px 0 rgba(21,19,13,.13),inset 0 -3px 0 rgba(201,162,39,.5); transition:background-color .2s,border-color .2s,box-shadow .2s,transform .2s; }
+.primary-button:hover { border-color:var(--orange); background:var(--orange); box-shadow:6px 6px 0 rgba(21,19,13,.16),inset 0 -3px 0 rgba(201,162,39,.35); transform:translate(-1px,-2px); }
+.primary-button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
+.secondary-button { display:grid; place-items:center; width:100%; min-height:46px; padding:0 18px; border:1px solid var(--ink); background:transparent; color:var(--ink); font:800 .76rem "Alegreya Sans"; letter-spacing:.09em; text-transform:uppercase; cursor:pointer; transition:background-color .2s,color .2s,transform .2s; }
+.secondary-button:hover { background:var(--ink); color:var(--paper); transform:translateY(-1px); }
+.account-text-button { justify-self:center; padding:2px 0; border:0; border-bottom:1px solid currentColor; background:transparent; color:var(--muted); font:700 .76rem "Alegreya Sans"; letter-spacing:.04em; cursor:pointer; }
+.account-text-button:hover { color:var(--orange); }
+
+/* ===== 1. ΤΟ AUTH GATE ===== */
+.gate { width:min(620px,100%); padding:26px 20px; background-color:var(--ink); background-image:linear-gradient(90deg,rgba(201,162,39,.05) 1px,transparent 1px),linear-gradient(rgba(201,162,39,.04) 1px,transparent 1px); background-size:36px 36px; border:1px solid var(--ink-line); }
+.gate-book { position:relative; display:grid; grid-template-columns:1fr 1fr; box-shadow:0 14px 26px rgba(0,0,0,.5); }
+.gate-page { position:relative; min-height:352px; padding:20px 18px; background:var(--paper); }
+.gate-page.left { border-radius:8px 0 0 8px; display:grid; align-content:center; justify-items:start; background-image:linear-gradient(90deg,transparent 0 62%,rgba(21,19,13,.06) 82%,rgba(21,19,13,.3) 100%); }
+.gate-page.right { border-radius:0 8px 8px 0; background-image:linear-gradient(270deg,transparent 0 62%,rgba(21,19,13,.06) 82%,rgba(21,19,13,.3) 100%),repeating-linear-gradient(0deg,transparent 0 21px,rgba(77,63,36,.09) 21px 22px); }
+.gate-ribbon { position:absolute; top:-9px; left:50%; width:14px; height:150px; transform:translateX(-50%); background:linear-gradient(104deg,var(--ribbon-top),var(--ribbon-mid) 52%,var(--ribbon-bottom)); clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 9px),0 100%); z-index:2; }
+.gate-brand { margin:0; font:700 1.8rem/.82 "Roboto Slab"; letter-spacing:-.05em; text-transform:uppercase; }
+.gate-type { margin-top:20px; font:700 1.25rem/1 "Roboto Slab"; letter-spacing:-.03em; text-transform:uppercase; }
+.gate-type i { display:inline-block; width:.5em; height:1em; background:var(--orange); transform:translateY(.12em); font-style:normal; }
+.gate-tabs { display:flex; margin-bottom:16px; border-bottom:2px solid var(--ink); }
+.gate-tabs button { flex:1; padding:9px 4px; border:0; background:transparent; color:var(--muted-soft); font:800 .64rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.gate-tabs button[aria-pressed="true"] { color:var(--ink); box-shadow:inset 0 -4px 0 var(--orange); }
+.gate-field { display:block; margin-bottom:10px; }
+.gate-field span { display:block; margin-bottom:3px; font:800 .56rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
+.gate-field i { display:block; height:34px; border:1.5px solid var(--line); background:var(--paper-field); }
+.gate-google { display:flex; align-items:center; justify-content:center; gap:9px; min-height:38px; margin-bottom:12px; border:1px solid var(--ink); background:rgba(255,255,255,.48); font:800 .62rem "Alegreya Sans"; letter-spacing:.1em; }
+.gate-google svg { width:15px; height:15px; }
+.gate-or { display:flex; align-items:center; gap:8px; margin:12px 0; color:var(--muted-soft); font:800 .55rem "Alegreya Sans"; letter-spacing:.16em; }
+.gate-or::before,.gate-or::after { content:""; flex:1; border-top:1px dashed var(--line); }
+.gate .primary-button { min-height:42px; font-size:.66rem; }
+.gate-door { display:grid; justify-items:center; margin-top:15px; padding-top:13px; border-top:1px dashed var(--line); }
+.gate-door p { margin:8px 0 0; color:var(--muted); font-size:.72rem; line-height:1.45; text-align:center; }
+.gate-page.right .member { position:absolute; right:12px; bottom:10px; padding:4px 8px 3px; border:2px solid rgba(125,96,26,.4); color:rgba(125,96,26,.6); font:800 .5rem "Alegreya Sans"; letter-spacing:.16em; transform:rotate(-6deg); }
+/* ===== 1β. οι εκδοχές του συνδέσμου ===== */
+.type-lab { display:grid; gap:0; width:min(620px,100%); border:1px solid var(--line); background:rgba(255,255,255,.4); }
+.type-row { display:grid; grid-template-columns:64px 1fr; align-items:center; gap:16px; padding:20px 20px; border-bottom:1px dashed var(--line); }
+.type-row:last-child { border-bottom:0; }
+.type-row b { font:800 .58rem "Alegreya Sans"; letter-spacing:.16em; color:var(--orange); }
+.type-row .spec { display:block; margin-top:7px; font:400 .74rem "Alegreya Sans"; letter-spacing:0; color:var(--muted); }
+.type-row.win { background:rgba(201,162,39,.09); box-shadow:inset 4px 0 0 var(--orange); }
+.link-a { justify-self:start; padding:2px 0; border:0; border-bottom:1px solid currentColor; background:transparent; color:var(--muted); font:700 .76rem "Alegreya Sans"; letter-spacing:.04em; text-transform:uppercase; cursor:pointer; }
+.link-b { justify-self:start; padding:2px 0; border:0; border-bottom:1px solid currentColor; background:transparent; color:var(--muted-strong); font:500 .95rem "Alegreya Sans"; letter-spacing:.01em; cursor:pointer; }
+.link-b:hover { color:var(--orange); }
+.link-c { justify-self:start; padding:2px 0; border:0; border-bottom:1.5px solid currentColor; background:transparent; color:var(--ink); font:500 .92rem "Roboto Slab"; letter-spacing:-.01em; cursor:pointer; }
+.link-c:hover { color:var(--orange); }
+.link-d { justify-self:start; padding:2px 0; border:0; border-bottom:1.5px solid rgba(125,96,26,.55); background:transparent; color:var(--pen); font:400 1rem "Playpen Sans"; letter-spacing:-.01em; cursor:pointer; }
+.link-d:hover { color:var(--orange); }
+
+.hl { position:relative; }
+.hl::after { content:""; position:absolute; inset:-8px -12px; border:2px dashed var(--gold); pointer-events:none; }
+
+/* ===== 2. Η ΚΑΡΤΑ ΛΟΓΑΡΙΑΣΜΟΥ ΣΤΟ ΜΕΝΟΥ ===== */
+.menu { width:min(320px,100%); padding:22px 20px 26px; background:linear-gradient(var(--cover-top),var(--cover-bottom)); border:1px solid var(--ink-line); color:var(--paper); box-shadow:8px 10px 0 rgba(21,19,13,.2); }
+.menu>p.k { margin:0 0 10px; font:800 .55rem "Alegreya Sans"; letter-spacing:.2em; color:var(--ink-label); }
+.menu nav { display:grid; gap:2px; }
+.menu nav button { padding:8px 10px; border:0; background:transparent; color:var(--paper); font:700 .95rem "Roboto Slab"; letter-spacing:.04em; text-align:left; cursor:pointer; }
+.menu nav button.active { background:rgba(201,162,39,.14); box-shadow:inset 3px 0 0 var(--gold); }
+.acct { width:100%; display:grid; grid-template-columns:34px minmax(0,1fr); align-items:center; gap:11px; margin-top:16px; padding:12px 0; border:0; border-top:1px solid var(--ink-line); border-bottom:1px solid var(--ink-line); background:transparent; color:var(--paper); text-align:left; cursor:pointer; }
+.acct-mark { position:relative; width:29px; height:29px; display:grid; place-items:center; border:1px solid var(--ink-mark-border); border-radius:50%; transform:rotate(-7deg); }
+.acct-mark::before { content:""; width:15px; height:15px; border:1px dashed var(--ink-mark-dash); border-radius:50%; }
+.acct-mark i { position:absolute; width:5px; height:5px; border-radius:50%; background:var(--ink-mark-dot); }
+.acct.on .acct-mark { border-color:var(--gold); }
+.acct.on .acct-mark::before { width:9px; height:9px; border:0; background:var(--gold); box-shadow:0 0 10px rgba(201,162,39,.7); }
+.acct.on .acct-mark i { display:none; }
+.acct-copy { min-width:0; display:block; }
+.acct-copy strong,.acct-copy span { display:block; overflow:hidden; font:700 .72rem "Roboto Slab"; letter-spacing:.08em; text-overflow:ellipsis; white-space:nowrap; }
+.acct-copy span { color:var(--gold); }
+.pin { display:inline-block; margin-left:8px; padding:2px 6px 1px; border:1px solid var(--danger); color:var(--danger); font:800 .5rem "Alegreya Sans"; letter-spacing:.1em; vertical-align:2px; }
+.pin.ok { border-color:var(--orange); color:var(--orange); }
+
+/* ===== 3. ΤΟ ΜΗΝΥΜΑ ===== */
+.sheet-wrap { position:relative; width:min(460px,100%); filter:drop-shadow(8px 10px 0 rgba(201,162,39,.38)) drop-shadow(12px 16px 22px rgba(0,0,0,.28)); }
+.sheet { position:relative; padding:30px 30px 26px; border:1px solid var(--ink); background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.095) 27px 28px); }
+.sheet-clip { position:absolute; top:-13px; left:38px; width:26px; height:44px; border:3px solid var(--ink-clip); border-bottom:0; border-radius:12px 12px 4px 4px; opacity:.8; }
+.sheet h2 { margin:2px 44px 0 0; font:700 1.55rem/1 "Roboto Slab"; letter-spacing:-.03em; text-transform:uppercase; }
+.sheet p { margin:16px 0 0; color:var(--muted-strong); font-size:.95rem; line-height:1.55; }
+.sheet ul { margin:16px 0 0; padding:0; list-style:none; display:grid; gap:9px; }
+.sheet ul li { display:grid; grid-template-columns:16px 1fr; gap:10px; align-items:start; color:var(--muted-strong); font-size:.92rem; line-height:1.4; }
+.sheet ul li::before { content:""; margin-top:7px; width:9px; height:9px; border:1.5px solid var(--orange); }
+.sheet .acts { display:grid; gap:12px; justify-items:center; margin-top:24px; }
+.sheet-close { position:absolute; top:14px; right:14px; width:34px; height:34px; border:1px solid var(--ink); background:transparent; color:var(--ink); font-size:1.2rem; line-height:1; cursor:pointer; }
+.sheet-close:hover { background:var(--ink); color:var(--gold); }
+.veil { padding:34px 20px; background:rgba(21,19,13,.8); display:grid; justify-items:center; }
+
+/* toast */
+.toast-phone { position:relative; width:min(320px,100%); padding:14px 13px 16px; border:3px solid var(--ink); border-radius:26px; background:var(--paper); box-shadow:8px 10px 0 rgba(21,19,13,.14); overflow:hidden; }
+.toast-bar { display:flex; justify-content:space-between; align-items:center; padding:0 6px 10px; color:var(--muted-soft); font:800 .55rem "Alegreya Sans"; letter-spacing:.12em; }
+.toast-head { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:8px; border-bottom:3px solid var(--ink); }
+.toast-head h4 { margin:0; font:900 1.1rem/1 "Roboto Slab"; text-transform:uppercase; }
+.toast-head span { font:800 .55rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); }
+.tile { margin-top:12px; padding:12px 14px; border:1.5px solid var(--line); background:var(--paper-soft); }
+.tile b { display:block; font:900 1.4rem/1 "Roboto Slab"; }
+.tile span { display:block; margin-top:4px; font:800 .55rem "Alegreya Sans"; letter-spacing:.14em; color:var(--muted); }
+.toast { margin:18px -13px -16px; padding:16px 16px 18px; background:linear-gradient(var(--cover-top),var(--cover-bottom)); border-top:2px solid var(--gold); color:var(--paper); }
+.toast strong { display:block; font:700 .95rem "Roboto Slab"; letter-spacing:.03em; }
+.toast p { margin:6px 0 0; color:var(--ink-label); font-size:.78rem; line-height:1.45; }
+.toast .row { display:flex; gap:9px; margin-top:12px; }
+.toast .row button { flex:1; min-height:38px; border:1px solid var(--paper); background:transparent; color:var(--paper); font:800 .6rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+.toast .row button.go { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+
+/* λίστα αλλαγών */
+.diff { grid-column:1 / -1; width:min(760px,100%); border-collapse:collapse; background:rgba(255,255,255,.4); }
+.diff caption { padding-bottom:12px; font:800 .62rem "Alegreya Sans"; letter-spacing:.2em; color:var(--orange); text-transform:uppercase; text-align:left; }
+.diff th,.diff td { padding:10px 12px; border-bottom:1px solid rgba(77,63,36,.18); text-align:left; font-size:.88rem; vertical-align:top; }
+.diff thead th { border-bottom:2.5px solid var(--ink); font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; }
+.diff td:first-child { width:210px; font-weight:800; color:var(--ink); }
+.diff tbody tr:last-child td { border-bottom:0; }
+.diff code { font-size:.86em; color:var(--muted-strong); }
+
+@media(max-width:600px){
+  .gate-book { grid-template-columns:1fr; }
+  .gate-page { min-height:0; }
+  .gate-page.left { border-radius:8px 8px 0 0; background-image:none; }
+  .gate-page.right { border-radius:0 0 8px 8px; }
+  .gate-ribbon { left:auto; right:14%; transform:none; height:90px; }
+  .sheet { padding:24px 20px 22px; }
+  .diff td:first-child { width:auto; }
+  .diff th,.diff td { padding:8px 8px; font-size:.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="intro">
+  <p class="eyebrow">DESIGN · GUEST MODE · Η ΑΠΛΗ ΕΚΔΟΧΗ</p>
+  <h1>ΤΡΙΑ<br>ΣΗΜΕΙΑ, <em>ΤΙΠΟΤΑ</em><br>ΑΛΛΟ</h1>
+  <p class="lede">Ένας σύνδεσμος στο auth gate, μια κάρτα λογαριασμού χωρίς email, κι ένα μήνυμα μόλις μπει ο επισκέπτης. Καμία άλλη αλλαγή σε καμία οθόνη: ίδια Καταγραφή, ίδιο Πρόγραμμα, ίδιο Ιστορικό, ίδια Επίβλεψη, ίδιο Προφίλ. Η αποθήκευση γίνεται τοπικά και μόνο — δηλαδή ακριβώς ό,τι κάνει ήδη η εφαρμογή πριν φτάσει στο <code>cloud-sync.js</code>.</p>
+</header>
+
+<!-- ═══════════════ 1 ═══════════════ -->
+<div class="attempt-label"><b>1</b><span>ΤΟ AUTH GATE — ο σύνδεσμος κάτω από τη φόρμα</span></div>
+<section class="stage single">
+  <figure class="case">
+    <div class="gate">
+      <div class="gate-book">
+        <span class="gate-ribbon" aria-hidden="true"></span>
+        <div class="gate-page left">
+          <p class="gate-brand">LOGBOOK</p>
+          <p class="gate-type">ΚΑΘΕ ΣΕΤ<i></i></p>
+        </div>
+        <div class="gate-page right">
+          <div class="gate-tabs">
+            <button type="button" aria-pressed="true">ΣΥΝΔΕΣΗ</button>
+            <button type="button" aria-pressed="false">ΕΓΓΡΑΦΗ</button>
+          </div>
+          <div class="gate-google"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285f4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/><path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"/><path fill="#fbbc05" d="M3.963 10.706A5.41 5.41 0 0 1 3.681 9c0-.592.102-1.167.282-1.706V4.962H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.038l3.006-2.332Z"/><path fill="#ea4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.582-2.582C13.463.892 11.426 0 9 0A9 9 0 0 0 .957 4.962l3.006 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/></svg><span>ΣΥΝΕΧΕΙΑ ΜΕ GOOGLE</span></div>
+          <div class="gate-or"><span>Ή ΜΕ EMAIL</span></div>
+          <label class="gate-field"><span>Email</span><i></i></label>
+          <label class="gate-field"><span>Κωδικός</span><i></i></label>
+          <div class="primary-button">ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ</div>
+          <div class="gate-door hl">
+            <button class="link-c" type="button">Ξεκίνα χωρίς λογαριασμό</button>
+          </div>
+          <span class="member">MEMBER</span>
+        </div>
+      </div>
+    </div>
+    <figcaption>ΤΟ ΜΟΝΟ ΝΕΟ ΣΤΟΙΧΕΙΟ ΕΙΝΑΙ ΜΕΣΑ ΣΤΟ <b>ΔΙΑΚΕΚΟΜΜΕΝΟ ΠΛΑΙΣΙΟ</b></figcaption>
+  </figure>
+
+  <div class="type-lab">
+    <div class="type-row">
+      <b>Α</b>
+      <div>
+        <button class="link-a" type="button">ΞΕΚΙΝΑ ΧΩΡΙΣ ΛΟΓΑΡΙΑΣΜΟ</button>
+        <span class="spec">Το σημερινό <code>.account-text-button</code> — Alegreya Sans 700, κεφαλαία, .76rem. Τα ελληνικά κεφαλαία χωρίς τόνους σε αυτό το μέγεθος κλείνουν και το κείμενο μοιάζει στριμωγμένο.</span>
+      </div>
+    </div>
+    <div class="type-row">
+      <b>Β</b>
+      <div>
+        <button class="link-b" type="button">Ξεκίνα χωρίς λογαριασμό</button>
+        <span class="spec">Ίδια γραμματοσειρά, πεζά, ελαφρύτερο βάρος, μεγαλύτερο μέγεθος. Η ελάχιστη αλλαγή — λύνει τη στρίμωξη χωρίς να προσθέτει τίποτα.</span>
+      </div>
+    </div>
+    <div class="type-row win">
+      <b>Γ</b>
+      <div>
+        <button class="link-c" type="button">Ξεκίνα χωρίς λογαριασμό</button>
+        <span class="spec">Roboto Slab 500, πεζά. Είναι η γραμματοσειρά του LOGBOOK και των τίτλων — δίνει στον σύνδεσμο το βάρος μιας κανονικής επιλογής, όχι ψιλών γραμμάτων.</span>
+      </div>
+    </div>
+    <div class="type-row">
+      <b>Δ</b>
+      <div>
+        <button class="link-d" type="button">Ξεκίνα χωρίς λογαριασμό</button>
+        <span class="spec">Playpen Sans — χειρόγραφο, σαν σημείωση στο περιθώριο. Ταιριάζει στη μεταφορά του τετραδίου, αλλά είναι η μόνη χειρόγραφη λέξη σε ολόκληρο το gate.</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="notes pick"><b>Το Γ.</b> Το πρόβλημα στο Α δεν είναι η γραμματοσειρά αυτή καθαυτή — είναι τα κεφαλαία σε μικρό μέγεθος. Τα ελληνικά κεφαλαία δεν έχουν ανιόντα/κατιόντα να δώσουν σχήμα στη λέξη, οπότε σε .76rem γίνονται μια συμπαγής μπάρα. Τα πεζά επιστρέφουν το περίγραμμα.<br><br>Διάλεξα το <b>Roboto Slab</b> γιατί ο σύνδεσμος δεν είναι υποσημείωση: είναι η δεύτερη από τις δύο πραγματικές επιλογές του gate. Το slab τον βάζει στο ίδιο επίπεδο φωνής με το LOGBOOK από πάνω, ενώ η υπογράμμιση τον κρατά σαφώς κάτω από το κύριο κουμπί. Το <b>Δ</b> είναι δελεαστικό, αλλά μια χειρόγραφη λέξη μόνη της σε μια οθόνη με φόρμες διαβάζεται ως λάθος, όχι ως ύφος.</p>
+
+  <p class="notes"><b>Κάτω από τη φόρμα, όχι δίπλα της.</b> Ο σύνδεσμος μπαίνει μετά το «ΣΥΝΔΕΣΗ ΣΤΟΝ ΛΟΓΑΡΙΑΣΜΟ», χωρισμένος με τη διακεκομμένη γραμμή που ήδη χρησιμοποιεί το <code>.account-provider-divider</code>. Είναι υπογραμμισμένο κουμπί κειμένου στη θέση του «Ξεχάσατε τον κωδικό πρόσβασης», με τη γραμματοσειρά της εκδοχής Γ — άρα δεν ανταγωνίζεται οπτικά το κύριο κουμπί.<br><br><b>Μόνο η φράση, χωρίς επεξήγηση από κάτω.</b> Το gate μένει καθαρό· την εξήγηση «γράφεις τοπικά» τη δίνει ολόκληρη το μήνυμα του σημείου 3, τη στιγμή που ο χρήστης έχει ήδη μπει.</p>
+</section>
+
+<!-- ═══════════════ 2 ═══════════════ -->
+<div class="attempt-label"><b>2</b><span>Η ΚΑΡΤΑ ΛΟΓΑΡΙΑΣΜΟΥ — το email απλώς λείπει</span></div>
+<section class="stage">
+
+  <figure class="case">
+    <aside class="menu">
+      <p class="k">ΠΛΟΗΓΗΣΗ</p>
+      <nav>
+        <button type="button" class="active">Αρχική</button>
+        <button type="button">Καταγραφή</button>
+        <button type="button">Πρόγραμμα</button>
+        <button type="button">Ιστορικό</button>
+      </nav>
+      <button class="acct on" type="button">
+        <span class="acct-mark" aria-hidden="true"><i></i></span>
+        <span class="acct-copy"><strong>ΛΟΓΑΡΙΑΣΜΟΣ</strong><span>dimitris.devezoglou@gmail.com</span></span>
+      </button>
+    </aside>
+    <figcaption>ΣΗΜΕΡΑ · <b>ΣΥΝΔΕΔΕΜΕΝΟΣ</b> — χρυσή κουκκίδα και email</figcaption>
+  </figure>
+
+  <figure class="case">
+    <aside class="menu">
+      <p class="k">ΠΛΟΗΓΗΣΗ</p>
+      <nav>
+        <button type="button" class="active">Αρχική</button>
+        <button type="button">Καταγραφή</button>
+        <button type="button">Πρόγραμμα</button>
+        <button type="button">Ιστορικό</button>
+      </nav>
+      <button class="acct" type="button">
+        <span class="acct-mark" aria-hidden="true"><i></i></span>
+        <span class="acct-copy"><strong>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</strong></span>
+      </button>
+    </aside>
+    <figcaption>ΕΠΙΣΚΕΠΤΗΣ · <b>ΧΩΡΙΣ EMAIL</b> — καμία δεύτερη γραμμή</figcaption>
+  </figure>
+
+  <p class="notes pick">Αυτή η οθόνη <b>υπάρχει ήδη και δεν χρειάζεται σχεδίαση</b>. Στο <code>index.html</code> η κάρτα γράφει <code>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</code> και το <code>#account-menu-email</code> έχει την κλάση <code>hidden</code>· η χρυσή κουκκίδα και ο παλμός ανάβουν μόνο με το <code>.is-connected</code> ([components.css:643](../components.css#L643)). Ο επισκέπτης πέφτει ακριβώς σε αυτή την κατάσταση: <b>ίδια κάρτα, μία γραμμή λιγότερη, καμία νέα λέξη</b>.<br><br>Η μόνη ανοιχτή επιλογή είναι η λέξη. Το <code>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</code> λέει τι δεν έχεις· το <code>ΕΠΙΣΚΕΠΤΗΣ</code> λέει τι είσαι. Προτείνω να μείνει το σημερινό <b>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</b> — υπάρχει ήδη μεταφρασμένο στις τέσσερις γλώσσες και το πάτημα της κάρτας οδηγεί ούτως ή άλλως στη σύνδεση.</p>
+</section>
+
+<!-- ═══════════════ 3 ═══════════════ -->
+<div class="attempt-label"><b>3</b><span>ΤΟ ΜΗΝΥΜΑ — μόλις μπει ως επισκέπτης</span></div>
+<section class="stage">
+
+  <figure class="case">
+    <div class="veil">
+      <div class="sheet-wrap">
+        <div class="sheet">
+          <span class="sheet-clip" aria-hidden="true"></span>
+          <button class="sheet-close" type="button" aria-label="Κλείσιμο">×</button>
+          <h2>Ό,τι γράφεις μένει εδώ</h2>
+          <p>Το τετράδιο δουλεύει κανονικά. Οι προπονήσεις σου αποθηκεύονται μόνο σε αυτή τη συσκευή.</p>
+          <ul>
+            <li>Με λογαριασμό τις βλέπεις κι από άλλο κινητό.</li>
+            <li>Δεν χάνονται αν αλλάξεις συσκευή ή καθαρίσεις τον browser.</li>
+          </ul>
+          <div class="acts">
+            <button class="primary-button" type="button">ΦΤΙΑΞΕ ΛΟΓΑΡΙΑΣΜΟ</button>
+            <button class="link-c" type="button">Όχι τώρα</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>3Α · <b>ΤΟ ΦΥΛΛΟ</b> — η εναλλακτική, αν χρειαστεί περισσότερος χώρος</figcaption>
+  </figure>
+
+  <figure class="case">
+    <div class="toast-phone">
+      <div class="toast-bar"><span>LOGBOOK</span><span>≡</span></div>
+      <div class="toast-head"><h4>Αρχική</h4><span>ΤΕΤΑΡΤΗ 26/07</span></div>
+      <div class="tile"><b>Push</b><span>ΣΗΜΕΡΙΝΗ ΠΡΟΠΟΝΗΣΗ · ΜΙΚΡΟΚΥΚΛΟΣ 1/7</span></div>
+      <div class="tile"><b>0</b><span>ΚΑΤΑΓΡΑΦΕΣ</span></div>
+      <div class="toast">
+        <strong>Ό,τι γράφεις μένει εδώ</strong>
+        <p>Οι προπονήσεις σου αποθηκεύονται μόνο σε αυτή τη συσκευή. Με λογαριασμό τις έχεις παντού.</p>
+        <div class="row">
+          <button class="go" type="button">ΦΤΙΑΞΕ ΛΟΓΑΡΙΑΣΜΟ</button>
+          <button type="button">ΟΧΙ ΤΩΡΑ</button>
+        </div>
+      </div>
+    </div>
+    <figcaption>3Β · <b>Η ΛΩΡΙΔΑ</b> — η επιλογή· δεν μπλοκάρει την οθόνη</figcaption>
+  </figure>
+
+  <p class="notes pick"><b>3Β, η λωρίδα.</b> Ο επισκέπτης μόλις πάτησε «ξεκίνα χωρίς λογαριασμό» — δεν του βάζουμε αμέσως δεύτερη πόρτα μπροστά. Η λωρίδα κάθεται στο κάτω μέρος της Αρχικής, αφήνει την οθόνη να φαίνεται, και ο χρήστης την προσπερνά με ένα πάτημα.<br><br><b>Δύο προτάσεις, τίποτα άλλο.</b> Η πρώτη λέει το γεγονός («μένει σε αυτή τη συσκευή»), η δεύτερη το κέρδος («με λογαριασμό τις έχεις παντού»). Χωρίς λίστες, χωρίς προειδοποιήσεις για το τι θα χάσει. Το «ΦΤΙΑΞΕ ΛΟΓΑΡΙΑΣΜΟ» ανοίγει τον υπάρχοντα διάλογο στην καρτέλα ΕΓΓΡΑΦΗ· το «ΟΧΙ ΤΩΡΑ» την κλείνει και δεν ξαναεμφανίζεται.<br><br>Εμφανίζεται <b>μία φορά</b>, στην πρώτη είσοδο ως επισκέπτης. Η <b>3Α</b> μένει ως εναλλακτική μόνο αν αργότερα χρειαστεί να ειπωθούν περισσότερα — αλλά τότε το μήνυμα έχει ήδη γίνει βαρύτερο απ' όσο χρειάζεται.</p>
+</section>
+
+<!-- ═══════════════ 4 ═══════════════ -->
+<div class="attempt-label"><b>4</b><span>ΤΙ ΑΛΛΑΖΕΙ ΚΑΙ ΤΙ ΟΧΙ</span></div>
+<section class="stage single">
+  <table class="diff">
+    <caption>Η πλήρης λίστα</caption>
+    <thead><tr><th>Σημείο</th><th>Αλλαγή</th></tr></thead>
+    <tbody>
+      <tr><td>Auth gate</td><td>Ένας υπογραμμισμένος σύνδεσμος κάτω από τη φόρμα. Θέλει μια παραλλαγή του <code>.account-text-button</code> σε Roboto Slab / πεζά.</td></tr>
+      <tr><td>Κάρτα λογαριασμού</td><td>Καμία. Ο επισκέπτης πέφτει στην υπάρχουσα κατάσταση <code>ΧΩΡΙΣ ΣΥΝΔΕΣΗ</code>, με το email κρυφό.</td></tr>
+      <tr><td>Μήνυμα εισόδου</td><td>Μια λωρίδα στο κάτω μέρος της Αρχικής, δύο προτάσεις και δύο κουμπιά. Μία φορά, την πρώτη είσοδο.</td></tr>
+      <tr><td>Αποθήκευση</td><td>Καμία. Το <code>modules/storage-migrations.js</code> γράφει ήδη τοπικά· απλώς δεν καλείται ο συγχρονισμός.</td></tr>
+      <tr><td>Καταγραφή, Πρόγραμμα, Ιστορικό, Επίβλεψη, Προφίλ</td><td>Καμία. Ούτε κλείδωμα, ούτε σήμανση, ούτε προτροπή.</td></tr>
+      <tr><td>Κατάσταση συγχρονισμού</td><td>Κρύβεται όσο ο χρήστης είναι επισκέπτης — δεν υπάρχει συγχρονισμός για να αναφερθεί.</td></tr>
+      <tr><td>i18n</td><td>Νέα <code>message.NNNN</code> IDs για τον σύνδεσμο, τη γραμμή του gate και το μήνυμα, σε EL/EN/FR/DE.</td></tr>
+    </tbody>
+  </table>
+  <p class="notes"><b>Το μόνο σενάριο που χρειάζεται απόφαση:</b> ο επισκέπτης που έχει ήδη γράψει προπονήσεις και πατά ΕΓΓΡΑΦΗ ή ΣΥΝΔΕΣΗ. Στην εγγραφή είναι απλό — τα τοπικά δεδομένα γίνονται το πρώτο snapshot του νέου λογαριασμού. Στη σύνδεση σε λογαριασμό <i>που έχει ήδη ιστορικό</i>, το <code>cloud-sync.js</code> κάνει merge· καλό είναι να το πει ρητά πριν, με μία πρόταση επιβεβαίωσης.</p>
+</section>
+
+<footer class="intro" style="border-bottom:0;border-top:3px solid var(--ink);box-shadow:0 -6px 0 -5px var(--ink)">
+  <p class="eyebrow">ΣΗΜΕΙΩΣΗ ΣΧΕΔΙΑΣΤΗ</p>
+  <p style="max-width:680px;margin:0;color:var(--muted);line-height:1.58">Καμία νέα μεταφορά, κανένα νέο component, κανένα χρώμα εκτός του token layer. Και τα τρία σημεία επαναχρησιμοποιούν στοιχεία που υπάρχουν ήδη στο <code>components.css</code> — η μόνη προσθήκη στο stylesheet είναι μια παραλλαγή του κουμπιού κειμένου σε Roboto Slab με πεζά, που μπορεί να αντικαταστήσει και το σημερινό «Ξεχάσατε τον κωδικό». Η πλούσια εκδοχή με την ταμπέλα ιδιοκτησίας και τους έξι σταθμούς παραμένει στο <b style="color:var(--ink)">guest-mode-designs.html</b>, αν χρειαστεί ποτέ.</p>
+</footer>
+
+</body>
+</html>

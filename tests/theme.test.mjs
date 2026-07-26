@@ -91,7 +91,7 @@ test('the switch sits in the menu, directly under the language picker', () => {
   assert.ok(theme, 'the darkmode picker is missing from the menu');
   assert.equal(language.nextElementSibling, theme, 'darkmode must follow the language row');
   assert.equal(theme.closest('.side-menu')?.id, 'side-menu');
-  assert.equal(theme.querySelector('span').textContent, 'DARKMODE');
+  assert.equal(theme.querySelector('span').textContent, 'ΣΚΟΤΕΙΝΗ ΛΕΙΤΟΥΡΓΙΑ');
   assert.deepEqual(
     [...theme.querySelectorAll('button')].map(button => button.textContent),
     ['ON', 'OFF'],

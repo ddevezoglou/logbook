@@ -691,6 +691,14 @@ button:disabled { cursor:not-allowed; opacity:.42; filter:saturate(.55); }
 .account-text-button:hover { color:var(--orange); }
 .account-text-button:focus-visible { outline:3px solid var(--gold); outline-offset:4px; }
 #account-signin-form .account-text-button { margin-top:-7px; }
+/* Η πόρτα του επισκέπτη: κάτω από τη φόρμα και χωρισμένη με την ίδια διακεκομμένη
+   γραμμή που χρησιμοποιεί ο διαχωριστής των παρόχων. Δεν είναι τρίτη επιλογή δίπλα
+   στη ΣΥΝΔΕΣΗ και την ΕΓΓΡΑΦΗ — είναι έξοδος κάτω από αυτές. */
+.account-guest-door { display:grid; justify-items:center; margin-top:18px; padding-top:16px; border-top:1px dashed var(--line); }
+/* Η έξοδος γράφεται με τα ίδια κεφαλαία της πύλης — ίδιο βάρος, ίδιο αραίωμα με τις
+   καρτέλες και τα κουμπιά της. Το πιο ελαφρύ βάρος του .account-text-button ανήκει
+   στο «ξεχάσατε τον κωδικό», που είναι πεζά μέσα στη φόρμα. */
+.account-guest-door .account-text-button { justify-self:center; font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; text-align:center; }
 .account-member { margin-top:24px; }
 .account-card { position:relative; padding:20px 22px 18px; background:var(--ink-surface); color:var(--on-ink); overflow:hidden; box-shadow:6px 7px 0 rgba(var(--gold-rgb),.35); }
 .account-card::before { content:""; position:absolute; inset:6px; border:1px solid rgba(var(--gold-rgb),.45); pointer-events:none; }
@@ -709,6 +717,21 @@ button:disabled { cursor:not-allowed; opacity:.42; filter:saturate(.55); }
 .account-form-status { min-height:20px; margin:18px 0 0; padding:10px 12px; border-left:3px solid var(--line); background:var(--wash-18); color:var(--muted); font-weight:700; }
 .account-form-status[data-kind="error"] { border-color:var(--danger); color:var(--danger); }
 .account-form-status[data-kind="success"] { border-color:var(--recovery); color:var(--success-text); }
+
+/* Η υπενθύμιση του επισκέπτη: λωρίδα στο κάτω μέρος, όχι δεύτερη πόρτα. Αφήνει την
+   εφαρμογή ορατή, φεύγει με ένα πάτημα και επανέρχεται μόνο μετά από καιρό. */
+.guest-reminder { position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); z-index:35; width:min(540px,calc(100% - 28px)); display:grid; gap:16px; padding:20px 22px 21px; border-left:4px solid var(--gold); background:var(--ink-surface); color:var(--on-ink); box-shadow:8px 9px 0 rgba(var(--shadow-rgb),.3),0 18px 34px rgba(var(--shadow-rgb),.35); opacity:0; transform:translate(-50%,calc(100% + 46px)); transition:transform .34s cubic-bezier(.16,1,.3,1),opacity .24s ease; }
+.guest-reminder.is-open { opacity:1; transform:translate(-50%,0); }
+body:not(.app-ready) .guest-reminder { display:none; }
+.guest-reminder-copy strong { display:block; margin-bottom:9px; font:700 1.02rem/1.3 "Roboto Slab"; }
+.guest-reminder-copy p { margin:0; color:var(--ink-muted); font-size:.94rem; line-height:1.5; }
+.guest-reminder-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.guest-reminder-actions .primary-button { flex:1 1 200px; width:auto; margin-top:0; border-color:var(--gold); background:var(--gold); color:var(--on-gold); box-shadow:4px 4px 0 rgba(var(--shadow-rgb),.28); }
+.guest-reminder-actions .primary-button:hover { border-color:var(--orange); background:var(--orange); color:var(--on-accent); }
+.guest-reminder-actions .secondary-button { flex:0 1 auto; margin-top:0; border-color:var(--ink-line); color:var(--ink-muted); }
+.guest-reminder-actions .secondary-button:hover { border-color:var(--gold); background:transparent; color:var(--on-ink); }
+@media(prefers-reduced-motion:reduce){ .guest-reminder { transition:none; } }
+@media(max-width:520px){ .guest-reminder-actions .secondary-button { flex:1 1 100%; } }
 @keyframes accountPassIn { from { opacity:0; transform:translateY(18px) rotate(-.7deg) scale(.98); } to { opacity:1; transform:none; } }
 @media(max-width:600px){.account-dialog{width:calc(100% - 14px);max-height:calc(100dvh - 14px)}.account-folder{margin:10px 8px 8px;filter:drop-shadow(5px 6px 0 rgba(var(--gold-rgb),.36)) drop-shadow(8px 10px 16px rgba(0,0,0,.26))}.account-tabs{padding:0 14px}.account-tabs button{flex:1;padding:0}.account-sheet{padding:24px 18px 22px}.account-clip{left:24px}.account-card{padding:18px 16px 16px}.account-connected-stamp{position:static;display:inline-block;margin-bottom:14px;transform:rotate(-2deg)}.account-member strong{margin-top:0}.account-member-actions{flex-direction:column}.account-member-actions button{width:100%}.account-delete-dialog .confirm-dialog-actions{flex-direction:column}}
 @media(max-height:760px){.side-menu .nav-button{padding-top:13px;padding-bottom:13px;font-size:1.2rem}.side-menu>p{margin-top:17px}.account-menu-card{margin-top:10px;padding-top:9px;padding-bottom:9px}}

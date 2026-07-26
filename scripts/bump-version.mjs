@@ -30,7 +30,6 @@ const targets = [
   {
     file:'index.html',
     update:replaceVersionReferences([
-      current => `Application version ${current}`,
       current => `<b>${current}</b>`,
     ]),
   },
@@ -50,9 +49,8 @@ const targets = [
     file:'DEVELOPMENT.md',
     update:replaceVersionReferences([
       current => `**${current}**`,
-      current => `της ${current}`,
-      current => `περιορισμοί της ${current}`,
-      current => `Αξιολόγηση ${current}`,
+      current => `## Γνωστοί περιορισμοί της ${current}`,
+      current => `## Αξιολόγηση ${current}`,
     ], { optional:true }),
   },
 ];

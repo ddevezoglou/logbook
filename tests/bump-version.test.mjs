@@ -42,7 +42,7 @@ test('version bump updates every release reference as one validated change', asy
     assert.deepEqual(new Set(result.changes.map(change => change.file)), new Set(files));
     assert.equal(JSON.parse(await readFile(join(fixture, 'package.json'), 'utf8')).version, nextVersion);
     assert.equal(JSON.parse(await readFile(join(fixture, 'package-lock.json'), 'utf8')).packages[''].version, nextVersion);
-    assert.match(await readFile(join(fixture, 'index.html'), 'utf8'), new RegExp(`Application version ${escapedNextVersion}`));
+    assert.match(await readFile(join(fixture, 'index.html'), 'utf8'), new RegExp(`<b>${escapedNextVersion}</b>`));
     assert.match(await readFile(join(fixture, 'service-worker.js'), 'utf8'), new RegExp(`logbook-${escapedNextVersion}`));
     assert.match(await readFile(join(fixture, 'DEVELOPMENT.md'), 'utf8'), new RegExp(`\\*\\*${escapedNextVersion}\\*\\*`));
   });

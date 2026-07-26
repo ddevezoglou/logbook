@@ -85,6 +85,9 @@
             <button class="primary-button" type="submit">ΑΛΛΑΓΗ ΚΩΔΙΚΟΥ</button>
           </form>
           <p id="account-form-status" class="account-form-status hidden" role="status" aria-live="polite"></p>
+          <div id="account-guest-door" class="account-guest-door">
+            <button id="account-guest-start" class="account-text-button" type="button">ΛΕΙΤΟΥΡΓΙΑ ΕΠΙΣΚΕΠΤΗ</button>
+          </div>
         </section>
       </div>
       <span class="auth-gate-stitch" aria-hidden="true"></span>
@@ -138,14 +141,14 @@
       <button type="button" data-language="de" aria-pressed="false">DE</button>
     </div>
     <div class="language-picker theme-picker" role="group" aria-label="Νυχτερινή εμφάνιση" data-i18n-aria-label="message.0471">
-      <span>DARKMODE</span>
+      <span>ΣΚΟΤΕΙΝΗ ΛΕΙΤΟΥΡΓΙΑ</span>
       <button type="button" data-theme-choice="night" aria-pressed="false">ON</button>
       <button type="button" data-theme-choice="day" aria-pressed="true">OFF</button>
     </div>
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version" aria-label="Application version 0.2.3"><i>VERSION</i><b>0.2.3</b></span>
+      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.2.4</b></span>
     </div>
     <a class="side-menu-privacy" href="privacy.html" data-i18n-id="message.0470">Πολιτική απορρήτου</a>
   </aside>
@@ -535,6 +538,16 @@
     </div>
   </dialog>
   <div id="toast" class="toast" role="status"></div>
+  <div id="guest-reminder" class="guest-reminder hidden" role="region" aria-labelledby="guest-reminder-title">
+    <div class="guest-reminder-copy">
+      <strong id="guest-reminder-title">Τα δεδομένα αποθηκεύονται μόνο σε αυτή τη συσκευή</strong>
+      <p>Οι προπονήσεις και τα προγράμματά σας μένουν εδώ και μόνο. Με έναν λογαριασμό τα κρατάτε ασφαλή και τα βρίσκετε από κάθε συσκευή σας.</p>
+    </div>
+    <div class="guest-reminder-actions">
+      <button id="guest-reminder-signup" class="primary-button" type="button">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
+      <button id="guest-reminder-dismiss" class="secondary-button" type="button">ΟΧΙ ΤΩΡΑ</button>
+    </div>
+  </div>
   <script src="quotes.js"></script>
   <script src="i18n.js"></script>
   <script src="supabase-config.js"></script>

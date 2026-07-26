@@ -476,6 +476,13 @@
     'message.0469':['Η ','','',''],
     'message.0470':['Πολιτική απορρήτου','Privacy policy','Politique de confidentialité','Datenschutzerklärung'],
     'message.0471':['Νυχτερινή εμφάνιση','Night appearance','Apparence nocturne','Nachtdarstellung'],
+    'message.0472':['ΛΕΙΤΟΥΡΓΙΑ ΕΠΙΣΚΕΠΤΗ','GUEST MODE','MODE INVITÉ','GASTMODUS'],
+    'message.0473':['Τα δεδομένα αποθηκεύονται μόνο σε αυτή τη συσκευή','Your data is stored on this device only','Les données sont enregistrées uniquement sur cet appareil','Ihre Daten werden nur auf diesem Gerät gespeichert'],
+    'message.0474':['Οι προπονήσεις και τα προγράμματά σας μένουν εδώ και μόνο. Με έναν λογαριασμό τα κρατάτε ασφαλή και τα βρίσκετε από κάθε συσκευή σας.','Your workouts and routines stay here and nowhere else. With an account you keep them safe and reach them from every one of your devices.','Vos séances et programmes restent ici et nulle part ailleurs. Avec un compte, vous les conservez en sécurité et les retrouvez depuis chacun de vos appareils.','Ihre Trainings und Pläne bleiben nur hier. Mit einem Konto bewahren Sie sie sicher auf und erreichen sie von jedem Ihrer Geräte.'],
+    'message.0475':['ΟΧΙ ΤΩΡΑ','NOT NOW','PAS MAINTENANT','JETZT NICHT'],
+    'message.0476':['Ξεκινάμε με τα δεδομένα αυτής της συσκευής.','Starting with the data on this device.','Démarrage avec les données de cet appareil.','Start mit den Daten dieses Geräts.'],
+    'message.0477':['ΣΚΟΤΕΙΝΗ ΛΕΙΤΟΥΡΓΙΑ','DARK MODE','MODE SOMBRE','DUNKELMODUS'],
+    'message.0478':['ΕΚΔΟΣΗ','VERSION','VERSION','VERSION'],
     'aria.weight-set':['{unit} σετ {number}','{unit}, set {number}','{unit}, série {number}','{unit}, Satz {number}']
   };
 

@@ -32,8 +32,8 @@ const productionScripts = [
 assert.match(version, /^\d+\.\d+\.\d+$/, 'package version must use semantic versioning');
 assert.equal(lock.version, version, 'package-lock root version must match package.json');
 assert.equal(lock.packages[''].version, version, 'package-lock package version must match package.json');
-assert.ok(html.includes(`Application version ${version}`), 'menu accessibility version must match package.json');
 assert.ok(html.includes(`<b>${version}</b>`), 'visible menu version must match package.json');
+assert.ok(html.includes('data-i18n-id="message.0478">ΕΚΔΟΣΗ</i>'), 'visible menu version label must use i18n');
 assert.ok(serviceWorker.includes(`CACHE_VERSION = 'logbook-${version}'`), 'service-worker cache must match package.json');
 assert.ok(development.includes(`**${version}**`), 'DEVELOPMENT.md current version must match package.json');
 

@@ -20,7 +20,7 @@ test('the darkmode switch lives under the language row and turns the page over',
     const rows = [...document.querySelectorAll('#side-menu .language-picker')];
     return rows.map(row => row.querySelector('span').textContent.trim());
   });
-  expect(order).toEqual(['ΓΛΩΣΣΑ', 'DARKMODE']);
+  expect(order).toEqual(['ΓΛΩΣΣΑ', 'ΣΚΟΤΕΙΝΗ ΛΕΙΤΟΥΡΓΙΑ']);
 
   await picker.locator('[data-theme-choice="night"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'night');
