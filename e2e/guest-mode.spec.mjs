@@ -29,7 +29,7 @@ async function enterAsGuest(page) {
   await expect(page.locator('#auth-gate')).toHaveAttribute('data-state', 'login');
   await page.locator('#account-guest-start').click();
   await expect(page.locator('body')).toHaveClass(/app-ready/);
-  await page.addStyleTag({ content:'*,*::before,*::after{animation:none !important;transition:none !important;}' });
+  await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
 }
 
 async function tabTo(page, selector, limit = 250) {

@@ -22,6 +22,7 @@ import {
 } from '../modules/progress-rewards.js';
 import { buildProgressChartMarkup } from '../modules/progress-chart.js';
 import { buildHistoryMarkup, buildSessionCardMarkup } from '../modules/history.js';
+import { exerciseCard, sessionPage, setRows } from '../modules/session-templates.js';
 import { escapeHtml, setMenuState, syncNavigationState } from '../modules/ui.js';
 import { readFileSync } from 'node:fs';
 
@@ -172,6 +173,53 @@ test('history module renders escaped workout cards and pagination without a DOM'
   assert.match(history, /SESSION No 61/);
   assert.match(history, /ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ 30 · ΑΠΟΜΕΝΟΥΝ 60/);
   assert.match(buildHistoryMarkup(), /Ολοκληρώστε την πρώτη προπόνηση/);
+});
+
+test('session templates render escaped cards, set rows and printable pages without a DOM', () => {
+  const rows = setRows(1, [{ reps:8, weight:100, weightMode:'kg' }], '', {
+    extra:true,
+    startIndex:2,
+    unit:'lbs',
+  });
+  assert.match(rows, /class="set-number">03</);
+  assert.match(rows, /data-extra-set/);
+  assert.match(rows, /value="220\.46"/);
+  assert.match(rows, /Βάρος \(lbs\)/);
+
+  const card = exerciseCard({
+    exercise:'Press <script>',
+    cues:'Brace & breathe',
+    sets:[{ reps:5, weight:60 }],
+  }, { exerciseIndex:1, generatedId:'generated-1' });
+  assert.match(card, /data-id="generated-1"/);
+  assert.match(card, /ΑΣΚΗΣΗ 2/);
+  assert.match(card, /Press &lt;script&gt;/);
+  assert.doesNotMatch(card, /Press <script>/);
+
+  const page = sessionPage({
+    session:{
+      id:'session-1',
+      date:'2026-07-27',
+      comments:'Good <day>',
+      exercises:[{ exercise:'Press & Pull', sets:[{ reps:5 }] }],
+    },
+    sessionNumber:4,
+    workoutName:'Upper <A>',
+    dayLabel:'Δευτέρα',
+    formattedDate:'27 Ιουλ 2026',
+    formatLoad:() => '60 kg',
+  });
+  assert.match(page, /SESSION No 4/);
+  assert.match(page, /Upper &lt;A&gt;/);
+  assert.match(page, /Good &lt;day&gt;/);
+  assert.match(page, /60 kg/);
+});
+
+test('session exercise cards repair an empty legacy set list with three editable rows', () => {
+  const card = exerciseCard({ exercise:'Legacy press', sets:[] }, { free:true });
+
+  assert.match(card, /class="free-set-count"[^>]*value="3"/);
+  assert.equal((card.match(/class="set-row/g) || []).length, 3);
 });
 
 test('UI helpers escape content and own navigation/menu state', () => {

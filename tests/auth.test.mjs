@@ -324,6 +324,7 @@ test('global sign out clears visible user data while preserving owner-scoped rec
   localStorage.setItem('logbookCloudMeta:user-a', JSON.stringify({ revision:2, hash:'abc' }));
   localStorage.setItem('logbookCloudCache:user-b', JSON.stringify({ trainingSessions:[] }));
   localStorage.setItem('logbookCloudOwner', 'user-a');
+  localStorage.setItem('logbookGuestErrorQueue', '[{"event_code":"stale_failure"}]');
 
   click(document, '#account-signout');
   await flush();
@@ -333,6 +334,7 @@ test('global sign out clears visible user data while preserving owner-scoped rec
   assert.equal(localStorage.getItem('trainingSessions'), null);
   assert.equal(localStorage.getItem('trainingRoutines'), null);
   assert.equal(localStorage.getItem('userProfile'), null);
+  assert.equal(localStorage.getItem('logbookGuestErrorQueue'), null);
   assert.equal(localStorage.getItem('logbookCloudOwner'), 'user-a');
   assert.deepEqual(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions, sessions);
   assert.ok(localStorage.getItem('logbookCloudMeta:user-a'));

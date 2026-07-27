@@ -495,16 +495,11 @@
   const wordCharacter = /[\p{L}\p{N}_]/u;
   const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const catalogEntries = Object.entries(catalog)
-    .map(([id, [source, ...values]]) => {
-      const escaped = escapeRegExp(source);
-      const prefix = wordCharacter.test(source[0]) ? '(^|[^\\p{L}\\p{N}_])' : '()';
-      const suffix = wordCharacter.test(source.at(-1)) ? '(?=$|[^\\p{L}\\p{N}_])' : '';
-      return { id, source, values, pattern:new RegExp(`${prefix}${escaped}${suffix}`, 'gu') };
-    });
+    .map(([id, [source, ...values]]) => ({ id, source, values }));
   const messagesById = new Map(catalogEntries.map(entry => [entry.id, entry]));
   const sourceMessages = new Map();
   catalogEntries.forEach(entry => sourceMessages.set(entry.source, entry));
-  const entries = [...sourceMessages.values()].sort((a, b) => b.source.length - a.source.length);
+  let compiledEntries = null;
   const textState = new WeakMap();
   const attrState = new WeakMap();
   const greekLanguageElements = new WeakSet();
@@ -528,7 +523,17 @@
     if (lang === 'el' || !source) return source;
     const column = languages.indexOf(lang) - 1;
     let output = source;
-    entries.forEach(({ pattern, values }) => { output = output.replace(pattern, (_, lead) => `${lead}${values[column]}`); });
+    if (!compiledEntries) {
+      compiledEntries = [...sourceMessages.values()]
+        .sort((a, b) => b.source.length - a.source.length)
+        .map(entry => {
+          const escaped = escapeRegExp(entry.source);
+          const prefix = wordCharacter.test(entry.source[0]) ? '(^|[^\\p{L}\\p{N}_])' : '()';
+          const suffix = wordCharacter.test(entry.source.at(-1)) ? '(?=$|[^\\p{L}\\p{N}_])' : '';
+          return { ...entry, pattern:new RegExp(`${prefix}${escaped}${suffix}`, 'gu') };
+        });
+    }
+    compiledEntries.forEach(({ pattern, values }) => { output = output.replace(pattern, (_, lead) => `${lead}${values[column]}`); });
     return output;
   }
 
@@ -637,5 +642,7 @@
     t:convert,
     tId:translateId,
   };
-  translate(document);
+  // The source document is already Greek. Avoid compiling hundreds of translation
+  // patterns and walking the complete DOM until a translated language is requested.
+  if (language !== 'el') translate(document);
 }());

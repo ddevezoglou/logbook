@@ -28,6 +28,7 @@ const APP_SHELL = [
   './modules/sessions.js',
   './modules/progress-chart.js',
   './modules/history.js',
+  './modules/session-templates.js',
   './modules/progress-rewards.js',
   './modules/ui.js',
   './pwa.js',
@@ -75,8 +76,14 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
+    // Network-first ανά διαδρομή. Cache-first εδώ σήμαινε ότι κάθε πλοήγηση έπαιρνε
+    // το `index.html` — η `privacy.html` γινόταν απρόσιτη σε κάθε χρήστη με ενεργό
+    // worker. Η απόκριση δικτύου δεν μπαίνει στην cache: το shell ανανεώνεται μόνο
+    // ολόκληρο στο install, ώστε το HTML να μη διαφωνεί ποτέ με το cached JS.
     event.respondWith(
-      caches.match(OFFLINE_PAGE).then(cached => cached || fetch(request)).catch(() => Response.error())
+      fetch(request).catch(() => caches.match(request, { ignoreSearch:true })
+        .then(cached => cached || caches.match(OFFLINE_PAGE))
+        .then(cached => cached || Response.error()))
     );
     return;
   }

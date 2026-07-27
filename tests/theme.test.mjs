@@ -5,6 +5,7 @@ import { JSDOM } from 'jsdom';
 
 const root = new URL('../', import.meta.url);
 const html = readFileSync(new URL('index.html', root), 'utf8');
+const privacy = readFileSync(new URL('privacy.html', root), 'utf8');
 const themeSource = readFileSync(new URL('theme.js', root), 'utf8');
 
 // Στήνει τη σελίδα και τρέχει το theme.js πάνω της, όπως το κάνει ο browser στο <head>.
@@ -105,6 +106,18 @@ test('the theme is applied before the first paint, so the night never flashes wh
   const head = html.slice(0, html.indexOf('</head>'));
   assert.match(head, /<script src="theme\.js"><\/script>/);
   assert.doesNotMatch(head, /<script[^>]*theme\.js[^>]*(defer|async)/);
+});
+
+test('the privacy page shares the token layer and applies the stored theme before paint', () => {
+  const head = privacy.slice(0, privacy.indexOf('</head>'));
+  assert.ok(head.indexOf('tokens.css') < head.indexOf('legal.css'), 'legal styles must consume the shared tokens');
+  assert.match(head, /<script src="theme\.js"><\/script>/);
+  assert.doesNotMatch(head, /<script[^>]*theme\.js[^>]*(defer|async)/);
+
+  const dom = new JSDOM(privacy, { url:'http://localhost/privacy.html', runScripts:'outside-only' });
+  dom.window.localStorage.setItem('logbookTheme', 'night');
+  dom.window.eval(themeSource);
+  assert.equal(dom.window.document.documentElement.dataset.theme, 'night');
 });
 
 test('theme.js ships with the app shell and the release', () => {

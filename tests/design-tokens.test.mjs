@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const css = ['tokens.css', 'base.css', 'components.css', 'dialogs.css', 'views.css']
+const css = ['tokens.css', 'base.css', 'components.css', 'dialogs.css', 'views.css', 'legal.css']
   .map(file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'))
   .join('\n');
 

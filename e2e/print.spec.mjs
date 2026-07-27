@@ -9,7 +9,7 @@ async function bootWithHistory(page, { theme } = {}) {
   await installAuthenticatedStub(page, { theme });
   await page.goto('/');
   await expect(page.locator('body')).toHaveClass(/app-ready/);
-  await page.addStyleTag({ content:'*,*::before,*::after{animation:none !important;transition:none !important;}' });
+  await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
 }
 
 async function openFirstWorkoutPage(page) {

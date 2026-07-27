@@ -13,10 +13,13 @@ test('the application CSP restricts executable resources and permits data URL av
   assert.match(policy, /default-src 'self'/);
   assert.match(policy, /connect-src 'self' https:\/\/hixnqtjsjcndeatxhpgd\.supabase\.co/);
   assert.match(policy, /img-src 'self' data:/);
+  assert.match(policy, /style-src 'self'/);
   assert.match(policy, /object-src 'none'/);
   assert.match(policy, /base-uri 'self'/);
   assert.match(policy, /form-action 'self'/);
+  assert.doesNotMatch(policy, /style-src[^;]*'unsafe-inline'/);
   assert.doesNotMatch(policy, /script-src[^;]*'unsafe-inline'/);
+  assert.doesNotMatch(html, /\sstyle=/, 'CSP-safe markup must not rely on inline styles');
 });
 
 test('security migration bounds cloud payloads and removes dormant Data API grants', () => {

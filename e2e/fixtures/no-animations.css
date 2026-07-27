@@ -1,0 +1,12 @@
+/* Τα tests που μετρούν θέσεις και χρώματα πρέπει να ακινητοποιήσουν τη σελίδα.
+   Δεν μπορεί να είναι inline: το CSP δηλώνει `style-src 'self'` χωρίς
+   'unsafe-inline', και το WebKit μπλοκάρει σωστά κάθε injected <style>. Ως
+   αρχείο ίδιας προέλευσης μπαίνει σαν <link> και περνά την ίδια πολιτική που
+   ισχύει και για τον χρήστη — ο έλεγχος δεν χαλαρώνει το CSP για να τρέξει.
+   Δεν δημοσιεύεται: το `scripts/build-production.mjs` χτίζει από ρητή λίστα. */
+*,
+*::before,
+*::after {
+  animation:none !important;
+  transition:none !important;
+}

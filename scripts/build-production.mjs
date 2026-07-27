@@ -36,6 +36,7 @@ const MODULE_FILES = [
   'modules/progress-chart.js',
   'modules/progress-rewards.js',
   'modules/history.js',
+  'modules/session-templates.js',
   'modules/ui.js',
 ];
 

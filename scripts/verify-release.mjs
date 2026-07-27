@@ -17,6 +17,7 @@ const productionScripts = [
   'i18n.js',
   'session-state.js',
   'modules/history.js',
+  'modules/session-templates.js',
   'modules/progress-rewards.js',
   'modules/progress-chart.js',
   'modules/routines.js',

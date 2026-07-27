@@ -7,10 +7,10 @@
     "runs": 3
   },
   "baseline": {
-    "measuredAt": "2026-07-26",
-    "appShellBytes": 1205623,
-    "lcpMs": 1408,
-    "tbtMs": 344
+    "measuredAt": "2026-07-27",
+    "appShellBytes": 1206923,
+    "lcpMs": 1428,
+    "tbtMs": 43
   },
   "budgets": {
     "appShellBytes": 1300000,

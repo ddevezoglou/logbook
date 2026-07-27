@@ -298,3 +298,28 @@ test('an installed PWA boots from its cached session without a network', async (
   await expect(page.locator('#account-sync-state')).toHaveCount(0);
   await expect(page.locator('#account-member-email')).toHaveText('mobile@example.com');
 });
+
+test('the privacy policy opens as its own page while the service worker controls the scope', async ({ page, context, browserName }) => {
+  test.skip(browserName !== 'chromium', 'One Chromium run covers the service-worker navigation contract.');
+  await page.addInitScript(() => sessionStorage.setItem('logbookLocalWorkerEnabled', 'true'));
+  await installAuthenticatedStub(page, { onlineOnly:true });
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register('/service-worker.js', { scope:'/' });
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once:true }));
+  });
+
+  // Ο worker σέρβιρε το cached `index.html` σε κάθε πλοήγηση: η διεύθυνση έγραφε
+  // `privacy.html` ενώ ο χρήστης έβλεπε την εφαρμογή.
+  await page.goto('/privacy.html');
+  expect(await page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await expect(page).toHaveTitle(/Πολιτική απορρήτου/);
+  await expect(page.getByRole('heading', { level:1, name:'Πολιτική απορρήτου' })).toBeVisible();
+  await expect(page.locator('#open-menu')).toHaveCount(0);
+
+  await context.setOffline(true);
+  await page.reload({ waitUntil:'domcontentloaded' });
+  await expect(page.getByRole('heading', { level:1, name:'Πολιτική απορρήτου' })).toBeVisible();
+});

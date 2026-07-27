@@ -15,7 +15,7 @@ for (const theme of ['day', 'night']) {
     await page.goto('/');
     await expect(page.locator('body')).toHaveClass(/app-ready/);
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-    await page.addStyleTag({ content:'*,*::before,*::after{animation:none !important;transition:none !important;}' });
+    await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
 
     const failures = [];
     for (const [label, size] of [['mobile', { width:390, height:844 }], ['desktop', { width:1366, height:900 }]]) {
@@ -32,6 +32,19 @@ for (const theme of ['day', 'night']) {
             failures.push(`${label}/${view} · ${node.target.join(' ')} · ${measured.fgColor} σε ${measured.bgColor} = ${measured.contrastRatio}:1`);
           }
         }
+      }
+    }
+
+    await page.goto('/privacy.html');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    await expect(page.locator('main')).toBeVisible();
+    const privacyResults = await new AxeBuilder({ page })
+      .withRules(['color-contrast-enhanced'])
+      .analyze();
+    for (const violation of privacyResults.violations) {
+      for (const node of violation.nodes) {
+        const measured = [...node.any, ...node.all].map(check => check.data).find(Boolean) ?? {};
+        failures.push(`privacy · ${node.target.join(' ')} · ${measured.fgColor} σε ${measured.bgColor} = ${measured.contrastRatio}:1`);
       }
     }
 

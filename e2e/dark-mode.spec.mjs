@@ -59,7 +59,7 @@ test('neither page has serious or critical accessibility debt left', async ({ pa
 
     // Κάθε view ξεκινά με fade-in. Μετρημένο στη μέση του, το axe βλέπει ημιδιάφανο
     // κείμενο και αναφέρει αντίθεση που δεν υπάρχει στην τελική κατάσταση.
-    await page.addStyleTag({ content:'*,*::before,*::after{animation:none !important;transition:none !important;}' });
+    await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
 
     const found = new Set();
     // Το κινητό και η οθόνη δεν βάφουν τα ίδια πράγματα: το `.mode-button` παίρνει
@@ -78,6 +78,19 @@ test('neither page has serious or critical accessibility debt left', async ({ pa
             found.add(`${label}/${view} · ${violation.id} · ${node.target.join(' ')}`);
           }
         }
+      }
+    }
+
+    await page.goto('/privacy.html');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    await expect(page.locator('main')).toBeVisible();
+    const privacyResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    for (const violation of privacyResults.violations) {
+      if (!['serious', 'critical'].includes(violation.impact)) continue;
+      for (const node of violation.nodes) {
+        found.add(`privacy · ${violation.id} · ${node.target.join(' ')}`);
       }
     }
     return [...found];

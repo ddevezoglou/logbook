@@ -9,6 +9,7 @@
    index.html (tokens → base → components → views) ΕΙΝΑΙ σημαντική. */
 
 * { box-sizing:border-box; }
+.svg-sprite { position:absolute; width:0; height:0; overflow:hidden; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans", sans-serif; min-height:100vh; }
 .auth-gate { position:fixed; inset:0; z-index:1000; min-height:100dvh; display:grid; place-items:center; padding:clamp(28px,6vw,78px) clamp(20px,4vw,60px); overflow:auto; background-color:var(--ink-surface); background-image:linear-gradient(90deg,rgba(var(--gold-rgb),.05) 1px,transparent 1px),linear-gradient(rgba(var(--gold-rgb),.04) 1px,transparent 1px); background-size:72px 72px; color:var(--on-ink); transition:opacity .24s ease,visibility .24s ease; }

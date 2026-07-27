@@ -32,6 +32,7 @@
     'routineRewardTracking',
     'homeProfileCardPosition',
     'homeRoutineCardPosition',
+    'logbookGuestErrorQueue',
   ];
   // Guest mode is a device-local decision, so it lives in localStorage next to the
   // data it describes and is never synced. No session, no user id, no cloud call:

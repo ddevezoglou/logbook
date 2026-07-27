@@ -4,6 +4,7 @@ import * as SessionModel from './modules/sessions.js';
 import * as ProgressRewards from './modules/progress-rewards.js';
 import * as ProgressChart from './modules/progress-chart.js';
 import * as HistoryView from './modules/history.js';
+import * as SessionTemplates from './modules/session-templates.js';
 import * as UI from './modules/ui.js';
 
 const store = StorageMigrations.createStore(localStorage, {
@@ -285,23 +286,7 @@ function renderRewards() {
 }
 
 function setRows(count, values = [], prefix = '', options = {}) {
-  const { extra = false, startIndex = 0 } = options;
-  const unit = weightUnit(), symbol = weightUnitSymbol(unit), unitName = weightUnitName(unit);
-  return Array.from({ length: count }, (_, i) => {
-    const value = values[i] || {};
-    const mode = safeWeightMode(value.weightMode) || inferredWeightMode(value);
-    const setPosition = startIndex + i + 1;
-    const reps = numericInputValue(value.reps, { integer:true });
-    const plates = numericInputValue(value.plates, { integer:true });
-    const displayedWeight = numericInputValue(storedWeightToDisplay(value.weight, unit));
-    const optionsMarkup = WEIGHT_MODES.map(option => `<option value="${option}" ${mode === option ? 'selected' : ''}>${weightModeSourceLabel(option, unit)}</option>`).join('');
-    return `<div class="set-row ${extra ? 'extra-set' : ''}" data-set data-weight-mode="${mode}" ${extra ? 'data-extra-set' : ''}><span class="set-number">${String(setPosition).padStart(2,'0')}</span>
-      <label class="set-control set-reps-control"><span class="set-control-label">Επαναλήψεις</span><input class="${prefix}reps set-reps" type="number" min="0" inputmode="numeric" placeholder="0" value="${reps}" aria-label="Επαναλήψεις σετ ${setPosition}" required></label>
-      <span class="set-times" aria-hidden="true">×</span>
-      <div class="set-load-entry"><label class="set-control set-mode-control"><span class="set-control-label">Μέτρηση</span><select class="weight-mode" aria-label="Τρόπος καταγραφής βάρους για το σετ ${setPosition}">${optionsMarkup}</select></label>
-        <div class="weight-entry"><label class="set-control set-plates-control"><span class="set-control-label">Πλάκες</span><input class="${prefix}plates set-plates" type="number" min="0" step="1" inputmode="numeric" placeholder="πλάκες" value="${plates}" aria-label="Πλάκες σετ ${setPosition}" ${mode === 'plates' || mode === 'mixed' ? 'required' : ''}></label><label class="set-control set-weight-control"><span class="set-control-label">Βάρος (${symbol})</span><input class="${prefix}weight set-weight" type="number" min="0" step="any" inputmode="decimal" placeholder="${symbol}" value="${displayedWeight}" aria-label="${unitName} σετ ${setPosition}" ${mode === 'kg' || mode === 'mixed' || mode === 'bodyweight_extra' ? 'required' : ''}></label></div>
-      </div><button class="remove-set${extra ? ' remove-extra-set' : ''}" type="button" aria-label="Αφαίρεση εργάσιμου σετ">−</button></div>`;
-  }).join('');
+  return SessionTemplates.setRows(count, values, prefix, { ...options, unit:weightUnit() });
 }
 
 function renumberSetRows(card) {
@@ -587,18 +572,13 @@ function duplicateRoutine(routineId) {
 }
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0, { custom = false } = {}) {
-  return `<article class="workout-exercise" data-exercise data-id="${esc(exercise.id || id())}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}" ${custom ? 'data-custom-exercise="true"' : ''}>
-    <span class="exercise-tape" aria-hidden="true"></span>
-    <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
-      ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${exercise.sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
-    ${exercise.cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
-    ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${exercise.sets?.length || 3}"></label>` : ''}
-    <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ / ΜΕΤΡΗΣΗ</span><span></span></div>
-    <div class="exercise-sets">${setRows(exercise.sets?.length || 3, exercise.sets || [])}</div>
-    <div class="set-actions"><button class="mini-button copy-first-set hidden" type="button" aria-label="Αντιγραφή του πρώτου σετ στα υπόλοιπα">ΑΝΤΙΓΡΑΦΗ</button>${free ? '' : `<button class="mini-button add-extra-set" type="button">＋ Extra σετ</button>`}</div>
-    <label class="full-field">Σχόλια άσκησης<textarea class="exercise-comments" data-i18n-user rows="2" placeholder="Τεχνική, αίσθηση, RPE...">${esc(exercise.comments || '')}</textarea></label>
-    <input class="exercise-source-name" type="hidden" value="${esc(exercise.exercise || '')}">
-  </article>`;
+  return SessionTemplates.exerciseCard(exercise, {
+    free,
+    exerciseIndex,
+    custom,
+    unit:weightUnit(),
+    generatedId:exercise.id ? '' : id(),
+  });
 }
 
 function refreshWorkoutDayOptions(preferredDay) {
@@ -959,24 +939,14 @@ function loggedLoad(set = {}) {
 }
 
 function sessionPage(session, sessionNumber) {
-  const exercises = Array.isArray(session.exercises) ? session.exercises : [];
-  return `<section class="session-page" aria-label="Η σελίδα της προπόνησης">
-    <div class="page-binding" aria-hidden="true"><i></i><i></i><i></i></div>
-    <header class="session-page-head">
-      <strong>SESSION No ${sessionNumber}</strong>
-      <time datetime="${esc(session.date || '')}">${dayForDate(session.date)} · ${formatDate(session.date)}</time>
-    </header>
-    <div class="session-page-title"><div><h4 data-i18n-user>${esc(sessionWorkoutName(session))}</h4></div><span aria-hidden="true">LOGGED</span></div>
-    ${session.comments ? `<p class="page-session-note" data-i18n-user><b>ΣΗΜΕΙΩΣΕΙΣ</b>${esc(session.comments)}</p>` : ''}
-    <div class="page-exercises">${exercises.map((exercise, exerciseIndex) => {
-      const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
-      return `<article class="page-exercise">
-        <div class="page-exercise-title"><span>${String(exerciseIndex + 1).padStart(2, '0')}</span><div><h5 data-i18n-user>${esc(exercise.exercise || 'Άσκηση')}</h5>${exercise.comments ? `<p data-i18n-user>${esc(exercise.comments)}</p>` : ''}</div></div>
-        <div class="page-set-table"><div class="page-set-head"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span>ΒΑΡΟΣ</span></div>${sets.length ? sets.map((set, setIndex) => `<div class="page-set-row"><strong>${String(setIndex + 1).padStart(2, '0')}</strong><span>${Number(set.reps) || 0}</span><span>${esc(loggedLoad(set))}</span></div>`).join('') : '<p class="page-no-sets">Δεν καταγράφηκαν σετ.</p>'}</div>
-      </article>`;
-    }).join('')}</div>
-    <footer><button type="button" data-close-session="${esc(session.id)}">ΚΛΕΙΣΙΜΟ ΣΕΛΙΔΑΣ ↑</button></footer>
-  </section>`;
+  return SessionTemplates.sessionPage({
+    session,
+    sessionNumber,
+    workoutName:sessionWorkoutName(session),
+    dayLabel:dayForDate(session.date),
+    formattedDate:formatDate(session.date),
+    formatLoad:loggedLoad,
+  });
 }
 
 let sessionDialogOpener = null;
