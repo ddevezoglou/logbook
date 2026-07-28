@@ -44,6 +44,14 @@
   const isRecord = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
   const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
+  function normalizeDeletedRecord(value) {
+    if (!isRecord(value) || value.id === undefined || value.id === null || typeof value.deletedAt !== 'string') return null;
+    const deletedAt = new Date(value.deletedAt);
+    return Number.isFinite(deletedAt.getTime()) ? { id:value.id, deletedAt:deletedAt.toISOString() } : null;
+  }
+
+  const isDeletedRecord = value => Boolean(normalizeDeletedRecord(value));
+
   function normalizeNumber(value, { integer = false } = {}) {
     if (value === null || value === undefined || !['number','string'].includes(typeof value) || (typeof value === 'string' && !value.trim())) return null;
     const number = Number(value);
@@ -77,6 +85,8 @@
 
   function normalizeSession(value) {
     if (!isRecord(value)) return null;
+    const deleted = normalizeDeletedRecord(value);
+    if (deleted) return deleted;
     const session = normalizeTextFields(value, ['date', 'type', 'workoutDay', 'workoutName', 'comments']);
     session.exercises = Array.isArray(value.exercises) ? value.exercises.map(normalizeExercise).filter(Boolean) : [];
     return session;
@@ -95,6 +105,8 @@
 
   function normalizeRoutine(value) {
     if (!isRecord(value)) return null;
+    const deleted = normalizeDeletedRecord(value);
+    if (deleted) return deleted;
     const routine = normalizeTextFields(value, ['name', 'cycleAnchorDate']);
     routine.plan = Array.isArray(value.plan) ? value.plan.map(normalizePlanItem).filter(Boolean) : [];
     routine.isPlaceholder = typeof value.isPlaceholder === 'boolean'
@@ -122,7 +134,10 @@
     ) {
       profile.customImage = value.customImage;
     }
-    return profile;
+    // A profile whose every allowlisted field is missing or empty is not
+    // content. Returning {} made it truthy, which blinded the empty cloud
+    // snapshot guard and asked the guest to resolve a merge over nothing.
+    return Object.values(profile).some(entry => entry !== '' && entry !== false) ? profile : null;
   }
 
   function normalizePayload(value = {}) {
@@ -168,20 +183,35 @@
     return JSON.stringify(value);
   }
 
+  // This hash is the only judge of whether a payload changed, so a collision is
+  // not an error the user ever sees: it is a change that is silently never
+  // written. Two independent lanes — different basis, different odd multiplier —
+  // widen the fingerprint to 64 bit. A meta hash written by an older 32 bit
+  // client simply compares unequal and costs one harmless re-upload of the data
+  // already on the device.
+  const HASH_LANES = [
+    { basis:0x811c9dc5, prime:0x01000193 },
+    { basis:0x9e3779b1, prime:0x5bd1e995 },
+  ];
+
   function payloadHash(payload) {
     const input = stableStringify(normalizePayload(payload));
-    let hash = 2166136261;
-    for (let index = 0; index < input.length; index += 1) {
-      hash ^= input.charCodeAt(index);
-      hash = Math.imul(hash, 16777619);
-    }
-    return (hash >>> 0).toString(16).padStart(8, '0');
+    return HASH_LANES.map(({ basis, prime }) => {
+      let hash = basis;
+      for (let index = 0; index < input.length; index += 1) {
+        hash ^= input.charCodeAt(index);
+        hash = Math.imul(hash, prime);
+      }
+      return (hash >>> 0).toString(16).padStart(8, '0');
+    }).join('');
   }
 
   function hasMeaningfulData(payload) {
     const data = normalizePayload(payload);
-    if (data.trainingSessions.length || data.userProfile || data.trainingRoutines.length > 1) return true;
-    const routine = data.trainingRoutines[0];
+    const sessions = data.trainingSessions.filter(item => !isDeletedRecord(item));
+    const routines = data.trainingRoutines.filter(item => !isDeletedRecord(item));
+    if (sessions.length || data.userProfile || routines.length > 1) return true;
+    const routine = routines[0];
     if (!routine) return false;
     return Boolean(routine.plan?.length || !routine.isPlaceholder);
   }
@@ -195,7 +225,19 @@
       if (item?.id === undefined || item?.id === null) return;
       const key = String(item.id);
       const existing = merged.get(key);
-      merged.set(key, existing && resolveConflict ? resolveConflict(existing, item) : item);
+      if (!existing) {
+        merged.set(key, item);
+        return;
+      }
+      const remoteDeleted = normalizeDeletedRecord(existing);
+      const localDeleted = normalizeDeletedRecord(item);
+      if (remoteDeleted || localDeleted) {
+        if (!remoteDeleted) merged.set(key, localDeleted);
+        else if (!localDeleted) merged.set(key, remoteDeleted);
+        else merged.set(key, remoteDeleted.deletedAt >= localDeleted.deletedAt ? remoteDeleted : localDeleted);
+        return;
+      }
+      merged.set(key, resolveConflict ? resolveConflict(existing, item) : item);
     });
     return [...merged.values()];
   }
@@ -217,11 +259,17 @@
     const remote = normalizePayload(remotePayload);
     const local = normalizePayload(localPayload);
     const routines = mergeCollection(remote.trainingRoutines, local.trainingRoutines, resolveRoutineConflict);
-    const localActiveRoutine = local.trainingRoutines.find(item => item?.isActive);
+    const localActiveRoutine = local.trainingRoutines.find(item => !isDeletedRecord(item) && item?.isActive);
     const localActive = localActiveRoutine?.id;
-    const remoteActive = remote.trainingRoutines.find(item => item?.isActive)?.id;
-    const activeId = isEmptyPlaceholder(localActiveRoutine, local.trainingSessions) ? (remoteActive || localActive) : (localActive || remoteActive);
-    if (activeId) routines.forEach(routine => { routine.isActive = String(routine.id) === String(activeId); });
+    const remoteActive = remote.trainingRoutines.find(item => !isDeletedRecord(item) && item?.isActive)?.id;
+    const liveRoutineIds = new Set(routines.filter(item => !isDeletedRecord(item)).map(item => String(item.id)));
+    const preferredActive = isEmptyPlaceholder(localActiveRoutine, local.trainingSessions) ? (remoteActive || localActive) : (localActive || remoteActive);
+    const activeId = liveRoutineIds.has(String(preferredActive))
+      ? preferredActive
+      : [remoteActive, localActive, routines.find(item => !isDeletedRecord(item))?.id].find(candidate => liveRoutineIds.has(String(candidate)));
+    if (activeId) routines.forEach(routine => {
+      if (!isDeletedRecord(routine)) routine.isActive = String(routine.id) === String(activeId);
+    });
     return normalizePayload({
       trainingRoutines:routines,
       trainingSessions:mergeCollection(remote.trainingSessions, local.trainingSessions),

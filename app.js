@@ -71,10 +71,20 @@ const {
   cycleDayLabel,
 } = RoutineModel;
 const oldLogs = store.read('trainingLogs', { type:'array', fallback:[] });
-const savedSessions = store.read('trainingSessions', { type:'array', fallback:[] });
+const isDeletedRecord = value => Boolean(value)
+  && typeof value === 'object'
+  && !Array.isArray(value)
+  && value.id !== undefined
+  && value.id !== null
+  && typeof value.deletedAt === 'string';
+const savedSessionRecords = store.read('trainingSessions', { type:'array', fallback:[] });
+const savedSessions = savedSessionRecords.filter(item => !isDeletedRecord(item));
+let sessionTombstones = savedSessionRecords.filter(isDeletedRecord);
 const savedProfile = store.read('userProfile', { type:'object', fallback:null });
 const legacyPlan = store.read('trainingPlan', { type:'array', fallback:[] });
-const savedRoutines = store.read('trainingRoutines', { type:'array', fallback:[] });
+const savedRoutineRecords = store.read('trainingRoutines', { type:'array', fallback:[] });
+const savedRoutines = savedRoutineRecords.filter(item => !isDeletedRecord(item));
+let routineTombstones = savedRoutineRecords.filter(isDeletedRecord);
 const { state, repairs } = StorageMigrations.migrateLocalData({
   oldLogs,
   savedSessions,
@@ -88,8 +98,6 @@ let routineCarouselIndex = 0;
 let planExerciseDrafts = [];
 let routineSwipeStartX = null;
 let historySwipe = null;
-if (repairs.sessionsChanged) safeStoreWrite('trainingSessions', state.sessions);
-if (repairs.routinesChanged) safeStoreWrite('trainingRoutines', state.routines);
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 
@@ -170,8 +178,33 @@ const selectedRoutine = () => state.routines.find(routine => routine.id === stat
 const activeRoutine = () => state.routines.find(routine => routine.isActive) || state.routines[0];
 const selectedPlan = () => selectedRoutine()?.plan || [];
 const activePlan = () => activeRoutine()?.plan || [];
-const persistRoutines = () => safeStoreWrite('trainingRoutines', state.routines);
-const persistSessions = sessions => safeStoreWrite('trainingSessions', sessions);
+function persistCollection(key, items, existingTombstones, deletedIds = []) {
+  const liveIds = new Set(items.map(item => String(item.id)));
+  const tombstones = new Map(existingTombstones.map(item => [String(item.id), item]));
+  const deletedAt = new Date().toISOString();
+  deletedIds.forEach(itemId => tombstones.set(String(itemId), { id:itemId, deletedAt }));
+  liveIds.forEach(itemId => tombstones.delete(itemId));
+  const nextTombstones = [...tombstones.values()];
+  return {
+    saved:safeStoreWrite(key, [...items, ...nextTombstones]),
+    tombstones:nextTombstones,
+  };
+}
+
+function persistRoutines(routines = state.routines, deletedIds = []) {
+  const result = persistCollection('trainingRoutines', routines, routineTombstones, deletedIds);
+  if (result.saved) routineTombstones = result.tombstones;
+  return result.saved;
+}
+
+function persistSessions(sessions = state.sessions, deletedIds = []) {
+  const result = persistCollection('trainingSessions', sessions, sessionTombstones, deletedIds);
+  if (result.saved) sessionTombstones = result.tombstones;
+  return result.saved;
+}
+
+if (repairs.sessionsChanged) persistSessions();
+if (repairs.routinesChanged) persistRoutines();
 
 const rewardLabels = ['ΔΗΜΙΟΥΡΓΙΑ ΠΡΟΓΡΑΜΜΑΤΟΣ','PLAN SETUP','KEEP UP THE WORK','NEVER GIVE UP','GYMRAT'];
 const scheduledForRoutine = (session, routine) => session?.routineId != null
@@ -562,7 +595,7 @@ function duplicateRoutine(routineId) {
     })),
   };
   const nextRoutines = [...state.routines, duplicate];
-  if (!safeStoreWrite('trainingRoutines', nextRoutines)) return;
+  if (!persistRoutines(nextRoutines)) return;
   state.routines = nextRoutines;
   state.selectedRoutineId = duplicate.id;
   resetPlanForm();
@@ -1278,27 +1311,76 @@ function homeCardBounds(card = $('#home-profile-card')) {
   };
 }
 
-function placeHomeCard(card, position, fallback) {
-  if (card.classList.contains('hidden')) return;
-  const { minX, minY, maxX, maxY } = homeCardBounds(card);
-  const rangeX = maxX - minX, rangeY = maxY - minY;
-  const mobile = mobileHomeLayout();
-  const fallbackX = mobile ? 0 : fallback.x(maxX);
-  const fallbackY = mobile ? 0 : fallback.y(maxY);
-  const x = Math.max(minX, Math.min(maxX, position ? minX + position.x * rangeX : fallbackX));
-  const y = Math.max(minY, Math.min(maxY, position ? minY + position.y * rangeY : fallbackY));
+function setHomeCardCoordinates(card, x, y) {
   card.dataset.x = String(x);
   card.dataset.y = String(y);
   card.style.setProperty('--card-x', `${x}px`);
   card.style.setProperty('--card-y', `${y}px`);
 }
 
+function homeRectsOverlap(first, second, gap = 20) {
+  return first.left < second.right + gap
+    && first.right + gap > second.left
+    && first.top < second.bottom + gap
+    && first.bottom + gap > second.top;
+}
+
+function avoidDefaultHomeCardCollisions(card, x, y, bounds, selectors = []) {
+  if (window.innerWidth < 1000) return { x, y };
+  setHomeCardCoordinates(card, x, y);
+  selectors.forEach(selector => {
+    const obstacle = $(selector);
+    if (!obstacle || obstacle.classList.contains('hidden')) return;
+    let cardRect = card.getBoundingClientRect();
+    const obstacleRect = obstacle.getBoundingClientRect();
+    if (!homeRectsOverlap(cardRect, obstacleRect)) return;
+
+    const candidates = [
+      { x:x - (cardRect.right - obstacleRect.left + 24), y },
+      { x:x + (obstacleRect.right - cardRect.left + 24), y },
+      { x, y:y - (cardRect.bottom - obstacleRect.top + 24) },
+      { x, y:y + (obstacleRect.bottom - cardRect.top + 24) },
+    ].filter(candidate => candidate.x >= bounds.minX && candidate.x <= bounds.maxX && candidate.y >= bounds.minY && candidate.y <= bounds.maxY)
+      .sort((first, second) => Math.hypot(first.x - x, first.y - y) - Math.hypot(second.x - x, second.y - y));
+    if (candidates.length) ({ x, y } = candidates[0]);
+    setHomeCardCoordinates(card, x, y);
+    cardRect = card.getBoundingClientRect();
+    if (homeRectsOverlap(cardRect, obstacleRect)) {
+      y = Math.min(bounds.maxY, y + (obstacleRect.bottom - cardRect.top + 24));
+      setHomeCardCoordinates(card, x, y);
+    }
+  });
+  return { x, y };
+}
+
+function placeHomeCard(card, position, fallback) {
+  if (card.classList.contains('hidden')) return;
+  const bounds = homeCardBounds(card);
+  const { minX, minY, maxX, maxY } = bounds;
+  const rangeX = maxX - minX, rangeY = maxY - minY;
+  const mobile = mobileHomeLayout();
+  const fallbackX = mobile ? 0 : fallback.x(maxX);
+  const fallbackY = mobile ? 0 : fallback.y(maxY);
+  let x = Math.max(minX, Math.min(maxX, position ? minX + position.x * rangeX : fallbackX));
+  let y = Math.max(minY, Math.min(maxY, position ? minY + position.y * rangeY : fallbackY));
+  if (!position && !mobile) ({ x, y } = avoidDefaultHomeCardCollisions(card, x, y, bounds, fallback.avoid));
+  setHomeCardCoordinates(card, x, y);
+}
+
 function placeHomeProfileCard(position = readHomeCardPosition()) {
-  placeHomeCard($('#home-profile-card'), position, { x:maxX => maxX * .92, y:maxY => Math.min(205, maxY * .16) });
+  placeHomeCard($('#home-profile-card'), position, {
+    x:maxX => maxX * .92,
+    y:maxY => Math.min(205, maxY * .16),
+    avoid:['.daily-quote'],
+  });
 }
 
 function placeHomeRoutineCard(position = readHomeCardPosition('homeRoutineCardPosition')) {
-  placeHomeCard($('#home-routine-card'), position, { x:maxX => maxX * .58, y:maxY => Math.min(330, maxY * .62) });
+  placeHomeCard($('#home-routine-card'), position, {
+    x:maxX => maxX * .58,
+    y:maxY => Math.min(330, maxY * .62),
+    avoid:['.daily-quote', '#home-profile-card', '.home-start', '.home-quick'],
+  });
 }
 
 function renderHomeProfileCard() {
@@ -2135,7 +2217,7 @@ document.addEventListener('click', event => {
     askToConfirm('Διαγραφή εβδομαδιαίου προγράμματος', `Να διαγραφεί οριστικά το «${routine.name}» και όλες οι ημέρες του; Το Ιστορικό προπονήσεων θα παραμείνει.`, () => {
       const nextRoutines = state.routines.filter(item => item.id !== routine.id);
       if (routine.isActive) nextRoutines[0].isActive = true;
-      if (!safeStoreWrite('trainingRoutines', nextRoutines)) return;
+      if (!persistRoutines(nextRoutines, [routine.id])) return;
       if (routine.isActive) switchRewardRoutine(routine.id, nextRoutines[0].id);
       state.routines = nextRoutines;
       delete rewardTracking.periods[routine.id];
@@ -2167,7 +2249,7 @@ document.addEventListener('click', event => {
     const session = state.sessions.find(item => String(item.id) === String(sessionId));
     askToConfirm('Διαγραφή προπόνησης', `Να διαγραφεί οριστικά η προπόνηση ${session ? `«${sessionWorkoutName(session)}» στις ${formatDate(session.date)}` : ''}; Θα χαθούν όλα τα σετ και οι μετρήσεις της.`, () => {
       const nextSessions = state.sessions.filter(x => String(x.id) !== String(sessionId));
-      if (!persistSessions(nextSessions)) return;
+      if (!persistSessions(nextSessions, [sessionId])) return;
       state.sessions = nextSessions;
       if ([state.editingSessionId, state.copyingSessionId].some(activeId => String(activeId) === String(sessionId))) resetSessionForm();
       renderOverview(); toast('Η προπόνηση διαγράφηκε');

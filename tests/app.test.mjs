@@ -32,9 +32,34 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.2.5');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.6');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
+});
+
+test('tombstoned routines and sessions stay in storage but never render', () => {
+  const deletedAt = '2026-07-28T12:00:00.000Z';
+  const { document, localStorage } = loadApp({
+    trainingRoutines:[
+      { id:'r1', name:'Visible', isActive:true, cycleLength:7, plan:[] },
+      { id:'r-deleted', deletedAt },
+    ],
+    trainingSessions:[
+      { id:'s1', date:'2026-07-27', type:'free', comments:'', exercises:[] },
+      { id:'s-deleted', deletedAt },
+    ],
+  });
+
+  assert.deepEqual([...document.querySelectorAll('#routine-list .routine-card')].map(card => card.dataset.routineId), ['r1']);
+  click(document, '[data-rename-routine="r1"]');
+  const rename = document.querySelector('[data-routine-rename-form="r1"] .routine-inline-name');
+  rename.value = 'Still visible';
+  rename.closest('form').dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
+  click(document, '.nav-button[data-view="overview"]');
+  assert.equal(document.querySelectorAll('#session-cards .session-card').length, 1);
+  assert.equal(document.querySelector('[data-edit-session="s-deleted"]'), null);
+  assert.equal(JSON.parse(localStorage.getItem('trainingRoutines')).length, 2);
+  assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 2);
 });
 
 test('version label follows every supported interface language', () => {
@@ -345,6 +370,35 @@ test('home routine ticket drag stays bounded and persists independently', () => 
   pointer('pointerup', 5000, 5000);
   assert.deepEqual(JSON.parse(localStorage.getItem('homeRoutineCardPosition')), { x:1, y:1 });
   assert.equal(localStorage.getItem('homeProfileCardPosition'), null);
+});
+
+test('desktop default home cards avoid the quote and primary actions', async () => {
+  const { window, document } = loadApp();
+  Object.defineProperty(window, 'innerWidth', { value:1440, configurable:true });
+  const shell = document.querySelector('.home-shell');
+  const card = document.querySelector('#home-routine-card');
+  const quote = document.querySelector('.daily-quote');
+  const start = document.querySelector('.home-start');
+  const quick = document.querySelector('.home-quick');
+  Object.defineProperties(shell, { clientWidth:{ value:1440 }, scrollHeight:{ value:900 } });
+  Object.defineProperties(card, {
+    offsetLeft:{ value:0 }, offsetTop:{ value:0 }, offsetWidth:{ value:330 }, offsetHeight:{ value:210 },
+  });
+  card.getBoundingClientRect = () => {
+    const left = Number(card.dataset.x) || 0;
+    const top = Number(card.dataset.y) || 0;
+    return { left, top, right:left + 330, bottom:top + 210, width:330, height:210 };
+  };
+  quote.getBoundingClientRect = () => ({ left:940, top:330, right:1380, bottom:490, width:440, height:160 });
+  start.getBoundingClientRect = () => ({ left:158, top:518, right:618, bottom:578, width:460, height:60 });
+  quick.getBoundingClientRect = () => ({ left:158, top:590, right:618, bottom:664, width:460, height:74 });
+
+  window.dispatchEvent(new window.Event('resize'));
+  await new Promise(resolve => window.setTimeout(resolve, 25));
+
+  const cardRect = card.getBoundingClientRect();
+  assert.ok(cardRect.right + 20 <= quote.getBoundingClientRect().left);
+  assert.ok(cardRect.bottom + 20 <= start.getBoundingClientRect().top);
 });
 
 test('home athlete card drag stays bounded and persists its relative position', () => {
@@ -763,7 +817,10 @@ test('deleting a session removes it from storage', () => {
   const { document, localStorage } = loadApp({ trainingSessions: [session] });
   click(document, '[data-delete-session="s1"]');
   click(document, '#confirm-delete-accept');
-  assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 0);
+  const saved = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(saved.filter(item => !item.deletedAt).length, 0);
+  assert.equal(saved[0].id, 's1');
+  assert.ok(Number.isFinite(Date.parse(saved[0].deletedAt)));
 });
 
 test('personal bests pick the heavier set', () => {
@@ -976,8 +1033,10 @@ test('deleting the active routine promotes another to active', () => {
   click(document, '[data-delete-routine="r1"]');
   click(document, '#confirm-delete-accept');
   const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
-  assert.equal(saved.length, 1);
-  assert.equal(saved[0].isActive, true);
+  const visible = saved.filter(item => !item.deletedAt);
+  assert.equal(visible.length, 1);
+  assert.equal(visible[0].isActive, true);
+  assert.equal(saved.find(item => item.deletedAt)?.id, 'r1');
 });
 
 test('plan form with all 7 days occupied does not save an empty-day workout', () => {
@@ -1299,7 +1358,9 @@ test('a deleted session cannot be recreated by its stale edit form', () => {
   click(document, '[data-delete-session="s1"]');
   click(document, '#confirm-delete-accept');
   click(document, '#save-session');
-  assert.equal(JSON.parse(localStorage.getItem('trainingSessions')).length, 0);
+  const saved = JSON.parse(localStorage.getItem('trainingSessions'));
+  assert.equal(saved.filter(item => !item.deletedAt).length, 0);
+  assert.equal(saved.filter(item => item.deletedAt).length, 1);
   assert.equal(document.querySelector('#cancel-session-edit').classList.contains('hidden'), true);
 });
 

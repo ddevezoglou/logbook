@@ -205,6 +205,57 @@ test('merge keeps unique routines and sessions from both devices', async () => {
   assert.equal(merged.userProfile.name, 'Local athlete');
 });
 
+test('merge tombstones prevent stale sessions and routines from being resurrected', async () => {
+  const { window } = await loadSync();
+  const deletedAt = '2026-07-28T12:00:00.000Z';
+  const remote = {
+    trainingRoutines:[{ id:'r1', name:'Current', isActive:true, plan:[] }, { id:'r2', deletedAt }],
+    trainingSessions:[{ id:'s1', date:'2026-07-25' }, { id:'s2', deletedAt }],
+  };
+  const staleLocal = {
+    trainingRoutines:[
+      { id:'r1', name:'Current', isActive:false, plan:[] },
+      { id:'r2', name:'Deleted elsewhere', isActive:true, plan:[{ id:'p2' }] },
+      { id:'r3', name:'Unsynced local', isActive:false, plan:[] },
+    ],
+    trainingSessions:[
+      { id:'s1', date:'2026-07-25' },
+      { id:'s2', date:'2026-07-26' },
+      { id:'s3', date:'2026-07-27' },
+    ],
+  };
+
+  const merged = window.LogbookCloudSync.mergePayloads(remote, staleLocal);
+  assert.deepEqual(JSON.parse(JSON.stringify(merged.trainingSessions)), [
+    { id:'s1', date:'2026-07-25', exercises:[] },
+    { id:'s2', deletedAt },
+    { id:'s3', date:'2026-07-27', exercises:[] },
+  ]);
+  assert.deepEqual(Array.from(merged.trainingRoutines, item => ({ id:item.id, deletedAt:item.deletedAt })), [
+    { id:'r1', deletedAt:undefined },
+    { id:'r2', deletedAt },
+    { id:'r3', deletedAt:undefined },
+  ]);
+  assert.equal(merged.trainingRoutines.find(item => item.id === 'r1').isActive, true);
+  window.close();
+});
+
+test('first sync uploads local tombstones as part of the snapshot', async () => {
+  const session = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const deletedAt = '2026-07-28T12:00:00.000Z';
+  const { client, window } = await loadSync({
+    session,
+    seed:{
+      trainingRoutines:[{ id:'r1', name:'Current', isActive:true, plan:[] }, { id:'r2', deletedAt }],
+      trainingSessions:[{ id:'s1', date:'2026-07-27' }, { id:'s2', deletedAt }],
+    },
+  });
+
+  assert.deepEqual(client.row.payload.trainingRoutines.find(item => item.id === 'r2'), { id:'r2', deletedAt });
+  assert.deepEqual(client.row.payload.trainingSessions.find(item => item.id === 's2'), { id:'s2', deletedAt });
+  window.close();
+});
+
 test('cloud payload normalization validates nested exercises and set fields', async () => {
   const { window } = await loadSync();
   const injected = '5" autofocus onfocus="alert(1)';
@@ -253,9 +304,44 @@ test('cloud profile uses an allowlist, omits the local gallery and stays below 1
   assert.ok(JSON.stringify(normalized).length < 100 * 1024);
 
   const oversized = window.LogbookCloudSync.mergePayloads({}, {
-    userProfile:{ customImage:`data:image/jpeg;base64,${'C'.repeat(513 * 1024)}` },
+    userProfile:{ name:'Athlete', customImage:`data:image/jpeg;base64,${'C'.repeat(513 * 1024)}` },
   });
   assert.equal('customImage' in oversized.userProfile, false);
+  window.close();
+});
+
+test('a profile without a single valid field is not data', async () => {
+  const { window } = await loadSync();
+  const profileOf = value => window.LogbookCloudSync.mergePayloads({}, { userProfile:value }).userProfile;
+
+  assert.equal(profileOf({ imageGallery:['data:image/jpeg;base64,AAAA'], nickname:'ghost' }), null);
+  assert.equal(profileOf({ name:'   ', customImage:'', hideAge:false }), null);
+  assert.equal(profileOf({ customImage:`data:image/jpeg;base64,${'C'.repeat(513 * 1024)}` }), null);
+  assert.deepEqual({ ...profileOf({ name:'Athlete', customImage:'' }) }, { name:'Athlete', customImage:'' });
+  window.close();
+});
+
+test('the payload fingerprint is 64 bit, stable across runs and moves in both lanes', async () => {
+  const { window } = await loadSync();
+  const { payloadHash } = window.LogbookCloudSync;
+  const payload = {
+    trainingRoutines:[{ id:'r1', name:'Strength', isActive:true, plan:[{ id:'p1', exercise:'Squat', workSets:3 }] }],
+    trainingSessions:[{ id:'s1', date:'2026-07-17', exercises:[{ exercise:'Squat', sets:[{ reps:5, weight:100, weightMode:'kg' }] }] }],
+    userProfile:{ name:'Athlete', birthdate:'1990-01-01', weight:80, weightUnit:'kg' },
+    logbookLanguage:'el',
+  };
+
+  // A silent collision is a lost change, so the fingerprint is pinned: any
+  // change to the hash or to what it hashes has to be a deliberate one.
+  const hash = payloadHash(payload);
+  assert.equal(hash.length, 16);
+  assert.equal(hash, 'ed0e87260caebdb0');
+  assert.equal(payloadHash(structuredClone(payload)), hash);
+
+  const changed = payloadHash({ ...payload, logbookLanguage:'en' });
+  assert.notEqual(changed.slice(0, 8), hash.slice(0, 8));
+  assert.notEqual(changed.slice(8), hash.slice(8));
+  assert.notEqual(payloadHash({ ...payload, userProfile:{ ...payload.userProfile, name:'Athlets' } }), hash);
   window.close();
 });
 
@@ -386,6 +472,32 @@ test('guest data merges only after explicit confirmation when the account alread
   assert.deepEqual(client.row.payload.trainingSessions.map(item => item.id).sort(), ['cloud-session', 'guest-session']);
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id).sort(), ['cloud-session', 'guest-session']);
   assert.deepEqual(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions.map(item => item.id), ['private-a']);
+  assert.equal(localStorage.getItem('logbookGuestImportPending'), null);
+});
+
+test('a guest carrying only an empty profile is never asked to resolve a merge', async () => {
+  const session = { user:{ id:'user-b', email:'second@example.com' } };
+  const row = {
+    user_id:'user-b',
+    revision:2,
+    payload:{ trainingRoutines:[], trainingSessions:[{ id:'cloud-session', date:'2026-07-16' }], logbookLanguage:'el' },
+  };
+  let prompts = 0;
+  const { localStorage } = await loadSync({
+    session,
+    row,
+    seed:{ logbookGuestImportPending:'1', userProfile:{ imageGallery:[], nickname:'ghost' } },
+    onWindow(window) {
+      window.addEventListener('logbook:guest-merge-required', event => {
+        prompts += 1;
+        event.detail.respond('cancel');
+      });
+    },
+  });
+
+  assert.equal(prompts, 0);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id), ['cloud-session']);
+  assert.equal(localStorage.getItem('userProfile'), null);
   assert.equal(localStorage.getItem('logbookGuestImportPending'), null);
 });
 
