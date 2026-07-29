@@ -8,6 +8,7 @@ const styles = ['tokens.css', 'base.css', 'components.css', 'dialogs.css', 'view
   .join('\n');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 const i18nSource = readFileSync(new URL('../i18n.js', import.meta.url), 'utf8');
+const indexSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 const routineWith = plan => [{ id: 'r1', name: 'Test Routine', isActive: true, plan }];
 const planDay = (day, exercise, extra = {}) => ({ id: `p-${day}-${exercise}`, day, workoutName: `${day} Workout`, exercise, workSets: 3, cues: '', ...extra });
@@ -32,7 +33,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.2.6');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.2.7');
   assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
@@ -998,18 +999,43 @@ test('equal weight with fewer reps shows neither progress nor decline', () => {
   assert.ok(panel.includes('9 επαν.'), 'reps stay available on the point tooltip');
 });
 
-test('progress chart fits the panel without horizontal scrolling', () => {
+test('progress chart holds one step per session and scrolls to reach the rest', () => {
   const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
   const sessions = Array.from({ length: 16 }, (_, i) => mkSession(`s${i}`, `2026-05-${String(i + 1).padStart(2, '0')}`, 50 + i * 2.5));
   const { document } = loadApp({ trainingSessions: sessions });
   click(document, '.nav-button[data-view="progress"]');
   const svg = document.querySelector('#progress-panel svg.progress-chart');
-  assert.ok(!svg.hasAttribute('style'), 'svg no longer forces a fixed pixel width');
   const viewWidth = Number(svg.getAttribute('viewBox').split(' ')[2]);
-  assert.ok(viewWidth <= 900, `viewBox width (${viewWidth}) stays within the panel fallback width`);
+  const spots = [...svg.querySelectorAll('.chart-dot')].map(dot => Number(dot.getAttribute('cx')));
+  const tightest = Math.min(...spots.slice(1).map((spot, i) => spot - spots[i]));
+  assert.ok(tightest >= 78, `every session keeps at least 78 units of paper (tightest gap ${tightest})`);
+  const wrap = document.querySelector('#progress-panel .chart-wrap');
+  assert.ok(wrap.classList.contains('is-scrollable'), 'the chart declares itself scrollable once it outgrows the panel');
+  // Το CSP («style-src 'self'») απορρίπτει τα inline styles, οπότε το πλάτος πρέπει να είναι attribute.
+  assert.ok(!svg.hasAttribute('style'), 'the width never rides on an inline style the CSP would drop');
+  assert.equal(svg.getAttribute('width'), String(viewWidth), 'a scrolling chart pins its pixel width so the panel can scroll it');
+  assert.equal(svg.getAttribute('height'), '340', 'and keeps its natural height instead of scaling with the width');
+  assert.equal(wrap.getAttribute('role'), 'region', 'the scroller is reachable as a labelled region');
+  assert.equal(wrap.getAttribute('tabindex'), '0', 'the scroller is reachable by keyboard');
+  const rail = document.querySelector('#progress-panel .chart-rail');
+  assert.ok(rail, 'the weight axis is pinned beside the paper instead of scrolling away with it');
+  assert.equal(rail.querySelectorAll('.chart-tick').length, 5, 'the pinned axis carries every tick');
+  assert.equal(svg.querySelectorAll('.chart-tick').length, 0, 'and the scrolling paper no longer repeats them');
   const rotated = [...svg.querySelectorAll('.chart-date')].every(t => (t.getAttribute('transform') || '').includes('rotate'));
   assert.ok(rotated, 'date labels are angled so all of them fit');
   assert.strictEqual(svg.querySelectorAll('.chart-date').length, sessions.length, 'every date keeps its label');
+});
+
+test('progress chart stays fluid while it still fits the panel', () => {
+  const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
+  const sessions = Array.from({ length: 5 }, (_, i) => mkSession(`s${i}`, `2026-05-${String(i + 1).padStart(2, '0')}`, 50 + i * 2.5));
+  const { document } = loadApp({ trainingSessions: sessions });
+  click(document, '.nav-button[data-view="progress"]');
+  const svg = document.querySelector('#progress-panel svg.progress-chart');
+  assert.ok(!svg.hasAttribute('width'), 'a chart that fits keeps its fluid width');
+  assert.ok(!document.querySelector('#progress-panel .chart-wrap').classList.contains('is-scrollable'), 'no scroller when there is nothing to reach');
+  assert.ok(!document.querySelector('#progress-panel .chart-rail'), 'no pinned axis either — the ticks stay inside the chart');
+  assert.equal(svg.querySelectorAll('.chart-tick').length, 5, 'the ticks keep their place inside a chart that fits');
 });
 
 test('progress chart with a single-point mode still guards against division issues', () => {
@@ -2273,6 +2299,42 @@ test('i18n leaves no Greek UI fragments in translated rendered content', () => {
   assert.ok(document.querySelector('.session-page').textContent.includes('Καλή ενέργεια'), 'the user-authored note remains Greek');
 });
 
+test('every i18n source string appears exactly once in the catalog', () => {
+  const { window } = loadApp();
+  const ids = [...i18nSource.matchAll(/^\s*'((?:message|aria)\.[\w-]+)':\[/gm)].map(match => match[1]);
+  assert.ok(ids.length > 400, 'the catalog ids are readable from the source');
+
+  const owners = new Map();
+  const duplicates = [];
+  ids.forEach(id => {
+    const source = window.LogbookI18n.tId(id);
+    if (owners.has(source)) duplicates.push(`${owners.get(source)} + ${id}: ${source}`);
+    else owners.set(source, id);
+  });
+
+  assert.deepEqual(duplicates, []);
+});
+
+test('the preserved community preview translates in every supported UI language', () => {
+  const preserved = indexSource.match(/<!--\s*COMMUNITY PREVIEW:[^\n]*\n([\s\S]*?)-->/)?.[1];
+  assert.ok(preserved, 'the community preview markup stays in index.html for future use');
+
+  const headings = { en:'PODCAST OF THE WEEK', fr:'PODCAST DE LA SEMAINE', de:'PODCAST DER WOCHE' };
+  Object.entries(headings).forEach(([language, heading]) => {
+    const { document, window } = loadApp();
+    const host = document.createElement('div');
+    document.body.append(host);
+    host.innerHTML = preserved;
+    window.LogbookI18n.setLanguage(language);
+
+    const card = host.querySelector('.community-cards article strong');
+    assert.equal(card.textContent.replace(/\s+/g, ' ').trim(), heading);
+    assert.equal(card.getAttribute('lang'), null, 'a fully translated card never switches the screen-reader voice');
+    assert.doesNotMatch(host.textContent, /[Ͱ-Ͽἀ-῿]/);
+    assert.doesNotMatch(host.querySelector('.community-cards').getAttribute('aria-label'), /[Ͱ-Ͽἀ-῿]/);
+  });
+});
+
 test('i18n translates empty and reward setup states in every supported UI language', () => {
   ['en','fr','de'].forEach(language => {
     const { document } = loadApp();
@@ -2469,6 +2531,60 @@ test('discarding a workout draft resets it before navigation and history edits a
   assert.equal(document.querySelector('#exercise-delete-dialog').open, true, 'old history sessions receive the same protection');
   click(document, '#confirm-delete-cancel');
   assert.ok(document.querySelector('#log-view').classList.contains('active'));
+});
+
+test('an in-progress mobile workout survives pagehide and is restored after a reload', () => {
+  const first = loadApp();
+  click(first.document, '.nav-button[data-view="log"]');
+  click(first.document, '[data-mode="free"]');
+  const firstCard = first.document.querySelector('#free-exercises [data-exercise]');
+  firstCard.querySelector('.exercise-name').value = 'Incline press';
+  firstCard.querySelector('.set-reps').value = '9';
+  firstCard.querySelector('.set-weight').value = '32.5';
+  first.document.querySelector('#session-comments').value = 'Screen locked between sets';
+
+  first.window.dispatchEvent(new first.window.Event('pagehide'));
+  const storedDraft = JSON.parse(first.localStorage.getItem('logbookWorkoutDraft'));
+  assert.equal(storedDraft.mode, 'free');
+  assert.equal(storedDraft.cards[0].sets[0].weight, '32.5');
+
+  const second = loadApp({ logbookWorkoutDraft:storedDraft });
+  const restoredCard = second.document.querySelector('#free-exercises [data-exercise]');
+  assert.ok(second.document.querySelector('#log-view').classList.contains('active'));
+  assert.equal(restoredCard.querySelector('.exercise-name').value, 'Incline press');
+  assert.equal(restoredCard.querySelector('.set-reps').value, '9');
+  assert.equal(restoredCard.querySelector('.set-weight').value, '32.5');
+  assert.equal(second.document.querySelector('#session-comments').value, 'Screen locked between sets');
+  assert.match(second.document.querySelector('#toast').textContent, /επανήλθε από το πρόχειρο/);
+});
+
+test('a workout draft is isolated to its owner and cleared after completion', () => {
+  const foreignDraft = {
+    version:1,
+    owner:'user-a',
+    mode:'free',
+    date:'2026-07-29',
+    cards:[{ editableName:true, exercise:'Private workout', comments:'', sets:[{ reps:'10', weightMode:'kg', weight:'20', plates:'' }] }],
+  };
+  const foreign = loadApp({ logbookWorkoutDraft:foreignDraft }, {
+    beforeApp(window) { window.localStorage.setItem('logbookCloudOwner', 'user-b'); },
+  });
+  assert.equal(foreign.localStorage.getItem('logbookWorkoutDraft'), null);
+  assert.equal(foreign.document.querySelector('#free-exercises .exercise-name'), null);
+
+  const own = loadApp();
+  click(own.document, '.nav-button[data-view="log"]');
+  click(own.document, '[data-mode="free"]');
+  const card = own.document.querySelector('#free-exercises [data-exercise]');
+  card.querySelector('.exercise-name').value = 'Dips';
+  card.querySelectorAll('[data-set]').forEach(row => {
+    row.querySelector('.set-reps').value = '10';
+    row.querySelector('.set-weight').value = '20';
+  });
+  own.window.dispatchEvent(new own.window.Event('pagehide'));
+  assert.ok(own.localStorage.getItem('logbookWorkoutDraft'));
+  click(own.document, '#save-session');
+  assert.equal(own.localStorage.getItem('logbookWorkoutDraft'), null);
 });
 
 test('weight selector exposes all five modes and requires only their matching fields', () => {

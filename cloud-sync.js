@@ -14,8 +14,8 @@
   const OWNER_KEY = 'logbookCloudOwner';
   const GUEST_KEY = 'logbookGuest';
   const GUEST_IMPORT_KEY = 'logbookGuestImportPending';
-  const GUEST_IMPORT_CANCELLED = 'guest-import-cancelled';
   const SYNC_DELAY = 700;
+  const REQUEST_TIMEOUT_MS = 15000;
   const WEIGHT_MODES = new Set(['kg', 'plates', 'mixed', 'bodyweight', 'bodyweight_extra']);
   const PROFILE_AVATARS = new Set(['custom', 'male', 'female']);
   const PROFILE_WEIGHT_UNITS = new Set(['kg', 'lbs']);
@@ -311,12 +311,33 @@
     return meta;
   }
 
+  async function requestWithTimeout(run) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const result = await run(controller.signal);
+      if (controller.signal.aborted) throw new Error('SYNC_TIMEOUT');
+      return result;
+    } catch (error) {
+      if (!controller.signal.aborted) throw error;
+      const timeoutError = new Error('SYNC_TIMEOUT');
+      timeoutError.name = 'TimeoutError';
+      throw timeoutError;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function withAbortSignal(query, signal) {
+    return typeof query?.abortSignal === 'function' ? query.abortSignal(signal) : query;
+  }
+
   async function fetchRemote(id) {
-    const { data, error } = await client
+    const { data, error } = await requestWithTimeout(signal => withAbortSignal(client
       .from('user_sync_state')
       .select('revision,payload,updated_at')
-      .eq('user_id', id)
-      .maybeSingle();
+      .eq('user_id', id), signal)
+      .maybeSingle());
     if (error) throw error;
     return data;
   }
@@ -330,23 +351,23 @@
   }
 
   async function insertRemote(id, payload) {
-    const { data, error } = await client
+    const { data, error } = await requestWithTimeout(signal => withAbortSignal(client
       .from('user_sync_state')
       .insert({ user_id:id, payload:normalizePayload(payload) })
-      .select('revision,payload,updated_at')
-      .single();
+      .select('revision,payload,updated_at'), signal)
+      .single());
     if (error) throw error;
     return data;
   }
 
   async function updateRemote(id, payload, expectedRevision) {
-    const { data, error } = await client
+    const { data, error } = await requestWithTimeout(signal => withAbortSignal(client
       .from('user_sync_state')
       .update({ payload:normalizePayload(payload) })
       .eq('user_id', id)
       .eq('revision', expectedRevision)
-      .select('revision,payload,updated_at')
-      .maybeSingle();
+      .select('revision,payload,updated_at'), signal)
+      .maybeSingle());
     if (error) throw error;
     return data;
   }
@@ -374,18 +395,6 @@
     setTimeout(() => window.dispatchEvent(new CustomEvent('logbook:cloud-data-applied')), 0);
   }
 
-  function requestGuestMergeChoice() {
-    return new Promise(resolve => {
-      let settled = false;
-      const respond = choice => {
-        if (settled) return;
-        settled = true;
-        resolve(['merge', 'cloud', 'cancel'].includes(choice) ? choice : 'cancel');
-      };
-      window.dispatchEvent(new CustomEvent('logbook:guest-merge-required', { detail:{ respond } }));
-    });
-  }
-
   async function performSync(id) {
     if (!client || !id || !navigator.onLine) {
       setStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline');
@@ -411,27 +420,10 @@
     let applied = false;
 
     if (guestImportPending) {
-      const guestHasData = hasMeaningfulData(local);
-      const cloudHasData = Boolean(remote && hasMeaningfulData(remote.payload));
-      const choice = guestHasData && cloudHasData ? await requestGuestMergeChoice() : 'merge';
-
-      if (choice === 'cancel') {
-        localStorage.removeItem(GUEST_IMPORT_KEY);
-        localStorage.setItem(GUEST_KEY, '1');
-        setStatus('Τα δεδομένα επισκέπτη παραμένουν μόνο σε αυτή τη συσκευή.', 'neutral');
-        window.dispatchEvent(new CustomEvent('logbook:guest-merge-cancelled'));
-        return GUEST_IMPORT_CANCELLED;
-      }
-
-      if (choice === 'cloud') {
-        applyPayload(remote.payload, { preserveLocalGallery:false });
-        applied = payloadHash(local) !== payloadHash(remote.payload);
-      } else {
-        const nextPayload = remote ? mergePayloads(remote.payload, local) : local;
-        remote = await saveWithConflictRetry(id, nextPayload, remote);
-        applyPayload(remote.payload, { preserveLocalGallery:false });
-        applied = true;
-      }
+      const nextPayload = remote ? mergePayloads(remote.payload, local) : local;
+      remote = await saveWithConflictRetry(id, nextPayload, remote);
+      applyPayload(remote.payload, { preserveLocalGallery:false });
+      applied = true;
 
       localStorage.removeItem(GUEST_IMPORT_KEY);
       localStorage.removeItem(GUEST_KEY);
@@ -565,8 +557,7 @@
       window.dispatchEvent(new CustomEvent('logbook:initial-sync-complete', {
         detail:{
           userId:id,
-          success:success === GUEST_IMPORT_CANCELLED ? false : Boolean(success),
-          cancelled:success === GUEST_IMPORT_CANCELLED,
+          success:Boolean(success),
         },
       }));
     });
@@ -586,6 +577,11 @@
   }
 
   window.addEventListener('logbook:supabase-ready', event => bindClient(event.detail.client));
+  window.addEventListener('logbook:session-state', event => {
+    const { state, userId:sessionUserId } = event.detail || {};
+    if (state === 'member' && client && !userId && sessionUserId) handleSession({ user:{ id:sessionUserId } });
+    else if ((state === 'unknown' || state === 'guest') && userId) handleSession(null);
+  });
   window.addEventListener('logbook:supabase-unavailable', () => setStatus('Cloud εκτός σύνδεσης · τα δεδομένα παραμένουν τοπικά.', 'offline'));
   window.addEventListener('logbook:initial-sync-requested', () => {
     if (userId) startInitialSync(userId, true);

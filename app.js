@@ -10,6 +10,9 @@ import * as UI from './modules/ui.js';
 const store = StorageMigrations.createStore(localStorage, {
   onWrite:key => window.dispatchEvent(new CustomEvent('logbook:local-data-changed', { detail:{ key } })),
 });
+const WORKOUT_DRAFT_KEY = 'logbookWorkoutDraft';
+const WORKOUT_DRAFT_VERSION = 1;
+let workoutDraftTimer = null;
 
 // A cloud payload was just written into localStorage. A blind reload here would
 // wipe any half-typed workout, plan day or profile edit, so reload only when the
@@ -614,6 +617,156 @@ function exerciseCard(exercise, free = false, exerciseIndex = 0, { custom = fals
   });
 }
 
+function workoutDraftOwner() {
+  try {
+    if (localStorage.getItem('logbookGuest') === '1') return 'guest';
+    return window.LogbookSessionMachine?.context?.session?.user?.id
+      || localStorage.getItem('logbookCloudOwner')
+      || 'local';
+  } catch {
+    return 'local';
+  }
+}
+
+function readWorkoutDraftCard(card) {
+  return {
+    id:card.dataset.id || '',
+    planExerciseId:card.dataset.planExerciseId || '',
+    custom:card.dataset.customExercise === 'true',
+    editableName:Boolean(card.querySelector('.exercise-name')),
+    exercise:(card.querySelector('.exercise-name')?.value || card.querySelector('.exercise-source-name')?.value || '').trim(),
+    cues:card.querySelector('.cue-banner b')?.textContent?.trim() || '',
+    comments:card.querySelector('.exercise-comments')?.value || '',
+    sets:[...card.querySelectorAll('[data-set]')].map(row => ({
+      reps:row.querySelector('.set-reps')?.value || '',
+      weightMode:row.querySelector('.weight-mode')?.value || 'kg',
+      weight:row.querySelector('.set-weight')?.value || '',
+      plates:row.querySelector('.set-plates')?.value || '',
+    })),
+  };
+}
+
+function collectWorkoutDraft() {
+  const container = state.mode === 'scheduled' ? $('#scheduled-session') : $('#free-exercises');
+  const deck = container.querySelector('.exercise-deck') || container;
+  return {
+    version:WORKOUT_DRAFT_VERSION,
+    owner:workoutDraftOwner(),
+    savedAt:new Date().toISOString(),
+    mode:state.mode,
+    date:$('#log-date').value,
+    selectedPlanDay:state.selectedPlanDay,
+    editingSessionId:state.editingSessionId,
+    copyingSessionId:state.copyingSessionId,
+    comments:$('#session-comments').value,
+    workoutName:$('#scheduled-session .session-intro h2')?.textContent?.trim() || '',
+    deckIndex:Number(deck.dataset.currentIndex) || 0,
+    cards:[...container.querySelectorAll('[data-exercise]')].map(readWorkoutDraftCard),
+  };
+}
+
+function clearWorkoutDraft() {
+  clearTimeout(workoutDraftTimer);
+  workoutDraftTimer = null;
+  try { localStorage.removeItem(WORKOUT_DRAFT_KEY); } catch { /* Best effort in private browsing. */ }
+}
+
+function persistWorkoutDraft() {
+  clearTimeout(workoutDraftTimer);
+  workoutDraftTimer = null;
+  if (!hasUnsavedSession()) return clearWorkoutDraft();
+  try { localStorage.setItem(WORKOUT_DRAFT_KEY, JSON.stringify(collectWorkoutDraft())); } catch { /* The open form still remains usable. */ }
+}
+
+function scheduleWorkoutDraftSave() {
+  clearTimeout(workoutDraftTimer);
+  workoutDraftTimer = setTimeout(persistWorkoutDraft, 120);
+}
+
+function draftCardMarkup(card, index) {
+  const sets = card.sets.map(set => ({
+    reps:set.reps,
+    weightMode:safeWeightMode(set.weightMode),
+    weight:set.weight === '' ? null : inputWeightToStored(set.weight),
+    plates:set.plates,
+  }));
+  return exerciseCard({
+    id:card.id,
+    planExerciseId:card.planExerciseId,
+    exercise:card.exercise,
+    cues:card.cues,
+    comments:card.comments,
+    sets,
+  }, card.editableName, index, { custom:card.custom });
+}
+
+function restoreWorkoutDraftValues(container, draftCards) {
+  [...container.querySelectorAll('[data-exercise]')].forEach((card, cardIndex) => {
+    const draftCard = draftCards[cardIndex];
+    if (!draftCard) return;
+    if (card.querySelector('.exercise-name')) card.querySelector('.exercise-name').value = draftCard.exercise;
+    card.querySelector('.exercise-comments').value = draftCard.comments;
+    [...card.querySelectorAll('[data-set]')].forEach((row, rowIndex) => {
+      const set = draftCard.sets[rowIndex];
+      if (!set) return;
+      row.querySelector('.set-reps').value = set.reps;
+      row.querySelector('.weight-mode').value = safeWeightMode(set.weightMode);
+      row.querySelector('.set-weight').value = set.weight;
+      row.querySelector('.set-plates').value = set.plates;
+      configureWeightMode(row, safeWeightMode(set.weightMode));
+    });
+  });
+}
+
+function restoreWorkoutDraft() {
+  let draft;
+  try { draft = JSON.parse(localStorage.getItem(WORKOUT_DRAFT_KEY) || 'null'); } catch { return false; }
+  if (!draft || draft.version !== WORKOUT_DRAFT_VERSION || draft.owner !== workoutDraftOwner()
+    || !['scheduled','free'].includes(draft.mode) || !Array.isArray(draft.cards) || !draft.cards.length) {
+    if (draft) clearWorkoutDraft();
+    return false;
+  }
+
+  state.editingSessionId = state.sessions.some(item => String(item.id) === String(draft.editingSessionId)) ? draft.editingSessionId : null;
+  state.copyingSessionId = state.sessions.some(item => String(item.id) === String(draft.copyingSessionId)) ? draft.copyingSessionId : null;
+  state.selectedPlanDay = draft.selectedPlanDay;
+  $('#log-date').value = draft.date || localDateInputValue();
+  $('#session-comments').value = draft.comments || '';
+  setMode(draft.mode);
+
+  const container = draft.mode === 'scheduled' ? $('#scheduled-session') : $('#free-exercises');
+  const cards = draft.cards.filter(card => Array.isArray(card.sets) && card.sets.length);
+  if (!cards.length) return false;
+  const cardsMarkup = cards.map(draftCardMarkup).join('');
+  if (draft.mode === 'scheduled') {
+    refreshWorkoutDayOptions(state.selectedPlanDay);
+    const date = $('#log-date').value;
+    $('#day-badge').innerHTML = `<span>${dayForDate(date)}</span><small>${formatDate(date)}</small>`;
+    const title = draft.workoutName || 'Προπόνηση';
+    container.innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(title)}</h2></div></div>${deckShellHTML(cardsMarkup)}`;
+  } else {
+    container.innerHTML = cardsMarkup;
+  }
+  restoreWorkoutDraftValues(container, cards);
+  refreshCopySetButtons(container);
+  refreshSessionDecks();
+  const deck = container.querySelector('.exercise-deck') || container;
+  if (deck.matches('.exercise-deck')) showDeckCard(deck, draft.deckIndex);
+
+  const continuingExistingSession = Boolean(state.editingSessionId || state.copyingSessionId);
+  $$('.mode-button').forEach(button => { button.disabled = continuingExistingSession; });
+  $('#workout-day-select').disabled = continuingExistingSession;
+  $('#cancel-session-edit').classList.toggle('hidden', !continuingExistingSession);
+  if (state.editingSessionId) {
+    $('#cancel-session-edit').textContent = 'Ακύρωση διορθώσεων';
+    $('#save-session').innerHTML = 'Αποθήκευση διορθώσεων';
+  } else if (state.copyingSessionId) {
+    $('#cancel-session-edit').textContent = 'Ακύρωση αντιγραφής';
+    $('#save-session').innerHTML = 'Ολοκλήρωση προπόνησης';
+  }
+  return true;
+}
+
 function refreshWorkoutDayOptions(preferredDay) {
   const routine = activeRoutine();
   const plan = activePlan();
@@ -1145,6 +1298,11 @@ function renderProgressChart() {
     locale:window.LogbookI18n?.getLocale() || 'el-GR',
     formatDate,
   });
+  // Όταν το γράφημα κυλάει, ανοίγει στην τελευταία προπόνηση — εκεί που κοιτάς.
+  const wrap = panel.querySelector('.chart-wrap.is-scrollable');
+  if (!wrap) return;
+  if (typeof wrap.scrollTo === 'function') wrap.scrollTo({ left:wrap.scrollWidth, behavior:'instant' });
+  else wrap.scrollLeft = wrap.scrollWidth;
 }
 
 function toast(message, kind = 'recorded') { const el = $('#toast'); el.textContent = message; el.classList.toggle('toast-error', kind === 'error'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
@@ -1585,6 +1743,7 @@ function setMode(mode) {
 }
 
 function resetSessionForm() {
+  clearWorkoutDraft();
   state.editingSessionId = null;
   state.copyingSessionId = null;
   state.selectedPlanDay = null;
@@ -1716,6 +1875,7 @@ function closeMenu() { setMenu(false); }
 
 $$('.nav-button').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
 window.addEventListener('beforeunload', event => {
+  persistWorkoutDraft();
   if (!hasUnsavedSession()) return;
   event.preventDefault();
   event.returnValue = '';
@@ -1986,6 +2146,10 @@ document.addEventListener('input', event => {
   refreshCopySetButton(card);
 });
 
+document.addEventListener('input', event => {
+  if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments')) scheduleWorkoutDraftSave();
+});
+
 document.addEventListener('change', event => {
   if (event.target.matches('.weight-mode')) {
     const row = event.target.closest('[data-set]');
@@ -1996,6 +2160,18 @@ document.addEventListener('change', event => {
   }
   if (!event.target.matches('[data-select-session]')) return;
   event.target.closest('.session-card').classList.toggle('session-selected', event.target.checked);
+});
+
+document.addEventListener('change', event => {
+  if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments, #workout-day-select')) scheduleWorkoutDraftSave();
+});
+
+document.addEventListener('click', event => {
+  if (event.target.closest('#scheduled-session, #free-session, #save-session, #cancel-session-edit')) setTimeout(scheduleWorkoutDraftSave, 0);
+});
+window.addEventListener('pagehide', persistWorkoutDraft);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') persistWorkoutDraft();
 });
 
 $('#plan-form').addEventListener('submit', event => {
@@ -2260,6 +2436,7 @@ document.addEventListener('click', event => {
 enableHomeProfileCardDrag();
 enableHomeRoutineCardDrag();
 $('#log-date').max = localDateInputValue(); $('#log-date').value = localDateInputValue(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile(); renderHome();
+const recoveredWorkoutDraft = restoreWorkoutDraft();
 document.addEventListener('logbook:languagechange', () => {
   // Re-render only date-dependent views. Form fields and in-progress sets stay intact.
   const logDate = $('#log-date').value;
@@ -2284,4 +2461,7 @@ document.addEventListener('click', event => {
   });
 });
 window.LogbookI18n?.translate(document);
-if (location.hash) showView(location.hash.slice(1));
+if (recoveredWorkoutDraft) {
+  showView('log', { skipSessionWarning:true });
+  toast('Η προπόνησή σας επανήλθε από το πρόχειρο.');
+} else if (location.hash) showView(location.hash.slice(1));

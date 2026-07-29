@@ -36,7 +36,8 @@ body:not(.app-ready)>.menu-ribbon,body:not(.app-ready)>.menu-backdrop,body:not(.
 .auth-gate-progress h1 { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; margin:-1px; }
 .auth-gate-progress .eyebrow { margin-bottom:10px; }
 .auth-gate-progress>p:last-of-type { max-width:34ch; margin:0; color:var(--muted); font-size:.98rem; line-height:1.55; }
-.auth-gate-progress .secondary-button { margin-top:24px; }
+.auth-gate-recovery-actions { position:relative; z-index:3; display:flex; flex-direction:column; align-items:flex-start; gap:14px; margin-top:24px; pointer-events:auto; }
+.auth-gate-recovery-actions button { position:relative; pointer-events:auto; touch-action:manipulation; }
 .auth-gate-flipbook { position:relative; width:104px; height:70px; margin-bottom:26px; }
 .auth-gate-flipbook i { display:block; }
 .auth-gate-flipbook .base { position:absolute; inset:0; border:2.4px solid var(--ink); border-radius:4px 8px 8px 4px; background:var(--paper-dark); }
@@ -245,13 +246,14 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 @media(max-width:850px){.progress-hero{grid-template-columns:1fr}}
 @media(max-width:600px){.progress-hero,.progress-content{padding-left:22px;padding-right:22px}.progress-panel{padding:18px}.chart-summary{align-items:flex-start;flex-direction:column}.chart-summary>div:last-child{text-align:left}}
 @media(max-width:600px){.personal-records-sheet{width:100%}.personal-records-sheet .personal-bests{padding-right:14px;padding-left:14px}}
-@media(prefers-reduced-motion:reduce){.personal-records-stamp{transition:none}.personal-records-sheet{animation:none;transform:rotate(-.15deg)}}
+@media(prefers-reduced-motion:reduce){.personal-records-stamp{transition:none}.personal-records-sheet{animation:none;transform:rotate(-.15deg)}.chart-wrap.is-scrollable{scroll-behavior:auto}}
 .progress-controls { grid-template-columns:1fr 1fr .55fr; max-width:980px; }
 .chart-legend { display:flex; justify-content:flex-end; gap:20px; padding-top:14px; color:var(--muted); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }.chart-legend span::before { content:""; display:inline-block; width:22px; height:3px; margin-right:7px; vertical-align:middle; }.weight-key::before { background:var(--orange); }.reps-key::before { background:var(--ink); }
 .chart-reps-line { fill:none; stroke:var(--ink); stroke-width:3; stroke-dasharray:8 7; stroke-linecap:round; }.chart-reps-dot { stroke:var(--ink); stroke-width:2; }
 .cycle-bracket { fill:none; stroke:var(--pen-blue); stroke-width:1.8; opacity:.9; }
 .cycle-label { font:700 10.5px "Alegreya Sans"; fill:var(--ink); paint-order:stroke; stroke:var(--paper); stroke-width:4px; stroke-linejoin:round; }
 .cycle-label tspan { fill:var(--muted); font-weight:600; }
+.cycle-label.is-compact { font-size:10px; letter-spacing:-.01em; }
 .chart-date { paint-order:stroke; stroke:var(--paper); stroke-width:5px; stroke-linejoin:round; }
 .chart-point { outline:0; cursor:crosshair; }
 .chart-point:focus-visible { outline:2px solid var(--orange); outline-offset:4px; }
@@ -270,6 +272,19 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 .chart-latest strong { display:block; margin-top:3px; color:var(--ink); font:700 1rem "Roboto Slab"; }
 .chart-summary .progress-verdict { flex:0 0 auto; }
 .chart-wrap { padding:28px 0 10px; }
+.chart-frame { display:flex; align-items:flex-start; }
+.chart-frame .chart-wrap { flex:1 1 auto; min-width:0; }
+.chart-rail { flex:0 0 auto; margin-top:28px; }
+.chart-rail-edge { stroke:var(--line); stroke-width:1; }
+/* Το CSP της εφαρμογής («style-src 'self'») απορρίπτει τα inline styles, οπότε το
+   πλάτος του κυλιόμενου γραφήματος έρχεται από τα attributes width/height του SVG —
+   αυτά ισχύουν μόνο αν το CSS πάψει να το τεντώνει στο 100%. */
+.chart-wrap.is-scrollable .progress-chart { width:auto; height:auto; }
+.chart-wrap.is-scrollable { overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.chart-wrap.is-scrollable:focus-visible { outline:2px solid var(--orange); outline-offset:3px; }
+.chart-wrap.is-scrollable::-webkit-scrollbar { height:7px; }
+.chart-wrap.is-scrollable::-webkit-scrollbar-thumb { background:var(--line); border-radius:4px; }
+.chart-wrap.is-scrollable::-webkit-scrollbar-track { background:transparent; }
 .progress-chart { overflow:visible; }
 .chart-line { transition:stroke-width .25s ease,opacity .25s ease; opacity:.85; stroke-width:3; }
 .chart-reps-line { opacity:.5; }

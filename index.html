@@ -41,7 +41,11 @@
           <p class="eyebrow">ΠΡΟΕΤΟΙΜΑΣΙΑ LOGBOOK</p>
           <h1 id="auth-gate-title">ΕΛΕΓΧΟΣ ΣΥΝΔΕΣΗΣ</h1>
           <p id="auth-gate-message">Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.</p>
-          <button id="auth-gate-retry" class="secondary-button hidden" type="button">ΠΡΟΣΠΑΘΕΙΑ ΞΑΝΑ</button>
+          <div id="auth-gate-recovery-actions" class="auth-gate-recovery-actions hidden">
+            <button id="auth-gate-retry" class="secondary-button" type="button">ΠΡΟΣΠΑΘΕΙΑ ΞΑΝΑ</button>
+            <button id="auth-gate-local" class="account-text-button hidden" type="button">ΑΝΟΙΓΜΑ ΣΤΗ ΣΥΣΚΕΥΗ</button>
+            <button id="auth-gate-signout" class="account-text-button hidden" type="button">ΑΠΟΣΥΝΔΕΣΗ</button>
+          </div>
         </div>
 
         <section id="account-guest" class="auth-gate-login hidden">
@@ -149,7 +153,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.2.6</b></span>
+      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.2.7</b></span>
     </div>
     <a class="side-menu-privacy" href="privacy.html" data-i18n-id="message.0470">Πολιτική απορρήτου</a>
   </aside>
@@ -210,7 +214,7 @@
             <p>Ένας χώρος που θα μεγαλώνει μαζί με την κοινότητα — ήχος, ιστορίες και ιδέες για την επόμενη προπόνηση.</p>
           </div>
           <div class="community-cards" aria-label="Προσεχείς προτάσεις κοινότητας">
-            <article><span>01 / LISTEN</span><strong>PODCAST<br>ΤΗΣ ΕΒΔΟΜΑΔΑΣ</strong><small>ΣΥΝΤΟΜΑ</small></article>
+            <article><span>01 / LISTEN</span><strong data-i18n-id="message.0192">PODCAST ΤΗΣ ΕΒΔΟΜΑΔΑΣ</strong><small>ΣΥΝΤΟΜΑ</small></article>
             <article><span>02 / MOVE</span><strong>SPOTIFY<br>PLAYLIST</strong><small>ΣΥΝΤΟΜΑ</small></article>
           </div>
         </section>
@@ -538,17 +542,6 @@
       <button id="account-delete-accept" class="confirm-delete-button" type="button">ΝΑΙ, ΔΙΑΓΡΑΦΗ</button>
     </div>
   </dialog>
-  <dialog id="guest-merge-dialog" class="confirm-dialog guest-merge-dialog" aria-labelledby="guest-merge-title" aria-describedby="guest-merge-message">
-    <div class="confirm-dialog-mark" aria-hidden="true">↔</div>
-    <p class="eyebrow">ΔΕΔΟΜΕΝΑ ΕΠΙΣΚΕΠΤΗ</p>
-    <h2 id="guest-merge-title">ΠΩΣ ΘΕΛΕΤΕ ΝΑ ΣΥΝΕΧΙΣΕΤΕ;</h2>
-    <p id="guest-merge-message" class="confirm-dialog-message">Ο λογαριασμός έχει ήδη προπονήσεις. Επιλέξτε αν θα προστεθούν και τα δεδομένα επισκέπτη ή αν θα κρατήσετε μόνο τα δεδομένα του λογαριασμού.</p>
-    <div class="confirm-dialog-actions guest-merge-actions">
-      <button id="guest-merge-cancel" class="secondary-button" type="button">ΑΚΥΡΩΣΗ</button>
-      <button id="guest-merge-cloud" class="secondary-button" type="button">ΜΟΝΟ ΔΕΔΟΜΕΝΑ ΛΟΓΑΡΙΑΣΜΟΥ</button>
-      <button id="guest-merge-accept" class="primary-button" type="button">ΣΥΓΧΩΝΕΥΣΗ</button>
-    </div>
-  </dialog>
   <div id="toast" class="toast" role="status"></div>
   <div id="guest-reminder" class="guest-reminder hidden" role="region" aria-labelledby="guest-reminder-title" aria-live="polite" aria-atomic="true">
     <div class="guest-reminder-copy">
@@ -566,7 +559,7 @@
   <script src="supabase-client.js"></script>
   <script src="error-tracking.js"></script>
   <script src="session-state.js"></script>
-  <script src="auth.js"></script>
+  <script src="auth.js?v=0.2.7"></script>
   <script src="cloud-sync.js"></script>
   <script src="pwa.js"></script>
 </body>

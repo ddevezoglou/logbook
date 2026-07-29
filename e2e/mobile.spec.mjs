@@ -299,6 +299,34 @@ test('an installed PWA boots from its cached session without a network', async (
   await expect(page.locator('#account-member-email')).toHaveText('mobile@example.com');
 });
 
+test('a workout in progress returns after mobile suspension and a full reload', async ({ page }) => {
+  await installAuthenticatedStub(page, { withWorkout:true });
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="log"]').click();
+  await page.locator('[data-mode="free"]').click();
+  const card = page.locator('#free-exercises [data-exercise]').first();
+  await card.locator('.exercise-name').fill('Mobile press');
+  await card.locator('.set-reps').first().fill('11');
+  await card.locator('.set-weight').first().fill('27.5');
+  await page.locator('#session-comments').fill('Locked between sets');
+
+  // A mobile OS may discard the backgrounded renderer. pagehide is the last
+  // reliable lifecycle signal before the next launch becomes a full reload.
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await page.reload({ waitUntil:'domcontentloaded' });
+
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  await expect(page.locator('#log-view')).toHaveClass(/active/);
+  await expect(page.locator('#free-exercises .exercise-name').first()).toHaveValue('Mobile press');
+  await expect(page.locator('#free-exercises .set-reps').first()).toHaveValue('11');
+  await expect(page.locator('#free-exercises .set-weight').first()).toHaveValue('27.5');
+  await expect(page.locator('#session-comments')).toHaveValue('Locked between sets');
+  await expect(page.locator('#account-open')).toHaveClass(/is-connected/);
+  await expect(page.locator('#account-menu-email')).toHaveText('mobile@example.com');
+});
+
 test('the privacy policy opens as its own page while the service worker controls the scope', async ({ page, context, browserName }) => {
   test.skip(browserName !== 'chromium', 'One Chromium run covers the service-worker navigation contract.');
   await page.addInitScript(() => sessionStorage.setItem('logbookLocalWorkerEnabled', 'true'));

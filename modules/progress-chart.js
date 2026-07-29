@@ -69,11 +69,22 @@ export function buildProgressChartMarkup({
   }
 
   const height = 340;
-  const left = 64;
+  const rail = 64;
   const right = 28;
   const top = 28;
   const bottom = 76;
-  const width = Math.max(panelWidth, 320);
+  // Κάθε προπόνηση κρατά το ίδιο χαρτί, όσες κι αν μαζευτούν: 78 μονάδες είναι το
+  // βήμα στο οποίο τυπώνεται ολόκληρη η ετικέτα «6 → 10 επαναλήψεις» και η κουκκίδα
+  // παραμένει στόχος αφής. Ό,τι δεν χωράει, το φτάνει η οριζόντια κύλιση.
+  const minStep = 78;
+  const visibleWidth = Math.max(panelWidth, 320);
+  const paperWidth = rail + right + (points.length - 1) * minStep;
+  const scrolls = paperWidth > visibleWidth;
+  // Όταν το χαρτί κυλάει, ο άξονας των κιλών βγαίνει από αυτό και καρφώνεται δίπλα του,
+  // αλλιώς θα έφευγε με την πρώτη κίνηση. Στο χαρτί μένει τόσο περιθώριο όσο χρειάζεται
+  // η πλάγια ημερομηνία της πρώτης προπόνησης.
+  const left = scrolls ? 36 : rail;
+  const width = scrolls ? left + right + (points.length - 1) * minStep : visibleWidth;
   const plateStep = displayWeight(5);
   const chartValue = item =>
     comparableGroup === 'plates' && item.extraWeight > 0
@@ -129,7 +140,17 @@ export function buildProgressChartMarkup({
         start = index;
       }
     }
-    return runs.map(([start, end]) => {
+    const centers = runs.map(([start, end]) => (x(start) + x(end)) / 2);
+    // Πλάτος που αντέχει μια κεντραρισμένη ετικέτα: όσο απέχει από τη γειτονική της
+    // και όσο επιτρέπουν τα άκρα του SVG.
+    const labelRoom = index => {
+      const center = centers[index];
+      const limits = [center * 2, (width - center) * 2];
+      if (index > 0) limits.push(center - centers[index - 1]);
+      if (index < centers.length - 1) limits.push(centers[index + 1] - center);
+      return Math.max(0, Math.min(...limits) - 8);
+    };
+    return runs.map(([start, end], index) => {
       const x1 = x(start);
       const x2 = x(end);
       const pointY = y(chartValue(points[start]));
@@ -140,9 +161,12 @@ export function buildProgressChartMarkup({
       const fromReps = points[start].reps;
       const toReps = points[end].reps;
       const repsText = fromReps === toReps ? `${fromReps}` : `${fromReps} → ${toReps}`;
-      const label = x2 - x1 >= 64
-        ? `<text class="cycle-label" x="${(x1 + x2) / 2}" y="${labelY}" text-anchor="middle">${repsText} <tspan>επαναλήψεις</tspan></text>`
-        : '';
+      const center = (x1 + x2) / 2;
+      // Η ετικέτα δεν κρύβεται ποτέ· όταν στενεύει ο χώρος πέφτει στη σύντομη μορφή («6→10»).
+      const spelled = x2 - x1 >= 64 || labelRoom(index) >= (repsText.length + 12) * 5.4;
+      const label = spelled
+        ? `<text class="cycle-label" x="${center}" y="${labelY}" text-anchor="middle">${repsText} <tspan>επαναλήψεις</tspan></text>`
+        : `<text class="cycle-label is-compact" x="${center}" y="${labelY}" text-anchor="middle">${repsText.replace(/ /g, '')}</text>`;
       return `<path class="cycle-bracket" d="M ${x1} ${bracketY + tickDirection} L ${x1} ${bracketY} L ${x2} ${bracketY} L ${x2} ${bracketY + tickDirection}"/>${label}`;
     }).join('');
   })();
@@ -151,11 +175,17 @@ export function buildProgressChartMarkup({
   const scaleFloor = primaryUnit ? floor : repFloor;
   const scaleCeiling = primaryUnit ? ceiling : repCeiling;
   const scaleY = primaryUnit ? y : repY;
-  const gridMarkup = Array.from({ length:5 }, (_, index) => {
+  const ticks = Array.from({ length:5 }, (_, index) => {
     const tickValue = scaleFloor + (scaleCeiling - scaleFloor) * index / 4;
-    const tickY = scaleY(tickValue);
-    return `<line x1="${left}" y1="${tickY}" x2="${width - right}" y2="${tickY}" class="chart-grid"/><text x="${left - 12}" y="${tickY + 4}" text-anchor="end" class="chart-tick">${Number(tickValue.toFixed(1))}</text>`;
-  }).join('');
+    return { label:Number(tickValue.toFixed(1)), y:scaleY(tickValue) };
+  });
+  const tickText = (x, tick) => `<text x="${x}" y="${tick.y + 4}" text-anchor="end" class="chart-tick">${tick.label}</text>`;
+  const gridMarkup = ticks
+    .map(tick => `<line x1="${left}" y1="${tick.y}" x2="${width - right}" y2="${tick.y}" class="chart-grid"/>${scrolls ? '' : tickText(left - 12, tick)}`)
+    .join('');
+  const railMarkup = scrolls
+    ? `<svg class="chart-rail" width="${rail}" height="${height}" viewBox="0 0 ${rail} ${height}" aria-hidden="true">${ticks.map(tick => tickText(rail - 13, tick)).join('')}<line x1="${rail - 1}" y1="${top}" x2="${rail - 1}" y2="${height - bottom}" class="chart-rail-edge"/></svg>`
+    : '';
   const pointsMarkup = points.map((item, index) => {
     const pointY = primaryUnit ? y(chartValue(item)) : repY(item.reps);
     const tipLabel = pointLabel(item);
@@ -181,5 +211,5 @@ export function buildProgressChartMarkup({
     ? `<div class="recording-warning"><strong>Έλεγχος καταγραφής: ${excluded.length} ${excluded.length === 1 ? 'προπόνηση εξαιρέθηκε' : 'προπονήσεις εξαιρέθηκαν'}.</strong><p>Το γράφημα χρησιμοποιεί μόνο «${groupLabel(comparableGroup)}». ${excluded.map(item => `${escapeHtml(formatDate(item.session.date))} — ${escapeHtml(item.reason || `καταγράφηκε σε ${modeLabel(item.mode)}`)}`).join(' · ')}</p></div>`
     : '';
 
-  return `<div class="chart-summary"><div><h2>${escapeHtml(exerciseName)}</h2><small>${points.length} καταγραφές</small></div><div class="chart-latest"><span>ΤΕΛΕΥΤΑΙΑ ΕΠΙΔΟΣΗ</span><strong>${escapeHtml(latestLoad)}</strong></div></div><div class="chart-legend"><span class="weight-key">${escapeHtml(primaryUnit || 'Επαναλήψεις')}</span></div><div class="chart-wrap"><svg class="progress-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Γράφημα προόδου βάρους και επαναλήψεων">${gridMarkup}<line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" class="chart-axis"/><path d="${smoothLine}" class="chart-line"/>${cycleBrackets}${pointsMarkup}</svg></div>${warning}`;
+  return `<div class="chart-summary"><div><h2>${escapeHtml(exerciseName)}</h2><small>${points.length} καταγραφές</small></div><div class="chart-latest"><span>ΤΕΛΕΥΤΑΙΑ ΕΠΙΔΟΣΗ</span><strong>${escapeHtml(latestLoad)}</strong></div></div><div class="chart-legend"><span class="weight-key">${escapeHtml(primaryUnit || 'Επαναλήψεις')}</span></div><div class="chart-frame">${railMarkup}<div class="chart-wrap${scrolls ? ' is-scrollable' : ''}"${scrolls ? ' tabindex="0" role="region" aria-label="Γράφημα προόδου, κυλάει οριζόντια"' : ''}><svg class="progress-chart" viewBox="0 0 ${width} ${height}"${scrolls ? ` width="${width}" height="${height}"` : ''} role="img" aria-label="Γράφημα προόδου βάρους και επαναλήψεων">${gridMarkup}<line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" class="chart-axis"/><path d="${smoothLine}" class="chart-line"/>${cycleBrackets}${pointsMarkup}</svg></div></div>${warning}`;
 }

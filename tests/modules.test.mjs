@@ -142,6 +142,44 @@ test('progress chart module returns complete escaped markup without a DOM', () =
   assert.doesNotMatch(markup, /<h2>Bench <Press><\/h2>/);
 });
 
+test('every rep cycle keeps a visible range on a phone-sized chart, however many records', () => {
+  const sessions = Array.from({ length:24 }, (_, index) => ({
+    date:new Date(2026, 0, 1 + index * 7).toISOString().slice(0, 10),
+    exercises:[{ exercise:'Bench Press', sets:[{ reps:6 + (index % 2) * 4, weight:60 + Math.floor(index / 2) * 2.5, weightMode:'kg' }] }],
+  }));
+
+  for (const records of [4, 5, 6, 8, 12, 24]) {
+    const markup = buildProgressChartMarkup({
+      workout:{ sessions:sessions.slice(0, records) },
+      exerciseKey:'bench press',
+      setIndex:0,
+      panelWidth:346,
+      weightSymbol:'kg',
+      formatDate:value => value,
+    });
+    const canvas = Number(/class="progress-chart" viewBox="0 0 ([\d.]+)/.exec(markup)[1]);
+    const spots = [...markup.matchAll(/<circle cx="([\d.]+)"[^>]*class="chart-dot"/g)].map(match => Number(match[1]));
+    const tightest = Math.min(...spots.slice(1).map((spot, index) => spot - spots[index]));
+    assert.ok(tightest >= 78 || canvas === 346, `${records} records: κάθε προπόνηση κρατά τουλάχιστον 78 μονάδες (στενότερο ${tightest.toFixed(1)})`);
+    assert.equal(markup.includes('is-scrollable'), canvas > 346, `${records} records: η κύλιση δηλώνεται μόνο όταν ο καμβάς ξεπερνά την οθόνη`);
+    assert.equal(markup.includes('chart-rail'), canvas > 346, `${records} records: ο άξονας καρφώνεται μόνο όταν το χαρτί κυλάει`);
+    const brackets = markup.match(/class="cycle-bracket"/g) || [];
+    const labels = [...markup.matchAll(/<text class="(cycle-label[^"]*)" x="([\d.]+)"[^>]*>(.*?)<\/text>/g)];
+    assert.equal(labels.length, brackets.length, `${records} records: every bracket keeps its rep range`);
+    labels.forEach(match => assert.match(match[3], /\d+\s*→\s*\d+|^\d+$/, `${records} records: the range stays readable`));
+
+    const boxes = labels.map(match => {
+      const text = match[3].replace(/<[^>]+>/g, '');
+      const halfWidth = text.length * (match[1].includes('is-compact') ? 5.2 : 5.4) / 2;
+      return { left:Number(match[2]) - halfWidth, right:Number(match[2]) + halfWidth };
+    });
+    boxes.forEach((box, index) => {
+      assert.ok(box.left >= 0 && box.right <= canvas, `${records} records: label ${index + 1} stays inside the canvas`);
+      if (index) assert.ok(box.left >= boxes[index - 1].right, `${records} records: label ${index + 1} does not overlap its neighbour`);
+    });
+  }
+});
+
 test('history module renders escaped workout cards and pagination without a DOM', () => {
   const sessions = [{
     id:'s<1>',

@@ -4,7 +4,6 @@
   const t = value => window.LogbookI18n?.t?.(value) || value;
   const dialog = $('#account-dialog');
   const deleteDialog = $('#account-delete-dialog');
-  const guestMergeDialog = $('#guest-merge-dialog');
   const gate = $('#auth-gate');
   const guest = $('#account-guest');
   const member = $('#account-member');
@@ -22,6 +21,7 @@
   // result so a late listener can still consume it instead of hanging on "syncing".
   let lastSyncResult = null;
   let syncWatchdog = null;
+  let localRecoveryAllowed = false;
   const SYNC_WATCHDOG_MS = 25000;
   const CLOUD_STORAGE_PREFIXES = ['logbookCloudCache:', 'logbookCloudMeta:'];
   const CLOUD_OWNER_KEY = 'logbookCloudOwner';
@@ -32,6 +32,7 @@
     'routineRewardTracking',
     'homeProfileCardPosition',
     'homeRoutineCardPosition',
+    'logbookWorkoutDraft',
     'logbookGuestErrorQueue',
   ];
   // Guest mode is a device-local decision, so it lives in localStorage next to the
@@ -43,7 +44,6 @@
   // stays without an account. So we store when it last appeared, not that it appeared.
   const GUEST_REMINDER_KEY = 'logbookGuestReminderAt';
   const GUEST_REMINDER_INTERVAL = 7 * 24 * 60 * 60 * 1000;
-  let guestMergeRespond = null;
 
   const currentSession = () => sessionMachine.context.session || null;
   const sessionIs = state => sessionMachine.is(state);
@@ -109,6 +109,43 @@
     }
   }
 
+  async function finishSignOut() {
+    if (!client) return false;
+    archiveCurrentLocalData();
+    const signedOut = await signOutEverywhere();
+    if (!signedOut) return false;
+    clearTimeout(syncWatchdog);
+    pendingSyncUserId = null;
+    localRecoveryAllowed = false;
+    clearLocalUserData();
+    writeFlag(GUEST_IMPORT_KEY, false);
+    renderSession(null);
+    return true;
+  }
+
+  function finishLocalSignOut() {
+    archiveCurrentLocalData();
+    clearPersistedAuthSession();
+    clearTimeout(syncWatchdog);
+    pendingSyncUserId = null;
+    localRecoveryAllowed = false;
+    clearLocalUserData();
+    writeFlag(GUEST_IMPORT_KEY, false);
+    renderSession(null);
+  }
+
+  function clearPersistedAuthSession() {
+    try { client?.auth.stopAutoRefresh?.(); } catch { /* The persisted token is still removed below. */ }
+    try {
+      const projectRef = new URL(window.LogbookSupabaseConfig.url).hostname.split('.')[0];
+      const storagePrefix = `sb-${projectRef}-auth-token`;
+      for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+        const key = localStorage.key(index);
+        if (key?.startsWith(storagePrefix)) localStorage.removeItem(key);
+      }
+    } catch { /* Session state can still leave the member gate without the persisted token. */ }
+  }
+
   function setStatus(message = '', kind = 'neutral') {
     status.textContent = message ? t(message) : '';
     status.dataset.kind = kind;
@@ -155,10 +192,14 @@
     gate.dataset.state = state;
     if (message) gateMessageSource = message;
     const checking = ['checking', 'syncing', 'loading', 'error'].includes(state);
+    const canSignOutFromGate = ['syncing', 'error'].includes(state) && Boolean(currentSession()?.user?.id) && Boolean(client);
     $('#auth-gate-progress').classList.toggle('hidden', !checking);
     guest.classList.toggle('hidden', state !== 'login');
     $('#account-tabs').classList.toggle('hidden', state !== 'login' || !['signin', 'signup'].includes(mode));
+    $('#auth-gate-recovery-actions').classList.toggle('hidden', state !== 'error' && !canSignOutFromGate);
     $('#auth-gate-retry').classList.toggle('hidden', state !== 'error');
+    $('#auth-gate-local').classList.toggle('hidden', state !== 'error' || !localRecoveryAllowed);
+    $('#auth-gate-signout').classList.toggle('hidden', !canSignOutFromGate);
     if (message) $('#auth-gate-message').textContent = t(message);
 
     const titles = {
@@ -180,6 +221,7 @@
   function showLogin() {
     passwordRecoveryActive = false;
     pendingSyncUserId = null;
+    localRecoveryAllowed = false;
     if (mode === 'recovery') setMode('signin');
     setGateState('login');
     setStatus('');
@@ -202,20 +244,31 @@
     const userId = nextSession?.user?.id;
     if (!userId || document.body.classList.contains('app-ready')) return;
     pendingSyncUserId = userId;
+    localRecoveryAllowed = false;
     if (lastSyncResult && lastSyncResult.userId === userId) {
       const { success } = lastSyncResult;
       lastSyncResult = null;
       if (success) return loadApplication();
-      setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+      showInitialSyncError(userId);
       return;
     }
     setGateState('syncing', 'Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.');
     clearTimeout(syncWatchdog);
     syncWatchdog = setTimeout(() => {
       if (pendingSyncUserId === userId && gate.dataset.state === 'syncing') {
-        setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
+        showInitialSyncError(userId);
       }
     }, SYNC_WATCHDOG_MS);
+  }
+
+  function showInitialSyncError(userId) {
+    localRecoveryAllowed = Boolean(userId && localStorage.getItem(CLOUD_OWNER_KEY) === userId);
+    setGateState(
+      'error',
+      localRecoveryAllowed
+        ? 'Δεν ολοκληρώθηκε ο συγχρονισμός. Δοκιμάστε ξανά ή συνεχίστε με τα αποθηκευμένα δεδομένα αυτής της συσκευής.'
+        : 'Δεν ολοκληρώθηκε ο συγχρονισμός. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.'
+    );
   }
 
   function loadApplication() {
@@ -458,6 +511,17 @@
     }
   });
 
+  $('#auth-gate-local').addEventListener('click', () => {
+    const session = currentSession();
+    if (!localRecoveryAllowed || !session?.user?.id || localStorage.getItem(CLOUD_OWNER_KEY) !== session.user.id) return;
+    clearTimeout(syncWatchdog);
+    pendingSyncUserId = null;
+    localRecoveryAllowed = false;
+    loadApplication();
+  });
+
+  $('#auth-gate-signout').addEventListener('click', () => finishLocalSignOut());
+
   $$('.account-form input[type="password"]').forEach(input => {
     const wrap = document.createElement('span');
     wrap.className = 'password-field';
@@ -591,14 +655,10 @@
     if (!client) return;
     const button = $('#account-signout');
     button.disabled = true;
-    archiveCurrentLocalData();
-    const signedOut = await signOutEverywhere();
+    const signedOut = await finishSignOut();
     button.disabled = false;
     if (!signedOut) return;
-    clearLocalUserData();
-    writeFlag(GUEST_IMPORT_KEY, false);
     dialog.close();
-    renderSession(null);
   });
 
   $('#account-delete-accept').addEventListener('click', async () => {
@@ -636,40 +696,14 @@
   });
 
   window.addEventListener('logbook:initial-sync-complete', event => {
-    const { userId, success, cancelled } = event.detail || {};
+    const { userId, success } = event.detail || {};
     if (!userId) return;
-    if (cancelled) return;
     lastSyncResult = { userId, success:Boolean(success) };
     if (!pendingSyncUserId || userId !== pendingSyncUserId) return;
     clearTimeout(syncWatchdog);
     lastSyncResult = null;
     if (success) loadApplication();
-    else setGateState('error', 'Ο αρχικός συγχρονισμός δεν ολοκληρώθηκε. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
-  });
-  window.addEventListener('logbook:guest-merge-required', event => {
-    if (!guestMergeDialog || typeof event.detail?.respond !== 'function') return;
-    guestMergeRespond = event.detail.respond;
-    guestMergeDialog.showModal();
-    requestAnimationFrame(() => $('#guest-merge-accept')?.focus());
-  });
-  window.addEventListener('logbook:guest-merge-cancelled', async () => {
-    writeFlag(GUEST_IMPORT_KEY, false);
-    writeFlag(GUEST_KEY, true);
-    try { await client?.auth.signOut({ scope:'local' }); } catch { /* The guest data stays local. */ }
-    enterGuest();
-  });
-  function finishGuestMerge(choice) {
-    const respond = guestMergeRespond;
-    guestMergeRespond = null;
-    if (guestMergeDialog?.open) guestMergeDialog.close();
-    respond?.(choice);
-  }
-  $('#guest-merge-accept').addEventListener('click', () => finishGuestMerge('merge'));
-  $('#guest-merge-cloud').addEventListener('click', () => finishGuestMerge('cloud'));
-  $('#guest-merge-cancel').addEventListener('click', () => finishGuestMerge('cancel'));
-  guestMergeDialog.addEventListener('cancel', event => {
-    event.preventDefault();
-    finishGuestMerge('cancel');
+    else showInitialSyncError(userId);
   });
   window.addEventListener('logbook:supabase-ready', event => bindClient(event.detail.client));
   window.addEventListener('logbook:offline-session', event => renderOfflineSession(event.detail?.session));

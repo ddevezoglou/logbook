@@ -66,6 +66,10 @@
    καρτέλες και τα κουμπιά της. Το πιο ελαφρύ βάρος του .account-text-button ανήκει
    στο «ξεχάσατε τον κωδικό», που είναι πεζά μέσα στη φόρμα. */
 .account-guest-door .account-text-button { justify-self:center; font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; text-align:center; }
+/* Η ίδια έξοδος, στη σειρά ανάκτησης της πύλης: το «ΑΝΟΙΓΜΑ ΣΤΗ ΣΥΣΚΕΥΗ» δεν είναι
+   δεύτερη ισότιμη ενέργεια δίπλα στην «ΠΡΟΣΠΑΘΕΙΑ ΞΑΝΑ» — είναι έξοδος κάτω από αυτήν.
+   Ίδια κεφαλαία της πύλης, αλλά αριστερή στοίχιση γιατί η σειρά δεν είναι κεντραρισμένη. */
+.auth-gate-recovery-actions .account-text-button { font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; }
 .account-member { margin-top:24px; }
 .account-card { position:relative; padding:20px 22px 18px; background:var(--ink-surface); color:var(--on-ink); overflow:hidden; box-shadow:6px 7px 0 rgba(var(--gold-rgb),.35); }
 .account-card::before { content:""; position:absolute; inset:6px; border:1px solid rgba(var(--gold-rgb),.45); pointer-events:none; }
@@ -79,11 +83,6 @@
 .account-delete-button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
 .account-delete-button:disabled { cursor:wait; opacity:.6; transform:none; box-shadow:none; }
 .account-delete-dialog .confirm-dialog-mark { background:var(--danger); }
-.guest-merge-dialog { width:min(650px,calc(100% - 36px)); }
-.guest-merge-dialog .confirm-dialog-mark { background:var(--gold); color:var(--on-gold); }
-.guest-merge-actions { flex-wrap:wrap; }
-.guest-merge-actions .primary-button,.guest-merge-actions .secondary-button { width:auto; margin-top:0; }
-.guest-merge-actions .primary-button { order:3; }
 .account-delete-status { margin:-12px 0 24px; padding:10px 12px; border-left:3px solid var(--line); background:var(--wash-2); color:var(--muted); font-weight:700; }
 .account-delete-status[data-kind="error"] { border-color:var(--danger); color:var(--danger); }
 .account-form-status { min-height:20px; margin:18px 0 0; padding:10px 12px; border-left:3px solid var(--line); background:var(--wash-18); color:var(--muted); font-weight:700; }
@@ -104,7 +103,7 @@ body:not(.app-ready) .guest-reminder { display:none; }
 .guest-reminder-actions .secondary-button:hover { border-color:var(--gold); background:transparent; color:var(--on-ink); }
 @media(prefers-reduced-motion:reduce){ .guest-reminder { transition:none; } }
 @keyframes accountPassIn { from { opacity:0; transform:translateY(18px) rotate(-.7deg) scale(.98); } to { opacity:1; transform:none; } }
-@media(max-width:600px){.account-dialog{width:calc(100% - 14px);max-height:calc(100dvh - 14px)}.account-folder{margin:10px 8px 8px;filter:drop-shadow(5px 6px 0 rgba(var(--gold-rgb),.36)) drop-shadow(8px 10px 16px rgba(0,0,0,.26))}.account-tabs{padding:0 14px}.account-tabs button{flex:1;padding:0}.account-sheet{padding:24px 18px 22px}.account-clip{left:24px}.account-card{padding:18px 16px 16px}.account-connected-stamp{position:static;display:inline-block;margin-bottom:14px;transform:rotate(-2deg)}.account-member strong{margin-top:0}.account-member-actions{flex-direction:column}.account-member-actions button{width:100%}.account-delete-dialog .confirm-dialog-actions,.guest-merge-dialog .confirm-dialog-actions{flex-direction:column}.guest-merge-actions .primary-button{order:0}}
+@media(max-width:600px){.account-dialog{width:calc(100% - 14px);max-height:calc(100dvh - 14px)}.account-folder{margin:10px 8px 8px;filter:drop-shadow(5px 6px 0 rgba(var(--gold-rgb),.36)) drop-shadow(8px 10px 16px rgba(0,0,0,.26))}.account-tabs{padding:0 14px}.account-tabs button{flex:1;padding:0}.account-sheet{padding:24px 18px 22px}.account-clip{left:24px}.account-card{padding:18px 16px 16px}.account-connected-stamp{position:static;display:inline-block;margin-bottom:14px;transform:rotate(-2deg)}.account-member strong{margin-top:0}.account-member-actions{flex-direction:column}.account-member-actions button{width:100%}.account-delete-dialog .confirm-dialog-actions{flex-direction:column}}
 @media(max-height:760px){.side-menu .nav-button{padding-top:13px;padding-bottom:13px;font-size:1.2rem}.side-menu>p{margin-top:17px}.account-menu-card{margin-top:10px;padding-top:9px;padding-bottom:9px}}
 
 /* Mobile/PWA hardening — safe areas, touch targets and compact viewport behavior. */

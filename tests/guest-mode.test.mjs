@@ -174,22 +174,9 @@ test('signing in ends the guest session and leaves no guest flag behind', async 
   assert.equal(document.querySelector('#account-menu-email').textContent, 'athlete@example.com');
 });
 
-test('the guest merge dialog exposes all three explicit outcomes', async () => {
-  const { window, document } = await loadAuth();
-  let choice = null;
-
-  window.dispatchEvent(new window.CustomEvent('logbook:guest-merge-required', {
-    detail:{ respond:value => { choice = value; } },
-  }));
-
-  assert.equal(document.querySelector('#guest-merge-dialog').open, true);
-  assert.equal(document.querySelector('#guest-merge-accept').textContent, 'ΣΥΓΧΩΝΕΥΣΗ');
-  assert.equal(document.querySelector('#guest-merge-cloud').textContent, 'ΜΟΝΟ ΔΕΔΟΜΕΝΑ ΛΟΓΑΡΙΑΣΜΟΥ');
-  assert.equal(document.querySelector('#guest-merge-cancel').textContent, 'ΑΚΥΡΩΣΗ');
-
-  click(document, '#guest-merge-cloud');
-  assert.equal(choice, 'cloud');
-  assert.equal(document.querySelector('#guest-merge-dialog').open, false);
+test('guest login has no merge-choice dialog', async () => {
+  const { document } = await loadAuth();
+  assert.equal(document.querySelector('#guest-merge-dialog'), null);
 });
 
 test('the guest reminder is translated like the rest of the interface', async () => {
@@ -202,6 +189,4 @@ test('the guest reminder is translated like the rest of the interface', async ()
   assert.equal(document.querySelector('#guest-reminder-title').textContent, 'Your data is stored on this device only');
   assert.equal(document.querySelector('#guest-reminder-dismiss').textContent, 'NOT NOW');
   assert.equal(document.querySelector('#guest-reminder-signup').textContent, 'CREATE ACCOUNT');
-  assert.equal(document.querySelector('#guest-merge-title').textContent, 'HOW WOULD YOU LIKE TO CONTINUE?');
-  assert.equal(document.querySelector('#guest-merge-accept').textContent, 'MERGE');
 });

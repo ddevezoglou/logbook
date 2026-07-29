@@ -8,6 +8,7 @@ const i18nSource = readFileSync(new URL('../i18n.js', import.meta.url), 'utf8');
 const configSource = readFileSync(new URL('../supabase-config.js', import.meta.url), 'utf8');
 const sessionStateSource = readFileSync(new URL('../session-state.js', import.meta.url), 'utf8');
 const authSource = readFileSync(new URL('../auth.js', import.meta.url), 'utf8');
+const baseStyles = readFileSync(new URL('../base.css', import.meta.url), 'utf8');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 async function loadAuth({ initialSession = null, signupSession = null, oauthError = null, deleteError = null, signOutFailures = [], onWindow = null } = {}) {
@@ -325,6 +326,7 @@ test('global sign out clears visible user data while preserving owner-scoped rec
   localStorage.setItem('logbookCloudCache:user-b', JSON.stringify({ trainingSessions:[] }));
   localStorage.setItem('logbookCloudOwner', 'user-a');
   localStorage.setItem('logbookGuestErrorQueue', '[{"event_code":"stale_failure"}]');
+  localStorage.setItem('logbookWorkoutDraft', '{"exercise":"private-draft"}');
 
   click(document, '#account-signout');
   await flush();
@@ -335,6 +337,7 @@ test('global sign out clears visible user data while preserving owner-scoped rec
   assert.equal(localStorage.getItem('trainingRoutines'), null);
   assert.equal(localStorage.getItem('userProfile'), null);
   assert.equal(localStorage.getItem('logbookGuestErrorQueue'), null);
+  assert.equal(localStorage.getItem('logbookWorkoutDraft'), null);
   assert.equal(localStorage.getItem('logbookCloudOwner'), 'user-a');
   assert.deepEqual(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions, sessions);
   assert.ok(localStorage.getItem('logbookCloudMeta:user-a'));
@@ -445,7 +448,79 @@ test('an initial sync that failed before the gate arms surfaces the error state'
 
   assert.equal(document.querySelector('script[data-logbook-app]'), null);
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
-  assert.ok(!document.querySelector('#auth-gate-retry').classList.contains('hidden'));
+  assert.ok(!document.querySelector('#auth-gate-recovery-actions').classList.contains('hidden'));
+  assert.ok(document.querySelector('#auth-gate-local').classList.contains('hidden'));
+  assert.ok(!document.querySelector('#auth-gate-signout').classList.contains('hidden'));
+});
+
+test('an existing session can sign out locally while initial sync is still pending', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { window, document, calls } = await loadAuth({ initialSession, onWindow(window) {
+    window.localStorage.setItem('sb-hixnqtjsjcndeatxhpgd-auth-token', 'persisted-session');
+    window.localStorage.setItem('sb-hixnqtjsjcndeatxhpgd-auth-token.0', 'chunked-session');
+  } });
+
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
+  assert.ok(!document.querySelector('#auth-gate-signout').classList.contains('hidden'));
+  assert.ok(document.querySelector('#auth-gate-retry').classList.contains('hidden'));
+
+  click(document, '#auth-gate-signout');
+  await flush();
+
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'login');
+  assert.equal(window.localStorage.getItem('sb-hixnqtjsjcndeatxhpgd-auth-token'), null);
+  assert.equal(window.localStorage.getItem('sb-hixnqtjsjcndeatxhpgd-auth-token.0'), null);
+  assert.equal(calls.signout.length, 0, 'the recovery exit must never wait for the network');
+});
+
+test('a signed-in user can leave the initial sync error and return to login', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { window, document, calls } = await loadAuth({ initialSession });
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:false },
+  }));
+
+  click(document, '#auth-gate-signout');
+  await flush();
+
+  assert.equal(calls.signout.length, 0, 'the error recovery exit must never wait for the network');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'login');
+  assert.ok(document.querySelector('#auth-gate-signout').classList.contains('hidden'));
+});
+
+test('a failed sync can open trusted data already owned by the same account', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { window, document } = await loadAuth({ initialSession, onWindow(window) {
+    window.localStorage.setItem('logbookCloudOwner', 'user-a');
+  } });
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:false },
+  }));
+
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
+  assert.ok(!document.querySelector('#auth-gate-local').classList.contains('hidden'));
+  assert.match(document.querySelector('#auth-gate-message').textContent, /δεδομένα αυτής της συσκευής/);
+
+  click(document, '#auth-gate-local');
+  assert.ok(document.querySelector('script[data-logbook-app]'));
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'loading');
+});
+
+test('a failed sync never exposes another account local data', async () => {
+  const initialSession = { user:{ id:'user-b', email:'other@example.com' } };
+  const { window, document } = await loadAuth({ initialSession, onWindow(window) {
+    window.localStorage.setItem('logbookCloudOwner', 'user-a');
+  } });
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-b', success:false },
+  }));
+
+  assert.ok(document.querySelector('#auth-gate-local').classList.contains('hidden'));
+  click(document, '#auth-gate-local');
+  assert.equal(document.querySelector('script[data-logbook-app]'), null);
 });
 
 test('the sync watchdog turns a hung "syncing" state into a retryable error', async () => {
@@ -462,7 +537,12 @@ test('the sync watchdog turns a hung "syncing" state into a retryable error', as
 
   watchdog.callback();
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
-  assert.ok(!document.querySelector('#auth-gate-retry').classList.contains('hidden'));
+  assert.ok(!document.querySelector('#auth-gate-recovery-actions').classList.contains('hidden'));
+  assert.equal(
+    document.querySelector('#auth-gate-message').textContent,
+    'Δεν ολοκληρώθηκε ο συγχρονισμός. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.',
+  );
+  assert.doesNotMatch(document.querySelector('#auth-gate-message').textContent, /DIAG|watchdog|supabase|online:/i);
 });
 
 test('language switches keep translating the gate message from its Greek source', async () => {
@@ -479,4 +559,27 @@ test('language switches keep translating the gate message from its Greek source'
   await flush();
   assert.equal(document.querySelector('#auth-gate-message').textContent, 'Récupération de vos dernières séances et programmes.');
   assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
+});
+
+test('the local recovery exit carries less weight than retrying the sync', async () => {
+  const initialSession = { user:{ id:'user-a', email:'athlete@example.com' } };
+  const { window, document } = await loadAuth({ initialSession, onWindow(window) {
+    window.localStorage.setItem('logbookCloudOwner', 'user-a');
+  } });
+
+  window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:false },
+  }));
+
+  const retry = document.querySelector('#auth-gate-retry');
+  const local = document.querySelector('#auth-gate-local');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
+  assert.ok(!local.classList.contains('hidden'));
+
+  assert.ok(retry.classList.contains('secondary-button'), 'retrying stays the proposed action');
+  assert.ok(local.classList.contains('account-text-button'), 'the exit reuses the lighter gate idiom');
+  assert.ok(!local.classList.contains('secondary-button'));
+  assert.match(baseStyles, /\.auth-gate-recovery-actions \{[^}]*flex-direction:column/);
+  assert.doesNotMatch(baseStyles, /guest-merge/, 'the removed merge prompt must leave no styling behind');
+  assert.match(baseStyles, /\.auth-gate-recovery-actions \{[^}]*pointer-events:auto/);
 });
