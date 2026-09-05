@@ -1,5 +1,6 @@
 (() => {
   const DATA_KEYS = [
+    'trainingExercises',
     'trainingRoutines',
     'trainingSessions',
     'userProfile',
@@ -8,7 +9,7 @@
     'homeRoutineCardPosition',
     'logbookLanguage',
   ];
-  const ARRAY_KEYS = new Set(['trainingRoutines', 'trainingSessions']);
+  const ARRAY_KEYS = new Set(['trainingExercises', 'trainingRoutines', 'trainingSessions']);
   const META_PREFIX = 'logbookCloudMeta:';
   const CACHE_PREFIX = 'logbookCloudCache:';
   const OWNER_KEY = 'logbookCloudOwner';
@@ -143,6 +144,7 @@
   function normalizePayload(value = {}) {
     const payload = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     return {
+      trainingExercises:Array.isArray(payload.trainingExercises) ? payload.trainingExercises.filter(item => isRecord(item) && typeof item.id === 'string' && typeof item.name === 'string').map(item => ({ ...item, aliases:Array.isArray(item.aliases) ? item.aliases.filter(alias => typeof alias === 'string') : [] })) : [],
       trainingRoutines:Array.isArray(payload.trainingRoutines) ? payload.trainingRoutines.map(normalizeRoutine).filter(Boolean) : [],
       trainingSessions:Array.isArray(payload.trainingSessions) ? payload.trainingSessions.map(normalizeSession).filter(Boolean) : [],
       userProfile:normalizeProfile(payload.userProfile),
@@ -210,7 +212,7 @@
     const data = normalizePayload(payload);
     const sessions = data.trainingSessions.filter(item => !isDeletedRecord(item));
     const routines = data.trainingRoutines.filter(item => !isDeletedRecord(item));
-    if (sessions.length || data.userProfile || routines.length > 1) return true;
+    if (data.trainingExercises.length || sessions.length || data.userProfile || routines.length > 1) return true;
     const routine = routines[0];
     if (!routine) return false;
     return Boolean(routine.plan?.length || !routine.isPlaceholder);
@@ -271,6 +273,7 @@
       if (!isDeletedRecord(routine)) routine.isActive = String(routine.id) === String(activeId);
     });
     return normalizePayload({
+      trainingExercises:mergeCollection(remote.trainingExercises, local.trainingExercises, resolveExerciseConflict),
       trainingRoutines:routines,
       trainingSessions:mergeCollection(remote.trainingSessions, local.trainingSessions),
       userProfile:local.userProfile || remote.userProfile,
@@ -328,6 +331,13 @@
     }
   }
 
+  function resolveExerciseConflict(remote, local) {
+    const winner = (remote.updatedAt || '') > (local.updatedAt || '') ? remote
+      : (remote.updatedAt || '') < (local.updatedAt || '') ? local
+        : stableStringify(remote) > stableStringify(local) ? remote : local;
+    return { ...winner, aliases:[...new Set([...(remote.aliases || []), ...(local.aliases || [])])].sort() };
+  }
+
   function withAbortSignal(query, signal) {
     return typeof query?.abortSignal === 'function' ? query.abortSignal(signal) : query;
   }
@@ -381,6 +391,13 @@
         remote = await fetchRemote(id);
       }
     }
+    // A missing library on a stale device must never erase remote definitions,
+    // including when its revision still matches and no conflict retry is needed.
+    payload = { ...payload, trainingExercises:mergeCollection(
+      normalizePayload(remote.payload).trainingExercises,
+      normalizePayload(payload).trainingExercises,
+      resolveExerciseConflict
+    ) };
     let saved = await updateRemote(id, payload, remote.revision);
     if (saved) return saved;
     const latest = await fetchRemote(id);
@@ -442,6 +459,16 @@
       remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, local), remote);
     }
 
+    // Old clients omit the library. Recover definitions from this owner's copy
+    // even without pending local edits; keep remote session updates intact.
+    if (remote && local.trainingExercises.length) {
+      const remoteData = normalizePayload(remote.payload);
+      const library = mergeCollection(remoteData.trainingExercises, local.trainingExercises, resolveExerciseConflict);
+      if (stableStringify(library) !== stableStringify(remoteData.trainingExercises)) {
+        remote = await saveWithConflictRetry(id, { ...remoteData, trainingExercises:library }, remote);
+      }
+    }
+
     if (!remote) {
       remote = await saveWithConflictRetry(id, local, null);
       if (switchingUser) {
@@ -484,6 +511,15 @@
 
     if (remote.conflictMerged && payloadHash(collectLocalPayload()) !== payloadHash(remote.payload)) {
       applyPayload(remote.payload);
+      applied = true;
+    }
+    // Reconcile recovered definitions without replacing unrelated edits made
+    // while the request was in flight. Account switches have already applied
+    // the destination account's payload above.
+    const currentLibrary = collectLocalPayload().trainingExercises;
+    const library = mergeCollection(normalizePayload(remote.payload).trainingExercises, currentLibrary, resolveExerciseConflict);
+    if (stableStringify(library) !== stableStringify(currentLibrary)) {
+      localStorage.setItem('trainingExercises', JSON.stringify(library));
       applied = true;
     }
     writeMeta(id, remote);

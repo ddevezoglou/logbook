@@ -30,6 +30,7 @@ const ROOT_FILES = [
   'service-worker.js',
 ];
 const MODULE_FILES = [
+  'modules/exercises.js',
   'modules/storage-migrations.js',
   'modules/routines.js',
   'modules/sessions.js',

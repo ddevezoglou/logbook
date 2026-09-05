@@ -1,9 +1,9 @@
 import {
-  normalizedName,
   smoothPath,
   weightModeGroup,
 } from './progress-rewards.js';
 import { escapeHtml } from './ui.js';
+import { exerciseKey as identityKey } from './exercises.js';
 
 const localDate = value => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
@@ -29,8 +29,11 @@ export function buildProgressChartMarkup({
     return '<div class="empty"><span>Καταγράψτε τουλάχιστον δύο ίδια σετ για να δείτε πρόοδο.</span></div>';
   }
 
-  const records = workout.sessions.map(session => {
-    const exercise = session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey);
+  const occurrences = workout.sessions.flatMap(session => {
+    const matches = session.exercises?.filter(item => identityKey(item) === exerciseKey) || [];
+    return matches.length ? matches.map(exercise => ({ session, exercise })) : [{ session }];
+  });
+  const records = occurrences.map(({ session, exercise }) => {
     if (!exercise) return { session, reason:'Η άσκηση δεν καταγράφηκε' };
     const set = exercise.sets?.[setIndex];
     if (!set) return { session, reason:`Δεν καταγράφηκε το σετ ${setIndex + 1}` };
@@ -116,7 +119,7 @@ export function buildProgressChartMarkup({
     ? linePoints
     : points.map((item, index) => ({ x:x(index), y:repY(item.reps) }));
   const smoothLine = smoothPath(mainPoints);
-  const exerciseName = points[0]?.session?.exercises?.find(item => normalizedName(item.exercise) === exerciseKey)?.exercise || '';
+  const exerciseName = points[0]?.session?.exercises?.find(item => identityKey(item) === exerciseKey)?.exercise || '';
   const pointLabel = (item, { fullReps = false } = {}) => {
     const repsUnit = fullReps ? 'επαναλήψεις' : 'επαν.';
     if (comparableGroup === 'bodyweight') {

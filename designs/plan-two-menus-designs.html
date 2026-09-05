@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Πρόγραμμα — Δύο πτυσσόμενα μενού</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --pen:#4d3f24; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p.lead { max-width:680px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.55; }
+.intro>p.lead b { color:var(--ink); }
+.intro .state { display:flex; flex-wrap:wrap; gap:10px; margin:26px 0 0; }
+.intro .state span { padding:6px 12px; border:1px solid var(--line); background:rgba(255,255,255,.42); font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.intro .state span b { color:var(--pen-blue); }
+
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.stage.single { grid-template-columns:1fr; justify-items:start; }
+.notes { grid-column:1 / -1; justify-self:start; max-width:720px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+.notes.pick { border:1px solid var(--pen-blue); border-left-width:5px; background:rgba(31,100,147,.06); }
+.notes.pick b { color:var(--pen-blue); }
+.caption { grid-column:1 / -1; justify-self:start; max-width:720px; margin:0; color:var(--muted); line-height:1.55; }
+.caption b { color:var(--ink); }
+.variant { width:min(360px,100%); }
+.variant>h4 { margin:0 0 12px; font:800 .74rem "Alegreya Sans"; letter-spacing:.18em; text-transform:uppercase; color:var(--orange); }
+.variant>p.why { margin:12px 0 0; font-size:.86rem; line-height:1.5; color:var(--muted); }
+.variant>p.why b { color:var(--ink); }
+.pairlabel { margin:14px 0 6px; font:800 .62rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--faded); }
+
+.btn { border:1px solid var(--pen); background:transparent; color:var(--pen); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; padding:9px 15px; cursor:pointer; transition:background .15s ease,color .15s ease; }
+.btn:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.btn:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.btn.primary { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.btn.primary:hover { background:var(--orange); border-color:var(--orange); }
+.btn.small { padding:6px 11px; font-size:.66rem; }
+
+/* ============================================================
+   ΤΟ ΚΟΙΝΟ ΠΤΥΣΣΟΜΕΝΟ ΜΕΝΟΥ
+   ============================================================ */
+.menu { }
+.menu+.menu { margin-top:22px; }
+
+/* η κεφαλίδα είναι ολόκληρη κουμπί */
+.menu-head { display:flex; align-items:baseline; gap:12px; width:100%; padding:0 0 7px; border:0; border-bottom:3px solid var(--ink); background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+.menu-head:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.menu-head h3 { flex:none; margin:0; font:900 1.02rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.menu-sum { flex:1; min-width:0; text-align:right; font:800 .62rem "Alegreya Sans"; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.menu-sum b { color:var(--orange); }
+.menu-sum .live { color:var(--pen-blue); }
+.menu-chev { flex:none; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; transition:transform .18s ease; align-self:center; }
+.menu-head[aria-expanded="false"] .menu-chev { transform:rotate(-90deg); }
+.menu-head[aria-expanded="false"] { border-bottom-style:double; border-bottom-width:5px; }
+.menu-body { padding-top:10px; }
+.menu-body[hidden] { display:none; }
+
+/* ============================================================
+   Α. ΤΟ ΙΔΙΩΜΑ ΤΗΣ ΚΕΦΑΛΙΔΑΣ — ΤΡΕΙΣ ΕΚΔΟΧΕΣ
+   ============================================================ */
+.demo { width:min(360px,100%); padding:16px; background:rgba(255,255,255,.32); border:1px solid var(--line); }
+.demo+.demo { margin-top:14px; }
+.stub { margin:0; padding:0; list-style:none; }
+.stub li { display:flex; align-items:baseline; gap:9px; padding:6px 0; }
+.stub li+li { border-top:1px solid rgba(77,63,36,.12); }
+.stub b { font:700 .84rem "Roboto Slab"; }
+.stub .dots { flex:1; border-bottom:1px dotted var(--line); transform:translateY(-3px); }
+.stub small { font:800 .6rem "Alegreya Sans"; letter-spacing:.1em; color:var(--orange); }
+
+/* Α2 — η καρτέλα ντοσιέ */
+.a2-head { display:flex; align-items:center; gap:10px; width:100%; padding:9px 13px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; font:inherit; text-align:left; }
+.a2-head h3 { flex:none; margin:0; font:700 .9rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:.02em; color:var(--gold); }
+.a2-head .menu-sum { color:var(--faded); }
+.a2-head .menu-sum b { color:var(--paper); }
+.a2-body { border:1px solid var(--line); border-top:0; padding:13px; background:rgba(255,255,255,.4); }
+
+/* Α3 — ο σελιδοδείκτης */
+.a3-wrap { position:relative; padding-left:16px; }
+.a3-wrap::before { content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--orange); }
+.a3-wrap.shut::before { background:var(--line); }
+.a3-head { display:flex; align-items:baseline; gap:10px; width:100%; padding:2px 0 8px; border:0; background:transparent; cursor:pointer; font:inherit; text-align:left; color:inherit; }
+.a3-head h3 { margin:0; font:900 1rem/1 "Roboto Slab"; text-transform:uppercase; }
+
+/* ============================================================
+   Β. Η ΚΛΕΙΣΤΗ ΓΡΑΜΜΗ
+   ============================================================ */
+.b-row { width:min(360px,100%); padding:0 0 7px; border-bottom:5px double var(--ink); display:flex; align-items:baseline; gap:12px; }
+.b-row h3 { flex:none; margin:0; font:900 1.02rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.b-row .menu-sum { flex:1; }
+.b-row svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; align-self:center; transform:rotate(-90deg); }
+
+/* ============================================================
+   Γ. Η ΚΑΡΤΑ ΠΡΟΓΡΑΜΜΑΤΟΣ
+   ============================================================ */
+.card { position:relative; flex:0 0 236px; padding:15px 15px 11px; background:var(--paper-soft); box-shadow:4px 6px 0 rgba(21,19,13,.13); }
+.card.on { background:var(--ink); color:var(--paper); }
+.card h4 { margin:0; font:900 1.04rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.card .meta { margin:5px 0 0; font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.card.on .meta { color:var(--faded); }
+.card .meta b { color:var(--orange); }
+.card.on .meta b { color:var(--gold); }
+.card .days { margin:9px 0 0; padding:8px 0 0; border-top:1px solid rgba(77,63,36,.2); list-style:none; }
+.card.on .days { border-top-color:rgba(239,232,216,.2); }
+.card .days li { display:flex; gap:8px; padding:3px 0; font:700 .66rem/1.25 "Roboto Slab"; text-transform:uppercase; letter-spacing:.04em; }
+.card .days li i { font-style:normal; color:var(--faded); font-weight:400; flex:none; min-width:20px; }
+
+/* η ζώνη ενεργειών: δύο πρωτεύουσες αριστερά, οι υπόλοιπες δεξιά */
+.acts { display:flex; align-items:center; gap:5px; margin-top:11px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); }
+.card.on .acts { border-top-color:rgba(239,232,216,.3); }
+.acts .spacer { flex:1; }
+.act { width:28px; height:28px; display:grid; place-items:center; padding:0; border:1px solid rgba(77,63,36,.42); background:transparent; color:inherit; cursor:pointer; transition:background .15s ease,color .15s ease,border-color .15s ease; }
+.card.on .act { border-color:rgba(239,232,216,.4); }
+.act svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.act:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.card.on .act:hover { background:var(--paper); border-color:var(--paper); color:var(--ink); }
+.act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.act.quiet { border-color:transparent; color:var(--muted); }
+.card.on .act.quiet { color:var(--faded); }
+.act.star[aria-pressed="true"] { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.act.star[aria-pressed="true"] svg { fill:currentColor; stroke:none; }
+.act.wide { width:auto; padding:0 11px; gap:6px; display:inline-flex; align-items:center; font:800 .62rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; }
+.act.danger:hover { background:var(--danger); border-color:var(--danger); color:var(--paper); }
+
+.live-tag { position:absolute; top:-9px; right:11px; padding:2px 8px; background:var(--gold); color:var(--ink); font:800 .55rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; }
+
+/* το καρουζέλ */
+.rail { position:relative; }
+.track { display:flex; gap:12px; overflow-x:auto; padding:12px 2px 16px; scroll-snap-type:x mandatory; scroll-behavior:smooth; }
+.track>.card { scroll-snap-align:start; }
+.railbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:2px; }
+.railbar .hint { font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.arrows { display:flex; gap:6px; }
+.arrow { width:30px; height:30px; display:grid; place-items:center; border:1px solid var(--pen); background:transparent; color:var(--pen); cursor:pointer; }
+.arrow:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.arrow:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.arrow svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ============================================================
+   ΤΟ ΕΥΡΕΤΗΡΙΟ (από τον Θ' γύρο, αμετάβλητο)
+   ============================================================ */
+.idx { margin:0; padding:0; list-style:none; }
+.idx-row { display:flex; align-items:baseline; gap:9px; padding:7px 0 6px; }
+.idx-row+.idx-row { border-top:1px solid rgba(77,63,36,.13); }
+.idx-name { font:700 .9rem/1.25 "Roboto Slab"; letter-spacing:-.01em; }
+.idx-note { display:block; font:400 .76rem/1.35 "Alegreya Sans"; color:var(--muted); }
+.idx-dots { flex:1 1 auto; min-width:14px; align-self:center; border-bottom:1px dotted var(--line); transform:translateY(-2px); }
+.idx-use { flex:none; font:800 .66rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; color:var(--orange); white-space:nowrap; }
+.idx-use.zero { color:var(--faded); }
+.addrow { display:flex; align-items:center; gap:10px; width:100%; margin-top:6px; padding:9px 2px; border:0; border-top:1px dashed rgba(77,63,36,.45); background:transparent; color:var(--orange); font:800 .74rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; text-align:left; }
+.addrow:hover { color:var(--ink); }
+.addrow:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.addrow b { font-size:1.1rem; line-height:1; }
+
+/* ============================================================
+   Η ΠΡΟΤΑΣΗ — ΤΗΛΕΦΩΝΟ ΚΑΙ DESKTOP
+   ============================================================ */
+.phone { width:390px; max-width:100%; border:10px solid var(--ink); border-radius:26px; background:var(--paper); overflow:hidden; box-shadow:8px 12px 0 rgba(21,19,13,.16); }
+.phone-inner { height:660px; overflow-y:auto; overflow-x:hidden; }
+.hero { padding:22px 18px 16px; }
+.hero h2 { margin:0; font:700 1.7rem/.92 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.045em; }
+.hero h2 em { display:block; color:var(--orange); font-style:normal; }
+.hero .info { float:right; width:27px; height:27px; display:grid; place-items:center; border:2px solid var(--ink); border-radius:50%; font:800 .86rem "Roboto Slab"; margin-left:12px; }
+.sec { padding:0 18px 20px; }
+.stamp { display:flex; align-items:center; justify-content:center; gap:9px; margin:2px 18px 22px; padding:9px; color:var(--faded); font:800 .6rem "Alegreya Sans"; letter-spacing:.22em; }
+.stamp svg { width:15px; height:15px; fill:currentColor; }
+
+.desk { width:min(1040px,100%); border:1px solid var(--line); background:rgba(255,255,255,.28); box-shadow:8px 12px 0 rgba(21,19,13,.12); }
+.desk-top { padding:26px 30px 18px; }
+.desk-top h2 { margin:0; font:700 2.2rem/.9 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.05em; }
+.desk-top h2 em { color:var(--orange); font-style:normal; }
+.desk-grid { display:grid; grid-template-columns:minmax(0,330px) minmax(0,1fr); gap:30px; padding:0 30px 30px; align-items:start; }
+.desk-grid.one { grid-template-columns:1fr; }
+.desk-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:14px; padding:12px 0 4px; }
+.desk-cards>.card { flex:none; width:auto; }
+@media(max-width:860px){ .desk-grid { grid-template-columns:1fr; } }
+
+/* ============================================================
+   ΠΙΝΑΚΕΣ
+   ============================================================ */
+.tablewrap { grid-column:1 / -1; width:100%; overflow-x:auto; }
+table.cmp { width:100%; min-width:620px; border-collapse:collapse; background:rgba(255,255,255,.4); font-size:.88rem; }
+table.cmp th, table.cmp td { border:1px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top; line-height:1.45; }
+table.cmp thead th { background:var(--ink); color:var(--paper); font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; border-color:var(--ink); }
+table.cmp tbody th { font-weight:800; width:24%; background:rgba(255,255,255,.5); }
+table.cmp td.yes { color:var(--pen-blue); font-weight:700; }
+table.cmp td.no { color:var(--danger); }
+table.cmp code, .notes code, .caption code, .qlist code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em; background:rgba(21,19,13,.07); padding:1px 4px; }
+
+.qlist { grid-column:1 / -1; justify-self:start; max-width:720px; margin:0; padding:0; list-style:none; }
+.qlist li { position:relative; padding:0 0 15px 34px; line-height:1.55; }
+.qlist li::before { content:"?"; position:absolute; left:0; top:0; width:22px; height:22px; display:grid; place-items:center; border:2px solid var(--pen-blue); border-radius:50%; color:var(--pen-blue); font:800 .8rem "Alegreya Sans"; }
+.qlist b { font-weight:800; }
+
+.foot { padding:34px 5vw 60px; border-top:3px solid var(--ink); color:var(--muted); font-size:.86rem; line-height:1.6; }
+.foot b { color:var(--ink); }
+
+@media(prefers-reduced-motion:reduce){ * { transition:none !important; scroll-behavior:auto !important; } }
+@media(max-width:600px){ .stage { grid-template-columns:1fr; } .phone { border-width:6px; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΠΡΟΓΡΑΜΜΑ — Ι' ΓΥΡΟΣ · ΣΥΝΕΧΕΙΑ ΤΟΥ (Ε)</p>
+  <h1>Δύο μενού,<br>ένα <em>ανοιγμα</em></h1>
+  <p class="lead">Το (Ε) του προηγούμενου γύρου έδειχνε ευρετήριο ασκήσεων και από κάτω τις κάρτες των προγραμμάτων, πάντα και τα δύο ανοιχτά. Εδώ γίνονται <b>δύο ανεξάρτητα πτυσσόμενα μενού</b>: το καθένα κλείνει μόνο του, τα προγράμματα κρατούν επεξεργασία, αγαπημένο και την οριζόντια εναλλαγή που έχουν σήμερα. Ο κανόνας που διατρέχει το αρχείο: <b>μια κλειστή γραμμή πρέπει να απαντά αυτό που θα ρωτούσες ανοίγοντάς την</b> — αλλιώς το minimize απλώς μετακινεί τη δουλειά.</p>
+  <div class="state">
+    <span>Ασκήσεις <b>πτυσσόμενες</b></span>
+    <span>Προγράμματα <b>πτυσσόμενα</b></span>
+    <span>Επεξεργασία + αγαπημένο <b>πρωτεύοντα</b></span>
+    <span>Καρουζέλ <b>ως έχει</b></span>
+  </div>
+</header>
+
+<!-- ============================================================ Α -->
+<div class="attempt-label"><b>Α</b><span>ΤΟ ΙΔΙΩΜΑ ΤΗΣ ΚΕΦΑΛΙΔΑΣ — ΠΑΤΗΣΕ ΤΙΣ ΓΙΑ ΝΑ ΚΛΕΙΣΟΥΝ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Α1 · Η γραμμή που ήδη υπάρχει</h4>
+    <div class="demo">
+      <div class="menu">
+        <button class="menu-head" type="button" aria-expanded="true" aria-controls="a1-body" data-toggle>
+          <h3>Οι ασκήσεις μου</h3>
+          <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut="<b>8</b> ασκήσεις · 2 αχρησιμοποίητες"></span>
+          <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="menu-body" id="a1-body">
+          <ul class="stub">
+            <li><b>Άρσεις θανάτου</b><span class="dots"></span><small>2 ημ.</small></li>
+            <li><b>Έλξεις</b><span class="dots"></span><small>3 ημ.</small></li>
+            <li><b>Καθίσματα</b><span class="dots"></span><small>2 ημ.</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="why"><b>Η πρόταση.</b> Η κεφαλίδα του (Ε) γίνεται ολόκληρη κουμπί. Καμία νέα μορφή: ο ίδιος τίτλος, η ίδια βαριά γραμμή από κάτω — που όταν κλείνει γίνεται <b>διπλή</b>, ώστε η κλειστή κατάσταση να διαβάζεται και χωρίς το βελάκι. Στόχος αφής ολόκληρη η γραμμή.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Α2 · Η καρτέλα ντοσιέ</h4>
+    <div class="demo">
+      <div class="menu">
+        <button class="a2-head" type="button" aria-expanded="true" aria-controls="a2-body" data-toggle>
+          <h3>Οι ασκήσεις μου</h3>
+          <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut="<b>8</b> ασκήσεις"></span>
+          <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="menu-body a2-body" id="a2-body">
+          <ul class="stub">
+            <li><b>Άρσεις θανάτου</b><span class="dots"></span><small>2 ημ.</small></li>
+            <li><b>Έλξεις</b><span class="dots"></span><small>3 ημ.</small></li>
+            <li><b>Καθίσματα</b><span class="dots"></span><small>2 ημ.</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="why">Η μελανί μπάρα κάνει το «μενού» αδιαμφισβήτητο και το κλειστό/ανοιχτό φαίνεται από απόσταση. Όμως <b>δύο μαύρες μπάρες</b> στη σελίδα ανταγωνίζονται την ενεργή κάρτα προγράμματος, που είναι ήδη μελανί — και το μελανί είναι το σήμα του «σε ισχύ».</p>
+  </div>
+
+  <div class="variant">
+    <h4>Α3 · Ο σελιδοδείκτης</h4>
+    <div class="demo">
+      <div class="a3-wrap" data-bookmark>
+        <button class="a3-head" type="button" aria-expanded="true" aria-controls="a3-body" data-toggle>
+          <h3>Οι ασκήσεις μου</h3>
+          <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut="<b>8</b> ασκήσεις"></span>
+          <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="menu-body" id="a3-body" style="padding-top:0">
+          <ul class="stub">
+            <li><b>Άρσεις θανάτου</b><span class="dots"></span><small>2 ημ.</small></li>
+            <li><b>Έλξεις</b><span class="dots"></span><small>3 ημ.</small></li>
+            <li><b>Καθίσματα</b><span class="dots"></span><small>2 ημ.</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="why">Η κάθετη κορδέλα σβήνει σε γκρι όταν το μενού κλείνει — ωραία μεταφορά τετραδίου. Αλλά εισάγει <b>νέο διακοσμητικό στοιχείο</b> για δουλειά που το βελάκι κάνει ήδη, και σπρώχνει το περιεχόμενο 16px δεξιά σε οθόνη 390px.</p>
+  </div>
+
+  <p class="notes pick"><b>Επιλογή: Α1.</b> Είναι το μόνο που δεν προσθέτει τίποτα — μετατρέπει τη γραμμή που υπάρχει ήδη σε κουμπί. Το κόστος του minimize πρέπει να είναι μηδέν σε νέα μορφή, γιατί κερδίζει σε χώρο· αν πληρωθεί με νέα κατασκευή, το κέρδος εξανεμίζεται.</p>
+</section>
+
+<!-- ============================================================ Β -->
+<div class="attempt-label"><b>Β</b><span>ΤΙ ΛΕΕΙ Η ΚΛΕΙΣΤΗ ΓΡΑΜΜΗ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Β1 · Μόνο ο τίτλος</h4>
+    <div class="b-row"><h3>Τα προγράμματά μου</h3><span class="menu-sum"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+    <p class="why">Καθαρό και άδειο. Ο χρήστης που έκλεισε τα προγράμματα για να δει τις ασκήσεις <b>δεν βλέπει πια ποιο πρόγραμμα τρέχει</b> — και αυτή είναι η πληροφορία που ήθελε από την ενότητα. Το minimize μετατρέπεται σε απόκρυψη.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Β2 · Ο αριθμός</h4>
+    <div class="b-row"><h3>Τα προγράμματά μου</h3><span class="menu-sum"><b>3</b> splits</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+    <p class="why">Λέει πόσα, δηλαδή τη λιγότερο χρήσιμη πληροφορία. Κανείς δεν κλείνει την ενότητα αναρωτώμενος πόσα προγράμματα έχει.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Β3 · Η ενεργή απάντηση</h4>
+    <div class="b-row"><h3>Τα προγράμματά μου</h3><span class="menu-sum"><b>3</b> splits · <span class="live">ΣΕ ΙΣΧΥ: PUSH PULL LEGS</span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+    <p class="pairlabel">και το αντίστοιχο για τις ασκήσεις</p>
+    <div class="b-row"><h3>Οι ασκήσεις μου</h3><span class="menu-sum"><b>8</b> ασκήσεις · 2 αχρησιμοποίητες</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+    <p class="why"><b>Η πρόταση.</b> Κάθε κλειστή γραμμή απαντά τη δική της ερώτηση: για τα προγράμματα «ποιο τρέχει», για τις ασκήσεις «έχω αφήσει κάτι αχρησιμοποίητο». Η σύνοψη εμφανίζεται <b>μόνο όταν το μενού είναι κλειστό</b> — ανοιχτό, το περιεχόμενο τη λέει ήδη και θα ήταν επανάληψη.</p>
+  </div>
+
+  <p class="notes"><b>Λεπτομέρεια που κρίνει την υλοποίηση:</b> η σύνοψη είναι κείμενο μέσα σε κουμπί, άρα ο screen reader τη διαβάζει ως μέρος του ονόματος του κουμπιού — «Τα προγράμματά μου, 3 splits, σε ισχύ Push Pull Legs, σύμπτυξη». Αυτό είναι σωστό και επιθυμητό. Χρειάζεται όμως <code>aria-expanded</code> στο κουμπί και <code>aria-controls</code> στο σώμα, και το σώμα να κρύβεται με το <code>hidden</code> attribute — όχι με <code>display:none</code> σε inline style, που το CSP <code>style-src 'self'</code> ρίχνει σιωπηλά.</p>
+</section>
+
+<!-- ============================================================ Γ -->
+<div class="attempt-label"><b>Γ</b><span>Η ΚΑΡΤΑ ΠΡΟΓΡΑΜΜΑΤΟΣ — ΕΠΕΞΕΡΓΑΣΙΑ ΚΑΙ ΑΓΑΠΗΜΕΝΟ ΜΠΡΟΣΤΑ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Γ1 · Έξι ισότιμα κουμπιά (σημερινό)</h4>
+    <article class="card" style="flex:none;width:100%">
+      <h4>Upper / Lower</h4>
+      <p class="meta">ΔΙΑΡΚΕΙΑ: <b>4 ΗΜΕΡΕΣ</b></p>
+      <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li><li><i>03</i> Upper B</li></ul>
+      <div class="acts">
+        <button class="act" type="button" aria-label="Ορισμός ως ενεργό"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+        <button class="act" type="button" aria-label="Άνοιγμα"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M9 5v14"/></svg></button>
+        <button class="act" type="button" aria-label="Επεξεργασία"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+        <button class="act" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+        <button class="act" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+        <button class="act" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+      </div>
+    </article>
+    <p class="why">Έξι τετράγωνα ίδιου βάρους. Η διαγραφή έχει την ίδια οπτική ένταση με την επεξεργασία, και το αστέρι — η <b>μοναδική ενέργεια που αλλάζει τι κάνει η εφαρμογή αύριο</b> — δεν ξεχωρίζει από την εκτύπωση.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Γ2 · Δύο πρωτεύουσες, τέσσερις ήσυχες</h4>
+    <article class="card" style="flex:none;width:100%">
+      <h4>Upper / Lower</h4>
+      <p class="meta">ΔΙΑΡΚΕΙΑ: <b>4 ΗΜΕΡΕΣ</b></p>
+      <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li><li><i>03</i> Upper B</li></ul>
+      <div class="acts">
+        <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό πρόγραμμα" data-demo-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+        <span class="spacer"></span>
+        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+      </div>
+    </article>
+    <p class="why"><b>Η πρόταση.</b> Το αστέρι και η επεξεργασία αριστερά με πλήρες περίγραμμα — η επεξεργασία με ετικέτα, γιατί είναι η μόνη που δεν εικονογραφείται μονοσήμαντα. Αντιγραφή, εκτύπωση και διαγραφή δεξιά, χωρίς περίγραμμα. <b>Πάτησε το αστέρι:</b> γεμίζει χρυσό και η κάρτα δηλώνει «ΣΕ ΙΣΧΥ». Το «Άνοιγμα» φεύγει από τη ζώνη — <b>η ίδια η κάρτα ανοίγει το πρόγραμμα</b>, κι έτσι τα κουμπιά πέφτουν από έξι σε πέντε.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Γ3 · Η ενεργή κάρτα</h4>
+    <article class="card on" style="flex:none;width:100%">
+      <span class="live-tag">Σε ισχύ</span>
+      <h4>Push Pull Legs</h4>
+      <p class="meta">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></p>
+      <ul class="days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li><li><i>Σα</i> Push</li></ul>
+      <div class="acts">
+        <button class="act star" type="button" aria-pressed="true" aria-label="Ενεργό πρόγραμμα"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+        <span class="spacer"></span>
+        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+      </div>
+    </article>
+    <p class="why">Το ενεργό πρόγραμμα κρατά το μελανί χαρτί και το χρυσό αστέρι, και αποκτά τη σφραγίδα «ΣΕ ΙΣΧΥ» στην πάνω ακμή. Τρία σήματα για την ίδια κατάσταση — <b>χρώμα, αστέρι, ετικέτα</b> — ώστε να μη στηρίζεται κανένα μόνο του, ούτε στο <code>prefers-contrast: more</code> ούτε στην εκτύπωση.</p>
+  </div>
+</section>
+
+<!-- ============================================================ Δ -->
+<div class="attempt-label"><b>Δ</b><span>Η ΠΡΟΤΑΣΗ — ΠΛΗΡΩΣ ΛΕΙΤΟΥΡΓΙΚΗ, ΚΙΝΗΤΟ 390PX</span></div>
+<section class="stage">
+  <div class="variant" style="width:auto">
+    <h4>Πάτησε τις δύο κεφαλίδες, το αστέρι και τα βελάκια</h4>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="hero">
+          <span class="info">i</span>
+          <h2>Το πλάνο<em>οδηγεί.</em></h2>
+        </div>
+
+        <!-- ΜΕΝΟΥ 1 -->
+        <div class="sec">
+          <div class="menu">
+            <button class="menu-head" type="button" aria-expanded="true" aria-controls="p-lib" data-toggle>
+              <h3>Οι ασκήσεις μου</h3>
+              <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut="<b>8</b> ασκήσεις · 2 αχρησιμοποίητες"></span>
+              <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="menu-body" id="p-lib">
+              <ul class="idx">
+                <li class="idx-row"><span><span class="idx-name">Άρσεις θανάτου</span></span><span class="idx-dots"></span><span class="idx-use">2 ημ.</span></li>
+                <li class="idx-row"><span><span class="idx-name">Δικέφαλα με μπάρα</span></span><span class="idx-dots"></span><span class="idx-use zero">—</span></li>
+                <li class="idx-row"><span><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></span><span class="idx-dots"></span><span class="idx-use">3 ημ.</span></li>
+                <li class="idx-row"><span><span class="idx-name">Έλξεις</span><span class="idx-note">ανάστροφη λαβή</span></span><span class="idx-dots"></span><span class="idx-use">1 ημ.</span></li>
+                <li class="idx-row"><span><span class="idx-name">Καθίσματα</span></span><span class="idx-dots"></span><span class="idx-use">2 ημ.</span></li>
+                <li class="idx-row"><span><span class="idx-name">Κωπηλατική με μπάρα</span></span><span class="idx-dots"></span><span class="idx-use zero">—</span></li>
+                <li class="idx-row"><span><span class="idx-name">Πιέσεις πάγκου</span><span class="idx-note">φαρδιά λαβή, πόδια σταθερά</span></span><span class="idx-dots"></span><span class="idx-use">2 ημ.</span></li>
+                <li class="idx-row"><span><span class="idx-name">Πιέσεις ώμων</span></span><span class="idx-dots"></span><span class="idx-use">1 ημ.</span></li>
+              </ul>
+              <button class="addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ΜΕΝΟΥ 2 -->
+        <div class="sec">
+          <div class="menu">
+            <button class="menu-head" type="button" aria-expanded="true" aria-controls="p-rout" data-toggle>
+              <h3>Τα προγράμματά μου</h3>
+              <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut='<b>3</b> splits · <span class="live" data-live-name>ΣΕ ΙΣΧΥ: PUSH PULL LEGS</span>'></span>
+              <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="menu-body" id="p-rout">
+              <div class="rail">
+                <div class="track" id="p-track" tabindex="0" aria-label="Προγράμματα προπόνησης">
+
+                  <article class="card on" data-routine="Push Pull Legs">
+                    <span class="live-tag" data-tag>Σε ισχύ</span>
+                    <h4>Push Pull Legs</h4>
+                    <p class="meta">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></p>
+                    <ul class="days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li><li><i>Σα</i> Push</li></ul>
+                    <div class="acts">
+                      <button class="act star" type="button" aria-pressed="true" aria-label="Ενεργό πρόγραμμα: Push Pull Legs" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                      <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                      <span class="spacer"></span>
+                      <button class="act quiet" type="button" aria-label="Αντιγραφή Push Pull Legs"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                      <button class="act quiet" type="button" aria-label="Εκτύπωση Push Pull Legs"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                      <button class="act quiet danger" type="button" aria-label="Διαγραφή Push Pull Legs"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                    </div>
+                  </article>
+
+                  <article class="card" data-routine="Upper / Lower">
+                    <span class="live-tag" data-tag hidden>Σε ισχύ</span>
+                    <h4>Upper / Lower</h4>
+                    <p class="meta">ΔΙΑΡΚΕΙΑ: <b>4 ΗΜΕΡΕΣ</b></p>
+                    <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li><li><i>03</i> Upper B</li><li><i>04</i> Lower B</li></ul>
+                    <div class="acts">
+                      <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό: Upper / Lower" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                      <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                      <span class="spacer"></span>
+                      <button class="act quiet" type="button" aria-label="Αντιγραφή Upper / Lower"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                      <button class="act quiet" type="button" aria-label="Εκτύπωση Upper / Lower"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                      <button class="act quiet danger" type="button" aria-label="Διαγραφή Upper / Lower"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                    </div>
+                  </article>
+
+                  <article class="card" data-routine="Full Body">
+                    <span class="live-tag" data-tag hidden>Σε ισχύ</span>
+                    <h4>Full Body</h4>
+                    <p class="meta">ΔΙΑΡΚΕΙΑ: <b>3 ΗΜΕΡΕΣ</b></p>
+                    <ul class="days"><li><i>01</i> Ημέρα Α</li><li><i>02</i> Ημέρα Β</li></ul>
+                    <div class="acts">
+                      <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό: Full Body" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                      <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                      <span class="spacer"></span>
+                      <button class="act quiet" type="button" aria-label="Αντιγραφή Full Body"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                      <button class="act quiet" type="button" aria-label="Εκτύπωση Full Body"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                      <button class="act quiet danger" type="button" aria-label="Διαγραφή Full Body"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                    </div>
+                  </article>
+
+                </div>
+                <div class="railbar">
+                  <span class="hint" id="p-pos">1 από 3</span>
+                  <span class="arrows">
+                    <button class="arrow" type="button" aria-controls="p-track" aria-label="Προηγούμενο πρόγραμμα" data-scroll="-1"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+                    <button class="arrow" type="button" aria-controls="p-track" aria-label="Επόμενο πρόγραμμα" data-scroll="1"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+                  </span>
+                </div>
+              </div>
+              <button class="addrow" type="button"><b>＋</b> Νέο πρόγραμμα</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stamp"><svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg>STRONGER EVERY SESSION<svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg></div>
+      </div>
+    </div>
+    <p class="why" style="max-width:390px">Κλείσε τις ασκήσεις: τα προγράμματα ανεβαίνουν αμέσως κάτω από τον τίτλο και η κλειστή γραμμή θυμίζει τι αφήνεις πίσω. Κλείσε τα προγράμματα: η γραμμή συνεχίζει να λέει <b>ποιο είναι σε ισχύ</b>. Άλλαξε αγαπημένο με το αστέρι — η σύνοψη ενημερώνεται μαζί.</p>
+  </div>
+
+  <p class="caption"><b>Και οι δύο κλειστές μαζί:</b> η ενότητα γίνεται δύο γραμμές, ύψους ~110px, που μαζί λένε «8 ασκήσεις, 2 αχρησιμοποίητες, 3 splits, τρέχει το Push Pull Legs». Είναι η πιο πυκνή περίληψη της προπονητικής κατάστασης που έχει δώσει ποτέ η εφαρμογή — και προκύπτει δωρεάν από το minimize, χωρίς νέα οθόνη.</p>
+</section>
+
+<!-- ============================================================ Ε -->
+<div class="attempt-label"><b>Ε</b><span>DESKTOP — ΤΑ ΙΔΙΑ ΔΥΟ ΜΕΝΟΥ ΣΕ ΑΝΟΙΓΜΑ ΔΥΟ ΣΕΛΙΔΩΝ</span></div>
+<section class="stage single">
+  <div class="desk">
+    <div class="desk-top"><h2>Το πλάνο <em>οδηγεί.</em></h2></div>
+    <div class="desk-grid" id="desk-grid">
+      <div>
+        <div class="menu">
+          <button class="menu-head" type="button" aria-expanded="true" aria-controls="d-lib" data-toggle data-desk>
+            <h3>Οι ασκήσεις μου</h3>
+            <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut="<b>8</b> ασκήσεις · 2 αχρησιμοποίητες"></span>
+            <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="menu-body" id="d-lib">
+            <ul class="idx">
+              <li class="idx-row"><span><span class="idx-name">Άρσεις θανάτου</span></span><span class="idx-dots"></span><span class="idx-use">2 ημ.</span></li>
+              <li class="idx-row"><span><span class="idx-name">Δικέφαλα με μπάρα</span></span><span class="idx-dots"></span><span class="idx-use zero">—</span></li>
+              <li class="idx-row"><span><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></span><span class="idx-dots"></span><span class="idx-use">3 ημ.</span></li>
+              <li class="idx-row"><span><span class="idx-name">Έλξεις</span><span class="idx-note">ανάστροφη λαβή</span></span><span class="idx-dots"></span><span class="idx-use">1 ημ.</span></li>
+              <li class="idx-row"><span><span class="idx-name">Καθίσματα</span></span><span class="idx-dots"></span><span class="idx-use">2 ημ.</span></li>
+              <li class="idx-row"><span><span class="idx-name">Κωπηλατική με μπάρα</span></span><span class="idx-dots"></span><span class="idx-use zero">—</span></li>
+              <li class="idx-row"><span><span class="idx-name">Πιέσεις πάγκου</span><span class="idx-note">φαρδιά λαβή, πόδια σταθερά</span></span><span class="idx-dots"></span><span class="idx-use">2 ημ.</span></li>
+              <li class="idx-row"><span><span class="idx-name">Πιέσεις ώμων</span></span><span class="idx-dots"></span><span class="idx-use">1 ημ.</span></li>
+            </ul>
+            <button class="addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="menu">
+          <button class="menu-head" type="button" aria-expanded="true" aria-controls="d-rout" data-toggle data-desk>
+            <h3>Τα προγράμματά μου</h3>
+            <span class="menu-sum" data-sum-open="&#8203;" data-sum-shut='<b>3</b> splits · <span class="live">ΣΕ ΙΣΧΥ: PUSH PULL LEGS</span>'></span>
+            <svg class="menu-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="menu-body" id="d-rout">
+            <div class="desk-cards">
+              <article class="card on">
+                <span class="live-tag">Σε ισχύ</span>
+                <h4>Push Pull Legs</h4>
+                <p class="meta"><b>7 ΗΜΕΡΕΣ</b></p>
+                <ul class="days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li></ul>
+                <div class="acts">
+                  <button class="act star" type="button" aria-pressed="true" aria-label="Ενεργό πρόγραμμα"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                  <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                  <span class="spacer"></span>
+                  <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                </div>
+              </article>
+              <article class="card">
+                <h4>Upper / Lower</h4>
+                <p class="meta"><b>4 ΗΜΕΡΕΣ</b></p>
+                <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li></ul>
+                <div class="acts">
+                  <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                  <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                  <span class="spacer"></span>
+                  <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                </div>
+              </article>
+              <article class="card">
+                <h4>Full Body</h4>
+                <p class="meta"><b>3 ΗΜΕΡΕΣ</b></p>
+                <ul class="days"><li><i>01</i> Ημέρα Α</li><li><i>02</i> Ημέρα Β</li></ul>
+                <div class="acts">
+                  <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                  <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                  <span class="spacer"></span>
+                  <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                </div>
+              </article>
+            </div>
+            <button class="addrow" type="button"><b>＋</b> Νέο πρόγραμμα</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="caption" style="margin-top:18px">Στο desktop τα δύο μενού είναι στήλες, όχι στοίβα — αλλά το minimize δουλεύει το ίδιο. <b>Κλείσε το ευρετήριο</b> και η στήλη των προγραμμάτων παίρνει όλο το πλάτος: το πλέγμα γίνεται μονόστηλο μόνο του, χωρίς νέο breakpoint. Στα ≤850px επιστρέφει η στοίβα του κινητού.</p>
+</section>
+
+<!-- ============================================================ ΣΤ -->
+<div class="attempt-label"><b>ΣΤ</b><span>ΤΙ ΑΛΛΑΖΕΙ, ΤΙ ΟΧΙ, ΚΑΙ ΤΙ ΜΕΝΕΙ ΑΝΟΙΧΤΟ</span></div>
+<section class="stage single">
+
+  <div class="tablewrap">
+    <table class="cmp">
+      <thead><tr><th>Στοιχείο</th><th>Σήμερα</th><th>Πρόταση</th></tr></thead>
+      <tbody>
+        <tr><th>Κεφαλίδα ενότητας</th><td>Στατικός τίτλος</td><td class="yes">Κουμπί με <code>aria-expanded</code>, ίδια μορφή· διπλή γραμμή όταν είναι κλειστή</td></tr>
+        <tr><th>Κλειστή κατάσταση</th><td>Δεν υπάρχει</td><td class="yes">Σύνοψη που απαντά τη δική της ερώτηση, ορατή μόνο κλειστή</td></tr>
+        <tr><th>Κουμπιά κάρτας</th><td>Έξι ισότιμα</td><td class="yes">Πέντε: αστέρι + Επεξεργασία μπροστά, τρία ήσυχα δεξιά</td></tr>
+        <tr><th>Άνοιγμα προγράμματος</th><td>Ξεχωριστό κουμπί</td><td class="yes">Η ίδια η κάρτα</td></tr>
+        <tr><th>Ένδειξη ενεργού</th><td>Χρυσό αστέρι</td><td class="yes">Αστέρι + μελανί χαρτί + ετικέτα «ΣΕ ΙΣΧΥ»</td></tr>
+        <tr><th>Εναλλαγή προγραμμάτων</th><td>Οριζόντιο καρουζέλ με βελάκια</td><td>Αμετάβλητη, με προσθήκη δείκτη «1 από 3»</td></tr>
+        <tr><th>Παλέτα και tokens</th><td>—</td><td>Αμετάβλητα. Κανένα νέο χρώμα, κανένα νέο breakpoint</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ol class="qlist" style="margin-top:30px">
+    <li><b>Θυμάται η εφαρμογή τι έκλεισες;</b> Πρόταση: ναι, δύο τοπικά κλειδιά, χωρίς συγχρονισμό — είναι προτίμηση συσκευής, όχι δεδομένο αθλητή, όπως ακριβώς η νυχτερινή εμφάνιση. Αν δεν αποθηκευτεί, κάθε αλλαγή view επαναφέρει και τα δύο ανοιχτά και το minimize χάνει το νόημά του.</li>
+    <li><b>Ποια είναι η αρχική κατάσταση για νέο χρήστη;</b> Και τα δύο ανοιχτά — κλειστό μενού σε άδεια εφαρμογή κρύβει ακριβώς το βήμα που πρέπει να γίνει. Ανοιχτό ερώτημα αν, με 30+ ασκήσεις, το ευρετήριο πρέπει να ανοίγει συμπτυγμένο από μόνο του.</li>
+    <li><b>Επιτρέπεται να είναι κλειστά και τα δύο;</b> Ναι στην πρόταση. Η εναλλακτική — «πάντα ένα ανοιχτό», σαν accordion — αφαιρεί την πιο πυκνή περίληψη κατάστασης χωρίς να κερδίζει τίποτα.</li>
+    <li><b>Πού πάει το «Άνοιγμα» για το πληκτρολόγιο;</b> Αν η κάρτα γίνει πατήσιμη, χρειάζεται να είναι εστιάσιμη και να απαντά σε Enter/Space, χωρίς να παγιδεύει τα πέντε κουμπιά μέσα της. Το ασφαλές μοτίβο είναι πατήσιμος ο τίτλος <code>&lt;h4&gt;</code> ως κουμπί, με την υπόλοιπη κάρτα να ακολουθεί με <code>click</code>.</li>
+    <li><b>Το αστέρι είναι <code>aria-pressed</code> ή ραδιοεπιλογή;</b> Ενεργό είναι πάντα ένα. Το <code>aria-pressed</code> σε πέντε κάρτες αφήνει τον screen reader να πει «πατημένο» σε δύο για ένα κλάσμα δευτερολέπτου κατά την εναλλαγή. Εναλλακτικά <code>role="radiogroup"</code> στο καρουζέλ.</li>
+    <li><b>Νέα i18n IDs.</b> «Σύμπτυξη», «Ανάπτυξη», «σε ισχύ», «αχρησιμοποίητες», «N από M», «Νέο πρόγραμμα». Η ετικέτα της κάρτας «ΣΕ ΙΣΧΥ» είναι ελληνική και μεταφράζεται — <b>δεν</b> είναι σφραγίδα σαν το «MEMBER» ή το «EARN IT».</li>
+    <li><b>Εκτύπωση.</b> Το print override πρέπει να αγνοεί τη σύμπτυξη: ένα κλειστό μενού δεν επιτρέπεται να τυπώσει κενή σελίδα. Στο <code>@media print</code> τα σώματα εμφανίζονται πάντα.</li>
+  </ol>
+</section>
+
+<div class="foot">
+  <b>Κατάσταση:</b> προτάσεις προς έγκριση. Κανένα stylesheet ή script της εφαρμογής δεν έχει αλλάξει από αυτό το αρχείο.<br>
+  <b>Πρόταση σε μία γραμμή:</b> Α1 κεφαλίδα-κουμπί χωρίς νέα μορφή · Β3 σύνοψη που απαντά τη δική της ερώτηση · Γ2 αστέρι και Επεξεργασία μπροστά, η κάρτα ανοίγει το πρόγραμμα.
+</div>
+
+<script>
+(function () {
+  function setSummary(head) {
+    var sum = head.querySelector('.menu-sum');
+    if (!sum) return;
+    var open = head.getAttribute('aria-expanded') === 'true';
+    sum.innerHTML = open ? (sum.dataset.sumOpen || '') : (sum.dataset.sumShut || '');
+  }
+
+  document.querySelectorAll('[data-toggle]').forEach(function (head) {
+    setSummary(head);
+    head.addEventListener('click', function () {
+      var open = head.getAttribute('aria-expanded') === 'true';
+      head.setAttribute('aria-expanded', open ? 'false' : 'true');
+      var body = document.getElementById(head.getAttribute('aria-controls'));
+      if (body) body.hidden = open;
+      setSummary(head);
+      var bookmark = head.closest('[data-bookmark]');
+      if (bookmark) bookmark.classList.toggle('shut', open);
+      if (head.hasAttribute('data-desk')) {
+        var grid = document.getElementById('desk-grid');
+        var heads = grid.querySelectorAll('[data-desk]');
+        var openCount = 0;
+        heads.forEach(function (item) { if (item.getAttribute('aria-expanded') === 'true') openCount++; });
+        grid.classList.toggle('one', openCount < 2);
+      }
+    });
+  });
+
+  // αστέρι: ενεργό είναι πάντα ένα
+  var track = document.getElementById('p-track');
+  if (track) {
+    track.addEventListener('click', function (event) {
+      var star = event.target.closest('[data-star]');
+      if (!star || star.getAttribute('aria-pressed') === 'true') return;
+      track.querySelectorAll('.card').forEach(function (card) {
+        var button = card.querySelector('[data-star]');
+        var tag = card.querySelector('[data-tag]');
+        var isNew = card.contains(star);
+        button.setAttribute('aria-pressed', isNew ? 'true' : 'false');
+        button.setAttribute('aria-label', (isNew ? 'Ενεργό πρόγραμμα: ' : 'Ορισμός ως ενεργό: ') + card.dataset.routine);
+        card.classList.toggle('on', isNew);
+        if (tag) tag.hidden = !isNew;
+      });
+      var name = star.closest('.card').dataset.routine.toUpperCase();
+      document.querySelectorAll('[data-sum-shut]').forEach(function (sum) {
+        if (sum.dataset.sumShut.indexOf('ΣΕ ΙΣΧΥ') === -1) return;
+        sum.dataset.sumShut = sum.dataset.sumShut.replace(/ΣΕ ΙΣΧΥ: [^<]*/, 'ΣΕ ΙΣΧΥ: ' + name);
+        var head = sum.closest('[data-toggle]');
+        if (head && head.getAttribute('aria-expanded') === 'false') sum.innerHTML = sum.dataset.sumShut;
+      });
+    });
+
+    var position = document.getElementById('p-pos');
+    function step(direction) {
+      var card = track.querySelector('.card');
+      if (!card) return;
+      track.scrollLeft += direction * (card.offsetWidth + 12);
+    }
+    document.querySelectorAll('[data-scroll]').forEach(function (button) {
+      button.addEventListener('click', function () { step(Number(button.dataset.scroll)); });
+    });
+    track.addEventListener('scroll', function () {
+      var card = track.querySelector('.card');
+      if (!card || !position) return;
+      var index = Math.round(track.scrollLeft / (card.offsetWidth + 12)) + 1;
+      var total = track.querySelectorAll('.card').length;
+      position.textContent = Math.min(Math.max(index, 1), total) + ' από ' + total;
+    });
+  }
+
+  var demoStar = document.querySelector('[data-demo-star]');
+  if (demoStar) {
+    demoStar.addEventListener('click', function () {
+      var on = demoStar.getAttribute('aria-pressed') === 'true';
+      demoStar.setAttribute('aria-pressed', on ? 'false' : 'true');
+      var card = demoStar.closest('.card');
+      card.classList.toggle('on', !on);
+      var tag = card.querySelector('.live-tag');
+      if (!on && !tag) {
+        tag = document.createElement('span');
+        tag.className = 'live-tag';
+        tag.textContent = 'Σε ισχύ';
+        card.insertBefore(tag, card.firstChild);
+      } else if (on && tag) {
+        tag.remove();
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

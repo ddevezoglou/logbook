@@ -113,7 +113,7 @@
     box-shadow:2px 2px 0 rgba(var(--shadow-rgb),.06);
   }
   .set-number { grid-column:1 / -1; padding-bottom:8px; border-bottom:1px solid var(--line); color:var(--orange); font-size:1rem; }
-  .set-number::before { content:"SET "; color:var(--muted); font:800 .62rem "Alegreya Sans"; letter-spacing:.13em; }
+  .set-number::before { content:"SET "; color:var(--muted); font:800 .62rem var(--font-ui); letter-spacing:.13em; }
   .set-control { display:flex; flex-direction:column; gap:6px; }
   .set-control-label { display:block; color:var(--muted); font-size:.62rem; line-height:1.15; letter-spacing:.08em; }
   .set-row .set-control>input,.set-row .set-control>select {
@@ -221,7 +221,7 @@
 .exercise-deck-shell { position:relative; margin-top:0; outline:none; }
 .exercise-deck-shell:focus-visible { box-shadow:0 0 0 2px var(--paper),0 0 0 4px rgba(var(--orange-rgb),.55); }
 .deck-head { min-height:44px; margin:0 18px 2px; display:grid; place-items:center; }
-.deck-stamp { justify-self:center; padding:6px 12px 5px; border:2px solid rgba(var(--orange-rgb),.55); color:var(--orange); font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:multiply; white-space:nowrap; }
+.deck-stamp { justify-self:center; padding:6px 12px 5px; border:2px solid rgba(var(--orange-rgb),.55); color:var(--orange); font:800 .66rem var(--font-ui); letter-spacing:.14em; transform:rotate(-4deg); mix-blend-mode:multiply; white-space:nowrap; }
 .exercise-deck { position:relative; margin:0 24px; touch-action:pan-y; isolation:isolate; }
 .exercise-deck > .workout-exercise { position:absolute; inset:18px 0 auto; width:100%; min-width:0; margin:0; overflow:hidden; background:var(--paper-deck); box-shadow:3px 5px 0 rgba(var(--shadow-rgb),.12); transform-origin:top center; transition:transform .45s cubic-bezier(.2,.75,.25,1),opacity .35s ease,box-shadow .35s ease; will-change:transform; }
 .exercise-deck > .workout-exercise:not([aria-hidden="true"]) { box-shadow:4px 7px 16px rgba(40,32,18,.16); }
@@ -229,7 +229,7 @@
 .exercise-tape { position:absolute; top:-10px; left:24px; width:58px; height:20px; z-index:2; background:var(--tape-warm); box-shadow:inset 0 0 0 1px rgba(90,72,35,.1); transform:rotate(-4deg); pointer-events:none; }
 .deck-progress { position:relative; height:3px; margin:12px 2px 0; background:rgba(var(--ink-rgb),.12); }
 .deck-progress i { position:absolute; inset:0 auto 0 0; width:0; background:var(--orange); transition:width .35s ease; }
-.deck-add { display:grid; place-items:center; width:100%; min-height:48px; margin-top:12px; padding:0 12px; border:0; border-top:1px dashed var(--line); border-bottom:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; font:800 .66rem "Alegreya Sans"; letter-spacing:.14em; text-align:center; text-transform:uppercase; }
+.deck-add { display:grid; place-items:center; width:100%; min-height:48px; margin-top:12px; padding:0 12px; border:0; border-top:1px dashed var(--line); border-bottom:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; font:800 .66rem var(--font-ui); letter-spacing:.14em; text-align:center; text-transform:uppercase; }
 .deck-add:hover { background:var(--ink-surface); color:var(--on-ink); }
 .deck-arrow { position:absolute; top:var(--deck-arrow-y,50%); z-index:260; width:26px; min-width:26px; height:52px; padding:0; transform:translateY(-50%); border:0; background:rgba(248,243,228,.72); color:var(--ink); opacity:.48; font:700 1.15rem "Roboto Slab"; cursor:pointer; transition:background .2s,color .2s,opacity .2s; }
 .deck-arrow-prev { left:22px; }

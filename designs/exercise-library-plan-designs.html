@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Βιβλιοθήκη ασκήσεων και Πρόγραμμα — Θ' γύρος</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --pen:#4d3f24; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p.lead { max-width:660px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.55; }
+.intro>p.lead b { color:var(--ink); }
+.intro .state { display:flex; flex-wrap:wrap; gap:10px; margin:26px 0 0; }
+.intro .state span { padding:6px 12px; border:1px solid var(--line); background:rgba(255,255,255,.42); font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.intro .state span b { color:var(--pen-blue); }
+
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.stage.single { grid-template-columns:1fr; }
+.notes { grid-column:1 / -1; justify-self:start; max-width:700px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+.notes.pick { border:1px solid var(--pen-blue); border-left-width:5px; background:rgba(31,100,147,.06); }
+.notes.pick b { color:var(--pen-blue); }
+.caption { grid-column:1 / -1; justify-self:start; max-width:700px; margin:0; color:var(--muted); line-height:1.55; }
+.variant { width:min(360px,100%); }
+.variant>h4 { margin:0 0 12px; font:800 .74rem "Alegreya Sans"; letter-spacing:.18em; text-transform:uppercase; color:var(--orange); }
+.variant>p.why { margin:12px 0 0; font-size:.86rem; line-height:1.5; color:var(--muted); }
+.variant>p.why b { color:var(--ink); }
+
+/* ===== shared paper primitives ===== */
+.sheet { position:relative; background:var(--paper-soft); box-shadow:5px 7px 0 rgba(21,19,13,.13); padding:24px 24px 18px; }
+.sheet.dark { background:var(--ink); color:var(--paper); border:1px solid #3d3828; }
+.sheet-title { margin:0; font:900 1.2rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.rule { border:0; border-top:3px solid var(--ink); margin:9px 0 0; }
+.rule.thin { border-top:1px solid rgba(77,63,36,.22); }
+.rule.dash { border-top:1px dashed rgba(77,63,36,.4); }
+.hint { color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+.hand { font-family:"Playpen Sans",cursive; color:var(--pen-blue); }
+
+.btn { border:1px solid var(--pen); background:transparent; color:var(--pen); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; padding:9px 15px; cursor:pointer; transition:background .15s ease,color .15s ease; }
+.btn:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.btn:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.btn.primary { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.btn.primary:hover { background:var(--orange); border-color:var(--orange); }
+.btn.ghost { border-color:transparent; color:var(--muted); padding:9px 4px; }
+.btn.ghost:hover { background:transparent; color:var(--ink); border-color:transparent; text-decoration:underline; }
+.btn.small { padding:6px 11px; font-size:.66rem; }
+
+/* ============================================================
+   Α. Η ΔΙΑΓΝΩΣΗ — τι υπάρχει σήμερα στον κώδικα
+   ============================================================ */
+.raw { all:initial; display:block; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; font-size:14px; color:#000; background:#fff; border:1px solid var(--line); padding:16px; width:min(360px,100%); box-shadow:5px 7px 0 rgba(21,19,13,.13); }
+.raw * { font-family:inherit; font-size:inherit; }
+.raw h2 { font-size:1.15em; margin:0 0 4px; }
+.raw p { margin:0 0 10px; color:#333; }
+.raw label { display:block; margin:0 0 8px; }
+.raw input[type=text], .raw textarea, .raw select { display:block; width:100%; margin-top:2px; font-family:inherit; font-size:inherit; }
+.raw ul { margin:12px 0 0; padding-left:22px; }
+.raw li { margin:0 0 8px; }
+.raw li p { margin:2px 0 0; font-size:.9em; color:#555; }
+.raw .rowbtn { margin-top:4px; }
+.raw hr { margin:14px 0; border:0; border-top:1px solid #ccc; }
+
+.faults { width:min(420px,100%); margin:0; padding:0; list-style:none; counter-reset:fault; }
+.faults li { position:relative; padding:0 0 16px 42px; }
+.faults li::before { counter-increment:fault; content:counter(fault); position:absolute; left:0; top:-2px; width:26px; height:26px; display:grid; place-items:center; border:2px solid var(--danger); border-radius:50%; color:var(--danger); font:800 .78rem "Alegreya Sans"; }
+.faults b { display:block; font:800 .95rem "Alegreya Sans"; letter-spacing:.01em; }
+.faults span { display:block; margin-top:3px; color:var(--muted); font-size:.88rem; line-height:1.5; }
+.faults code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.85em; background:rgba(21,19,13,.07); padding:1px 4px; }
+
+/* ============================================================
+   Β. Η ΑΣΚΗΣΗ ΩΣ ΑΝΤΙΚΕΙΜΕΝΟ
+   ============================================================ */
+/* Β1 — το ευρετήριο */
+.b1-list { margin:0; padding:0; list-style:none; }
+.b1-row { display:flex; align-items:baseline; gap:9px; padding:7px 0 6px; }
+.b1-row+.b1-row { border-top:1px solid rgba(77,63,36,.13); }
+.b1-name { font:700 .9rem/1.25 "Roboto Slab"; letter-spacing:-.01em; }
+.b1-note { display:block; font:400 .76rem/1.35 "Alegreya Sans"; color:var(--muted); letter-spacing:.01em; }
+.b1-dots { flex:1 1 auto; min-width:14px; align-self:center; border-bottom:1px dotted var(--line); transform:translateY(-2px); }
+.b1-use { flex:none; font:800 .66rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; color:var(--orange); white-space:nowrap; }
+.b1-use.zero { color:var(--faded); }
+.b1-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px dashed rgba(77,63,36,.4); }
+
+/* Β2 — οι καρτέλες */
+.b2-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.b2-chip { display:inline-flex; align-items:baseline; gap:7px; padding:7px 12px; border:1px solid var(--pen); background:rgba(255,255,255,.5); font:700 .78rem "Roboto Slab"; letter-spacing:-.01em; }
+.b2-chip i { font-style:normal; font-family:"Alegreya Sans"; font-weight:800; font-size:.62rem; letter-spacing:.1em; color:var(--orange); }
+.b2-chip.unused { border-style:dashed; color:var(--muted); }
+
+/* Β3 — η κάρτα */
+.b3-card { position:relative; padding:16px 16px 12px; background:var(--paper-soft); box-shadow:4px 5px 0 rgba(21,19,13,.13); border:1px solid rgba(77,63,36,.2); }
+.b3-card+.b3-card { margin-top:14px; }
+.b3-card h5 { margin:0; font:900 1rem/1 "Roboto Slab"; text-transform:uppercase; }
+.b3-card p { margin:6px 0 0; font-size:.84rem; color:var(--muted); line-height:1.45; }
+.b3-card .b3-acts { display:flex; justify-content:flex-end; gap:6px; margin-top:10px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.35); }
+
+/* Β4 — η γραμμή τετραδίου */
+.b4-pad { background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,rgba(31,100,147,.16) 31px,rgba(31,100,147,.16) 32px); padding-top:4px; }
+.b4-line { display:flex; align-items:center; gap:10px; height:32px; }
+.b4-line b { font-family:"Playpen Sans",cursive; font-weight:600; font-size:.86rem; color:var(--pen-blue); }
+.b4-line small { margin-left:auto; font:800 .62rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; color:var(--faded); }
+.b4-margin { width:0; border-left:2px solid rgba(122,51,37,.35); height:100%; }
+
+/* ============================================================
+   Γ. Η ΒΙΒΛΙΟΘΗΚΗ ΜΕΣΑ ΣΤΗ ΣΕΛΙΔΑ
+   ============================================================ */
+.c-frame { width:min(380px,100%); }
+.c-viewhead { padding:14px 16px; background:var(--ink); color:var(--paper); }
+.c-viewhead h3 { margin:0; font:700 1.05rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.c-viewhead h3 em { color:var(--gold); font-style:normal; }
+.c-body { border:1px solid var(--line); border-top:0; background:rgba(255,255,255,.3); padding:16px; }
+.c-block { background:var(--paper-soft); box-shadow:3px 4px 0 rgba(21,19,13,.1); padding:14px 14px 12px; }
+.c-block+.c-block { margin-top:16px; }
+.c-block h4 { margin:0 0 2px; font:900 .9rem/1 "Roboto Slab"; text-transform:uppercase; }
+.c-mini { margin:0; padding:0; list-style:none; }
+.c-mini li { display:flex; align-items:baseline; gap:8px; padding:5px 0; font:700 .78rem "Roboto Slab"; }
+.c-mini li+li { border-top:1px solid rgba(77,63,36,.12); }
+.c-mini .b1-dots { transform:translateY(-3px); }
+.c-mini small { font:800 .6rem "Alegreya Sans"; letter-spacing:.1em; color:var(--orange); }
+.c-formbox { margin-top:10px; padding:12px; border:1px dashed var(--line); background:rgba(255,255,255,.5); }
+.c-field { display:block; margin:0 0 8px; }
+.c-field span { display:block; font:800 .62rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.c-field i { display:block; height:30px; border:1px solid var(--line); background:#fff; font-style:normal; font-size:.82rem; color:var(--faded); padding:6px 8px; }
+.c-field i.tall { height:46px; }
+.c-addrow { display:flex; align-items:center; gap:10px; width:100%; margin-top:6px; padding:9px 2px; border:0; border-top:1px dashed rgba(77,63,36,.45); background:transparent; color:var(--orange); font:800 .74rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; text-align:left; }
+.c-addrow:hover { color:var(--ink); }
+.c-addrow:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.c-addrow b { font-size:1.1rem; line-height:1; }
+.c-routine { padding:12px 12px 10px; background:var(--ink); color:var(--paper); box-shadow:3px 4px 0 rgba(21,19,13,.18); }
+.c-routine strong { display:block; font:900 .95rem/1 "Roboto Slab"; text-transform:uppercase; }
+.c-routine small { display:block; margin-top:5px; font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; color:var(--faded); }
+.c-drawer-note { margin:10px 0 0; font-size:.8rem; color:var(--muted); line-height:1.45; }
+.c-tabs { display:flex; }
+.c-tabs button { flex:1; padding:10px 8px; border:1px solid var(--line); background:rgba(255,255,255,.35); color:var(--muted); font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.c-tabs button+button { border-left:0; }
+.c-tabs button[aria-selected=true] { background:var(--paper-soft); color:var(--ink); border-bottom-color:var(--paper-soft); }
+
+/* ============================================================
+   Δ. Η ΕΠΙΛΟΓΗ ΤΗΣ ΑΣΚΗΣΗΣ ΜΕΣΑ ΣΤΗΝ ΗΜΕΡΑ
+   ============================================================ */
+.d-dialog { width:min(380px,100%); background:var(--paper-soft); box-shadow:6px 8px 0 rgba(21,19,13,.16); border:1px solid rgba(77,63,36,.25); }
+.d-dialog-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 16px 12px; border-bottom:3px solid var(--ink); }
+.d-dialog-head h4 { margin:0; font:900 1.1rem/1.05 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.d-dialog-head span { font:800 .6rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--orange); }
+.d-dialog-body { padding:14px 16px 16px; }
+
+.d-picker { border:1px solid rgba(77,63,36,.3); background:rgba(255,255,255,.55); }
+.d-search { display:flex; align-items:center; gap:8px; padding:9px 11px; border-bottom:1px solid rgba(77,63,36,.2); }
+.d-search svg { width:15px; height:15px; fill:none; stroke:var(--muted); stroke-width:2; flex:none; }
+.d-search input { flex:1; border:0; background:transparent; font:500 .86rem "Alegreya Sans"; color:var(--ink); }
+.d-search input:focus { outline:none; }
+.d-search input::placeholder { color:var(--faded); }
+.d-opts { max-height:212px; overflow:auto; margin:0; padding:0; list-style:none; }
+.d-opt { display:flex; align-items:center; gap:10px; width:100%; padding:9px 11px; border:0; background:transparent; text-align:left; cursor:pointer; font:inherit; }
+.d-opt+.d-opt { border-top:1px solid rgba(77,63,36,.1); }
+.d-opt:hover { background:rgba(201,162,39,.12); }
+.d-opt:focus-visible { outline:2px solid var(--gold); outline-offset:-2px; }
+.d-tick { flex:none; width:19px; height:19px; border:1.5px solid var(--pen); display:grid; place-items:center; }
+.d-tick svg { width:12px; height:12px; fill:none; stroke:var(--paper); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+.d-opt[aria-pressed=true] .d-tick { background:var(--ink); border-color:var(--ink); }
+.d-opt[aria-pressed=true] .d-tick svg { opacity:1; }
+.d-opt-text { flex:1; min-width:0; }
+.d-opt-text b { display:block; font:700 .84rem/1.2 "Roboto Slab"; }
+.d-opt-text small { display:block; font-size:.74rem; color:var(--muted); line-height:1.3; }
+.d-opt-count { flex:none; font:800 .6rem "Alegreya Sans"; letter-spacing:.1em; text-transform:uppercase; color:var(--faded); }
+.d-newrow { display:flex; align-items:center; gap:10px; width:100%; padding:10px 11px; border:0; border-top:1px dashed rgba(77,63,36,.45); background:rgba(201,162,39,.08); color:var(--orange); font:800 .72rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; text-align:left; }
+.d-newrow:hover { color:var(--ink); background:rgba(201,162,39,.18); }
+.d-newrow b { font-size:1.05rem; line-height:1; }
+
+.d-chosen { margin-top:14px; padding-top:12px; border-top:2px solid var(--ink); }
+.d-chosen-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+.d-chosen-head b { font:800 .66rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; }
+.d-chosen-head small { font-size:.72rem; color:var(--muted); }
+.d-chosen ol { margin:0; padding:0; list-style:none; counter-reset:pick; }
+.d-chosen li { display:flex; align-items:center; gap:10px; padding:7px 0; }
+.d-chosen li+li { border-top:1px solid rgba(77,63,36,.12); }
+.d-chosen li::before { counter-increment:pick; content:counter(pick,decimal-leading-zero); font:800 .66rem "Alegreya Sans"; color:var(--faded); flex:none; width:18px; }
+.d-chosen li b { font:700 .82rem "Roboto Slab"; flex:1; min-width:0; }
+.d-sets { display:inline-flex; align-items:center; border:1px solid rgba(77,63,36,.4); }
+.d-sets button { width:23px; height:23px; border:0; background:transparent; color:var(--pen); font:800 .9rem "Roboto Slab"; line-height:1; cursor:pointer; }
+.d-sets button:hover { background:var(--ink); color:var(--paper); }
+.d-sets span { min-width:34px; text-align:center; font:800 .66rem "Alegreya Sans"; letter-spacing:.06em; color:var(--muted); }
+.d-empty { padding:14px 4px; text-align:center; color:var(--faded); font-size:.84rem; }
+.d-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; padding-top:12px; border-top:1px dashed rgba(77,63,36,.4); }
+
+/* Δ1 — το σημερινό */
+.d1-field { display:block; margin:0 0 11px; }
+.d1-field span { display:block; font:800 .62rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.d1-field i { display:flex; align-items:center; justify-content:space-between; height:32px; padding:0 9px; border:1px solid var(--line); background:#fff; font-style:normal; font-size:.84rem; color:var(--faded); }
+.d1-card { border:1px solid rgba(77,63,36,.25); background:rgba(255,255,255,.45); padding:10px; margin-top:9px; }
+.d1-card>span.n { font:800 .62rem "Alegreya Sans"; color:var(--faded); letter-spacing:.1em; }
+
+/* ============================================================
+   Ε. Η ΠΡΟΤΑΣΗ
+   ============================================================ */
+.phone { width:390px; max-width:100%; border:10px solid var(--ink); border-radius:26px; background:var(--paper); overflow:hidden; box-shadow:8px 12px 0 rgba(21,19,13,.16); }
+.phone-inner { height:640px; overflow-y:auto; overflow-x:hidden; }
+.e-hero { padding:22px 18px 16px; }
+.e-hero h2 { margin:0; font:700 1.7rem/.92 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.045em; }
+.e-hero h2 em { display:block; color:var(--orange); font-style:normal; }
+.e-hero .info { float:right; width:27px; height:27px; display:grid; place-items:center; border:2px solid var(--ink); border-radius:50%; font:800 .86rem "Roboto Slab"; margin-left:12px; }
+.e-sec { padding:0 18px 20px; }
+.e-sechead { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding-bottom:7px; border-bottom:3px solid var(--ink); }
+.e-sechead h3 { margin:0; font:900 1.02rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.e-sechead .count { font:800 .62rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.e-sechead .count b { color:var(--orange); }
+.e-lib { margin:10px 0 0; padding:0; list-style:none; }
+.e-divider { margin:12px 0 4px; font:800 .62rem "Alegreya Sans"; letter-spacing:.2em; color:var(--faded); }
+.e-cards { display:flex; gap:12px; overflow-x:auto; padding:14px 18px 18px; scroll-snap-type:x mandatory; }
+.e-card { scroll-snap-align:start; flex:0 0 232px; position:relative; padding:15px 15px 11px; background:var(--paper-soft); box-shadow:4px 6px 0 rgba(21,19,13,.13); }
+.e-card.on { background:var(--ink); color:var(--paper); }
+.e-card h4 { margin:0; font:900 1.02rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.e-card .meta { margin-top:5px; font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.e-card.on .meta { color:var(--faded); }
+.e-card .meta b { color:var(--orange); }
+.e-card.on .meta b { color:var(--gold); }
+.e-days { margin:9px 0 0; padding:8px 0 0; border-top:1px solid rgba(77,63,36,.2); list-style:none; }
+.e-card.on .e-days { border-top-color:rgba(239,232,216,.2); }
+.e-days li { display:flex; gap:8px; padding:3px 0; font:700 .66rem/1.25 "Roboto Slab"; text-transform:uppercase; letter-spacing:.04em; }
+.e-days li i { font-style:normal; color:var(--faded); font-weight:400; flex:none; }
+.e-acts { display:flex; gap:5px; margin-top:10px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); }
+.e-card.on .e-acts { border-top-color:rgba(239,232,216,.3); }
+.e-act { width:27px; height:27px; display:grid; place-items:center; border:1px solid rgba(77,63,36,.45); background:transparent; color:inherit; cursor:pointer; }
+.e-card.on .e-act { border-color:rgba(239,232,216,.4); }
+.e-act svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.e-act.star-on { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.e-stamp { display:flex; align-items:center; justify-content:center; gap:9px; margin:2px 18px 22px; padding:9px; color:var(--faded); font:800 .6rem "Alegreya Sans"; letter-spacing:.22em; }
+.e-stamp svg { width:15px; height:15px; fill:currentColor; }
+
+.desk { width:min(1000px,100%); border:1px solid var(--line); background:rgba(255,255,255,.28); box-shadow:8px 12px 0 rgba(21,19,13,.12); }
+.desk-top { padding:26px 30px 20px; }
+.desk-top h2 { margin:0; font:700 2.2rem/.9 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.05em; }
+.desk-top h2 em { color:var(--orange); font-style:normal; }
+.desk-grid { display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:30px; padding:0 30px 30px; align-items:start; }
+.desk-col>.e-sechead { border-bottom-width:3px; }
+.desk-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(206px,1fr)); gap:14px; margin-top:14px; }
+.desk-cards .e-card { flex:none; width:auto; }
+@media(max-width:860px){ .desk-grid { grid-template-columns:1fr; } }
+
+/* ============================================================
+   ΣΤ. ΠΙΝΑΚΕΣ
+   ============================================================ */
+.tablewrap { grid-column:1 / -1; width:100%; overflow-x:auto; }
+table.cmp { width:100%; min-width:620px; border-collapse:collapse; background:rgba(255,255,255,.4); font-size:.88rem; }
+table.cmp th, table.cmp td { border:1px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top; line-height:1.45; }
+table.cmp thead th { background:var(--ink); color:var(--paper); font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; border-color:var(--ink); }
+table.cmp tbody th { font-weight:800; width:23%; background:rgba(255,255,255,.5); }
+table.cmp td.yes { color:var(--pen-blue); font-weight:700; }
+table.cmp td.no { color:var(--danger); }
+table.cmp tr.win td, table.cmp tr.win th { background:rgba(201,162,39,.14); }
+
+.qlist { grid-column:1 / -1; justify-self:start; max-width:700px; margin:0; padding:0; list-style:none; counter-reset:q; }
+.qlist li { position:relative; padding:0 0 15px 34px; line-height:1.55; }
+.qlist li::before { counter-increment:q; content:"?"; position:absolute; left:0; top:0; width:22px; height:22px; display:grid; place-items:center; border:2px solid var(--pen-blue); border-radius:50%; color:var(--pen-blue); font:800 .8rem "Alegreya Sans"; }
+.qlist b { font-weight:800; }
+
+.foot { padding:34px 5vw 60px; border-top:3px solid var(--ink); color:var(--muted); font-size:.86rem; line-height:1.6; }
+.foot b { color:var(--ink); }
+
+@media(prefers-reduced-motion:reduce){ * { transition:none !important; } }
+@media(max-width:600px){ .stage { grid-template-columns:1fr; } .phone { border-width:6px; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΠΡΟΓΡΑΜΜΑ — Θ' ΓΥΡΟΣ · ΕΚΔΟΣΕΙΣ 0.3.0 ΚΑΙ 0.3.1</p>
+  <h1>Η βιβλιοθήκη<br>και το <em>πλανο</em></h1>
+  <p class="lead">Το μοντέλο της άσκησης ως ανεξάρτητης οντότητας <b>υπάρχει ήδη</b>: <code>modules/exercises.js</code> κρατά ταυτότητα, σημειώσεις και προηγούμενα ονόματα, το <code>plan-view</code> έχει πλέον δική του ενότητα βιβλιοθήκης, και ο επιλογέας της ημέρας διαβάζει από αυτήν. Αυτό που λείπει είναι η μορφή: <b>κανένα stylesheet δεν έχει αγγιχτεί.</b> Το αρχείο απαντά πώς δείχνει η ενότητα «Πρόγραμμα» όταν αποκτήσει δεύτερο κάτοικο, και γιατί η βιβλιοθήκη δεν πρέπει να γίνει δεύτερο σύστημα καρτών.</p>
+  <div class="state">
+    <span>Μοντέλο <b>έτοιμο</b></span>
+    <span>Markup <b>έτοιμο</b></span>
+    <span>Μορφή <b>ανοιχτή</b></span>
+    <span>Θέση <b>μέσα στο Πρόγραμμα</b></span>
+  </div>
+</header>
+
+<!-- ============================================================ Α -->
+<div class="attempt-label"><b>Α</b><span>Η ΔΙΑΓΝΩΣΗ — ΤΙ ΥΠΑΡΧΕΙ ΣΗΜΕΡΑ</span></div>
+<section class="stage">
+  <div class="variant">
+    <h4>Όπως αποδίδεται τώρα</h4>
+    <div class="raw">
+      <h2>1. Οι ασκήσεις μου</h2>
+      <p>Δημιουργήστε ασκήσεις στη βιβλιοθήκη και επιλέξτε τις στις ημέρες του προγράμματος.</p>
+      <label>Όνομα άσκησης<input type="text" value=""></label>
+      <label>Σημειώσεις άσκησης<textarea rows="2"></textarea></label>
+      <button type="button">Αποθήκευση άσκησης</button>
+      <ul>
+        <li><strong>Έλξεις (1) · πρόσθια λαβή</strong><p>πρόσθια λαβή</p><button class="rowbtn" type="button">Επεξεργασία</button></li>
+        <li><strong>Έλξεις (2) · ανάστροφη λαβή</strong><p>ανάστροφη λαβή</p><button class="rowbtn" type="button">Επεξεργασία</button></li>
+        <li><strong>Πιέσεις πάγκου</strong><button class="rowbtn" type="button">Επεξεργασία</button></li>
+      </ul>
+      <hr>
+      <h2>2. Τα προγράμματά μου</h2>
+      <p>…η υπάρχουσα φόρμα και το καρουζέλ προγραμμάτων.</p>
+    </div>
+    <p class="why">Πιστή απόδοση του σημερινού markup με προεπιλογές φυλλομετρητή. Δεν είναι κριτική στον κώδικα — <b>η μορφή απλώς δεν έχει γραφτεί ακόμη.</b></p>
+  </div>
+
+  <div class="variant" style="width:min(420px,100%)">
+    <h4>Τι πρέπει να λύσει ο σχεδιασμός</h4>
+    <ol class="faults">
+      <li><b>Η σελίδα ανοίγει με άδεια φόρμα.</b><span>Το πρώτο πράγμα στην ενότητα είναι ένα κενό πεδίο. Στη δεύτερη εβδομάδα ο χρήστης έχει 30 ασκήσεις και θέλει να τις <em>δει</em>, όχι να γράψει νέα.</span></li>
+      <li><b>Δύο συστήματα καρτών θα ακυρώσουν το ένα το άλλο.</b><span>Τα προγράμματα είναι ήδη κάρτες με σκιά και έξι ενέργειες. Αν γίνει κάρτα και κάθε άσκηση, η σελίδα χάνει ιεραρχία.</span></li>
+      <li><b>Το <code>&lt;select&gt;</code> της ημέρας δεν αναζητά και δεν δημιουργεί.</b><span>Με 40 ασκήσεις είναι λίστα κύλισης. Και αν λείπει μία, ο χρήστης κλείνει τον διάλογο, ανεβαίνει στη βιβλιοθήκη, τη γράφει, και ξαναρχίζει την ημέρα.</span></li>
+      <li><b>Το «Αριθμός ασκήσεων» ζητά αριθμό πριν από την απόφαση.</b><span><code>min=1 max=15</code> με προεπιλογή 3: ο χρήστης δηλώνει πόσες θα βάλει πριν δει τι υπάρχει.</span></li>
+      <li><b>Οι ομώνυμες εκθέτουν το μοντέλο.</b><span>Το <code>exerciseOptionLabel</code> τυπώνει «Έλξεις (2) · ανάστροφη λαβή». Ο δείκτης <code>(2)</code> είναι εσωτερική σειρά πίνακα, όχι πληροφορία για τον αθλητή.</span></li>
+    </ol>
+  </div>
+
+  <p class="notes"><b>Και μία απουσία:</b> δεν υπάρχει διαγραφή άσκησης — μόνο «Επεξεργασία». Λογικό ως προσωρινή στάση, αφού μια άσκηση μπορεί να είναι σε χρήση. Τα σχέδια παρακάτω τη λύνουν δείχνοντας <b>πού χρησιμοποιείται</b> η καθεμία: όταν η γραμμή λέει «σε 3 ημέρες», η διαγραφή γίνεται ασφαλής ερώτηση αντί για ρίσκο.</p>
+</section>
+
+<!-- ============================================================ Β -->
+<div class="attempt-label"><b>Β</b><span>Η ΑΣΚΗΣΗ ΩΣ ΑΝΤΙΚΕΙΜΕΝΟ — ΤΕΣΣΕΡΙΣ ΕΚΔΟΧΕΣ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Β1 · Το ευρετήριο</h4>
+    <div class="sheet">
+      <h3 class="sheet-title">Οι ασκήσεις μου</h3>
+      <hr class="rule">
+      <ul class="b1-list" style="margin-top:6px">
+        <li class="b1-row"><span><span class="b1-name">Άρσεις θανάτου</span></span><span class="b1-dots"></span><span class="b1-use">σε 2 ημέρες</span></li>
+        <li class="b1-row"><span><span class="b1-name">Έλξεις</span><span class="b1-note">πρόσθια λαβή</span></span><span class="b1-dots"></span><span class="b1-use">σε 3 ημέρες</span></li>
+        <li class="b1-row"><span><span class="b1-name">Έλξεις</span><span class="b1-note">ανάστροφη λαβή</span></span><span class="b1-dots"></span><span class="b1-use">σε 1 ημέρα</span></li>
+        <li class="b1-row"><span><span class="b1-name">Καθίσματα</span></span><span class="b1-dots"></span><span class="b1-use">σε 2 ημέρες</span></li>
+        <li class="b1-row"><span><span class="b1-name">Κωπηλατική με μπάρα</span></span><span class="b1-dots"></span><span class="b1-use zero">αχρησιμοποίητη</span></li>
+        <li class="b1-row"><span><span class="b1-name">Πιέσεις πάγκου</span><span class="b1-note">φαρδιά λαβή, πόδια σταθερά</span></span><span class="b1-dots"></span><span class="b1-use">σε 2 ημέρες</span></li>
+      </ul>
+      <div class="b1-foot">
+        <span class="hint">8 ασκήσεις</span>
+        <button class="btn small" type="button">Νέα άσκηση</button>
+      </div>
+    </div>
+    <p class="why"><b>Η πρόταση.</b> Πυκνό, αλφαβητικό, σαρώνεται με μια ματιά. Οι τελείες-οδηγοί οδηγούν στη μοναδική πληροφορία που κρίνει κάθε επόμενη ενέργεια: <b>πού χρησιμοποιείται.</b> Η σημείωση κάτω από το όνομα ξεχωρίζει τις ομώνυμες χωρίς <code>(1)</code> και <code>(2)</code>. Τυπογραφικά υποχωρεί μπροστά στις κάρτες των προγραμμάτων, άρα η ιεραρχία της σελίδας επιβιώνει.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Β2 · Οι καρτέλες</h4>
+    <div class="sheet">
+      <h3 class="sheet-title">Οι ασκήσεις μου</h3>
+      <hr class="rule">
+      <div class="b2-wrap">
+        <span class="b2-chip">Άρσεις θανάτου <i>2</i></span>
+        <span class="b2-chip">Έλξεις <i>3</i></span>
+        <span class="b2-chip">Καθίσματα <i>2</i></span>
+        <span class="b2-chip unused">Κωπηλατική με μπάρα</span>
+        <span class="b2-chip">Πιέσεις πάγκου <i>2</i></span>
+        <span class="b2-chip">Πιέσεις ώμων <i>1</i></span>
+        <span class="b2-chip unused">Δικέφαλα με μπάρα</span>
+      </div>
+      <div class="b1-foot"><span class="hint">8 ασκήσεις</span><button class="btn small" type="button">Νέα άσκηση</button></div>
+    </div>
+    <p class="why">Χωράει πολλά σε λίγο ύψος και το διάστικτο περίγραμμα διαβάζεται αμέσως ως «αχρησιμοποίητη». <b>Χάνει τη σημείωση</b>, όμως — άρα οι ομώνυμες ξαναγίνονται δυσδιάκριτες, και ακριβώς αυτές είναι ο λόγος που υπάρχει το νέο μοντέλο.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Β3 · Η κάρτα</h4>
+    <div class="sheet">
+      <h3 class="sheet-title">Οι ασκήσεις μου</h3>
+      <hr class="rule">
+      <div style="margin-top:12px">
+        <article class="b3-card">
+          <h5>Πιέσεις πάγκου</h5>
+          <p>φαρδιά λαβή, πόδια σταθερά</p>
+          <div class="b3-acts"><button class="btn small" type="button">Επεξεργασία</button><button class="btn small" type="button">Διαγραφή</button></div>
+        </article>
+        <article class="b3-card">
+          <h5>Έλξεις</h5>
+          <p>πρόσθια λαβή</p>
+          <div class="b3-acts"><button class="btn small" type="button">Επεξεργασία</button><button class="btn small" type="button">Διαγραφή</button></div>
+        </article>
+      </div>
+    </div>
+    <p class="why">Η προφανής λύση, και <b>ακριβώς το λάθος</b> που περιγράφει το εύρημα 2. Δύο ασκήσεις καταλαμβάνουν όσο χώρο ένα ολόκληρο πρόγραμμα, και η σελίδα αποκτά δύο ισότιμα συστήματα καρτών. Μπαίνει εδώ για να απορριφθεί ρητά.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Β4 · Η γραμμή τετραδίου</h4>
+    <div class="sheet">
+      <h3 class="sheet-title">Οι ασκήσεις μου</h3>
+      <hr class="rule">
+      <div class="b4-pad">
+        <div class="b4-line"><b>Άρσεις θανάτου</b><small>2 ημέρες</small></div>
+        <div class="b4-line"><b>Έλξεις — πρόσθια λαβή</b><small>3 ημέρες</small></div>
+        <div class="b4-line"><b>Έλξεις — ανάστροφη λαβή</b><small>1 ημέρα</small></div>
+        <div class="b4-line"><b>Καθίσματα</b><small>2 ημέρες</small></div>
+        <div class="b4-line"><b>Πιέσεις πάγκου</b><small>2 ημέρες</small></div>
+      </div>
+      <div class="b1-foot"><span class="hint">8 ασκήσεις</span><button class="btn small" type="button">Νέα άσκηση</button></div>
+    </div>
+    <p class="why">Η πιο «τετράδιο» εκδοχή: μπλε στυλό πάνω σε χαραγμένες γραμμές. Όμορφη σε πέντε γραμμές, <b>κουραστική σε σαράντα</b>, και η Playpen Sans δεν έχει ελληνικά σε κάθε βάρος — η ίδια παγίδα που έχει ήδη καταγραφεί σε προηγούμενο γύρο. Μένει ως ατμόσφαιρα, όχι ως δομή.</p>
+  </div>
+
+  <p class="notes pick"><b>Επιλογή: Β1.</b> Το ευρετήριο κρατά τη σημείωση (άρα λύνει τις ομώνυμες χωρίς αριθμούς), κρατά τη χρήση (άρα κάνει τη διαγραφή ασφαλή), και είναι το μόνο που <b>δεν ανταγωνίζεται</b> τις κάρτες των προγραμμάτων παρακάτω. Το Β2 επανέρχεται στο Δ ως τρόπος επιλογής, όπου η πυκνότητα είναι πλεονέκτημα.</p>
+</section>
+
+<!-- ============================================================ Γ -->
+<div class="attempt-label"><b>Γ</b><span>ΠΟΥ ΚΑΘΕΤΑΙ Η ΦΟΡΜΑ — ΤΡΕΙΣ ΔΙΑΤΑΞΕΙΣ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Γ1 · Φόρμα πάνω (σημερινό)</h4>
+    <div class="c-frame">
+      <div class="c-viewhead"><h3>Το πλάνο <em>οδηγεί.</em></h3></div>
+      <div class="c-body">
+        <div class="c-block">
+          <h4>1. Οι ασκήσεις μου</h4>
+          <div class="c-formbox">
+            <label class="c-field"><span>Όνομα άσκησης</span><i>&nbsp;</i></label>
+            <label class="c-field"><span>Σημειώσεις</span><i class="tall">&nbsp;</i></label>
+            <button class="btn small primary" type="button">Αποθήκευση</button>
+          </div>
+          <ul class="c-mini" style="margin-top:12px">
+            <li>Άρσεις θανάτου<span class="b1-dots"></span><small>2</small></li>
+            <li>Έλξεις<span class="b1-dots"></span><small>3</small></li>
+            <li>Καθίσματα<span class="b1-dots"></span><small>2</small></li>
+          </ul>
+        </div>
+        <div class="c-block"><h4>2. Τα προγράμματά μου</h4>
+          <div class="c-routine" style="margin-top:10px"><strong>Push Pull Legs</strong><small>ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ</small></div>
+        </div>
+      </div>
+    </div>
+    <p class="why">Η φόρμα καταλαμβάνει το πάνω μισό της ενότητας <b>μόνιμα</b>, ενώ χρησιμοποιείται λίγες φορές. Ο χρήστης κάνει κύλιση πάνω από ένα άδειο πεδίο κάθε φορά που θέλει να δει τα προγράμματά του.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Γ2 · Η φόρμα ως τελευταία γραμμή</h4>
+    <div class="c-frame">
+      <div class="c-viewhead"><h3>Το πλάνο <em>οδηγεί.</em></h3></div>
+      <div class="c-body">
+        <div class="c-block">
+          <h4>Οι ασκήσεις μου</h4>
+          <ul class="c-mini" style="margin-top:10px">
+            <li>Άρσεις θανάτου<span class="b1-dots"></span><small>2</small></li>
+            <li>Έλξεις<span class="b1-dots"></span><small>3</small></li>
+            <li>Καθίσματα<span class="b1-dots"></span><small>2</small></li>
+            <li>Πιέσεις πάγκου<span class="b1-dots"></span><small>2</small></li>
+          </ul>
+          <button class="c-addrow" type="button" id="c2-add"><b>＋</b> Νέα άσκηση</button>
+          <div class="c-formbox" id="c2-form" hidden>
+            <label class="c-field"><span>Όνομα άσκησης</span><i>&nbsp;</i></label>
+            <label class="c-field"><span>Σημειώσεις</span><i class="tall">&nbsp;</i></label>
+            <div style="display:flex;gap:7px"><button class="btn small primary" type="button">Αποθήκευση</button><button class="btn small ghost" type="button" id="c2-cancel">Ακύρωση</button></div>
+          </div>
+        </div>
+        <div class="c-block"><h4>Τα προγράμματά μου</h4>
+          <div class="c-routine" style="margin-top:10px"><strong>Push Pull Legs</strong><small>ΔΙΑΡΚΕΙΑ: 7 ΗΜΕΡΕΣ</small></div>
+        </div>
+      </div>
+    </div>
+    <p class="why"><b>Η πρόταση.</b> Το περιεχόμενο πρώτο, η δημιουργία στο τέλος του ευρετηρίου — εκεί όπου τελειώνει η ανάγνωση και γεννιέται η ανάγκη. Πάτησε το «＋» για να ανοίξει επί τόπου. Το ίδιο ιδίωμα δουλεύει και στην Καταγραφή, οπότε δεν εισάγεται νέο στοιχείο σχεδιασμού.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Γ3 · Δύο καρτέλες</h4>
+    <div class="c-frame">
+      <div class="c-viewhead"><h3>Το πλάνο <em>οδηγεί.</em></h3></div>
+      <div class="c-body" style="padding-top:0">
+        <div class="c-tabs" style="margin:0 -16px 16px">
+          <button type="button" aria-selected="true">Ασκήσεις</button>
+          <button type="button" aria-selected="false">Προγράμματα</button>
+        </div>
+        <div class="c-block">
+          <ul class="c-mini">
+            <li>Άρσεις θανάτου<span class="b1-dots"></span><small>2</small></li>
+            <li>Έλξεις<span class="b1-dots"></span><small>3</small></li>
+            <li>Καθίσματα<span class="b1-dots"></span><small>2</small></li>
+            <li>Πιέσεις πάγκου<span class="b1-dots"></span><small>2</small></li>
+            <li>Πιέσεις ώμων<span class="b1-dots"></span><small>1</small></li>
+          </ul>
+          <button class="c-addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+        </div>
+        <p class="c-drawer-note">Τα προγράμματα ζουν στη δεύτερη καρτέλα και δεν φαίνονται ποτέ μαζί με τις ασκήσεις.</p>
+      </div>
+    </div>
+    <p class="why">Καθαρότερο ανά οθόνη, αλλά <b>κρύβει τη σχέση</b>: το ζητούμενο του 0.3.1 είναι να γίνει ορατή η σειρά «ασκήσεις → πρόγραμμα → ημέρες». Δύο καρτέλες την κόβουν στα δύο και προσθέτουν ένα tap σε κάθε σύνθεση προγράμματος.</p>
+  </div>
+
+  <p class="notes pick"><b>Επιλογή: Γ2 — και τα ψηφία φεύγουν από τους τίτλους.</b> Το «1.» και το «2.» είναι σωστά την πρώτη μέρα και θόρυβος για πάντα μετά. Η σειρά ανήκει στο πάνελ «ΟΔΗΓΙΕΣ», που είναι ήδη αριθμημένη λίστα βημάτων· οι τίτλοι της σελίδας μένουν «Οι ασκήσεις μου» και «Τα προγράμματά μου», με τη διάταξη — ευρετήριο πάνω, κάρτες κάτω — να λέει τη σειρά χωρίς αρίθμηση.</p>
+</section>
+
+<!-- ============================================================ Δ -->
+<div class="attempt-label"><b>Δ</b><span>Η ΕΠΙΛΟΓΗ ΜΕΣΑ ΣΤΗΝ ΗΜΕΡΑ — ΤΟ ΚΡΙΣΙΜΟ ΣΗΜΕΙΟ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Δ1 · Το σημερινό</h4>
+    <div class="d-dialog">
+      <div class="d-dialog-head"><div><span>Push Pull Legs</span><h4>Νέα προπόνηση ημέρας</h4></div></div>
+      <div class="d-dialog-body">
+        <label class="d1-field"><span>Ημέρα</span><i>Δευτέρα <b>▾</b></i></label>
+        <label class="d1-field"><span>Όνομα προπόνησης</span><i>Push</i></label>
+        <label class="d1-field"><span>Αριθμός ασκήσεων</span><i>3</i></label>
+        <div class="hint" style="margin:14px 0 6px">Ασκήσεις προπόνησης</div>
+        <div class="d1-card"><span class="n">01</span>
+          <label class="d1-field" style="margin-top:5px"><span>Άσκηση</span><i>Επιλογή άσκησης <b>▾</b></i></label>
+          <label class="d1-field" style="margin:0"><span>Εργάσιμα σετ</span><i>3</i></label>
+        </div>
+        <div class="d1-card"><span class="n">02</span>
+          <label class="d1-field" style="margin-top:5px"><span>Άσκηση</span><i>Επιλογή άσκησης <b>▾</b></i></label>
+          <label class="d1-field" style="margin:0"><span>Εργάσιμα σετ</span><i>3</i></label>
+        </div>
+      </div>
+    </div>
+    <p class="why">Ο χρήστης δηλώνει <b>πόσες</b> ασκήσεις πριν δει <b>ποιες</b> υπάρχουν, και ανοίγει τρία χωριστά <code>&lt;select&gt;</code> για να συνθέσει μία ημέρα. Αν λείπει άσκηση, η ημέρα εγκαταλείπεται.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Δ2 · Ο επιλογέας — <b>δοκίμασέ τον</b></h4>
+    <div class="d-dialog">
+      <div class="d-dialog-head"><div><span>Push Pull Legs · Δευτέρα</span><h4>Push</h4></div></div>
+      <div class="d-dialog-body">
+        <div class="d-picker">
+          <div class="d-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+            <input type="text" placeholder="Αναζήτηση στη βιβλιοθήκη" id="d2-search" aria-label="Αναζήτηση άσκησης">
+          </div>
+          <ul class="d-opts" id="d2-opts">
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Άρσεις θανάτου"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Άρσεις θανάτου</b></span><span class="d-opt-count">2 ημ.</span></button></li>
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Έλξεις" data-note="πρόσθια λαβή"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Έλξεις</b><small>πρόσθια λαβή</small></span><span class="d-opt-count">3 ημ.</span></button></li>
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Έλξεις" data-note="ανάστροφη λαβή"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Έλξεις</b><small>ανάστροφη λαβή</small></span><span class="d-opt-count">1 ημ.</span></button></li>
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Καθίσματα"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Καθίσματα</b></span><span class="d-opt-count">2 ημ.</span></button></li>
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Κωπηλατική με μπάρα"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Κωπηλατική με μπάρα</b></span><span class="d-opt-count">—</span></button></li>
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Πιέσεις πάγκου" data-note="φαρδιά λαβή"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Πιέσεις πάγκου</b><small>φαρδιά λαβή</small></span><span class="d-opt-count">2 ημ.</span></button></li>
+            <li><button class="d-opt" type="button" aria-pressed="false" data-name="Πιέσεις ώμων"><span class="d-tick"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><span class="d-opt-text"><b>Πιέσεις ώμων</b></span><span class="d-opt-count">1 ημ.</span></button></li>
+          </ul>
+          <button class="d-newrow" type="button"><b>＋</b> Νέα άσκηση στη βιβλιοθήκη</button>
+        </div>
+
+        <div class="d-chosen">
+          <div class="d-chosen-head"><b>Η ημέρα</b><small id="d2-count">καμία άσκηση</small></div>
+          <ol id="d2-list"></ol>
+          <p class="d-empty" id="d2-empty">Διάλεξε ασκήσεις από τη βιβλιοθήκη.</p>
+        </div>
+        <div class="d-actions"><button class="btn small ghost" type="button">Ακύρωση</button><button class="btn small primary" type="button">Αποθήκευση ημέρας</button></div>
+      </div>
+    </div>
+    <p class="why"><b>Η πρόταση.</b> Η αναζήτηση κάνει τις 40 ασκήσεις διαχειρίσιμες· το tick επιλέγει· η σειρά προκύπτει από τη σειρά επιλογής, άρα το πεδίο «Αριθμός ασκήσεων» <b>παύει να υπάρχει</b>· τα σετ ρυθμίζονται με −/＋ πάνω στη γραμμή. Η «Νέα άσκηση στη βιβλιοθήκη» κρατά τον χρήστη μέσα στην ημέρα.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Δ3 · Οι καρτέλες ως επιλογή</h4>
+    <div class="d-dialog">
+      <div class="d-dialog-head"><div><span>Push Pull Legs · Δευτέρα</span><h4>Push</h4></div></div>
+      <div class="d-dialog-body">
+        <div class="hint" style="margin-bottom:8px">Πάτησε για να προσθέσεις</div>
+        <div class="b2-wrap" style="margin-top:0">
+          <span class="b2-chip">Άρσεις θανάτου</span>
+          <span class="b2-chip">Έλξεις <i>πρόσθια</i></span>
+          <span class="b2-chip">Έλξεις <i>ανάστροφη</i></span>
+          <span class="b2-chip">Καθίσματα</span>
+          <span class="b2-chip">Κωπηλατική</span>
+          <span class="b2-chip">Πιέσεις πάγκου</span>
+          <span class="b2-chip">Πιέσεις ώμων</span>
+          <span class="b2-chip unused">＋ Νέα</span>
+        </div>
+        <div class="d-chosen">
+          <div class="d-chosen-head"><b>Η ημέρα</b><small>3 ασκήσεις</small></div>
+          <ol>
+            <li><b>Πιέσεις πάγκου</b><span class="d-sets"><button type="button" tabindex="-1">−</button><span>3 σετ</span><button type="button" tabindex="-1">＋</button></span></li>
+            <li><b>Πιέσεις ώμων</b><span class="d-sets"><button type="button" tabindex="-1">−</button><span>4 σετ</span><button type="button" tabindex="-1">＋</button></span></li>
+            <li><b>Έλξεις</b><span class="d-sets"><button type="button" tabindex="-1">−</button><span>3 σετ</span><button type="button" tabindex="-1">＋</button></span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <p class="why">Ταχύτερο σε λίγες ασκήσεις και ωραίο στο κινητό. Με 40 όμως το σύννεφο ξεπερνά την οθόνη και <b>χωρίς αναζήτηση</b> η εύρεση γίνεται σάρωση. Οι σημειώσεις στριμώχνονται σε μία λέξη — «πρόσθια» — που δεν αρκεί πάντα.</p>
+  </div>
+
+  <p class="notes pick"><b>Επιλογή: Δ2.</b> Είναι το μόνο που καταργεί το «Αριθμός ασκήσεων» αντί να το ομορφύνει, και το μόνο που επιτρέπει δημιουργία άσκησης χωρίς έξοδο από την ημέρα. Το Δ3 μένει ως πιθανή συμπεριφορά του Δ2 σε πολύ μικρές βιβλιοθήκες, αν ποτέ χρειαστεί.</p>
+</section>
+
+<!-- ============================================================ Ε -->
+<div class="attempt-label"><b>Ε</b><span>Η ΠΡΟΤΑΣΗ ΣΥΝΟΛΙΚΑ — ΚΙΝΗΤΟ ΚΑΙ DESKTOP</span></div>
+<section class="stage">
+  <div class="variant" style="width:auto">
+    <h4>Κινητό · 390px</h4>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="e-hero">
+          <span class="info">i</span>
+          <h2>Το πλάνο<em>οδηγεί.</em></h2>
+        </div>
+
+        <div class="e-sec">
+          <div class="e-sechead"><h3>Οι ασκήσεις μου</h3><span class="count"><b>8</b> ασκήσεις</span></div>
+          <ul class="e-lib b1-list">
+            <li class="b1-row"><span><span class="b1-name">Άρσεις θανάτου</span></span><span class="b1-dots"></span><span class="b1-use">2 ημ.</span></li>
+            <li class="b1-row"><span><span class="b1-name">Δικέφαλα με μπάρα</span></span><span class="b1-dots"></span><span class="b1-use zero">—</span></li>
+            <li class="b1-row"><span><span class="b1-name">Έλξεις</span><span class="b1-note">πρόσθια λαβή</span></span><span class="b1-dots"></span><span class="b1-use">3 ημ.</span></li>
+            <li class="b1-row"><span><span class="b1-name">Έλξεις</span><span class="b1-note">ανάστροφη λαβή</span></span><span class="b1-dots"></span><span class="b1-use">1 ημ.</span></li>
+            <li class="b1-row"><span><span class="b1-name">Καθίσματα</span></span><span class="b1-dots"></span><span class="b1-use">2 ημ.</span></li>
+            <li class="b1-row"><span><span class="b1-name">Κωπηλατική με μπάρα</span></span><span class="b1-dots"></span><span class="b1-use zero">—</span></li>
+            <li class="b1-row"><span><span class="b1-name">Πιέσεις πάγκου</span><span class="b1-note">φαρδιά λαβή, πόδια σταθερά</span></span><span class="b1-dots"></span><span class="b1-use">2 ημ.</span></li>
+            <li class="b1-row"><span><span class="b1-name">Πιέσεις ώμων</span></span><span class="b1-dots"></span><span class="b1-use">1 ημ.</span></li>
+          </ul>
+          <button class="c-addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+        </div>
+
+        <div class="e-sec" style="padding-bottom:0">
+          <div class="e-sechead"><h3>Τα προγράμματά μου</h3><span class="count"><b>3</b> splits</span></div>
+        </div>
+        <div class="e-cards">
+          <article class="e-card on">
+            <h4>Push Pull Legs</h4>
+            <p class="meta">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b> · ΣΕ ΙΣΧΥ</p>
+            <ul class="e-days">
+              <li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li><li><i>Σα</i> Push</li>
+            </ul>
+            <div class="e-acts">
+              <button class="e-act star-on" type="button" aria-label="Ενεργό"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+              <button class="e-act" type="button" aria-label="Άνοιγμα"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M9 5v14"/></svg></button>
+              <button class="e-act" type="button" aria-label="Επεξεργασία"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+              <button class="e-act" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+              <button class="e-act" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+              <button class="e-act" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+            </div>
+          </article>
+          <article class="e-card">
+            <h4>Upper / Lower</h4>
+            <p class="meta">ΔΙΑΡΚΕΙΑ: <b>4 ΗΜΕΡΕΣ</b></p>
+            <ul class="e-days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li><li><i>03</i> Upper B</li></ul>
+            <div class="e-acts">
+              <button class="e-act" type="button" aria-label="Ορισμός ως ενεργό"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+              <button class="e-act" type="button" aria-label="Άνοιγμα"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M9 5v14"/></svg></button>
+              <button class="e-act" type="button" aria-label="Επεξεργασία"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+              <button class="e-act" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+              <button class="e-act" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+              <button class="e-act" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+            </div>
+          </article>
+        </div>
+        <div class="e-stamp"><svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg>STRONGER EVERY SESSION<svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg></div>
+      </div>
+    </div>
+    <p class="why" style="max-width:390px">Η σελίδα ανοίγει με <b>περιεχόμενο</b>. Το ευρετήριο δίνει ολόκληρη τη βιβλιοθήκη σε μία οθόνη· το «＋» κλείνει το ευρετήριο και ανοίγει τη φόρμα στη θέση του. Οι κάρτες των προγραμμάτων μένουν ακριβώς όπως τις όρισε ο Η' γύρος, με τα έξι κουμπιά ενεργειών.</p>
+  </div>
+
+  <p class="caption" style="margin-top:10px">Και η ίδια ενότητα σε πλάτος desktop, όπου το ευρετήριο και τα προγράμματα στέκονται δίπλα-δίπλα ως αριστερή και δεξιά σελίδα του ίδιου ανοίγματος:</p>
+
+  <div class="desk">
+    <div class="desk-top"><h2>Το πλάνο <em>οδηγεί.</em></h2></div>
+    <div class="desk-grid">
+      <div class="desk-col">
+        <div class="e-sechead"><h3>Οι ασκήσεις μου</h3><span class="count"><b>8</b></span></div>
+        <ul class="e-lib b1-list">
+          <li class="b1-row"><span><span class="b1-name">Άρσεις θανάτου</span></span><span class="b1-dots"></span><span class="b1-use">2 ημ.</span></li>
+          <li class="b1-row"><span><span class="b1-name">Δικέφαλα με μπάρα</span></span><span class="b1-dots"></span><span class="b1-use zero">—</span></li>
+          <li class="b1-row"><span><span class="b1-name">Έλξεις</span><span class="b1-note">πρόσθια λαβή</span></span><span class="b1-dots"></span><span class="b1-use">3 ημ.</span></li>
+          <li class="b1-row"><span><span class="b1-name">Έλξεις</span><span class="b1-note">ανάστροφη λαβή</span></span><span class="b1-dots"></span><span class="b1-use">1 ημ.</span></li>
+          <li class="b1-row"><span><span class="b1-name">Καθίσματα</span></span><span class="b1-dots"></span><span class="b1-use">2 ημ.</span></li>
+          <li class="b1-row"><span><span class="b1-name">Κωπηλατική με μπάρα</span></span><span class="b1-dots"></span><span class="b1-use zero">—</span></li>
+          <li class="b1-row"><span><span class="b1-name">Πιέσεις πάγκου</span><span class="b1-note">φαρδιά λαβή, πόδια σταθερά</span></span><span class="b1-dots"></span><span class="b1-use">2 ημ.</span></li>
+          <li class="b1-row"><span><span class="b1-name">Πιέσεις ώμων</span></span><span class="b1-dots"></span><span class="b1-use">1 ημ.</span></li>
+        </ul>
+        <button class="c-addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+      </div>
+      <div class="desk-col">
+        <div class="e-sechead"><h3>Τα προγράμματά μου</h3><span class="count"><b>3</b> splits</span></div>
+        <div class="desk-cards">
+          <article class="e-card on">
+            <h4>Push Pull Legs</h4>
+            <p class="meta">7 ΗΜΕΡΕΣ · ΣΕ ΙΣΧΥ</p>
+            <ul class="e-days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li></ul>
+          </article>
+          <article class="e-card">
+            <h4>Upper / Lower</h4>
+            <p class="meta">4 ΗΜΕΡΕΣ</p>
+            <ul class="e-days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li></ul>
+          </article>
+          <article class="e-card">
+            <h4>Full Body</h4>
+            <p class="meta">3 ΗΜΕΡΕΣ</p>
+            <ul class="e-days"><li><i>01</i> A</li><li><i>02</i> B</li></ul>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Στα ≤850px το πλέγμα πέφτει σε μία στήλη — το ίδιο breakpoint «χωρίς δεύτερη στήλη» που ισχύει ήδη. Δεν χρειάζεται νέο.</p>
+</section>
+
+<!-- ============================================================ ΣΤ -->
+<div class="attempt-label"><b>ΣΤ</b><span>ΣΥΓΚΡΙΣΗ, ΟΡΙΑ ΚΑΙ ΑΝΟΙΧΤΑ ΕΡΩΤΗΜΑΤΑ</span></div>
+<section class="stage single">
+
+  <div class="tablewrap">
+    <table class="cmp">
+      <thead><tr><th>Κριτήριο</th><th>Β1 Ευρετήριο</th><th>Β2 Καρτέλες</th><th>Β3 Κάρτες</th><th>Β4 Γραμμές</th></tr></thead>
+      <tbody>
+        <tr><th>Ξεχωρίζει ομώνυμες</th><td class="yes">Ναι, με τη σημείωση</td><td class="no">Οριακά</td><td class="yes">Ναι</td><td class="no">Με παύλα, στριμωχτά</td></tr>
+        <tr><th>Δείχνει πού χρησιμοποιείται</th><td class="yes">Ναι, με τελείες</td><td class="yes">Ναι, αριθμός</td><td class="no">Χρειάζεται τρίτη γραμμή</td><td class="yes">Ναι</td></tr>
+        <tr><th>Αντέχει 40 ασκήσεις</th><td class="yes">Ναι</td><td class="yes">Ναι</td><td class="no">Όχι</td><td class="no">Κουραστικό</td></tr>
+        <tr><th>Ανταγωνίζεται τις κάρτες</th><td class="yes">Όχι</td><td class="yes">Όχι</td><td class="no">Ναι</td><td class="yes">Όχι</td></tr>
+        <tr><th>Κόστος CSS</th><td>Μικρό</td><td>Μικρό</td><td>Μεσαίο</td><td>Μεσαίο</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tablewrap" style="margin-top:26px">
+    <table class="cmp">
+      <thead><tr><th>Τι αλλάζει</th><th>Τι δεν αλλάζει</th></tr></thead>
+      <tbody>
+        <tr><td>Η ενότητα «Πρόγραμμα» ανοίγει με το ευρετήριο αντί για φόρμα.</td><td>Η παλέτα, τα tokens και οι τέσσερις καταστάσεις τους. Κανένα νέο χρώμα.</td></tr>
+        <tr><td>Οι τίτλοι χάνουν τα «1.» και «2.»· η σειρά μένει στις ΟΔΗΓΙΕΣ.</td><td>Οι κάρτες των προγραμμάτων και τα έξι κουμπιά ενεργειών, όπως τα όρισε ο Η' γύρος.</td></tr>
+        <tr><td>Η φόρμα δημιουργίας ανοίγει από «＋ Νέα άσκηση» στο τέλος του ευρετηρίου.</td><td>Τα τρία breakpoints. Το desktop πλέγμα πέφτει στο ήδη υπάρχον ≤850px.</td></tr>
+        <tr><td>Το πεδίο «Αριθμός ασκήσεων» καταργείται· η σειρά προκύπτει από την επιλογή.</td><td>Το μοντέλο δεδομένων του <code>modules/exercises.js</code>. Κανένα σχέδιο εδώ δεν του ζητά νέο πεδίο.</td></tr>
+        <tr><td>Το <code>&lt;select&gt;</code> της ημέρας γίνεται επιλογέας με αναζήτηση και tick.</td><td>Η μηδενική επίδραση στο ιστορικό: τα παλιά ονόματα μένουν όπως καταγράφηκαν.</td></tr>
+        <tr><td>Η άσκηση αποκτά διαγραφή, με τη χρήση της τυπωμένη δίπλα.</td><td>Η λειτουργία επισκέπτη, ο συγχρονισμός και τα tombstones.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ol class="qlist" style="margin-top:30px">
+    <li><b>Πώς μετριέται η «χρήση»;</b> «Σε 3 ημέρες» σε <em>όλα</em> τα προγράμματα ή μόνο στο ενεργό; Προτείνεται σε όλα, αλλιώς η διαγραφή φαίνεται ασφαλής ενώ δεν είναι. Δεν απαιτεί νέο πεδίο — προκύπτει από τα <code>routines[].plan[].exerciseId</code>.</li>
+    <li><b>Τι γίνεται η διαγραφή άσκησης σε χρήση;</b> Τρεις δρόμοι: απαγόρευση με εξήγηση, διαγραφή μόνο από τη βιβλιοθήκη με τις ημέρες να κρατούν το όνομα, ή tombstone όπως στα προγράμματα. Η τρίτη είναι συνεπής με ό,τι ήδη κάνει το merge.</li>
+    <li><b>Πού μπαίνει η επεξεργασία στο ευρετήριο;</b> Στο mockup η γραμμή είναι ολόκληρη πατήσιμη και ανοίγει τη φόρμα με συμπληρωμένα πεδία. Εναλλακτικά ένα διακριτικό εικονίδιο δεξιά — αλλά τότε η στήλη χρήσης χάνει τη θέση της.</li>
+    <li><b>Χρειάζεται αλφαβητική ταξινόμηση με ελληνικό collation;</b> Το mockup υποθέτει αλφαβητικά. Ελληνικά και λατινικά μαζί θέλουν <code>localeCompare('el')</code>, αλλιώς οι αγγλικοί όροι πέφτουν όλοι στο τέλος.</li>
+    <li><b>Νέα i18n IDs.</b> «Οι ασκήσεις μου», «Νέα άσκηση», «σε N ημέρες», «αχρησιμοποίητη», «Αναζήτηση στη βιβλιοθήκη», «Η ημέρα». Οι σφραγίδες μένουν αγγλικές κατά τον υπάρχοντα κανόνα· κανένα από τα παραπάνω δεν είναι σφραγίδα.</li>
+    <li><b>Ο πληθυντικός.</b> «σε 1 ημέρα» / «σε 2 ημέρες» δεν λύνεται με μία μετάφραση. Ή δύο IDs, ή η ουδέτερη σύντμηση «1 ημ. / 2 ημ.» που χρησιμοποιεί η εκδοχή κινητού.</li>
+  </ol>
+</section>
+
+<div class="foot">
+  <b>Κατάσταση:</b> προτάσεις προς έγκριση. Καμία δεν έχει υλοποιηθεί και κανένα stylesheet της εφαρμογής δεν έχει αλλάξει από αυτό το αρχείο.<br>
+  <b>Πρόταση σε μία γραμμή:</b> Β1 ευρετήριο, Γ2 φόρμα ως τελευταία γραμμή χωρίς αριθμημένους τίτλους, Δ2 επιλογέας με αναζήτηση που καταργεί το «Αριθμός ασκήσεων».
+</div>
+
+<script>
+(function () {
+  var add = document.getElementById('c2-add');
+  var form = document.getElementById('c2-form');
+  var cancel = document.getElementById('c2-cancel');
+  if (add && form && cancel) {
+    add.addEventListener('click', function () { form.hidden = false; add.hidden = true; });
+    cancel.addEventListener('click', function () { form.hidden = true; add.hidden = false; add.focus(); });
+  }
+
+  var opts = document.getElementById('d2-opts');
+  var list = document.getElementById('d2-list');
+  var empty = document.getElementById('d2-empty');
+  var count = document.getElementById('d2-count');
+  var search = document.getElementById('d2-search');
+  if (!opts || !list) return;
+  var chosen = [];
+
+  function label(n) { return n === 0 ? 'καμία άσκηση' : n === 1 ? '1 άσκηση' : n + ' ασκήσεις'; }
+
+  function render() {
+    list.innerHTML = '';
+    chosen.forEach(function (item) {
+      var li = document.createElement('li');
+      var name = document.createElement('b');
+      name.textContent = item.note ? item.name + ' — ' + item.note : item.name;
+      var sets = document.createElement('span');
+      sets.className = 'd-sets';
+      var minus = document.createElement('button');
+      minus.type = 'button'; minus.textContent = '−';
+      minus.setAttribute('aria-label', 'Ένα σετ λιγότερο: ' + item.name);
+      var value = document.createElement('span');
+      value.textContent = item.sets + ' σετ';
+      var plus = document.createElement('button');
+      plus.type = 'button'; plus.textContent = '＋';
+      plus.setAttribute('aria-label', 'Ένα σετ περισσότερο: ' + item.name);
+      minus.addEventListener('click', function () { item.sets = Math.max(1, item.sets - 1); render(); });
+      plus.addEventListener('click', function () { item.sets = Math.min(20, item.sets + 1); render(); });
+      sets.appendChild(minus); sets.appendChild(value); sets.appendChild(plus);
+      li.appendChild(name); li.appendChild(sets);
+      list.appendChild(li);
+    });
+    empty.hidden = chosen.length > 0;
+    count.textContent = label(chosen.length);
+  }
+
+  opts.addEventListener('click', function (event) {
+    var button = event.target.closest('.d-opt');
+    if (!button) return;
+    var name = button.dataset.name;
+    var note = button.dataset.note || '';
+    var on = button.getAttribute('aria-pressed') === 'true';
+    button.setAttribute('aria-pressed', on ? 'false' : 'true');
+    if (on) {
+      chosen = chosen.filter(function (item) { return !(item.name === name && item.note === note); });
+    } else {
+      chosen.push({ name: name, note: note, sets: 3 });
+    }
+    render();
+  });
+
+  if (search) {
+    search.addEventListener('input', function () {
+      var term = search.value.trim().toLowerCase();
+      Array.prototype.forEach.call(opts.children, function (li) {
+        var button = li.querySelector('.d-opt');
+        var text = (button.dataset.name + ' ' + (button.dataset.note || '')).toLowerCase();
+        li.hidden = term !== '' && text.indexOf(term) === -1;
+      });
+    });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

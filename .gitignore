@@ -16,6 +16,7 @@
 /.tmp-fonts/
 /.playwright-cli/
 /output/playwright/
+/output/database/
 /playwright-report/
 /test-results/
 /coverage/

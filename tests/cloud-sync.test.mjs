@@ -8,6 +8,30 @@ const syncSource = readFileSync(new URL('../cloud-sync.js', import.meta.url), 'u
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const clone = value => value === null || value === undefined ? value : structuredClone(value);
 
+test('a library-only device uploads definitions even beside an empty placeholder', async () => {
+  const { client } = await loadSync({ session:{ user:{ id:'user-a' } }, seed:{
+    trainingExercises:[{ id:'exercise-a', name:'Row', aliases:[] }],
+    trainingRoutines:[{ id:'placeholder', name:'Το πρόγραμμά μου', isPlaceholder:true, plan:[] }],
+  }, row:{ user_id:'user-a', revision:1, payload:{}, updated_at:'2026-09-05T00:00:00Z' } });
+  assert.equal(client.row.payload.trainingExercises[0].name, 'Row');
+});
+
+test('an old cloud snapshot cannot erase a clean device library or overwrite its renamed definitions', async () => {
+  const library = [{ id:'a', name:'Cable Row', aliases:['Row'], updatedAt:'2026-09-05T12:00:00.000Z' }];
+  const local = { trainingExercises:library, trainingSessions:[{ id:'s1', date:'2026-07-06', exercises:[] }] };
+  const hashDom = new JSDOM('', { url:'http://localhost/', runScripts:'outside-only' });
+  hashDom.window.eval(syncSource);
+  const hash = hashDom.window.LogbookCloudSync.payloadHash(local);
+  hashDom.window.close();
+  const remoteSessions = [...local.trainingSessions, { id:'s2', date:'2026-07-07', exercises:[] }];
+  const { client, localStorage } = await loadSync({ session:{ user:{ id:'user-a' } }, seed:{
+    ...local, logbookCloudOwner:'user-a', 'logbookCloudMeta:user-a':{ revision:1, hash },
+  }, row:{ user_id:'user-a', revision:2, payload:{ trainingSessions:remoteSessions }, updated_at:'2026-09-05T13:00:00Z' } });
+  assert.deepEqual(client.row.payload.trainingExercises, library);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')), remoteSessions);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingExercises')), library);
+});
+
 function createClient({ session = null, row = null, writeError = null, hangReads = false } = {}) {
   let storedRow = clone(row);
   let authListener = null;
@@ -385,7 +409,7 @@ test('the payload fingerprint is 64 bit, stable across runs and moves in both la
   // change to the hash or to what it hashes has to be a deliberate one.
   const hash = payloadHash(payload);
   assert.equal(hash.length, 16);
-  assert.equal(hash, 'ed0e87260caebdb0');
+  assert.equal(hash, '8e26da3968116309');
   assert.equal(payloadHash(structuredClone(payload)), hash);
 
   const changed = payloadHash({ ...payload, logbookLanguage:'en' });
@@ -515,6 +539,23 @@ test('guest data merges automatically when the account already has history', asy
   assert.deepEqual(JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.id).sort(), ['cloud-session', 'guest-session']);
   assert.deepEqual(JSON.parse(localStorage.getItem('logbookCloudCache:user-a')).trainingSessions.map(item => item.id), ['private-a']);
   assert.equal(localStorage.getItem('logbookGuestImportPending'), null);
+});
+
+test('a dirty same-revision device with a missing library preserves and receives remote definitions', async () => {
+  const library = [{ id:'row', name:'Row', notes:'', aliases:[], updatedAt:'2026-09-05T10:00:00Z' }];
+  const { client, localStorage, window } = await loadSync({
+    session:{ user:{ id:'user-a', email:'athlete@example.com' } },
+    row:{ user_id:'user-a', revision:7, payload:{ trainingExercises:library, trainingSessions:[] } },
+    seed:{
+      logbookCloudOwner:'user-a',
+      'logbookCloudMeta:user-a':{ revision:7, hash:'before-local-edit' },
+      trainingSessions:[{ id:'local-session', date:'2026-09-05' }],
+    },
+  });
+  assert.deepEqual(client.row.payload.trainingExercises.map(item => item.id), ['row']);
+  assert.deepEqual(JSON.parse(localStorage.getItem('trainingExercises')).map(item => item.id), ['row']);
+  assert.deepEqual(client.row.payload.trainingSessions.map(item => item.id), ['local-session']);
+  window.close();
 });
 
 test('an empty guest profile does not count as data during automatic import', async () => {

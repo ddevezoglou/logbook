@@ -28,7 +28,7 @@ export function buildHistoryMarkup({
   formatDate = () => 'Χωρίς ημερομηνία',
 } = {}) {
   if (!totalCount) {
-    return '<div class="empty"><span>Ολοκληρώστε την πρώτη προπόνηση και αρχίστε να χτίζετε το αρχείο σας.</span></div>';
+    return '<div class="empty history-empty"><span>Ολοκληρώστε την πρώτη προπόνηση και αρχίστε να χτίζετε το αρχείο σας.</span><button class="primary-button" type="button" data-home-action="log">Έναρξη καταγραφής</button></div>';
   }
   const cards = sessions.map((session, index) => buildSessionCardMarkup({
     session,

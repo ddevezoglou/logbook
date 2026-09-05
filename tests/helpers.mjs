@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import * as StorageMigrations from '../modules/storage-migrations.js';
+import * as ExerciseModel from '../modules/exercises.js';
 import * as RoutineModel from '../modules/routines.js';
 import * as SessionModel from '../modules/sessions.js';
 import * as ProgressRewards from '../modules/progress-rewards.js';
@@ -41,7 +42,7 @@ export function loadApp(seed = {}, options = {}) {
   options.beforeApp?.(window);
   window.eval(quotesSource);
   window.eval(i18nSource);
-  window.__LogbookModules = { StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, HistoryView, SessionTemplates, UI };
+  window.__LogbookModules = { ExerciseModel, StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, HistoryView, SessionTemplates, UI };
   window.eval(executableAppSource);
   return { window, document: window.document, localStorage: window.localStorage };
 }

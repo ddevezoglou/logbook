@@ -4,6 +4,7 @@ import {
   normalizeRoutine,
   validCycleDay,
 } from './routines.js';
+import { migrateExercises } from './exercises.js';
 
 export function createStore(storage, { onWrite } = {}) {
   const matchesType = (value, type) => {
@@ -46,6 +47,7 @@ export function migrateLocalData({
   savedProfile = null,
   legacyPlan = [],
   savedRoutines = [],
+  savedExercises = [],
   randomUUID = () => globalThis.crypto.randomUUID(),
 } = {}) {
   const sessions = Array.isArray(savedSessions) ? savedSessions : [];
@@ -134,13 +136,15 @@ export function migrateLocalData({
       }],
     }));
   const profile = !Array.isArray(savedProfile) && savedProfile ? savedProfile : null;
+  const migrated = migrateExercises({ exercises:savedExercises, routines, sessions:migratedSessions });
 
   return {
     state:{
-      routines,
+      routines:migrated.routines,
+      exercises:migrated.exercises,
       selectedRoutineId:routines.find(routine => routine.isActive)?.id ?? routines[0]?.id ?? null,
       editingRoutineId:null,
-      sessions:migratedSessions,
+      sessions:migrated.sessions,
       profile,
       mode:'scheduled',
       editingDay:null,
@@ -153,10 +157,11 @@ export function migrateLocalData({
       historyVisibleCount:30,
     },
     repairs:{
-      sessionsChanged:!sessions.length && Array.isArray(oldLogs) && oldLogs.length > 0,
+      exercisesChanged:JSON.stringify(savedExercises) !== JSON.stringify(migrated.exercises),
+      sessionsChanged:JSON.stringify(sessions) !== JSON.stringify(migrated.sessions),
       routinesChanged:rebuiltPlans
         || !(Array.isArray(savedRoutines) && savedRoutines.length)
-        || JSON.stringify(savedRoutines) !== JSON.stringify(routines),
+        || JSON.stringify(savedRoutines) !== JSON.stringify(migrated.routines),
     },
   };
 }

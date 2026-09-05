@@ -54,7 +54,7 @@ test('the page uses only local fonts and declares its install metadata', () => {
   assert.match(html, /src="pwa\.js"/);
   assert.doesNotMatch(html, /fonts\.(googleapis|gstatic)\.com/);
 
-  for (const family of ['Alegreya Sans', 'Roboto Slab', 'Playpen Sans']) {
+  for (const family of ['Alegreya Sans', 'Roboto Slab', 'Playpen Sans', 'Source Sans 3 Variable']) {
     assert.match(fonts, new RegExp(`font-family:"${family}"`));
   }
   for (const path of fonts.matchAll(/url\("([^"]+\.woff2)"\)/g)) {
@@ -83,7 +83,7 @@ test('service worker precaches the complete local shell without development seed
     './modules/history.js',
     './modules/session-templates.js',
     './modules/ui.js',
-    './auth.js?v=0.2.7',
+    './auth.js?v=0.3.1',
     './session-state.js',
     './cloud-sync.js',
     './error-tracking.js',
@@ -91,6 +91,8 @@ test('service worker precaches the complete local shell without development seed
     './assets/vendor/supabase-2.110.7.min.js',
     './assets/icons/icon-512.png',
     './assets/fonts/alegreya-sans-greek-800-normal.woff2',
+    './assets/fonts/source-sans-3-greek-wght-normal.woff2',
+    './assets/fonts/source-sans-3-latin-wght-normal.woff2',
   ]) {
     assert.ok(serviceWorker.includes(`'${path}'`), `${path} is in the app shell`);
   }

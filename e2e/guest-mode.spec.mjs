@@ -64,6 +64,9 @@ test('the guest entry and primary navigation work keyboard-only with a polite re
   await tabTo(page, '#account-guest-start');
   await page.keyboard.press('Enter');
   await expect(page.locator('body')).toHaveClass(/app-ready/);
+  // Match the other guest checks: axe must measure the settled page, not an
+  // intermediate opacity frame of the entrance animation (especially WebKit).
+  await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
 
   const reminder = page.getByRole('region', { name:'Τα δεδομένα αποθηκεύονται μόνο σε αυτή τη συσκευή' });
   await expect(reminder).toBeVisible();

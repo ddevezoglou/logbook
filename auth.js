@@ -26,6 +26,8 @@
   const CLOUD_STORAGE_PREFIXES = ['logbookCloudCache:', 'logbookCloudMeta:'];
   const CLOUD_OWNER_KEY = 'logbookCloudOwner';
   const LOCAL_USER_DATA_KEYS = [
+    'trainingExercises',
+    'logbookExerciseMigrationBackup',
     'trainingRoutines',
     'trainingSessions',
     'userProfile',

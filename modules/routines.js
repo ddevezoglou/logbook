@@ -41,6 +41,7 @@ export function normalizeRoutine(routine = {}, index = 0, randomUUID = () => glo
     return cycleDay ? { ...item, cycleDay } : null;
   }).filter(Boolean) : [];
   return {
+    ...routine,
     id:routine.id || randomUUID(),
     name:routine.name || `Πρόγραμμα ${index + 1}`,
     isActive:Boolean(routine.isActive),

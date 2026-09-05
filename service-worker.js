@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.2.7';
+const CACHE_VERSION = 'logbook-0.3.1';
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
 const APP_SHELL = [
   './',
@@ -20,10 +20,11 @@ const APP_SHELL = [
   './supabase-client.js',
   './error-tracking.js',
   './session-state.js',
-  './auth.js?v=0.2.7',
+  './auth.js?v=0.3.1',
   './cloud-sync.js',
   './app.js',
   './modules/storage-migrations.js',
+  './modules/exercises.js',
   './modules/routines.js',
   './modules/sessions.js',
   './modules/progress-chart.js',
@@ -37,6 +38,8 @@ const APP_SHELL = [
   './assets/icons/icon-maskable-512.png',
   './assets/icons/apple-touch-icon.png',
   './assets/vendor/supabase-2.110.7.min.js',
+  './assets/fonts/source-sans-3-greek-wght-normal.woff2',
+  './assets/fonts/source-sans-3-latin-wght-normal.woff2',
   './assets/fonts/alegreya-sans-greek-400-normal.woff2',
   './assets/fonts/alegreya-sans-greek-500-normal.woff2',
   './assets/fonts/alegreya-sans-greek-700-normal.woff2',

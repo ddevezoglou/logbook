@@ -87,7 +87,7 @@ test('Supabase scripts load before the application is dynamically bootstrapped',
   const client = htmlSource.indexOf('src="supabase-client.js"');
   const errorTracking = htmlSource.indexOf('src="error-tracking.js"');
   const sessionState = htmlSource.indexOf('src="session-state.js"');
-  const auth = htmlSource.indexOf('src="auth.js?v=0.2.7"');
+  const auth = htmlSource.indexOf('src="auth.js?v=0.3.1"');
   const sync = htmlSource.indexOf('src="cloud-sync.js"');
 
   assert.match(clientSource, /assets\/vendor\/supabase-2\.110\.7\.min\.js/);

@@ -47,14 +47,16 @@
   --ink-muted:#a89f86;
   --ink-faint:#6f695a;
   --warning-bg:#e8dcc1;
+  --font-ui:"Source Sans 3 Variable",sans-serif;
+  --control-radius:7px;
   --control-height:46px;
   --control-height-compact:44px;
   --control-height-primary:56px;
   --control-pad:18px;
-  --control-font:.76rem;
-  --control-tracking:.09em;
-  --control-shadow:4px 4px 0 rgba(var(--shadow-rgb),.13);
-  --control-shadow-hover:6px 6px 0 rgba(var(--shadow-rgb),.16);
+  --control-font:.78rem;
+  --control-tracking:.055em;
+  --control-shadow:0 2px 4px rgba(var(--shadow-rgb),.12);
+  --control-shadow-hover:0 5px 12px rgba(var(--shadow-rgb),.16);
   --control-speed:.2s;
 
   /* Φωτεινές επιφάνειες χαρτιού */
@@ -238,8 +240,8 @@
   --ink-line:#4a4436;
   --ink-faint:#8a8474;
   --warning-bg:#2a2419;
-  --control-shadow:4px 4px 0 rgba(0,0,0,.45);
-  --control-shadow-hover:6px 6px 0 rgba(0,0,0,.55);
+  --control-shadow:0 2px 5px rgba(0,0,0,.3);
+  --control-shadow-hover:0 5px 14px rgba(0,0,0,.4);
 
   /* Επιφάνειες χαρτιού: βυθισμένες, με το focus να σηκώνεται προς το φως */
   --paper-field-focus:#1c1811;

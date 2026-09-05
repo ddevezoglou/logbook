@@ -57,7 +57,7 @@ test('the exercise counter keeps existing exercises while it grows and shrinks',
   const counter = page.locator('#exercise-count');
   await expect(counter).toHaveValue('4');
   await expect(page.locator('.plan-exercise-fields')).toHaveCount(4);
-  const names = () => page.locator('.builder-name').evaluateAll(list => list.map(input => input.value));
+  const names = () => page.locator('.builder-name').evaluateAll(list => list.map(input => input.value ? input.selectedOptions[0].textContent : ''));
 
   await counter.click();
   await counter.press('ControlOrMeta+a');
@@ -83,6 +83,34 @@ test('the exercise counter keeps existing exercises while it grows and shrinks',
   await page.waitForTimeout(100);
   expect((await names()).slice(0, 4)).toEqual(['Exercise 1', 'Exercise 2', 'Exercise 3', 'Exercise 4']);
   await expect(page.locator('.plan-exercise-fields')).toHaveCount(12);
+});
+
+test('plan sections preserve carousel state and cards fit after resizing', async ({ page }) => {
+  await boot(page);
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="plan"]').click();
+  const toggle = page.locator('[aria-controls="routine-manager-body"]');
+  const centered = page.locator('.routine-card[data-carousel-position="0"]');
+  const routineId = await centered.getAttribute('data-routine-id');
+  await toggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#routine-manager-body')).toBeHidden();
+  await page.keyboard.press('Enter');
+  await expect(centered).toHaveAttribute('data-routine-id', routineId);
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height:900 });
+    await expect.poll(() => page.locator('#routine-list').evaluate(list => {
+      const outer = list.getBoundingClientRect();
+      const card = list.querySelector('[data-carousel-position="0"]').getBoundingClientRect();
+      return card.top >= outer.top && card.bottom <= outer.bottom;
+    })).toBe(true);
+  }
+  const libraryToggle = page.locator('[aria-controls="exercise-library-body"]');
+  await libraryToggle.click();
+  await expect(page.locator('#exercise-library-body')).toBeHidden();
+  await libraryToggle.click();
+  await page.locator('[data-edit-exercise]').first().click();
+  await expect(page.locator('#library-exercise-name')).toBeFocused();
 });
 
 test('cards behind the active one only peek out of the deck', async ({ page }) => {

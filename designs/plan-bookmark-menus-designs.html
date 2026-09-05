@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Πρόγραμμα — Σελιδοδείκτης και καθαρό ευρετήριο</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --pen:#4d3f24; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p.lead { max-width:690px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.55; }
+.intro>p.lead b { color:var(--ink); }
+.intro .state { display:flex; flex-wrap:wrap; gap:10px; margin:26px 0 0; }
+.intro .state span { padding:6px 12px; border:1px solid var(--line); background:rgba(255,255,255,.42); font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.intro .state span b { color:var(--pen-blue); }
+.intro .state span.open { border-style:dashed; }
+.intro .state span.open b { color:var(--danger); }
+
+.attempt-label { position:sticky; top:0; z-index:20; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.attempt-label b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.attempt-label span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; }
+.stage { padding:clamp(40px,6vw,64px) 5vw 60px; display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:clamp(28px,4vw,52px); align-items:start; justify-items:center; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.stage.single { grid-template-columns:1fr; justify-items:start; }
+.notes { grid-column:1 / -1; justify-self:start; max-width:720px; margin:4px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+.notes.pick { border:1px solid var(--pen-blue); border-left-width:5px; background:rgba(31,100,147,.06); }
+.notes.pick b { color:var(--pen-blue); }
+.caption { grid-column:1 / -1; justify-self:start; max-width:720px; margin:0; color:var(--muted); line-height:1.55; }
+.caption b { color:var(--ink); }
+.variant { width:min(360px,100%); }
+.variant>h4 { margin:0 0 12px; font:800 .74rem "Alegreya Sans"; letter-spacing:.18em; text-transform:uppercase; color:var(--orange); }
+.variant>p.why { margin:12px 0 0; font-size:.86rem; line-height:1.5; color:var(--muted); }
+.variant>p.why b { color:var(--ink); }
+.pairlabel { margin:16px 0 7px; font:800 .62rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--faded); }
+.demo { width:100%; padding:16px; background:rgba(255,255,255,.32); border:1px solid var(--line); }
+
+.btn { border:1px solid var(--pen); background:transparent; color:var(--pen); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; padding:9px 15px; cursor:pointer; transition:background .15s ease,color .15s ease; }
+.btn:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.btn:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.btn.primary { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.btn.primary:hover { background:var(--orange); border-color:var(--orange); }
+.btn.small { padding:6px 11px; font-size:.66rem; }
+.btn.danger { background:var(--danger); border-color:var(--danger); color:var(--paper); }
+.btn.danger:hover { background:var(--ink); border-color:var(--ink); }
+
+/* ============================================================
+   ΤΟ ΜΕΝΟΥ ΜΕ ΣΕΛΙΔΟΔΕΙΚΤΗ  (η επιλογή Α3)
+   ============================================================ */
+.bm { position:relative; padding-left:15px; }
+.bm::before { content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--orange); transition:background .18s ease; }
+.bm.shut::before { background:var(--line); }
+.bm-head { display:flex; align-items:baseline; gap:11px; width:100%; padding:1px 0 8px; border:0; background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+.bm-head:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.bm-head h3 { flex:none; margin:0; font:900 1.02rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.chev { flex:none; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; align-self:center; transition:transform .18s ease; }
+.bm-head[aria-expanded="false"] .chev, .plain-head[aria-expanded="false"] .chev { transform:rotate(-90deg); }
+.sum { flex:1; min-width:0; text-align:right; font:800 .62rem "Alegreya Sans"; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sum b { color:var(--orange); }
+.sum .live { color:var(--pen-blue); }
+.body[hidden] { display:none; }
+
+/* το μενού με απλή γραμμή (η εναλλακτική Α1) */
+.plain { }
+.plain-head { display:flex; align-items:baseline; gap:11px; width:100%; padding:0 0 7px; border:0; border-bottom:3px solid var(--ink); background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+.plain-head:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.plain-head[aria-expanded="false"] { border-bottom-style:double; border-bottom-width:5px; }
+.plain-head h3 { flex:none; margin:0; font:900 1.02rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+
+/* ============================================================
+   ΤΟ ΚΑΘΑΡΟ ΕΥΡΕΤΗΡΙΟ — ΧΩΡΙΣ ΔΕΞΙΑ ΣΤΗΛΗ
+   ============================================================ */
+.idx { margin:0; padding:0; list-style:none; }
+.idx li+li { border-top:1px solid rgba(77,63,36,.13); }
+.idx-row { display:block; width:100%; padding:8px 2px 7px; border:0; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+.idx-row:hover { background:rgba(201,162,39,.1); }
+.idx-row:focus-visible { outline:2px solid var(--gold); outline-offset:-2px; }
+.idx-name { display:block; font:700 .9rem/1.25 "Roboto Slab"; letter-spacing:-.01em; }
+.idx-note { display:block; margin-top:1px; font:400 .78rem/1.35 "Alegreya Sans"; color:var(--muted); }
+.addrow { display:flex; align-items:center; gap:10px; width:100%; margin-top:6px; padding:9px 2px; border:0; border-top:1px dashed rgba(77,63,36,.45); background:transparent; color:var(--orange); font:800 .74rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; text-align:left; }
+.addrow:hover { color:var(--ink); }
+.addrow:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.addrow b { font-size:1.1rem; line-height:1; }
+
+/* η φόρμα επεξεργασίας που ανοίγει στη θέση της γραμμής */
+.editbox { margin:2px 0 4px; padding:12px; border:1px dashed var(--line); background:rgba(255,255,255,.55); }
+.editbox[hidden] { display:none; }
+.field { display:block; margin:0 0 9px; }
+.field span { display:block; font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.field input, .field textarea { display:block; width:100%; border:1px solid var(--line); background:#fff; font:500 .86rem "Alegreya Sans"; color:var(--ink); padding:6px 8px; }
+.field textarea { resize:vertical; min-height:44px; }
+.field input:focus-visible, .field textarea:focus-visible { outline:2px solid var(--gold); outline-offset:1px; }
+.editacts { display:flex; align-items:center; gap:7px; }
+.editacts .spacer { flex:1; }
+
+/* ============================================================
+   Η ΚΑΡΤΑ ΠΡΟΓΡΑΜΜΑΤΟΣ — Γ2
+   ============================================================ */
+.card { position:relative; flex:0 0 236px; padding:15px 15px 11px; background:var(--paper-soft); box-shadow:4px 6px 0 rgba(21,19,13,.13); }
+.card.on { background:var(--ink); color:var(--paper); }
+.card-open { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+.card-open:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.card h4 { margin:0; font:900 1.04rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.card .meta { margin:5px 0 0; font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.card.on .meta { color:var(--faded); }
+.card .meta b { color:var(--orange); }
+.card.on .meta b { color:var(--gold); }
+.card .days { margin:9px 0 0; padding:8px 0 0; border-top:1px solid rgba(77,63,36,.2); list-style:none; }
+.card.on .days { border-top-color:rgba(239,232,216,.2); }
+.card .days li { display:flex; gap:8px; padding:3px 0; font:700 .66rem/1.25 "Roboto Slab"; text-transform:uppercase; letter-spacing:.04em; }
+.card .days li i { font-style:normal; color:var(--faded); font-weight:400; flex:none; min-width:20px; }
+.acts { display:flex; align-items:center; gap:5px; margin-top:11px; padding-top:9px; border-top:1px dashed rgba(77,63,36,.4); }
+.card.on .acts { border-top-color:rgba(239,232,216,.3); }
+.acts .spacer { flex:1; }
+.act { width:28px; height:28px; display:grid; place-items:center; padding:0; border:1px solid rgba(77,63,36,.42); background:transparent; color:inherit; cursor:pointer; transition:background .15s ease,color .15s ease,border-color .15s ease; }
+.card.on .act { border-color:rgba(239,232,216,.4); }
+.act svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.act:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.card.on .act:hover { background:var(--paper); border-color:var(--paper); color:var(--ink); }
+.act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.act.quiet { border-color:transparent; color:var(--muted); }
+.card.on .act.quiet { color:var(--faded); }
+.act.star[aria-pressed="true"] { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.act.star[aria-pressed="true"] svg { fill:currentColor; stroke:none; }
+.act.wide { width:auto; padding:0 11px; gap:6px; display:inline-flex; align-items:center; font:800 .62rem "Alegreya Sans"; letter-spacing:.12em; text-transform:uppercase; }
+.act.danger:hover { background:var(--danger); border-color:var(--danger); color:var(--paper); }
+.live-tag { position:absolute; top:-9px; right:11px; padding:2px 8px; background:var(--gold); color:var(--ink); font:800 .55rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; }
+
+.rail { position:relative; }
+.track { display:flex; gap:12px; overflow-x:auto; padding:12px 2px 16px; scroll-snap-type:x mandatory; scroll-behavior:smooth; }
+.track>.card { scroll-snap-align:start; }
+.railbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.railbar .hint { font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.arrows { display:flex; gap:6px; }
+.arrow { width:30px; height:30px; display:grid; place-items:center; border:1px solid var(--pen); background:transparent; color:var(--pen); cursor:pointer; }
+.arrow:hover { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+.arrow:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.arrow svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ============================================================
+   Ο ΔΙΑΛΟΓΟΣ ΔΙΑΓΡΑΦΗΣ
+   ============================================================ */
+.confirm { width:min(340px,100%); padding:22px 22px 18px; background:var(--paper-soft); border:1px solid rgba(77,63,36,.3); box-shadow:6px 8px 0 rgba(21,19,13,.18); text-align:center; }
+.confirm-mark { width:38px; height:38px; margin:0 auto 12px; display:grid; place-items:center; border:3px solid var(--danger); border-radius:50%; color:var(--danger); font:900 1.3rem "Roboto Slab"; }
+.confirm .eyebrow { margin:0; font:800 .6rem "Alegreya Sans"; letter-spacing:.2em; text-transform:uppercase; color:var(--danger); }
+.confirm h2 { margin:6px 0 10px; font:900 1.15rem/1.1 "Roboto Slab"; text-transform:uppercase; }
+.confirm p { margin:0; font-size:.88rem; line-height:1.5; color:var(--muted); }
+.confirm .where { margin:12px 0 0; padding:11px 13px; border:1px solid rgba(77,63,36,.28); background:rgba(255,255,255,.55); text-align:left; }
+.confirm .where b { display:block; font:800 .58rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.confirm .where ul { margin:0; padding:0; list-style:none; }
+.confirm .where li { padding:3px 0; font:700 .78rem "Roboto Slab"; }
+.confirm .where li i { font-style:normal; font-family:"Alegreya Sans"; font-weight:500; font-size:.76rem; color:var(--muted); }
+.confirm-acts { display:flex; justify-content:center; gap:8px; margin-top:16px; }
+
+/* ============================================================
+   ΤΗΛΕΦΩΝΟ ΚΑΙ DESKTOP
+   ============================================================ */
+.phones { grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:40px; justify-content:center; width:100%; }
+.phonebox { width:390px; max-width:100%; }
+.phonebox>h4 { margin:0 0 12px; font:800 .74rem "Alegreya Sans"; letter-spacing:.18em; text-transform:uppercase; color:var(--orange); }
+.phonebox>p { margin:14px 0 0; font-size:.86rem; line-height:1.5; color:var(--muted); }
+.phonebox>p b { color:var(--ink); }
+.phone { border:10px solid var(--ink); border-radius:26px; background:var(--paper); overflow:hidden; box-shadow:8px 12px 0 rgba(21,19,13,.16); }
+.phone-inner { height:640px; overflow-y:auto; overflow-x:hidden; }
+.hero { padding:22px 18px 16px; }
+.hero h2 { margin:0; font:700 1.7rem/.92 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.045em; }
+.hero h2 em { display:block; color:var(--orange); font-style:normal; }
+.hero .info { float:right; width:27px; height:27px; display:grid; place-items:center; border:2px solid var(--ink); border-radius:50%; font:800 .86rem "Roboto Slab"; margin-left:12px; }
+.sec { padding:0 18px 22px; }
+.stamp { display:flex; align-items:center; justify-content:center; gap:9px; margin:0 18px 22px; padding:9px; color:var(--faded); font:800 .6rem "Alegreya Sans"; letter-spacing:.22em; }
+.stamp svg { width:15px; height:15px; fill:currentColor; }
+
+.desk { width:min(1040px,100%); border:1px solid var(--line); background:rgba(255,255,255,.28); box-shadow:8px 12px 0 rgba(21,19,13,.12); }
+.desk-top { padding:26px 30px 18px; }
+.desk-top h2 { margin:0; font:700 2.2rem/.9 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.05em; }
+.desk-top h2 em { color:var(--orange); font-style:normal; }
+.desk-grid { display:grid; grid-template-columns:minmax(0,320px) minmax(0,1fr); gap:34px; padding:0 30px 30px; align-items:start; }
+.desk-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:14px; padding:12px 0 4px; }
+.desk-cards>.card { flex:none; width:auto; }
+@media(max-width:860px){ .desk-grid { grid-template-columns:1fr; } }
+
+/* ============================================================
+   ΠΙΝΑΚΕΣ
+   ============================================================ */
+.tablewrap { grid-column:1 / -1; width:100%; overflow-x:auto; }
+table.cmp { width:100%; min-width:640px; border-collapse:collapse; background:rgba(255,255,255,.4); font-size:.88rem; }
+table.cmp th, table.cmp td { border:1px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top; line-height:1.45; }
+table.cmp thead th { background:var(--ink); color:var(--paper); font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; border-color:var(--ink); }
+table.cmp tbody th { font-weight:800; width:26%; background:rgba(255,255,255,.5); }
+table.cmp td.yes { color:var(--pen-blue); font-weight:700; }
+table.cmp td.no { color:var(--danger); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em; background:rgba(21,19,13,.07); padding:1px 4px; }
+
+.qlist { grid-column:1 / -1; justify-self:start; max-width:720px; margin:0; padding:0; list-style:none; }
+.qlist li { position:relative; padding:0 0 15px 34px; line-height:1.55; }
+.qlist li::before { content:"?"; position:absolute; left:0; top:0; width:22px; height:22px; display:grid; place-items:center; border:2px solid var(--pen-blue); border-radius:50%; color:var(--pen-blue); font:800 .8rem "Alegreya Sans"; }
+.qlist b { font-weight:800; }
+
+.foot { padding:34px 5vw 60px; border-top:3px solid var(--ink); color:var(--muted); font-size:.86rem; line-height:1.6; }
+.foot b { color:var(--ink); }
+
+@media(prefers-reduced-motion:reduce){ * { transition:none !important; scroll-behavior:auto !important; } }
+@media(max-width:600px){ .stage { grid-template-columns:1fr; } .phone { border-width:6px; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">ΠΡΟΓΡΑΜΜΑ — ΙΑ' ΓΥΡΟΣ · ΟΙ ΕΠΙΛΟΓΕΣ ΣΟΥ ΣΤΗΜΕΝΕΣ</p>
+  <h1>Σελιδοδείκτης<br>και <em>καθαρο</em> ευρετηριο</h1>
+  <p class="lead">Τρεις αποφάσεις κλείδωσαν από τον προηγούμενο γύρο: <b>Α3</b> ο σελιδοδείκτης ως κεφαλίδα των ασκήσεων, <b>ευρετήριο χωρίς δεξιά στήλη</b> — μόνο όνομα και σημείωση, καμία μέτρηση ημερών — και <b>Γ2</b> στις κάρτες, με αστέρι και «Επεξεργασία» μπροστά. Μένει ένα ανοιχτό: παίρνουν και τα προγράμματα σελιδοδείκτη ή όχι. Το αρχείο δείχνει <b>και τις δύο εκδοχές ολόκληρες</b>, δίπλα-δίπλα και λειτουργικές.</p>
+  <div class="state">
+    <span>Κεφαλίδα ασκήσεων <b>Α3</b></span>
+    <span>Ευρετήριο <b>χωρίς στήλη</b></span>
+    <span>Κάρτες <b>Γ2</b></span>
+    <span class="open">2ο μενού <b>ανοιχτό</b></span>
+  </div>
+</header>
+
+<!-- ============================================================ Α -->
+<div class="attempt-label"><b>Α</b><span>Ο ΣΕΛΙΔΟΔΕΙΚΤΗΣ ΣΤΙΣ ΔΥΟ ΚΑΤΑΣΤΑΣΕΙΣ ΤΟΥ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Ανοιχτό — πάτησε την κεφαλίδα</h4>
+    <div class="demo">
+      <div class="bm" data-bm>
+        <button class="bm-head" type="button" aria-expanded="true" aria-controls="a-body" data-toggle>
+          <h3>Οι ασκήσεις μου</h3>
+          <span class="sum" data-shut="<b>8</b> ασκήσεις"></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="body" id="a-body">
+          <ul class="idx">
+            <li><span class="idx-row" style="cursor:default"><span class="idx-name">Άρσεις θανάτου</span></span></li>
+            <li><span class="idx-row" style="cursor:default"><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></span></li>
+            <li><span class="idx-row" style="cursor:default"><span class="idx-name">Καθίσματα</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="why">Η πορτοκαλί κορδέλα τρέχει σε ολόκληρο το ύψος του ανοιχτού μενού — δεν είναι διακόσμηση, είναι <b>το μήκος του περιεχομένου</b>. Το βελάκι δείχνει κάτω, ο τίτλος κρατά τη θέση του, η σύνοψη σιωπά γιατί το περιεχόμενο τη λέει ήδη.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Κλειστό — η κορδέλα σβήνει</h4>
+    <div class="demo">
+      <div class="bm shut" data-bm>
+        <button class="bm-head" type="button" aria-expanded="false" aria-controls="a2-body" data-toggle>
+          <h3>Οι ασκήσεις μου</h3>
+          <span class="sum" data-shut="<b>8</b> ασκήσεις"><b>8</b> ασκήσεις</span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="body" id="a2-body" hidden>
+          <ul class="idx"><li><span class="idx-row"><span class="idx-name">Άρσεις θανάτου</span></span></li></ul>
+        </div>
+      </div>
+    </div>
+    <p class="why">Κλειστό, η κορδέλα γίνεται γκρίζα και μαζεύεται στο ύψος μιας γραμμής, το βελάκι γυρίζει, και η σύνοψη εμφανίζεται. <b>Τρία ανεξάρτητα σήματα</b> για την ίδια κατάσταση — χρώμα, μήκος, στροφή — ώστε να μη στηρίζεται κανένα μόνο του.</p>
+    <p class="pairlabel">Η σύνοψη χωρίς τη μέτρηση ημερών</p>
+    <p class="why" style="margin-top:0">Στον προηγούμενο γύρο η κλειστή γραμμή έλεγε «8 ασκήσεις · 2 αχρησιμοποίητες». Το «αχρησιμοποίητες» προερχόταν από τη μέτρηση που μόλις αφαιρέθηκε, οπότε <b>φεύγει και αυτό</b>. Μένει ο καθαρός αριθμός.</p>
+  </div>
+
+  <p class="notes"><b>Το κόστος του σελιδοδείκτη, ρητά:</b> η κορδέλα και το διάκενό της τρώνε 15px από το πλάτος του περιεχομένου. Σε οθόνη 390px με 18px περιθώριο, το ευρετήριο πέφτει από 354px σε 339px. Για ονόματα ασκήσεων σε δύο γραμμές είναι αμελητέο· γι' αυτό η ενότητα Δ το δοκιμάζει με το μακρύτερο ρεαλιστικό όνομα.</p>
+</section>
+
+<!-- ============================================================ Β -->
+<div class="attempt-label"><b>Β</b><span>ΤΟ ΚΑΘΑΡΟ ΕΥΡΕΤΗΡΙΟ — ΤΙ ΚΕΡΔΙΖΕΙ Η ΑΦΑΙΡΕΣΗ ΤΗΣ ΣΤΗΛΗΣ</span></div>
+<section class="stage">
+
+  <div class="variant">
+    <h4>Πριν — με τη στήλη</h4>
+    <div class="demo">
+      <ul class="idx">
+        <li><span class="idx-row" style="cursor:default;display:flex;align-items:baseline;gap:9px"><span><span class="idx-name">Άρσεις θανάτου</span></span><span style="flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)"></span><span style="font:800 .66rem 'Alegreya Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--orange);white-space:nowrap">2 ημ.</span></span></li>
+        <li><span class="idx-row" style="cursor:default;display:flex;align-items:baseline;gap:9px"><span><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></span><span style="flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)"></span><span style="font:800 .66rem 'Alegreya Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--orange);white-space:nowrap">3 ημ.</span></span></li>
+        <li><span class="idx-row" style="cursor:default;display:flex;align-items:baseline;gap:9px"><span><span class="idx-name">Κωπηλατική με μπάρα</span></span><span style="flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)"></span><span style="font:800 .66rem 'Alegreya Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--faded);white-space:nowrap">αχρησ.</span></span></li>
+      </ul>
+    </div>
+    <p class="why">Η δεξιά στήλη διεκδικούσε το βλέμμα σε κάθε γραμμή, και οι τελείες την τραβούσαν εκεί ενεργά. Το όνομα της άσκησης — <b>το μόνο που ψάχνει ο χρήστης</b> — μοιραζόταν τη γραμμή με μια μέτρηση διαχείρισης.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Μετά — μόνο όνομα και σημείωση</h4>
+    <div class="demo">
+      <ul class="idx">
+        <li><span class="idx-row" style="cursor:default"><span class="idx-name">Άρσεις θανάτου</span></span></li>
+        <li><span class="idx-row" style="cursor:default"><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></span></li>
+        <li><span class="idx-row" style="cursor:default"><span class="idx-name">Κωπηλατική με μπάρα</span></span></li>
+      </ul>
+    </div>
+    <p class="why">Ένα πράγμα ανά γραμμή. Το βλέμμα κατεβαίνει σε ευθεία στήλη ονομάτων, όπως σε λεξικό. <b>Και κερδίζεται κάτι απρόσμενο:</b> αφού δεξιά δεν κάθεται τίποτα, ολόκληρη η γραμμή μπορεί να γίνει στόχος αφής για την επεξεργασία — χωρίς μικρό εικονίδιο που θα ήταν δύσκολος στόχος στο κινητό.</p>
+  </div>
+
+  <div class="variant">
+    <h4>Η επεξεργασία — <b>πάτησε μια γραμμή</b></h4>
+    <div class="demo">
+      <ul class="idx" id="b-idx">
+        <li>
+          <button class="idx-row" type="button" data-edit="0"><span class="idx-name">Άρσεις θανάτου</span></button>
+          <div class="editbox" data-form="0" hidden>
+            <label class="field"><span>Όνομα άσκησης</span><input type="text" value="Άρσεις θανάτου"></label>
+            <label class="field"><span>Σημειώσεις</span><textarea rows="2"></textarea></label>
+            <div class="editacts">
+              <button class="btn small primary" type="button" data-close="0">Αποθήκευση</button>
+              <button class="btn small" type="button" data-close="0">Ακύρωση</button>
+              <span class="spacer"></span>
+              <button class="btn small danger" type="button">Διαγραφή</button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <button class="idx-row" type="button" data-edit="1"><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></button>
+          <div class="editbox" data-form="1" hidden>
+            <label class="field"><span>Όνομα άσκησης</span><input type="text" value="Έλξεις"></label>
+            <label class="field"><span>Σημειώσεις</span><textarea rows="2">πρόσθια λαβή</textarea></label>
+            <div class="editacts">
+              <button class="btn small primary" type="button" data-close="1">Αποθήκευση</button>
+              <button class="btn small" type="button" data-close="1">Ακύρωση</button>
+              <span class="spacer"></span>
+              <button class="btn small danger" type="button">Διαγραφή</button>
+            </div>
+          </div>
+        </li>
+        <li><button class="idx-row" type="button" data-edit="2"><span class="idx-name">Καθίσματα</span></button>
+          <div class="editbox" data-form="2" hidden>
+            <label class="field"><span>Όνομα άσκησης</span><input type="text" value="Καθίσματα"></label>
+            <label class="field"><span>Σημειώσεις</span><textarea rows="2"></textarea></label>
+            <div class="editacts">
+              <button class="btn small primary" type="button" data-close="2">Αποθήκευση</button>
+              <button class="btn small" type="button" data-close="2">Ακύρωση</button>
+              <span class="spacer"></span>
+              <button class="btn small danger" type="button">Διαγραφή</button>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <button class="addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+    </div>
+    <p class="why">Η φόρμα ανοίγει <b>στη θέση της γραμμής</b>, όχι σε διάλογο και όχι στην κορυφή της σελίδας. Ο χρήστης δεν χάνει τη θέση του στο ευρετήριο. Η διαγραφή ζει εδώ μέσα, όχι στη γραμμή — μια καταστροφική ενέργεια δεν κάθεται σε λίστα που σαρώνεται.</p>
+  </div>
+</section>
+
+<!-- ============================================================ Γ -->
+<div class="attempt-label"><b>Γ</b><span>ΠΟΥ ΠΗΓΕ Η ΑΣΦΑΛΕΙΑ ΤΗΣ ΔΙΑΓΡΑΦΗΣ</span></div>
+<section class="stage">
+  <div class="variant" style="width:min(420px,100%)">
+    <h4>Η στήλη έφυγε· η πληροφορία μετακόμισε</h4>
+    <div class="confirm">
+      <div class="confirm-mark">!</div>
+      <p class="eyebrow">Επιβεβαίωση</p>
+      <h2>Διαγραφή άσκησης</h2>
+      <p>Η άσκηση <b>Έλξεις — πρόσθια λαβή</b> χρησιμοποιείται αυτή τη στιγμή. Θα αφαιρεθεί από τη βιβλιοθήκη και από τις παρακάτω ημέρες.</p>
+      <div class="where">
+        <b>Πού χρησιμοποιείται</b>
+        <ul>
+          <li>Push Pull Legs <i>— Pull, Τρίτη</i></li>
+          <li>Push Pull Legs <i>— Pull, Παρασκευή</i></li>
+          <li>Upper / Lower <i>— Upper A</i></li>
+        </ul>
+      </div>
+      <p style="margin-top:12px">Οι καταγεγραμμένες προπονήσεις δεν αλλάζουν.</p>
+      <div class="confirm-acts">
+        <button class="btn small" type="button">Ακύρωση</button>
+        <button class="btn small danger" type="button">Διαγραφή</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant" style="width:min(420px,100%)">
+    <h4>Η ήσυχη περίπτωση</h4>
+    <div class="confirm">
+      <div class="confirm-mark">!</div>
+      <p class="eyebrow">Επιβεβαίωση</p>
+      <h2>Διαγραφή άσκησης</h2>
+      <p>Η άσκηση <b>Κωπηλατική με μπάρα</b> δεν χρησιμοποιείται σε κανένα πρόγραμμα.</p>
+      <p style="margin-top:12px">Οι καταγεγραμμένες προπονήσεις δεν αλλάζουν.</p>
+      <div class="confirm-acts">
+        <button class="btn small" type="button">Ακύρωση</button>
+        <button class="btn small danger" type="button">Διαγραφή</button>
+      </div>
+    </div>
+    <p class="why">Ο ίδιος διάλογος, χωρίς τον πίνακα. Ο χρήστης βλέπει την πληροφορία <b>ακριβώς όταν του χρειάζεται</b> — και τη βλέπει πλήρη, με ονόματα προγραμμάτων και ημερών, αντί για ένα «2 ημ.» που δεν έλεγε ποιες.</p>
+  </div>
+
+  <p class="notes pick"><b>Γιατί αυτό είναι καλύτερο από τη στήλη.</b> Η στήλη πλήρωνε κάθε γραμμή, κάθε φορά, για μια πληροφορία που χρειάζεται μία φορά στη ζωή μιας άσκησης. Ο διάλογος την πληρώνει μόνο στη στιγμή της απόφασης — και τότε τη δίνει <b>ολόκληρη</b>. Η αφαίρεση της στήλης δεν έχασε ασφάλεια· την πήγε στο σωστό σημείο.</p>
+</section>
+
+<!-- ============================================================ Δ -->
+<div class="attempt-label"><b>Δ</b><span>ΟΙ ΔΥΟ ΕΚΔΟΧΕΣ ΤΟΥ 2ΟΥ ΜΕΝΟΥ — ΛΕΙΤΟΥΡΓΙΚΕΣ, ΔΙΠΛΑ-ΔΙΠΛΑ</span></div>
+<section class="stage">
+  <div class="phones">
+
+    <!-- ============ ΕΚΔΟΧΗ 1 ============ -->
+    <div class="phonebox">
+      <h4>Εκδοχή 1 · Σελιδοδείκτης και στα δύο</h4>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="hero"><span class="info">i</span><h2>Το πλάνο<em>οδηγεί.</em></h2></div>
+
+          <div class="sec">
+            <div class="bm" data-bm>
+              <button class="bm-head" type="button" aria-expanded="true" aria-controls="v1-lib" data-toggle>
+                <h3>Οι ασκήσεις μου</h3>
+                <span class="sum" data-shut="<b>8</b> ασκήσεις"></span>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="body" id="v1-lib">
+                <ul class="idx">
+                  <li><button class="idx-row" type="button"><span class="idx-name">Άρσεις θανάτου</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Δικέφαλα με μπάρα</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Έλξεις</span><span class="idx-note">ανάστροφη λαβή</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Καθίσματα</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Κωπηλατική με μπάρα σε κλίση</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Πιέσεις πάγκου</span><span class="idx-note">φαρδιά λαβή, πόδια σταθερά</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Πιέσεις ώμων</span></button></li>
+                </ul>
+                <button class="addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="bm" data-bm>
+              <button class="bm-head" type="button" aria-expanded="true" aria-controls="v1-rout" data-toggle>
+                <h3>Τα προγράμματά μου</h3>
+                <span class="sum" data-shut='<b>3</b> splits · <span class="live">ΣΕ ΙΣΧΥ: PUSH PULL LEGS</span>'></span>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="body" id="v1-rout">
+                <div class="rail">
+                  <div class="track" data-track tabindex="0" aria-label="Προγράμματα προπόνησης">
+                    <article class="card on" data-routine="Push Pull Legs">
+                      <span class="live-tag" data-tag>Σε ισχύ</span>
+                      <button class="card-open" type="button"><h4>Push Pull Legs</h4><p class="meta">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></p></button>
+                      <ul class="days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li><li><i>Σα</i> Push</li></ul>
+                      <div class="acts">
+                        <button class="act star" type="button" aria-pressed="true" aria-label="Ενεργό πρόγραμμα: Push Pull Legs" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                        <span class="spacer"></span>
+                        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                      </div>
+                    </article>
+                    <article class="card" data-routine="Upper / Lower">
+                      <span class="live-tag" data-tag hidden>Σε ισχύ</span>
+                      <button class="card-open" type="button"><h4>Upper / Lower</h4><p class="meta">ΔΙΑΡΚΕΙΑ: <b>4 ΗΜΕΡΕΣ</b></p></button>
+                      <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li><li><i>03</i> Upper B</li></ul>
+                      <div class="acts">
+                        <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό: Upper / Lower" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                        <span class="spacer"></span>
+                        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                      </div>
+                    </article>
+                    <article class="card" data-routine="Full Body">
+                      <span class="live-tag" data-tag hidden>Σε ισχύ</span>
+                      <button class="card-open" type="button"><h4>Full Body</h4><p class="meta">ΔΙΑΡΚΕΙΑ: <b>3 ΗΜΕΡΕΣ</b></p></button>
+                      <ul class="days"><li><i>01</i> Ημέρα Α</li><li><i>02</i> Ημέρα Β</li></ul>
+                      <div class="acts">
+                        <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό: Full Body" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                        <span class="spacer"></span>
+                        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                      </div>
+                    </article>
+                  </div>
+                  <div class="railbar">
+                    <span class="hint" data-pos>1 από 3</span>
+                    <span class="arrows">
+                      <button class="arrow" type="button" aria-label="Προηγούμενο πρόγραμμα" data-scroll="-1"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+                      <button class="arrow" type="button" aria-label="Επόμενο πρόγραμμα" data-scroll="1"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+                    </span>
+                  </div>
+                </div>
+                <button class="addrow" type="button"><b>＋</b> Νέο πρόγραμμα</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stamp"><svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg>STRONGER EVERY SESSION<svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg></div>
+        </div>
+      </div>
+      <p><b>Υπέρ:</b> τα δύο μενού διαβάζονται ως ίδιο είδος πράγματος — δύο ενότητες του ίδιου τετραδίου, με τον ίδιο τρόπο να κλείνουν. Δύο πορτοκαλί κορδέλες χτίζουν κάθετο ρυθμό στη σελίδα.<br><b>Κατά:</b> η κορδέλα χάνει τη σημασία της. Όταν όλα έχουν σελιδοδείκτη, ο σελιδοδείκτης δεν σημαίνει τίποτα — και το περιεχόμενο στριμώχνεται 15px και στις δύο ενότητες.</p>
+    </div>
+
+    <!-- ============ ΕΚΔΟΧΗ 2 ============ -->
+    <div class="phonebox">
+      <h4>Εκδοχή 2 · Σελιδοδείκτης μόνο στις ασκήσεις</h4>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="hero"><span class="info">i</span><h2>Το πλάνο<em>οδηγεί.</em></h2></div>
+
+          <div class="sec">
+            <div class="bm" data-bm>
+              <button class="bm-head" type="button" aria-expanded="true" aria-controls="v2-lib" data-toggle>
+                <h3>Οι ασκήσεις μου</h3>
+                <span class="sum" data-shut="<b>8</b> ασκήσεις"></span>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="body" id="v2-lib">
+                <ul class="idx">
+                  <li><button class="idx-row" type="button"><span class="idx-name">Άρσεις θανάτου</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Δικέφαλα με μπάρα</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Έλξεις</span><span class="idx-note">ανάστροφη λαβή</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Καθίσματα</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Κωπηλατική με μπάρα σε κλίση</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Πιέσεις πάγκου</span><span class="idx-note">φαρδιά λαβή, πόδια σταθερά</span></button></li>
+                  <li><button class="idx-row" type="button"><span class="idx-name">Πιέσεις ώμων</span></button></li>
+                </ul>
+                <button class="addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="plain">
+              <button class="plain-head" type="button" aria-expanded="true" aria-controls="v2-rout" data-toggle>
+                <h3>Τα προγράμματά μου</h3>
+                <span class="sum" data-shut='<b>3</b> splits · <span class="live">ΣΕ ΙΣΧΥ: PUSH PULL LEGS</span>'></span>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="body" id="v2-rout">
+                <div class="rail">
+                  <div class="track" data-track tabindex="0" aria-label="Προγράμματα προπόνησης">
+                    <article class="card on" data-routine="Push Pull Legs">
+                      <span class="live-tag" data-tag>Σε ισχύ</span>
+                      <button class="card-open" type="button"><h4>Push Pull Legs</h4><p class="meta">ΔΙΑΡΚΕΙΑ: <b>7 ΗΜΕΡΕΣ</b></p></button>
+                      <ul class="days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li><li><i>Σα</i> Push</li></ul>
+                      <div class="acts">
+                        <button class="act star" type="button" aria-pressed="true" aria-label="Ενεργό πρόγραμμα: Push Pull Legs" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                        <span class="spacer"></span>
+                        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                      </div>
+                    </article>
+                    <article class="card" data-routine="Upper / Lower">
+                      <span class="live-tag" data-tag hidden>Σε ισχύ</span>
+                      <button class="card-open" type="button"><h4>Upper / Lower</h4><p class="meta">ΔΙΑΡΚΕΙΑ: <b>4 ΗΜΕΡΕΣ</b></p></button>
+                      <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li><li><i>03</i> Upper B</li></ul>
+                      <div class="acts">
+                        <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό: Upper / Lower" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                        <span class="spacer"></span>
+                        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                      </div>
+                    </article>
+                    <article class="card" data-routine="Full Body">
+                      <span class="live-tag" data-tag hidden>Σε ισχύ</span>
+                      <button class="card-open" type="button"><h4>Full Body</h4><p class="meta">ΔΙΑΡΚΕΙΑ: <b>3 ΗΜΕΡΕΣ</b></p></button>
+                      <ul class="days"><li><i>01</i> Ημέρα Α</li><li><i>02</i> Ημέρα Β</li></ul>
+                      <div class="acts">
+                        <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό: Full Body" data-star><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                        <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                        <span class="spacer"></span>
+                        <button class="act quiet" type="button" aria-label="Αντιγραφή"><svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg></button>
+                        <button class="act quiet" type="button" aria-label="Εκτύπωση"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><path d="M5 9h14v7H5z"/><path d="M7 16h10v4H7z"/></svg></button>
+                        <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                      </div>
+                    </article>
+                  </div>
+                  <div class="railbar">
+                    <span class="hint" data-pos>1 από 3</span>
+                    <span class="arrows">
+                      <button class="arrow" type="button" aria-label="Προηγούμενο πρόγραμμα" data-scroll="-1"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+                      <button class="arrow" type="button" aria-label="Επόμενο πρόγραμμα" data-scroll="1"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+                    </span>
+                  </div>
+                </div>
+                <button class="addrow" type="button"><b>＋</b> Νέο πρόγραμμα</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stamp"><svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg>STRONGER EVERY SESSION<svg viewBox="0 0 24 24"><path d="M6 11a6 6 0 0 1 12 0v2H6z"/></svg></div>
+        </div>
+      </div>
+      <p><b>Υπέρ:</b> ο σελιδοδείκτης κρατά νόημα — σημαίνει «υλικό αναφοράς, ανοίγει όποτε το χρειάζεσαι». Τα προγράμματα κρατούν τη βαριά γραμμή, που ταιριάζει σε ενότητα με κάρτες. Οι δύο ενότητες <b>ξεχωρίζουν με μια ματιά</b>.<br><b>Κατά:</b> δύο διαφορετικές κεφαλίδες για δύο μενού που κάνουν το ίδιο πράγμα. Ο χρήστης μπορεί να μη μαντέψει ότι και η δεύτερη κλείνει.</p>
+    </div>
+  </div>
+
+  <p class="notes"><b>Τι να κοιτάξεις στη σύγκριση.</b> Κλείσε το πρώτο μενού και στα δύο τηλέφωνα. Στην Εκδοχή 1 οι δύο κλειστές γραμμές είναι σχεδόν πανομοιότυπες και ο σελιδοδείκτης δεν βοηθά να τις ξεχωρίσεις. Στην Εκδοχή 2 η γκρίζα κορδέλα και η διπλή γραμμή δίνουν <b>δύο διαφορετικές σιλουέτες</b>. Το μακρύ όνομα «Κωπηλατική με μπάρα σε κλίση» υπάρχει επίτηδες: δείχνει πώς αντέχει το στένεμα των 15px.</p>
+</section>
+
+<!-- ============================================================ Ε -->
+<div class="attempt-label"><b>Ε</b><span>DESKTOP — Η ΕΚΔΟΧΗ 2 ΣΕ ΑΝΟΙΓΜΑ ΔΥΟ ΣΕΛΙΔΩΝ</span></div>
+<section class="stage single">
+  <div class="desk">
+    <div class="desk-top"><h2>Το πλάνο <em>οδηγεί.</em></h2></div>
+    <div class="desk-grid">
+      <div>
+        <div class="bm" data-bm>
+          <button class="bm-head" type="button" aria-expanded="true" aria-controls="dk-lib" data-toggle>
+            <h3>Οι ασκήσεις μου</h3>
+            <span class="sum" data-shut="<b>8</b> ασκήσεις"></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="body" id="dk-lib">
+            <ul class="idx">
+              <li><button class="idx-row" type="button"><span class="idx-name">Άρσεις θανάτου</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Δικέφαλα με μπάρα</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Έλξεις</span><span class="idx-note">πρόσθια λαβή</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Έλξεις</span><span class="idx-note">ανάστροφη λαβή</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Καθίσματα</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Κωπηλατική με μπάρα σε κλίση</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Πιέσεις πάγκου</span><span class="idx-note">φαρδιά λαβή, πόδια σταθερά</span></button></li>
+              <li><button class="idx-row" type="button"><span class="idx-name">Πιέσεις ώμων</span></button></li>
+            </ul>
+            <button class="addrow" type="button"><b>＋</b> Νέα άσκηση</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="plain">
+          <button class="plain-head" type="button" aria-expanded="true" aria-controls="dk-rout" data-toggle>
+            <h3>Τα προγράμματά μου</h3>
+            <span class="sum" data-shut='<b>3</b> splits · <span class="live">ΣΕ ΙΣΧΥ: PUSH PULL LEGS</span>'></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="body" id="dk-rout">
+            <div class="desk-cards">
+              <article class="card on">
+                <span class="live-tag">Σε ισχύ</span>
+                <button class="card-open" type="button"><h4>Push Pull Legs</h4><p class="meta"><b>7 ΗΜΕΡΕΣ</b></p></button>
+                <ul class="days"><li><i>Δε</i> Push</li><li><i>Τρ</i> Pull</li><li><i>Πε</i> Legs</li></ul>
+                <div class="acts">
+                  <button class="act star" type="button" aria-pressed="true" aria-label="Ενεργό πρόγραμμα"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                  <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                  <span class="spacer"></span>
+                  <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                </div>
+              </article>
+              <article class="card">
+                <button class="card-open" type="button"><h4>Upper / Lower</h4><p class="meta"><b>4 ΗΜΕΡΕΣ</b></p></button>
+                <ul class="days"><li><i>01</i> Upper A</li><li><i>02</i> Lower A</li></ul>
+                <div class="acts">
+                  <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                  <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                  <span class="spacer"></span>
+                  <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                </div>
+              </article>
+              <article class="card">
+                <button class="card-open" type="button"><h4>Full Body</h4><p class="meta"><b>3 ΗΜΕΡΕΣ</b></p></button>
+                <ul class="days"><li><i>01</i> Ημέρα Α</li><li><i>02</i> Ημέρα Β</li></ul>
+                <div class="acts">
+                  <button class="act star" type="button" aria-pressed="false" aria-label="Ορισμός ως ενεργό"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9z"/></svg></button>
+                  <button class="act wide" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Επεξεργασία</button>
+                  <span class="spacer"></span>
+                  <button class="act quiet danger" type="button" aria-label="Διαγραφή"><svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V4h6v3"/><path d="M7 7v13h10V7"/></svg></button>
+                </div>
+              </article>
+            </div>
+            <button class="addrow" type="button"><b>＋</b> Νέο πρόγραμμα</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="caption" style="margin-top:18px">Στο desktop η διαφορά των δύο κεφαλίδων γίνεται <b>πλεονέκτημα</b>: οι δύο στήλες δεν χρειάζονται διαχωριστικό, γιατί η κορδέλα αριστερά και η βαριά γραμμή δεξιά τις ξεχωρίζουν ήδη. Στα ≤850px επιστρέφει η στοίβα του κινητού.</p>
+</section>
+
+<!-- ============================================================ ΣΤ -->
+<div class="attempt-label"><b>ΣΤ</b><span>ΣΥΓΚΡΙΣΗ ΚΑΙ ΑΝΟΙΧΤΑ ΕΡΩΤΗΜΑΤΑ</span></div>
+<section class="stage single">
+
+  <div class="tablewrap">
+    <table class="cmp">
+      <thead><tr><th>Κριτήριο</th><th>Εκδοχή 1 — σελιδοδείκτης και στα δύο</th><th>Εκδοχή 2 — μόνο στις ασκήσεις</th></tr></thead>
+      <tbody>
+        <tr><th>Συνέπεια</th><td class="yes">Πλήρης· ίδιο ιδίωμα και στα δύο</td><td>Δύο ιδιώματα για ίδια λειτουργία</td></tr>
+        <tr><th>Οι δύο ενότητες ξεχωρίζουν</th><td class="no">Όχι, ειδικά κλειστές</td><td class="yes">Ναι, δύο σιλουέτες</td></tr>
+        <tr><th>Ο σελιδοδείκτης σημαίνει κάτι</th><td class="no">Όχι· όταν όλα τον έχουν, χάνεται</td><td class="yes">Ναι: «υλικό αναφοράς»</td></tr>
+        <tr><th>Πλάτος περιεχομένου στα 390px</th><td>339px και στις δύο</td><td class="yes">339px ευρετήριο, 354px κάρτες</td></tr>
+        <tr><th>Ανακαλύπτεται ότι κλείνει</th><td class="yes">Μία φορά, ισχύει παντού</td><td>Δύο φορές</td></tr>
+        <tr><th>Desktop δύο στηλών</th><td>Χρειάζεται διαχωρισμό</td><td class="yes">Ξεχωρίζουν από μόνες τους</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="caption" style="margin-top:22px"><b>Αν πρέπει να πω γνώμη:</b> η Εκδοχή 2. Ο σελιδοδείκτης αξίζει μόνο αν σημαίνει κάτι, και σημαίνει «αυτό είναι το ευρετήριό σου» — υλικό που ανοίγεις για να βρεις, όχι για να διαχειριστείς. Το επιχείρημα υπέρ της 1, η συνέπεια, καλύπτεται ήδη από το ότι <b>και οι δύο κεφαλίδες είναι κουμπιά με το ίδιο βελάκι στην ίδια θέση</b>. Το βελάκι είναι η συνέπεια· η κορδέλα είναι η ταυτότητα. Δεν χρειάζεται να κάνουν την ίδια δουλειά.</p>
+
+  <ol class="qlist" style="margin-top:26px">
+    <li><b>Ανακαλύπτεται ότι η γραμμή του ευρετηρίου ανοίγει επεξεργασία;</b> Χωρίς δεξιά στήλη δεν υπάρχει ορατό σημάδι ότι η γραμμή είναι πατήσιμη. Πρόταση: μία γραμμή στο πάνελ «ΟΔΗΓΙΕΣ» — «Πατήστε μια άσκηση για να την επεξεργαστείτε» — αντί για εικονίδιο σε κάθε γραμμή, που θα ξανάφερνε τη στήλη από την πίσω πόρτα.</li>
+    <li><b>Ο κατάλογος διαγραμμένων.</b> Αν η διαγραφή άσκησης γίνει tombstone όπως στα προγράμματα, χρειάζεται απόφαση για το τι βλέπει ο χρήστης σε ημέρα που είχε τη διαγραμμένη άσκηση: κενή θέση, ή το όνομα με ένδειξη «διαγράφηκε».</li>
+    <li><b>Θυμάται η εφαρμογή τι έκλεισες;</b> Ανοιχτό από τον προηγούμενο γύρο. Πρόταση: δύο τοπικά κλειδιά, χωρίς συγχρονισμό — προτίμηση συσκευής όπως η νυχτερινή εμφάνιση.</li>
+    <li><b>Ταξινόμηση.</b> Το ευρετήριο υποθέτει αλφαβητικά. Χρειάζεται <code>localeCompare('el')</code>, αλλιώς οι αγγλικοί όροι πέφτουν όλοι μετά τα ελληνικά.</li>
+    <li><b>Το αστέρι.</b> Ενεργό είναι πάντα ένα, οπότε το <code>aria-pressed</code> σε πολλές κάρτες μπορεί να ακουστεί ως δύο πατημένα κατά την εναλλαγή. Εναλλακτικά <code>role="radiogroup"</code> στο καρουζέλ.</li>
+    <li><b>Νέα i18n IDs.</b> «Οι ασκήσεις μου», «Νέα άσκηση», «Νέο πρόγραμμα», «Σύμπτυξη», «Ανάπτυξη», «σε ισχύ», «N από M», «Πού χρησιμοποιείται». Η ετικέτα «ΣΕ ΙΣΧΥ» είναι ελληνική και μεταφράζεται — δεν είναι σφραγίδα σαν το «MEMBER».</li>
+    <li><b>Εκτύπωση.</b> Στο <code>@media print</code> τα σώματα των μενού πρέπει να εμφανίζονται πάντα: ένα κλειστό μενού δεν επιτρέπεται να τυπώσει κενή σελίδα.</li>
+  </ol>
+</section>
+
+<div class="foot">
+  <b>Κατάσταση:</b> σχέδια προς έγκριση. Κανένα αρχείο της εφαρμογής δεν έχει αλλάξει — μόνο αυτό το αρχείο και το <code>designs/README.md</code>.<br>
+  <b>Κλειδωμένα:</b> Α3 σελιδοδείκτης στις ασκήσεις · ευρετήριο χωρίς δεξιά στήλη · Γ2 στις κάρτες.<br>
+  <b>Ανοιχτό:</b> Εκδοχή 1 ή 2 για το δεύτερο μενού.
+</div>
+
+<script>
+(function () {
+  function setSummary(head) {
+    var sum = head.querySelector('.sum');
+    if (!sum) return;
+    sum.innerHTML = head.getAttribute('aria-expanded') === 'true' ? '' : (sum.dataset.shut || '');
+  }
+
+  document.querySelectorAll('[data-toggle]').forEach(function (head) {
+    setSummary(head);
+    var wrap = head.closest('[data-bm]');
+    if (wrap) wrap.classList.toggle('shut', head.getAttribute('aria-expanded') === 'false');
+    head.addEventListener('click', function () {
+      var open = head.getAttribute('aria-expanded') === 'true';
+      head.setAttribute('aria-expanded', open ? 'false' : 'true');
+      var body = document.getElementById(head.getAttribute('aria-controls'));
+      if (body) body.hidden = open;
+      setSummary(head);
+      if (wrap) wrap.classList.toggle('shut', open);
+    });
+  });
+
+  // ευρετήριο: η γραμμή ανοίγει τη φόρμα στη θέση της
+  var idx = document.getElementById('b-idx');
+  if (idx) {
+    function closeAll() {
+      idx.querySelectorAll('[data-form]').forEach(function (form) { form.hidden = true; });
+      idx.querySelectorAll('[data-edit]').forEach(function (row) { row.hidden = false; });
+    }
+    idx.addEventListener('click', function (event) {
+      var row = event.target.closest('[data-edit]');
+      if (row) {
+        closeAll();
+        row.hidden = true;
+        var form = idx.querySelector('[data-form="' + row.dataset.edit + '"]');
+        if (form) { form.hidden = false; form.querySelector('input').focus(); }
+        return;
+      }
+      var close = event.target.closest('[data-close]');
+      if (close) {
+        closeAll();
+        var back = idx.querySelector('[data-edit="' + close.dataset.close + '"]');
+        if (back) back.focus();
+      }
+    });
+  }
+
+  // αστέρι + καρουζέλ, ανά τηλέφωνο
+  document.querySelectorAll('[data-track]').forEach(function (track) {
+    var rail = track.closest('.rail');
+    var position = rail ? rail.querySelector('[data-pos]') : null;
+
+    track.addEventListener('click', function (event) {
+      var star = event.target.closest('[data-star]');
+      if (!star || star.getAttribute('aria-pressed') === 'true') return;
+      track.querySelectorAll('.card').forEach(function (card) {
+        var button = card.querySelector('[data-star]');
+        var tag = card.querySelector('[data-tag]');
+        var isNew = card.contains(star);
+        button.setAttribute('aria-pressed', isNew ? 'true' : 'false');
+        button.setAttribute('aria-label', (isNew ? 'Ενεργό πρόγραμμα: ' : 'Ορισμός ως ενεργό: ') + card.dataset.routine);
+        card.classList.toggle('on', isNew);
+        if (tag) tag.hidden = !isNew;
+      });
+      var name = star.closest('.card').dataset.routine.toUpperCase();
+      var screen = track.closest('.phone-inner') || document;
+      screen.querySelectorAll('[data-shut]').forEach(function (sum) {
+        if (sum.dataset.shut.indexOf('ΣΕ ΙΣΧΥ') === -1) return;
+        sum.dataset.shut = sum.dataset.shut.replace(/ΣΕ ΙΣΧΥ: [^<]*/, 'ΣΕ ΙΣΧΥ: ' + name);
+        var head = sum.closest('[data-toggle]');
+        if (head && head.getAttribute('aria-expanded') === 'false') sum.innerHTML = sum.dataset.shut;
+      });
+    });
+
+    if (rail) {
+      rail.querySelectorAll('[data-scroll]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var card = track.querySelector('.card');
+          if (card) track.scrollLeft += Number(button.dataset.scroll) * (card.offsetWidth + 12);
+        });
+      });
+    }
+    track.addEventListener('scroll', function () {
+      var card = track.querySelector('.card');
+      if (!card || !position) return;
+      var total = track.querySelectorAll('.card').length;
+      var index = Math.round(track.scrollLeft / (card.offsetWidth + 12)) + 1;
+      position.textContent = Math.min(Math.max(index, 1), total) + ' από ' + total;
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -24,14 +24,14 @@
 .account-dialog[open] { animation:accountPassIn .34s cubic-bezier(.16,1,.3,1) both; }
 .account-folder { position:relative; margin:14px 14px 12px; filter:drop-shadow(8px 10px 0 rgba(var(--gold-rgb),.38)) drop-shadow(12px 16px 22px rgba(0,0,0,.28)); }
 .account-tabs { display:flex; align-items:flex-end; gap:6px; padding:0 22px; }
-.account-tabs button { position:relative; top:1px; min-height:46px; padding:0 28px; border:1px solid var(--ink); border-bottom:0; background:var(--paper-dark); color:var(--muted); cursor:pointer; font:800 .7rem "Alegreya Sans"; letter-spacing:.14em; transition:background .2s,color .2s; }
+.account-tabs button { position:relative; top:1px; min-height:46px; padding:0 28px; border:1px solid var(--ink); border-bottom:0; background:var(--paper-dark); color:var(--muted); cursor:pointer; font:800 .7rem var(--font-ui); letter-spacing:.14em; transition:background .2s,color .2s; }
 .account-tabs button[aria-pressed="true"] { z-index:2; min-height:52px; background:var(--paper); color:var(--ink); }
 .account-sheet { position:relative; border:1px solid var(--ink); background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(77,63,36,.095) 27px 28px); padding:30px 30px 26px; }
 .account-clip { position:absolute; top:-13px; left:38px; width:26px; height:44px; border:3px solid var(--ink-clip); border-radius:12px 12px 4px 4px; border-bottom:0; opacity:.8; pointer-events:none; }
 #account-close { position:absolute; top:14px; right:14px; z-index:3; width:34px; height:34px; border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer; font-size:1.2rem; }
 #account-close:hover { background:var(--ink-surface); color:var(--gold); }
 .account-sheet h2 { margin:2px 44px 0 0; font:700 clamp(1.5rem,4vw,1.9rem)/1 "Roboto Slab"; letter-spacing:-.03em; text-transform:uppercase; }
-.account-provider-button { position:relative; width:100%; min-height:50px; display:grid; grid-template-columns:22px 1fr 22px; align-items:center; gap:12px; margin:24px 0 0; padding:0 16px; border:1px solid var(--ink); background:var(--wash-48); color:var(--ink); cursor:pointer; font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; transition:background .2s,color .2s,box-shadow .2s,transform .2s; }
+.account-provider-button { position:relative; width:100%; min-height:50px; display:grid; grid-template-columns:22px 1fr 22px; align-items:center; gap:12px; margin:24px 0 0; padding:0 16px; border:1px solid var(--ink); background:var(--wash-48); color:var(--ink); cursor:pointer; font:800 .72rem var(--font-ui); letter-spacing:.13em; transition:background .2s,color .2s,box-shadow .2s,transform .2s; }
 .account-provider-button::after { content:""; position:absolute; inset:4px; border:1px solid transparent; pointer-events:none; transition:border-color .2s; }
 .account-provider-button:hover { background:var(--ink-surface); color:var(--on-ink); box-shadow:4px 5px 0 rgba(var(--gold-rgb),.35); transform:translate(-2px,-2px); }
 .account-provider-button:hover::after { border-color:rgba(var(--gold-rgb),.55); }
@@ -54,7 +54,7 @@
 .password-eye:hover { color:var(--orange); }
 .account-form .primary-button { grid-column:1 / -1; margin-top:0; }
 .account-form-intro { margin:0 0 2px; color:var(--muted); font-size:.94rem; line-height:1.45; }
-.account-text-button { justify-self:start; min-height:0 !important; padding:2px 0; border:0; border-bottom:1px solid currentColor; background:transparent; color:var(--muted); cursor:pointer; font:700 .76rem "Alegreya Sans"; letter-spacing:.04em; text-align:left; }
+.account-text-button { justify-self:start; min-height:0 !important; padding:2px 0; border:0; border-bottom:1px solid currentColor; background:transparent; color:var(--muted); cursor:pointer; font:700 .76rem var(--font-ui); letter-spacing:.04em; text-align:left; }
 .account-text-button:hover { color:var(--orange); }
 .account-text-button:focus-visible { outline:3px solid var(--gold); outline-offset:4px; }
 #account-signin-form .account-text-button { margin-top:-7px; }
@@ -65,20 +65,20 @@
 /* Η έξοδος γράφεται με τα ίδια κεφαλαία της πύλης — ίδιο βάρος, ίδιο αραίωμα με τις
    καρτέλες και τα κουμπιά της. Το πιο ελαφρύ βάρος του .account-text-button ανήκει
    στο «ξεχάσατε τον κωδικό», που είναι πεζά μέσα στη φόρμα. */
-.account-guest-door .account-text-button { justify-self:center; font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; text-align:center; }
+.account-guest-door .account-text-button { justify-self:center; font:800 .72rem var(--font-ui); letter-spacing:.13em; text-align:center; }
 /* Η ίδια έξοδος, στη σειρά ανάκτησης της πύλης: το «ΑΝΟΙΓΜΑ ΣΤΗ ΣΥΣΚΕΥΗ» δεν είναι
    δεύτερη ισότιμη ενέργεια δίπλα στην «ΠΡΟΣΠΑΘΕΙΑ ΞΑΝΑ» — είναι έξοδος κάτω από αυτήν.
    Ίδια κεφαλαία της πύλης, αλλά αριστερή στοίχιση γιατί η σειρά δεν είναι κεντραρισμένη. */
-.auth-gate-recovery-actions .account-text-button { font:800 .72rem "Alegreya Sans"; letter-spacing:.13em; }
+.auth-gate-recovery-actions .account-text-button { font:800 .72rem var(--font-ui); letter-spacing:.13em; }
 .account-member { margin-top:24px; }
 .account-card { position:relative; padding:20px 22px 18px; background:var(--ink-surface); color:var(--on-ink); overflow:hidden; box-shadow:6px 7px 0 rgba(var(--gold-rgb),.35); }
 .account-card::before { content:""; position:absolute; inset:6px; border:1px solid rgba(var(--gold-rgb),.45); pointer-events:none; }
 .account-card::after { content:"LOGBOOK"; position:absolute; right:-14px; bottom:-22px; color:rgba(239,232,216,.06); font:700 4.6rem/.8 "Roboto Slab"; letter-spacing:-.06em; pointer-events:none; }
-.account-connected-stamp { position:absolute; top:14px; right:16px; z-index:2; padding:5px 9px 4px; border:2px solid var(--gold); color:var(--gold); font:800 .6rem "Alegreya Sans"; letter-spacing:.14em; transform:rotate(6deg); }
+.account-connected-stamp { position:absolute; top:14px; right:16px; z-index:2; padding:5px 9px 4px; border:2px solid var(--gold); color:var(--gold); font:800 .6rem var(--font-ui); letter-spacing:.14em; transform:rotate(6deg); }
 .account-member strong { position:relative; display:block; margin:38px 0 4px; overflow-wrap:anywhere; font:700 clamp(1.15rem,3vw,1.5rem)/1.15 "Roboto Slab"; }
 .account-member-actions { display:flex; align-items:stretch; gap:10px; margin-top:12px; }
 .account-member-actions .secondary-button { margin-top:0; }
-.account-delete-button { min-height:var(--control-height); padding:0 16px; border:1px solid var(--danger); background:transparent; color:var(--danger); cursor:pointer; font:800 .72rem "Alegreya Sans"; letter-spacing:.08em; text-transform:uppercase; transition:background var(--control-speed),color var(--control-speed),transform var(--control-speed),box-shadow var(--control-speed); }
+.account-delete-button { min-height:var(--control-height); padding:0 16px; border:1px solid var(--danger); background:transparent; color:var(--danger); cursor:pointer; font:800 .72rem var(--font-ui); letter-spacing:.08em; text-transform:uppercase; transition:background var(--control-speed),color var(--control-speed),transform var(--control-speed),box-shadow var(--control-speed); }
 .account-delete-button:hover { background:var(--danger); color:var(--on-accent); transform:translate(-2px,-2px); box-shadow:var(--control-shadow); }
 .account-delete-button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
 .account-delete-button:disabled { cursor:wait; opacity:.6; transform:none; box-shadow:none; }

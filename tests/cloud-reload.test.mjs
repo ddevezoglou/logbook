@@ -26,6 +26,13 @@ test('cloud data applied on a clean screen reloads immediately', () => {
   assert.equal(reloads.count, 1);
 });
 
+test('cloud data applied while choosing exercises in a new plan day defers reload', () => {
+  const { window, document, reloads } = loadAppWithReloadSpy();
+  document.querySelector('#plan-workout-dialog').showModal();
+  window.dispatchEvent(new window.CustomEvent('logbook:cloud-data-applied'));
+  assert.equal(reloads.count, 0);
+});
+
 test('cloud data applied with unsaved work defers the reload and informs the user', () => {
   const { window, document, reloads } = loadAppWithReloadSpy();
 

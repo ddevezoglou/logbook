@@ -10,6 +10,7 @@ const development = read('DEVELOPMENT.md');
 const gitignore = read('.gitignore');
 const version = pkg.version;
 const productionScripts = [
+  'modules/exercises.js',
   'app.js',
   'auth.js',
   'cloud-sync.js',

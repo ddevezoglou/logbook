@@ -5,6 +5,18 @@
   // Greek remains the stable source language so existing saved plans keep working.
   // Each entry is [English, French, German]. Longer phrases are applied first.
   const catalog = {
+    'library.from':['Από τη βιβλιοθήκη','From the library','Depuis la bibliothèque','Aus der Bibliothek'],
+    'library.title':['1. Οι ασκήσεις μου','1. My exercises','1. Mes exercices','1. Meine Übungen'],
+    'library.routines':['2. Τα προγράμματά μου','2. My routines','2. Mes programmes','2. Meine Trainingspläne'],
+    'library.guide':['Δημιουργήστε ασκήσεις στη βιβλιοθήκη και επιλέξτε τις στις ημέρες του προγράμματος.','Create exercises in your library, then select them for your routine days.','Créez des exercices dans votre bibliothèque, puis sélectionnez-les pour les jours du programme.','Erstellen Sie Übungen in Ihrer Bibliothek und wählen Sie diese für Ihre Trainingstage aus.'],
+    'library.history':['Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.','Changes to routines and the library preserve past records.','Les modifications du programme et de la bibliothèque préservent les anciennes séances.','Änderungen am Trainingsplan und an der Bibliothek erhalten bisherige Aufzeichnungen.'],
+    'library.notes':['Σημειώσεις άσκησης','Exercise notes','Notes de l’exercice','Übungsnotizen'],
+    'library.save':['Αποθήκευση άσκησης','Save exercise','Enregistrer l’exercice','Übung speichern'],
+    'library.choose':['Επιλογή άσκησης','Select exercise','Choisir un exercice','Übung auswählen'],
+    'library.empty':['Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.','Add your first exercise to the library.','Ajoutez votre premier exercice à la bibliothèque.','Fügen Sie Ihre erste Übung zur Bibliothek hinzu.'],
+    'library.saved':['Η άσκηση αποθηκεύτηκε.','Exercise saved.','Exercice enregistré.','Übung gespeichert.'],
+    'library.plan-saved':['Το πρόγραμμα αποθηκεύτηκε.','Routine saved.','Programme enregistré.','Trainingsplan gespeichert.'],
+    'library.old-routine':['Παλαιό πρόγραμμα','Previous routine','Ancien programme','Früherer Trainingsplan'],
     'message.0001':['Οι προπονήσεις και τα προγράμματά σου παραμένουν συγχρονισμένα σε κάθε συσκευή.','Your workouts and routines stay synced on every device.','Vos séances et programmes restent synchronisés sur tous vos appareils.','Ihre Trainings und Pläne bleiben auf allen Geräten synchronisiert.'],
     'message.0002':['Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.','Checking for an active session on this device.','Vérification d’une session active sur cet appareil.','Auf diesem Gerät wird nach einer aktiven Sitzung gesucht.'],
     'message.0003':['Φέρνουμε τις τελευταίες προπονήσεις και τα προγράμματά σας.','Fetching your latest workouts and routines.','Récupération de vos dernières séances et programmes.','Ihre neuesten Trainings und Pläne werden geladen.'],
@@ -125,7 +137,7 @@
     'message.0118':['Διαλέξτε έτοιμο avatar ή ανεβάστε δική σας εικόνα.','Choose a ready-made avatar or upload your own image.','Choisissez un avatar prêt à l’emploi ou importez votre image.','Wählen Sie einen fertigen Avatar oder laden Sie ein eigenes Bild hoch.'],
     'message.0119':['Ανεβάστε τη δική σας εικόνα προφίλ.','Upload your own profile image.','Importez votre propre image de profil.','Laden Sie Ihr eigenes Profilbild hoch.'],
     'message.0120':['Η κάρτα αθλητή ενημερώνεται αυτόματα και εμφανίζεται στην Αρχική.','The athlete card updates automatically and appears on Home.','La carte d’athlète se met à jour automatiquement et apparaît sur l’Accueil.','Die Athletenkarte aktualisiert sich automatisch und erscheint auf der Startseite.'],
-    'message.0121':['Επιλέξτε από τα φίλτρα προπόνηση, άσκηση και σετ.','Use the filters to pick a workout, exercise and set.','Utilisez les filtres pour choisir séance, exercice et série.','Wählen Sie über die Filter Training, Übung und Satz.'],
+    'message.0121':['Επιλέξτε από τα φίλτρα πρόγραμμα, άσκηση και σετ.','Use the filters to pick a routine, exercise and set.','Utilisez les filtres pour choisir un programme, un exercice et une série.','Wählen Sie über die Filter Trainingsplan, Übung und Satz.'],
     'message.0122':['ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ','WEEKLY PLAN','PROGRAMME HEBDOMADAIRE','WOCHENPLAN'],
     'message.0123':['01 / ΕΒΔΟΜΑΔΙΑΙΕΣ ΡΟΥΤΙΝΕΣ','01 / WEEKLY ROUTINES','01 / PROGRAMMES HEBDOMADAIRES','01 / WOCHENPLÄNE'],
     'message.0124':['ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΑΣ','YOUR ROUTINES','VOS PROGRAMMES','IHRE PLÄNE'],
@@ -479,6 +491,12 @@
     'message.0478':['ΕΚΔΟΣΗ','VERSION','VERSION','VERSION'],
     'message.0485':['Δεν ολοκληρώθηκε ο συγχρονισμός. Δοκιμάστε ξανά ή συνεχίστε με τα αποθηκευμένα δεδομένα αυτής της συσκευής.','Sync did not complete. Try again or continue with the data saved on this device.','La synchronisation n’a pas abouti. Réessayez ou continuez avec les données enregistrées sur cet appareil.','Die Synchronisierung wurde nicht abgeschlossen. Versuchen Sie es erneut oder fahren Sie mit den auf diesem Gerät gespeicherten Daten fort.'],
     'message.0486':['ΑΝΟΙΓΜΑ ΣΤΗ ΣΥΣΚΕΥΗ','OPEN ON THIS DEVICE','OUVRIR SUR CET APPAREIL','AUF DIESEM GERÄT ÖFFNEN'],
+    'plan.library-title':['Οι ασκήσεις μου','My exercises','Mes exercices','Meine Übungen'],
+    'plan.routines-title':['Τα προγράμματά μου','My routines','Mes programmes','Meine Pläne'],
+    'plan.index-hint':['Πατήστε μια άσκηση για επεξεργασία.','Select an exercise to edit it.','Sélectionnez un exercice pour le modifier.','Wählen Sie eine Übung zum Bearbeiten.'],
+    'plan.new-exercise':['Νέα άσκηση','New exercise','Nouvel exercice','Neue Übung'],
+    'plan.new-routine':['Νέο πρόγραμμα','New routine','Nouveau programme','Neuer Plan'],
+    'plan.in-use':['Σε ισχύ','In use','En cours','Aktiv'],
     'aria.weight-set':['{unit} σετ {number}','{unit}, set {number}','{unit}, série {number}','{unit}, Satz {number}']
   };
 

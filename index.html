@@ -153,7 +153,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.2.7</b></span>
+      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.3.1</b></span>
     </div>
     <a class="side-menu-privacy" href="privacy.html" data-i18n-id="message.0470">Πολιτική απορρήτου</a>
   </aside>
@@ -276,15 +276,51 @@
         <aside id="plan-guide" class="info-panel hidden">
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
-            <li><b>01</b><span>Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.</span></li>
-            <li><b>02</b><span>Προσθέστε σε κάθε προπόνηση όνομα, ασκήσεις, εργάσιμα σετ και cues.</span></li>
+            <li><b>01</b><span>Δημιουργήστε ασκήσεις στη βιβλιοθήκη και επιλέξτε τις στις ημέρες του προγράμματος.</span></li>
+            <li><b>02</b><span>Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.</span></li>
             <li><b>03</b><span>Ανοίξτε ένα πρόγραμμα για επεξεργασία, αντιγραφή ή διαγραφή και ορίστε με το αστέρι ποιο είναι ενεργό.</span></li>
-            <li><b>04</b><span>Όταν αλλάζετε ημέρα ή ονόματα, επιλέξτε αν θα ενημερωθεί μαζί και το παλιό Ιστορικό.</span></li>
+            <li><b>04</b><span>Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.</span></li>
           </ol>
         </aside>
       </div>
+      <div class="plan-workspace">
+      <section class="exercise-library" aria-labelledby="exercise-library-title">
+        <h2 id="exercise-library-title"><button class="plan-section-toggle" type="button" aria-expanded="true" aria-controls="exercise-library-body"><span><i class="plan-step" aria-hidden="true">01</i>Οι ασκήσεις μου</span><small id="exercise-library-count" data-i18n-user>00</small><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></h2>
+        <div id="exercise-library-body">
+        <p class="plan-section-note">Πατήστε μια άσκηση για επεξεργασία.</p>
+        <ul id="exercise-library-list"></ul>
+        <details id="library-editor" class="plan-create">
+        <summary>Νέα άσκηση</summary>
+        <form id="exercise-library-form">
+          <label>Όνομα άσκησης<input id="library-exercise-name" data-i18n-user type="text" maxlength="200" required></label>
+          <label>Σημειώσεις άσκησης<textarea id="library-exercise-notes" data-i18n-user maxlength="2000" rows="2"></textarea></label>
+          <div class="exercise-library-actions">
+            <button class="primary-button" type="submit">Αποθήκευση άσκησης</button>
+            <button id="cancel-library-edit" class="mini-button hidden" type="button">Ακύρωση</button>
+          </div>
+        </form>
+        </details>
+        <p id="exercise-library-status" role="status"></p>
+        </div>
+      </section>
       <section class="routine-manager" aria-label="Διαχείριση προγραμμάτων">
-        <div class="routine-create-panel">
+        <h2><button class="plan-section-toggle" type="button" aria-expanded="true" aria-controls="routine-manager-body"><span><i class="plan-step" aria-hidden="true">02</i>Τα προγράμματά μου</span><small id="routine-total" data-i18n-user>00</small><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></h2>
+        <div id="routine-manager-body">
+        <p class="plan-section-note routine-active-summary"><span>Σε ισχύ</span><strong id="plan-active-name" data-i18n-user>—</strong></p>
+        <div class="routine-carousel">
+          <div class="routine-carousel-bar">
+            <span><b id="routine-carousel-count">—</b></span>
+          </div>
+          <div class="routine-carousel-stage">
+            <div id="routine-list" class="routine-list" tabindex="0" aria-label="Προγράμματα προπόνησης" aria-live="polite"></div>
+            <div class="routine-carousel-controls" role="group" aria-label="Πλοήγηση προγραμμάτων">
+              <button type="button" data-routine-scroll="-1" aria-controls="routine-list" aria-label="Προηγούμενο πρόγραμμα" data-i18n-aria-label="message.0129"><svg aria-hidden="true"><use href="#arrow-left-icon"/></svg></button>
+              <button type="button" data-routine-scroll="1" aria-controls="routine-list" aria-label="Επόμενο πρόγραμμα" data-i18n-aria-label="message.0130"><svg aria-hidden="true"><use href="#arrow-right-icon"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <details id="routine-creator" class="routine-create-panel plan-create">
+          <summary>Νέο πρόγραμμα</summary>
           <form id="routine-form" class="routine-create-form">
             <label>Όνομα προγράμματος<input id="routine-name" type="text" maxlength="50" placeholder="π.χ. Push Pull Legs" required></label>
             <label>Διάρκεια (σε ημέρες)<input id="routine-cycle-length" type="number" min="3" max="10" value="7" required></label>
@@ -297,21 +333,11 @@
             </fieldset>
             <button class="secondary-button" type="submit">＋ Δημιουργία</button>
           </form>
-        </div>
-        <div class="routine-carousel">
-          <div class="routine-carousel-bar">
-            <span><b id="routine-carousel-count">—</b> TRAINING SPLITS</span>
-          </div>
-          <div class="routine-carousel-stage">
-            <div id="routine-list" class="routine-list" tabindex="0" aria-label="Προγράμματα προπόνησης" aria-live="polite"></div>
-            <div class="routine-carousel-controls" role="group" aria-label="Πλοήγηση προγραμμάτων">
-              <button type="button" data-routine-scroll="-1" aria-controls="routine-list" aria-label="Προηγούμενο πρόγραμμα" data-i18n-aria-label="message.0129"><svg aria-hidden="true"><use href="#arrow-left-icon"/></svg></button>
-              <button type="button" data-routine-scroll="1" aria-controls="routine-list" aria-label="Επόμενο πρόγραμμα" data-i18n-aria-label="message.0130"><svg aria-hidden="true"><use href="#arrow-right-icon"/></svg></button>
-            </div>
-          </div>
-        </div>
+        </details>
         <div class="motto-stamp routine-motto" aria-hidden="true"><svg><use href="#flex-icon"/></svg>STRONGER EVERY SESSION<svg class="flip"><use href="#flex-icon"/></svg></div>
+        </div>
       </section>
+      </div>
     </section>
 
     <section class="view" id="overview-view">
@@ -344,7 +370,7 @@
         <aside id="progress-guide" class="info-panel hidden">
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
-            <li><b>01</b><span>Επιλέξτε από τα φίλτρα προπόνηση, άσκηση και σετ.</span></li>
+            <li><b>01</b><span>Επιλέξτε από τα φίλτρα πρόγραμμα, άσκηση και σετ.</span></li>
             <li><b>02</b><span>Το γράφημα συγκρίνει βάρος ή πλάκες και δείχνει την πορεία των επαναλήψεων στο ίδιο φορτίο.</span></li>
             <li><b>03</b><span>Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.</span></li>
             <li><b>04</b><span>Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.</span></li>
@@ -353,7 +379,7 @@
       </div>
       <div class="progress-content">
         <div class="progress-controls">
-          <label>Προπόνηση<select id="progress-workout"></select></label>
+          <label>Πρόγραμμα<select id="progress-workout"></select></label>
           <label>Άσκηση<select id="progress-exercise"></select></label>
           <label>Σετ<select id="progress-set"></select></label>
         </div>
@@ -559,7 +585,7 @@
   <script src="supabase-client.js"></script>
   <script src="error-tracking.js"></script>
   <script src="session-state.js"></script>
-  <script src="auth.js?v=0.2.7"></script>
+  <script src="auth.js?v=0.3.1"></script>
   <script src="cloud-sync.js"></script>
   <script src="pwa.js"></script>
 </body>

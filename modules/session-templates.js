@@ -29,13 +29,15 @@ export function exerciseCard(exercise = {}, {
   custom = false,
   unit = 'kg',
   generatedId = '',
+  library = [],
 } = {}) {
   const esc = escapeHtml;
   const sets = Array.isArray(exercise.sets) && exercise.sets.length ? exercise.sets : [{}, {}, {}];
-  return `<article class="workout-exercise" data-exercise data-id="${esc(exercise.id || generatedId)}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}" ${custom ? 'data-custom-exercise="true"' : ''}>
+  return `<article class="workout-exercise" data-exercise data-exercise-id="${esc(exercise.exerciseId || '')}" data-id="${esc(exercise.id || generatedId)}" data-plan-exercise-id="${esc(exercise.planExerciseId || exercise.id || '')}" ${custom ? 'data-custom-exercise="true"' : ''}>
     <span class="exercise-tape" aria-hidden="true"></span>
     <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
+    ${free && library.length ? `<label class="full-field">Από τη βιβλιοθήκη<select class="session-library-exercise"><option value="">Επιλογή άσκησης</option>${library.map(entry => `<option data-i18n-user value="${esc(entry.id)}" ${entry.id === exercise.exerciseId ? 'selected' : ''}>${esc(entry.label || entry.name)}</option>`).join('')}</select></label>` : ''}
     ${exercise.cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
     ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${sets.length}"></label>` : ''}
     <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ / ΜΕΤΡΗΣΗ</span><span></span></div>
