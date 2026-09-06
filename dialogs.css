@@ -196,7 +196,6 @@ button,input,select,textarea { -webkit-tap-highlight-color:transparent; }
 }
 
 @media(max-width:600px) and (pointer:coarse) {
-  .home-profile-card { cursor:grab; touch-action:none; }
   .home-routine-card { cursor:default; touch-action:pan-y; }
   .home-routine-head,.home-routine-title { cursor:grab; touch-action:none; }
 }

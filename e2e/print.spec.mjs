@@ -81,6 +81,7 @@ test('the night prints on white paper like everybody else', async ({ page }) => 
 test('the plan prints whole, with no day cut in half', async ({ page }) => {
   await bootWithHistory(page);
   await goToView(page, 'plan');
+  await page.locator('[aria-controls="routine-manager-body"]').click();
 
   await page.locator('.routine-card [data-view-routine]').first().click();
   await expect(page.locator('#plan-overview-dialog')).toHaveAttribute('open', '');

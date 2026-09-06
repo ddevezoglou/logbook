@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15130d">
+  <meta name="robots" content="index,follow">
+  <title>Privacy policy — Logbook</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate" hreflang="el" href="privacy.html">
+  <link rel="alternate" hreflang="en" href="privacy.en.html">
+  <link rel="alternate" hreflang="fr" href="privacy.fr.html">
+  <link rel="alternate" hreflang="de" href="privacy.de.html">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="legal.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <a href="./">← Back to Logbook</a>
+      <p>LOGBOOK · PRIVACY</p>
+      <h1>Privacy policy</h1>
+      <p>Last updated: 6 September 2026</p>
+      <nav class="langs" aria-label="Language">
+        <a lang="el" hreflang="el" href="privacy.html">ΕΛΛΗΝΙΚΑ</a>
+        <strong lang="en">ENGLISH</strong>
+        <a lang="fr" hreflang="fr" href="privacy.fr.html">FRANÇAIS</a>
+        <a lang="de" hreflang="de" href="privacy.de.html">DEUTSCH</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>1. Who operates the service</h2>
+      <p>Logbook is operated by the maintainer of the Logbook project. For questions or privacy requests you can get in touch through the <a href="https://github.com/ddevezoglou/logbook/issues">project support page</a>. Do not include a password, access token or sensitive data in a public request.</p>
+    </section>
+
+    <section>
+      <h2>2. What data we process</h2>
+      <ul>
+        <li><strong>Account details:</strong> email, an internal user identifier and technical session data. Your password is handled by Supabase Auth and is not stored in the application code.</li>
+        <li><strong>Your exercise library:</strong> every exercise is a separate record with a stable identifier, a name, an optional note and the earlier names it has been saved under, so that older records stay attached to it.</li>
+        <li><strong>Training data:</strong> routines and their days, logged workouts, sets, reps, weight or plates, exercise and workout comments, and the personal bests calculated from them.</li>
+        <li><strong>Profile details and preferences:</strong> name, date of birth and whether your age is shown, measurement unit, language and appearance theme.</li>
+        <li><strong>Profile photos:</strong> the active avatar is synced as part of your profile. The other images in the gallery stay on that device only and are not part of the synced snapshot.</li>
+        <li><strong>Technical error events:</strong> only allowlisted operational diagnostic fields — error source and code, error type, application version, browser family and network status. The error message and stack, the URL, your email, tokens and workout content are not recorded.</li>
+      </ul>
+      <p>Exercise and wellbeing entries may reveal information about your physical condition. Only enter data you want to store in the service.</p>
+    </section>
+
+    <section>
+      <h2>3. Why the data is used</h2>
+      <p>The data is used to create and run your account, store your logbook on the device, sync it between your devices, show your history and progress, keep the service secure, deal with technical failures and permanently delete your account when you ask. It is not used for advertising, and there is no product analytics and no sale of personal data.</p>
+    </section>
+
+    <section>
+      <h2>4. Local storage and cloud sync</h2>
+      <p>Logbook is local-first: every change is written to the device's localStorage first. When you are signed in and online, a normalised snapshot — exercise library, routines, workouts and profile — is synced to Supabase.</p>
+      <p>Sync is snapshot-based: each device sends the whole picture, the server keeps one version per account, and a revision number detects a concurrent write from another device. Deletions travel as deletion markers, so a device that has been offline cannot bring back what you deleted.</p>
+      <p>Before the first migration to the new exercise model, the application keeps a backup copy of the previous records on the device. It stays there until you sign out or delete your account.</p>
+      <p>Signing out requests that sessions on all devices be revoked. If that fails, sign-out may complete only locally; signing out from the sync failure screen is also local. Access tokens already issued to other devices remain valid until they expire. Completed sign-out removes the exercise library, routines, workouts, profile and working draft from this browser.</p>
+      <p>Before sign-out, if available storage permits, a recovery copy is written to localStorage under a key tied to your account identifier. It contains the synced snapshot data, but not the working draft, extra photos or pre-migration backup. It may be used the next time you sign in with the same account; a new sign-in after signing out requires a network connection. This copy has no expiry and no screen opens it directly, but it can be read with the browser's developer tools. It is removed from this browser when you delete the corresponding account or clear site data. On a shared device, clear the site data after signing out.</p>
+    </section>
+
+    <section>
+      <h2>5. Using Logbook without an account (guest mode)</h2>
+      <p>You can use Logbook without an account. No account is created, no workout data is sent to any server, and data is stored in the device's localStorage. There is no automatic backup off the device. Clearing browser data or losing the device means losing the local data; uninstalling may also remove it, depending on the browser and operating system. In Safari, a page that has not been added to the home screen may lose its localStorage after seven days of Safari use without interaction with that site.</p>
+      <p>As a guest, not even technical error events are sent. Up to ten of them may wait in a queue on the device and are transmitted only if you sign in later, at which point they are linked to your account. If you never sign in, they never leave.</p>
+      <p>If you create an account or sign in to an existing one while in guest mode, the data on this device is automatically merged with that account's data and sent to Supabase during sync.</p>
+    </section>
+
+    <section>
+      <h2>6. Recovery snapshots and retention periods</h2>
+      <ul>
+        <li>The current cloud sync snapshot is kept for as long as the account exists.</li>
+        <li>The private <code>user_sync_snapshots</code> table keeps at most one operational recovery snapshot per user and UTC day. Each snapshot is removed automatically 30 days after it was created. It is not reachable from the browser client.</li>
+        <li>Allowlisted technical error events are kept for up to 30 days.</li>
+        <li>Local account data is cleared on sign-out or account deletion, with the exceptions described in section 4. Preferences such as language and appearance theme, and copies belonging to other accounts, may remain in the browser. Clearing site data also removes this local data.</li>
+        <li>Deleting your account removes the local data from this browser and the synced data, recovery snapshots and linked error events from the database through a cascading delete.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>7. Service providers</h2>
+      <p>GitHub Pages hosts the static files of the application. Supabase provides authentication and the database. If you choose Google sign-in, Google takes part in the authentication process under its own privacy policy. Providers may process technical connection data under their own terms.</p>
+    </section>
+
+    <section>
+      <h2>8. Control over your data</h2>
+      <p>You can export your workout history as a CSV file from the Profile section. The file contains date, workout name, exercise, set, reps, weight and unit, plates and comments. It does not include your routines, your exercise library or your profile; a full export of all your data does not exist yet.</p>
+      <p>You can permanently delete your cloud account from the account panel. For access, correction, restriction or any other question about your data, use the contact channel in section 1.</p>
+    </section>
+
+    <section>
+      <h2>9. Security and changes</h2>
+      <p>The service uses Row Level Security, restricted database grants, server-side validation, global sign-out, a Content Security Policy and private recovery snapshots. No technical measure removes every risk. This page is updated whenever the way data is processed changes materially, with a new update date. The page exists in all four languages of the application; if the versions differ, the Greek text prevails.</p>
+    </section>
+  </main>
+</body>
+</html>

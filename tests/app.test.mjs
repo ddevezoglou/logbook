@@ -44,8 +44,8 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.3.1');
-  assert.ok(document.querySelector('#home-profile-card').classList.contains('hidden'));
+  assert.equal(document.querySelector('.app-version b').textContent, '0.3.2');
+  assert.equal(document.querySelector('#home-profile-card'), null);
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });
 
@@ -87,10 +87,11 @@ test('version label follows every supported interface language', () => {
 test('athlete profile card shows the notebook cover with brand mark, polaroid and motto', () => {
   const { document } = loadApp();
   assert.equal(document.querySelector('#profile-view .profile-hero h1').textContent.replace(/\s+/g, ''), 'ΤΟΑΠΟΤΥΠΩΜΑΜΕΝΕΙ.');
-  assert.equal(document.querySelectorAll('#profile-guide li').length, 4);
+  assert.equal(document.querySelectorAll('#profile-guide li').length, 5);
   assert.equal(document.querySelectorAll('.profile-card-top .profile-brand-mark i').length, 5);
   assert.ok(document.querySelector('.profile-polaroid .profile-tape'));
-  assert.ok(document.querySelector('.profile-polaroid-photo #profile-reward-ring'));
+  assert.ok(document.querySelector('.profile-polaroid-photo #profile-preview-avatar'));
+  assert.equal(document.querySelector('#profile-reward-ring'), null);
   assert.equal(document.querySelector('#profile-preview-name').textContent, 'ΟΝΟΜΑ');
   assert.equal(document.querySelector('.profile-card-foot > span').textContent, 'TRAIN . LOG . REPEAT');
   assert.ok(document.querySelector('.profile-card > .profile-elastic'));
@@ -106,10 +107,10 @@ test('athlete profile card shows the notebook cover with brand mark, polaroid an
   assert.match(styles, /\.hero \.info-panel,\.progress-hero \.info-panel,\.profile-hero \.info-panel\s*\{\s*width:min\(300px,78vw\);\s*left:auto;\s*\}/);
 });
 
-test('home shows the saved profile card and opens the workout log', () => {
+test('home omits the saved profile card and opens the workout log', () => {
   const { document } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
-  assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
-  assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
+  assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
+  assert.equal(document.querySelector('#home-profile-card'), null);
   click(document, '[data-home-action="log"]');
   assert.ok(document.querySelector('#log-view').classList.contains('active'));
 });
@@ -387,7 +388,7 @@ test('home routine ticket drag stays bounded and persists independently', () => 
   assert.equal(localStorage.getItem('homeProfileCardPosition'), null);
 });
 
-test('desktop default home cards avoid the quote and primary actions', async () => {
+test('desktop default routine card clears all obstacles with and without the daily stamp', async () => {
   const { window, document } = loadApp();
   Object.defineProperty(window, 'innerWidth', { value:1440, configurable:true });
   const shell = document.querySelector('.home-shell');
@@ -405,45 +406,29 @@ test('desktop default home cards avoid the quote and primary actions', async () 
     return { left, top, right:left + 330, bottom:top + 210, width:330, height:210 };
   };
   quote.getBoundingClientRect = () => ({ left:940, top:330, right:1380, bottom:490, width:440, height:160 });
-  start.getBoundingClientRect = () => ({ left:158, top:518, right:618, bottom:578, width:460, height:60 });
   quick.getBoundingClientRect = () => ({ left:158, top:590, right:618, bottom:664, width:460, height:74 });
 
-  window.dispatchEvent(new window.Event('resize'));
-  await new Promise(resolve => window.setTimeout(resolve, 25));
-
-  const cardRect = card.getBoundingClientRect();
-  assert.ok(cardRect.right + 20 <= quote.getBoundingClientRect().left);
-  assert.ok(cardRect.bottom + 20 <= start.getBoundingClientRect().top);
+  for (const top of [518, 468]) {
+    start.getBoundingClientRect = () => ({ left:158, top, right:618, bottom:top + 60, width:460, height:60 });
+    window.dispatchEvent(new window.Event('resize'));
+    await new Promise(resolve => window.setTimeout(resolve, 25));
+    const cardRect = card.getBoundingClientRect();
+    for (const obstacle of [quote, start, quick]) {
+      const rect = obstacle.getBoundingClientRect();
+      assert.ok(cardRect.right + 20 <= rect.left || cardRect.left >= rect.right + 20
+        || cardRect.bottom + 20 <= rect.top || cardRect.top >= rect.bottom + 20);
+    }
+  }
 });
 
-test('home athlete card drag stays bounded and persists its relative position', () => {
-  const { document, localStorage } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
-  const shell = document.querySelector('.home-shell');
-  const card = document.querySelector('#home-profile-card');
-  Object.defineProperties(shell, { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
-  Object.defineProperties(card, { offsetWidth:{ value:250 }, offsetHeight:{ value:160 } });
-  const pointer = (type, x, y) => {
-    const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
-    Object.defineProperties(event, { pointerId:{ value:1 }, button:{ value:0 }, clientX:{ value:x }, clientY:{ value:y } });
-    card.dispatchEvent(event);
-  };
-  pointer('pointerdown', 50, 50);
-  pointer('pointermove', 5000, 5000);
-  pointer('pointerup', 5000, 5000);
-  const position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
-  assert.deepEqual(position, { x:1, y:1 });
-});
-
-test('mobile touch can move both home cards while keeping mobile positions bounded and separate', () => {
+test('mobile touch moves the routine card within bounds and keeps its position separate from desktop', () => {
   const { window, document, localStorage } = loadApp({ userProfile:{ name:'Δημήτρης', birthdate:'1990-01-01', avatar:'custom', customImage:'' } });
   Object.defineProperty(window, 'innerWidth', { value:390, configurable:true });
   Object.defineProperty(window, 'innerHeight', { value:640, configurable:true });
   const shell = document.querySelector('.home-shell');
-  const profileCard = document.querySelector('#home-profile-card');
   const routineCard = document.querySelector('#home-routine-card');
   Object.defineProperties(shell, { clientWidth:{ value:390 }, scrollHeight:{ value:844 } });
   shell.getBoundingClientRect = () => ({ left:0, top:0 });
-  Object.defineProperties(profileCard, { offsetLeft:{ value:90 }, offsetTop:{ value:500 }, offsetWidth:{ value:280 }, offsetHeight:{ value:100 } });
   Object.defineProperties(routineCard, { offsetLeft:{ value:25 }, offsetTop:{ value:80 }, offsetWidth:{ value:340 }, offsetHeight:{ value:300 } });
   const touch = (target, type, pointerId, x, y) => {
     const event = new document.defaultView.Event(type, { bubbles:true, cancelable:true });
@@ -454,30 +439,23 @@ test('mobile touch can move both home cards while keeping mobile positions bound
     target.dispatchEvent(event);
   };
 
-  touch(profileCard, 'pointerdown', 11, 20, 20);
-  touch(profileCard, 'pointermove', 11, 2000, 2000);
-  touch(profileCard, 'pointerup', 11, 2000, 2000);
   touch(routineCard.querySelector('.home-routine-head'), 'pointerdown', 12, 20, 20);
   touch(routineCard, 'pointermove', 12, 2000, 2000);
   touch(routineCard, 'pointerup', 12, 2000, 2000);
 
-  assert.deepEqual(JSON.parse(localStorage.getItem('homeProfileCardPositionMobile')), { x:1, y:1 });
   assert.deepEqual(JSON.parse(localStorage.getItem('homeRoutineCardPositionMobile')), { x:1, y:1 });
-  assert.equal(Number(profileCard.dataset.x), 4);
-  assert.equal(Number(profileCard.dataset.y), 24);
   assert.equal(Number(routineCard.dataset.x), 9);
   assert.equal(Number(routineCard.dataset.y), 244);
   assert.equal(localStorage.getItem('homeProfileCardPosition'), null);
   assert.equal(localStorage.getItem('homeRoutineCardPosition'), null);
 });
 
-test('mobile home styling keeps quote rotation, compact athlete card and bounded routine growth', () => {
+test('mobile home styling keeps quote rotation, bounded routine growth', () => {
   assert.match(styles, /html\s*\{[^}]*overflow-x:clip;/);
   assert.match(styles, /html:has\(#home-view\.active\),body:has\(#home-view\.active\)\s*\{\s*scrollbar-width:none;/);
   assert.match(styles, /html:has\(#home-view\.active\)::\-webkit-scrollbar,body:has\(#home-view\.active\)::\-webkit-scrollbar\s*\{\s*width:0;\s*height:0;/);
   assert.match(styles, /\.home-shell\s*\{[^}]*max-width:100vw;[^}]*overflow-x:clip;[^}]*overflow-y:visible;/);
   assert.match(styles, /\.daily-quote\s*\{[^}]*width:calc\(100% - 8px\);[^}]*transform:rotate\(\.8deg\);/);
-  assert.match(styles, /\.home-profile-card\s*\{[^}]*width:min\(76vw,280px\);[^}]*padding:12px;/);
   assert.match(styles, /\.home-routine-card\s*\{[^}]*max-height:min\(68vh,560px\);/);
   assert.match(styles, /\.home-routine-days\s*\{\s*max-height:min\(var\(--routine-list-height,49px\),42vh,294px\);/);
   assert.match(styles, /\.home-intro\s*\{\s*display:contents;\s*\}/);
@@ -500,6 +478,57 @@ test('home rest stamp appears after a workout is logged today', () => {
   assert.equal(withWorkout.closest('.home-intro')?.className, 'home-intro');
 });
 
+test('plans, old rewards and workouts on other dates never earn the daily stamp', () => {
+  const dateAt = offset => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+  for (const sessions of [[], rewardSessions([-3,-2,-1]), [
+    { ...rewardSessions([0])[0], date:dateAt(-1) },
+    { ...rewardSessions([0])[1], date:dateAt(1) },
+    { id:'deleted-today', date:dateAt(0), deletedAt:new Date().toISOString() },
+  ]]) {
+    const { document, localStorage } = loadApp({
+      trainingRoutines:routineWith(rewardPlan()), trainingSessions:sessions,
+      userProfile:{ name:'Athlete', customImage:'', avatar:'male' },
+      routineRewardTracking:{ version:1, activeRoutineId:'r1', periods:{ r1:[{ start:dateAt(-100), end:null }] } },
+      homeProfileCardPosition:{ x:.5, y:.5 },
+    });
+    assert.ok(document.querySelector('#home-rest-stamp').classList.contains('hidden'));
+    assert.equal(document.querySelector('#home-profile-card, #home-reward-stamp, #profile-reward-ring'), null);
+    assert.equal(JSON.parse(localStorage.getItem('userProfile')).name, 'Athlete');
+  }
+});
+
+test('the daily stamp follows saving, redating and deleting a scheduled or free workout', () => {
+  const today = new Date();
+  const dateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  for (const type of ['free', 'scheduled']) {
+    const session = { ...rewardSessions([0])[0], id:'daily', type, date:dateKey(yesterday) };
+    const { document, localStorage } = loadApp({ trainingSessions:[session], trainingRoutines:routineWith(rewardPlan()) });
+    const assertStamp = visible => {
+      click(document, '.nav-button[data-view="home"]');
+      assert.equal(document.querySelector('#home-rest-stamp').classList.contains('hidden'), !visible);
+    };
+    assertStamp(false);
+    for (const date of [dateKey(today), dateKey(yesterday), dateKey(today)]) {
+      click(document, '.nav-button[data-view="overview"]');
+      click(document, '[data-edit-session="daily"]');
+      setValue(document, '#log-date', date);
+      click(document, '#save-session');
+      assert.equal(JSON.parse(localStorage.getItem('trainingSessions'))[0].date, date);
+      assertStamp(date === dateKey(today));
+    }
+    click(document, '.nav-button[data-view="overview"]');
+    click(document, '[data-delete-session="daily"]');
+    click(document, '#confirm-delete-accept');
+    assertStamp(false);
+  }
+});
+
 test('desktop home program paper grows with its workout list without an internal scrollbar', () => {
   assert.match(styles, /@media\(min-width:601px\)\s*\{\.home-routine-days\s*\{max-height:none;overflow:visible\}\}/);
 });
@@ -518,36 +547,36 @@ test('home quick navigation buttons open the plan and history views', () => {
   assert.ok(document.querySelector('#overview-view').classList.contains('active'));
 });
 
-test('arrow keys move the home athlete card within bounds and persist the position', () => {
-  const { document, window, localStorage } = loadApp({ userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
+test('arrow keys move the home routine card within bounds and persist the position', () => {
+  const { document, window, localStorage } = loadApp({ trainingRoutines:routineWith(rewardPlan()), userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' } });
   const shell = document.querySelector('.home-shell');
-  const card = document.querySelector('#home-profile-card');
+  const card = document.querySelector('#home-routine-card');
   Object.defineProperties(shell, { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
   Object.defineProperties(card, { offsetWidth:{ value:250 }, offsetHeight:{ value:160 } });
   const key = (name, shiftKey = false) => card.dispatchEvent(new window.KeyboardEvent('keydown', { key: name, shiftKey, bubbles: true, cancelable: true }));
   key('ArrowRight');
   key('ArrowDown', true);
-  let position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  let position = JSON.parse(localStorage.getItem('homeRoutineCardPosition'));
   assert.ok(Math.abs(position.x - 8 / 750) < 1e-9, 'plain arrow should move 8px on a 750px range');
   assert.ok(Math.abs(position.y - 30 / 1240) < 1e-9, 'shift+arrow should move 30px on a 1240px range');
   key('ArrowLeft');
   key('ArrowLeft');
   key('ArrowUp', true);
-  position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  position = JSON.parse(localStorage.getItem('homeRoutineCardPosition'));
   assert.deepEqual(position, { x: 0, y: 0 }, 'movement past the top-left corner must clamp to 0');
 });
 
 test('corrupted saved card position is ignored and replaced by a valid one', () => {
-  const { document, window, localStorage } = loadApp({
+  const { document, window, localStorage } = loadApp({ trainingRoutines:routineWith(rewardPlan()),
     userProfile: { name:'Δημήτρης', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' },
-    homeProfileCardPosition: [0.5, 0.5],
+    homeRoutineCardPosition: [0.5, 0.5],
   });
-  const card = document.querySelector('#home-profile-card');
+  const card = document.querySelector('#home-routine-card');
   assert.ok(!card.classList.contains('hidden'), 'boot with a corrupted position must not hide or break the card');
   Object.defineProperties(document.querySelector('.home-shell'), { clientWidth:{ value:1000 }, scrollHeight:{ value:1400 } });
   Object.defineProperties(card, { offsetWidth:{ value:250 }, offsetHeight:{ value:160 } });
   card.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
-  const position = JSON.parse(localStorage.getItem('homeProfileCardPosition'));
+  const position = JSON.parse(localStorage.getItem('homeRoutineCardPosition'));
   assert.ok(!Array.isArray(position) && Number.isFinite(position.x) && Number.isFinite(position.y));
 });
 
@@ -1212,19 +1241,14 @@ test('sync repair promotes the program that owns workout history over an empty d
   const saved = JSON.parse(localStorage.getItem('trainingRoutines'));
   assert.equal(saved.find(routine => routine.id === 'r1').isActive, true);
   assert.equal(saved.find(routine => routine.id === 'placeholder').isActive, false);
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
 });
 
-test('sync repair rebuilds an emptied plan from the routine workout history so rewards return', () => {
+test('sync repair rebuilds an emptied plan from the routine workout history without restoring retired rewards', () => {
   const thirteenWeeks = Array.from({ length:13 }, (_, index) => index - 12);
   const emptied = [{ id:'r1', name:'Push Pull Test', isActive:true, cycleLength:7, plan:[] }];
   const { document, localStorage } = loadApp({ trainingRoutines:emptied, trainingSessions:rewardSessions(thirteenWeeks) });
   const repaired = JSON.parse(localStorage.getItem('trainingRoutines')).find(routine => routine.id === 'r1');
   assert.deepEqual([...new Set(repaired.plan.map(item => item.cycleDay))].sort((a, b) => a - b), [1, 3, 5]);
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
-  assert.ok(!document.querySelector('#home-reward-stamp').classList.contains('hidden'));
 });
 
 test('routine persistence failure is handled without showing a false success', () => {
@@ -1764,8 +1788,8 @@ test('profile form submit persists the profile and updates the menu identity', (
   assert.equal(document.querySelector('#profile-status').textContent, '');
   assert.ok(document.querySelector('#profile-status').classList.contains('hidden'));
   assert.ok(document.querySelector('#profile-save').classList.contains('hidden'));
-  assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
-  assert.ok(!document.querySelector('#home-profile-card').classList.contains('hidden'));
+  assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
+  assert.equal(document.querySelector('#home-profile-card'), null);
   assert.equal(document.querySelector('#toast').textContent, 'Το προφίλ αποθηκεύτηκε');
 });
 
@@ -1988,7 +2012,7 @@ test('profile drafts stay unsaved and are discarded after leaving the profile vi
   assert.deepEqual(JSON.parse(localStorage.getItem('userProfile')), savedProfile);
   assert.equal(document.querySelector('#profile-status').textContent, 'ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ');
   assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
-  assert.equal(document.querySelector('#home-profile-name').textContent, 'Δημήτρης');
+  assert.equal(document.querySelector('#menu-profile-name').textContent, 'Δημήτρης');
 
   click(document, '.nav-button[data-view="home"]');
   click(document, '.nav-button[data-view="profile"]');
@@ -2350,15 +2374,6 @@ test('the preserved community preview translates in every supported UI language'
   });
 });
 
-test('i18n translates empty and reward setup states in every supported UI language', () => {
-  ['en','fr','de'].forEach(language => {
-    const { document } = loadApp();
-    click(document, `[data-language="${language}"]`);
-    assert.doesNotMatch(document.querySelector('#home-reward-label').textContent, /[\u0370-\u03ff\u1f00-\u1fff]/);
-    assert.doesNotMatch(document.querySelector('#profile-reward-ring').getAttribute('aria-label'), /[\u0370-\u03ff\u1f00-\u1fff]/);
-  });
-});
-
 test('a rest day shows only the no-workout heading', () => {
   const { document } = loadApp(); // empty plan → no scheduled workout
   click(document, '.nav-button[data-view="log"]');
@@ -2683,108 +2698,4 @@ test('Greek user content keeps Greek uppercase rules in every interface language
   assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
   click(document, '[data-language="de"]');
   assert.equal(document.querySelector('#menu-profile-name').getAttribute('lang'), 'el');
-});
-
-test('reward track grants PLAN SETUP as soon as an active plan has workout days', () => {
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()) });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'PLAN SETUP');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-1'));
-  assert.ok(!document.querySelector('#home-reward-stamp').classList.contains('hidden'));
-  assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '1');
-});
-
-test('one complete program week grants KEEP UP THE WORK', () => {
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions([0]) });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
-  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
-  assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '2');
-});
-
-test('an empty active week breaks the completed-week streak', () => {
-  const sessions = rewardSessions([-2, 0]);
-  const tracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-2), end:null }] } };
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:sessions, routineRewardTracking:tracking });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
-  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
-});
-
-test('four and twelve complete weeks grant NEVER GIVE UP and GYMRAT', () => {
-  const four = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions([-3,-2,-1,0]) }).document;
-  assert.equal(four.querySelector('#home-reward-label').textContent, 'NEVER GIVE UP');
-  const twelve = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions([-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0]) }).document;
-  assert.equal(twelve.querySelector('#home-reward-label').textContent, 'GYMRAT');
-  assert.ok(twelve.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
-});
-
-test('streaks beyond twelve weeks keep GYMRAT and the full streak count', () => {
-  const sixteenWeeks = Array.from({ length: 16 }, (_, index) => index - 15);
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions(sixteenWeeks) });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
-  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('16 συνεχόμενες εβδομάδες'));
-  assert.equal(document.querySelector('#home-reward-stamp').dataset.stage, '4');
-});
-
-test('synced scheduled sessions without a legacy type still count toward rewards', () => {
-  const sessions = rewardSessions([-3,-2,-1,0]).map(({ type, ...session }) => session);
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:sessions });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'NEVER GIVE UP');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-3'));
-});
-
-test('synced workout history repairs reward tracking that started after the workouts', () => {
-  const thirteenWeeks = Array.from({ length: 13 }, (_, index) => index - 12);
-  const staleTracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(0), end:null }] } };
-  const { document, window } = loadApp({
-    trainingRoutines:routineWith(rewardPlan()),
-    trainingSessions:rewardSessions(thirteenWeeks),
-    routineRewardTracking:staleTracking,
-  });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
-  const repaired = JSON.parse(window.localStorage.getItem('routineRewardTracking'));
-  assert.equal(repaired.periods.r1[0].start, rewardDate(-12));
-});
-
-test('synced active routine change keeps a single open reward period', () => {
-  const routines = [
-    { id:'r1', name:'Previous', isActive:false, plan:rewardPlan() },
-    { id:'r2', name:'Current', isActive:true, plan:rewardPlan() },
-  ];
-  const staleTracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-2), end:null }], r2:[] } };
-  const { window } = loadApp({ trainingRoutines:routines, routineRewardTracking:staleTracking });
-  const repaired = JSON.parse(window.localStorage.getItem('routineRewardTracking'));
-  assert.equal(repaired.activeRoutineId, 'r2');
-  assert.equal(repaired.periods.r1.filter(period => period.end === null).length, 0);
-  assert.equal(repaired.periods.r2.filter(period => period.end === null).length, 1);
-});
-
-test('GYMRAT is kept on the same routine even after a missed week past twelve', () => {
-  const longRunWithGap = [...Array.from({ length: 13 }, (_, index) => index - 14), 0]; // -14..-2 complete, -1 missed, current complete
-  const tracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-14), end:null }] } };
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions(longRunWithGap), routineRewardTracking:tracking });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
-  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
-});
-
-test('a missed week before reaching twelve still resets the streak to stage 2', () => {
-  const shortRunWithGap = [...Array.from({ length: 5 }, (_, index) => index - 6), 0]; // -6..-2 complete, -1 missed, current complete
-  const tracking = { version:1, activeRoutineId:'r1', periods:{ r1:[{ start:rewardDate(-6), end:null }] } };
-  const { document } = loadApp({ trainingRoutines:routineWith(rewardPlan()), trainingSessions:rewardSessions(shortRunWithGap), routineRewardTracking:tracking });
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
-  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('1 συνεχόμενη εβδομάδα'));
-});
-
-test('switching routines freezes and later restores each routine reward streak', () => {
-  const routines = [
-    { id:'r1', name:'Program One', isActive:true, plan:rewardPlan() },
-    { id:'r2', name:'Program Two', isActive:false, plan:rewardPlan() },
-  ];
-  const { document } = loadApp({ trainingRoutines:routines, trainingSessions:rewardSessions([-1,0]) });
-  click(document, '[data-activate-routine="r2"]');
-  click(document, '[data-activate-routine="r1"]');
-  click(document, '.nav-button[data-view="profile"]');
-  assert.ok(document.querySelector('#profile-reward-ring').getAttribute('aria-label').includes('2 συνεχόμενες εβδομάδες'));
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'KEEP UP THE WORK');
 });

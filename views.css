@@ -63,7 +63,7 @@
   .home-vol { display:none; }
   .home-intro { display:contents; }
   .home-start,.home-quick { display:none; }
-  .home-routine-card,.home-profile-card {
+  .home-routine-card {
     position:relative;
     top:auto;
     left:auto;
@@ -79,11 +79,6 @@
   .daily-quote footer { font-size:.6rem; }
   .quote-mark { font-size:2.6rem; bottom:2px; right:10px; }
   .home-rest-stamp { order:4; align-self:center; max-width:calc(100% - 8px); margin:4px 0 0; }
-  .home-profile-card { order:5; align-self:flex-end; width:min(76vw,280px); padding:12px; opacity:.9; filter:sepia(.18) grayscale(.18) contrast(.94); mix-blend-mode:normal; }
-  .home-profile-card-body { grid-template-columns:62px minmax(0,1fr); gap:8px; }
-  .home-card-avatar { width:72px; height:72px; transform:scale(.72); transform-origin:center; }
-  .home-profile-card-copy strong { font-size:.9rem; }
-  .home-reward-stamp { position:static; order:6; align-self:flex-start; margin-top:4px; transform:rotate(-2deg); }
 
   .session-shell,.overview-content,.progress-content { padding:28px 16px 34px; }
   .routine-manager,.sheet,.history-panel,.profile-form,.profile-preview { padding-left:16px; padding-right:16px; }
@@ -527,3 +522,5 @@
   }
   *:not(.day-card-head):not(.session-page-head) { box-shadow:none !important; }
 }
+.workout-draft-status { font-size: .875rem; line-height: 1.5; }
+.workout-draft-status.draft-save-error { font-weight: 700; }

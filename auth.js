@@ -12,6 +12,7 @@
   const { STATES:SESSION_STATES } = window.LogbookSessionState;
   const sessionMachine = window.LogbookSessionMachine;
   let client = null;
+  let authRevision = 0;
   let mode = 'signin';
   let passwordRecoveryActive = false;
   let pendingSyncUserId = null;
@@ -245,6 +246,7 @@
   function waitForInitialSync(nextSession) {
     const userId = nextSession?.user?.id;
     if (!userId || document.body.classList.contains('app-ready')) return;
+    if (gate.dataset.state === 'loading' && document.querySelector('script[data-logbook-app]')) return;
     pendingSyncUserId = userId;
     localRecoveryAllowed = false;
     if (lastSyncResult && lastSyncResult.userId === userId) {
@@ -274,6 +276,8 @@
   }
 
   function loadApplication() {
+    clearTimeout(syncWatchdog);
+    pendingSyncUserId = null;
     setGateState('loading', 'Όλα είναι έτοιμα. Ανοίγουμε το Logbook.');
     if (appLoaded) {
       window.location.reload();
@@ -304,6 +308,10 @@
   }
 
   function renderOfflineMember(nextSession) {
+    if (localStorage.getItem(CLOUD_OWNER_KEY) !== nextSession.user.id) {
+      showInitialSyncError(nextSession.user.id);
+      return;
+    }
     const alreadyReady = document.body.classList.contains('app-ready');
     const email = nextSession.user.email || '';
     guest.classList.add('hidden');
@@ -399,6 +407,7 @@
   // Every identity change passes through this function. Storage, UI and the
   // observable lifecycle can therefore never disagree about the active state.
   function transitionSession(nextState, context = {}, { render = true } = {}) {
+    authRevision += 1;
     const previousState = sessionMachine.state;
     const snapshot = sessionMachine.transition(nextState, context);
     const enteringGuest = nextState === SESSION_STATES.GUEST;
@@ -438,13 +447,19 @@
 
   async function checkSession() {
     if (!client) return;
-    setGateState('checking', 'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.');
-    const { data, error } = await client.auth.getSession();
-    if (error) {
+    const revision = authRevision;
+    const alreadyReady = document.body.classList.contains('app-ready');
+    if (!alreadyReady) setGateState('checking', 'Ελέγχουμε αν υπάρχει ενεργή συνεδρία σε αυτή τη συσκευή.');
+    try {
+      const { data, error } = await client.auth.getSession();
+      // Auth events and explicit sign-out are newer than this pending lookup.
+      if (revision !== authRevision) return;
+      if (error) throw error;
+      if (!passwordRecoveryActive) renderSession(data?.session);
+    } catch {
+      if (revision !== authRevision || alreadyReady) return;
       setGateState('error', 'Δεν μπορέσαμε να ελέγξουμε τη σύνδεσή σας. Ελέγξτε το δίκτυο και δοκιμάστε ξανά.');
-      return;
     }
-    if (!passwordRecoveryActive) renderSession(data?.session);
   }
 
   async function bindClient(nextClient) {

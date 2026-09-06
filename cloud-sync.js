@@ -24,6 +24,9 @@
   const LEGACY_PLACEHOLDER_NAMES = new Set(['Το πρόγραμμά μου', 'Πρόγραμμα 1']);
   let client = null;
   let userId = null;
+  let sessionRevision = 0;
+  let identityRevision = 0;
+  let activeSync = null;
   let syncTimer = null;
   let syncPromise = null;
   let pendingSync = false;
@@ -314,20 +317,40 @@
     return meta;
   }
 
-  async function requestWithTimeout(run) {
+  function isCurrent(context) {
+    return context.id === userId && context.revision === identityRevision && context.client === client;
+  }
+
+  function assertCurrent(context) {
+    if (!isCurrent(context)) throw new Error('SYNC_CANCELLED');
+  }
+
+  async function requestWithTimeout(run, context) {
+    assertCurrent(context);
     const controller = new AbortController();
+    const cancel = () => controller.abort();
+    context.controller.signal.addEventListener('abort', cancel, { once:true });
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let onAbort;
+    const aborted = new Promise((_, reject) => {
+      onAbort = () => reject(new Error(isCurrent(context) ? 'SYNC_TIMEOUT' : 'SYNC_CANCELLED'));
+      controller.signal.addEventListener('abort', onAbort, { once:true });
+    });
     try {
-      const result = await run(controller.signal);
+      const result = await Promise.race([run(controller.signal), aborted]);
+      assertCurrent(context);
       if (controller.signal.aborted) throw new Error('SYNC_TIMEOUT');
       return result;
     } catch (error) {
+      assertCurrent(context);
       if (!controller.signal.aborted) throw error;
       const timeoutError = new Error('SYNC_TIMEOUT');
       timeoutError.name = 'TimeoutError';
       throw timeoutError;
     } finally {
       clearTimeout(timeout);
+      context.controller.signal.removeEventListener('abort', cancel);
+      controller.signal.removeEventListener('abort', onAbort);
     }
   }
 
@@ -342,12 +365,12 @@
     return typeof query?.abortSignal === 'function' ? query.abortSignal(signal) : query;
   }
 
-  async function fetchRemote(id) {
+  async function fetchRemote(id, context) {
     const { data, error } = await requestWithTimeout(signal => withAbortSignal(client
       .from('user_sync_state')
       .select('revision,payload,updated_at')
       .eq('user_id', id), signal)
-      .maybeSingle());
+      .maybeSingle(), context);
     if (error) throw error;
     return data;
   }
@@ -360,35 +383,36 @@
       );
   }
 
-  async function insertRemote(id, payload) {
+  async function insertRemote(id, payload, context) {
     const { data, error } = await requestWithTimeout(signal => withAbortSignal(client
       .from('user_sync_state')
       .insert({ user_id:id, payload:normalizePayload(payload) })
       .select('revision,payload,updated_at'), signal)
-      .single());
+      .single(), context);
     if (error) throw error;
     return data;
   }
 
-  async function updateRemote(id, payload, expectedRevision) {
+  async function updateRemote(id, payload, expectedRevision, context) {
     const { data, error } = await requestWithTimeout(signal => withAbortSignal(client
       .from('user_sync_state')
       .update({ payload:normalizePayload(payload) })
       .eq('user_id', id)
       .eq('revision', expectedRevision)
       .select('revision,payload,updated_at'), signal)
-      .maybeSingle());
+      .maybeSingle(), context);
     if (error) throw error;
     return data;
   }
 
-  async function saveWithConflictRetry(id, payload, remote) {
+  async function saveWithConflictRetry(id, payload, remote, context) {
     if (!remote) {
       try {
-        return await insertRemote(id, payload);
+        return await insertRemote(id, payload, context);
       } catch (error) {
         if (error?.code !== '23505') throw error;
-        remote = await fetchRemote(id);
+        remote = await fetchRemote(id, context);
+        if (remote) payload = mergePayloads(remote.payload, payload);
       }
     }
     // A missing library on a stale device must never erase remote definitions,
@@ -398,21 +422,25 @@
       normalizePayload(payload).trainingExercises,
       resolveExerciseConflict
     ) };
-    let saved = await updateRemote(id, payload, remote.revision);
+    let saved = await updateRemote(id, payload, remote.revision, context);
     if (saved) return saved;
-    const latest = await fetchRemote(id);
-    if (!latest) return insertRemote(id, payload);
-    const merged = mergePayloads(latest.payload, payload);
-    saved = await updateRemote(id, merged, latest.revision);
+    const latest = await fetchRemote(id, context);
+    if (!latest) return insertRemote(id, payload, context);
+    const merged = window.LogbookDataReconciliation.payload(normalizePayload(remote.payload), normalizePayload(payload), normalizePayload(latest.payload));
+    saved = await updateRemote(id, merged, latest.revision, context);
     if (!saved) throw new Error('SYNC_CONFLICT');
     return { ...saved, conflictMerged:true };
   }
 
-  function announceApplied() {
-    setTimeout(() => window.dispatchEvent(new CustomEvent('logbook:cloud-data-applied')), 0);
+  function announceApplied(context) {
+    setTimeout(() => {
+      if (isCurrent(context)) window.dispatchEvent(new CustomEvent('logbook:cloud-data-applied'));
+    }, 0);
   }
 
-  async function performSync(id) {
+  async function performSync(context) {
+    assertCurrent(context);
+    const { id } = context;
     if (!client || !id || !navigator.onLine) {
       setStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline');
       return false;
@@ -432,23 +460,14 @@
       local = normalizePayload(cached);
       applyPayload(local, { preserveLocalGallery:false });
     }
+    const localAtStart = collectLocalPayload();
     const localHash = payloadHash(local);
-    let remote = await fetchRemote(id);
-    let applied = false;
+    let remote = await fetchRemote(id, context);
 
     if (guestImportPending) {
       const nextPayload = remote ? mergePayloads(remote.payload, local) : local;
-      remote = await saveWithConflictRetry(id, nextPayload, remote);
-      applyPayload(remote.payload, { preserveLocalGallery:false });
-      applied = true;
-
-      localStorage.removeItem(GUEST_IMPORT_KEY);
-      localStorage.removeItem(GUEST_KEY);
-      writeMeta(id, remote);
-      setStatus('Συγχρονισμένο σε όλες τις συσκευές.', 'success');
-      if (applied) announceApplied();
-      return true;
-    }
+      remote = await saveWithConflictRetry(id, nextPayload, remote, context);
+    } else {
 
     // A completely empty cloud snapshot is never a valid replacement for a
     // device that still has workouts, a profile or a configured program. This
@@ -456,7 +475,7 @@
     // an empty payload. Recover by merging the device's last meaningful copy
     // back into the cloud before anything is applied locally.
     if (remote && hasMeaningfulData(local) && !hasMeaningfulData(remote.payload)) {
-      remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, local), remote);
+      remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, local), remote, context);
     }
 
     // Old clients omit the library. Recover definitions from this owner's copy
@@ -465,66 +484,53 @@
       const remoteData = normalizePayload(remote.payload);
       const library = mergeCollection(remoteData.trainingExercises, local.trainingExercises, resolveExerciseConflict);
       if (stableStringify(library) !== stableStringify(remoteData.trainingExercises)) {
-        remote = await saveWithConflictRetry(id, { ...remoteData, trainingExercises:library }, remote);
+        remote = await saveWithConflictRetry(id, { ...remoteData, trainingExercises:library }, remote, context);
       }
     }
 
     if (!remote) {
-      remote = await saveWithConflictRetry(id, local, null);
-      if (switchingUser) {
-        applyPayload(remote.payload, { preserveLocalGallery:false });
-        applied = true;
-      }
+      remote = await saveWithConflictRetry(id, local, null, context);
     } else if (switchingUser) {
       if (cached && meta && meta.hash !== payloadHash(cached)) {
-        remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, cached), remote);
+        remote = await saveWithConflictRetry(id, mergePayloads(remote.payload, cached), remote, context);
       }
-      applied = payloadHash(collectLocalPayload()) !== payloadHash(remote.payload);
-      applyPayload(remote.payload, { preserveLocalGallery:false });
     } else if (!meta) {
       if (hasMeaningfulData(local)) {
         const merged = mergePayloads(remote.payload, local);
         remote = payloadHash(merged) === payloadHash(remote.payload)
           ? remote
-          : await saveWithConflictRetry(id, merged, remote);
-        if (payloadHash(local) !== payloadHash(remote.payload)) {
-          applyPayload(remote.payload);
-          applied = true;
-        }
-      } else {
-        applyPayload(remote.payload);
-        applied = localHash !== payloadHash(remote.payload);
+          : await saveWithConflictRetry(id, merged, remote, context);
       }
     } else if (meta.revision === Number(remote.revision)) {
-      if (meta.hash !== localHash) remote = await saveWithConflictRetry(id, local, remote);
-    } else if (meta.hash === localHash) {
-      applyPayload(remote.payload);
-      applied = localHash !== payloadHash(remote.payload);
-    } else {
-      const merged = mergePayloads(remote.payload, local);
-      remote = await saveWithConflictRetry(id, merged, remote);
-      if (localHash !== payloadHash(remote.payload)) {
-        applyPayload(remote.payload);
-        applied = true;
-      }
+      if (meta.hash !== localHash) remote = await saveWithConflictRetry(id, local, remote, context);
+    } else if (meta.hash !== localHash) {
+      const merged = cached && payloadHash(cached) === meta.hash
+        ? window.LogbookDataReconciliation.payload(normalizePayload(cached), local, normalizePayload(remote.payload))
+        : mergePayloads(remote.payload, local);
+      remote = await saveWithConflictRetry(id, merged, remote, context);
+    }
     }
 
-    if (remote.conflictMerged && payloadHash(collectLocalPayload()) !== payloadHash(remote.payload)) {
-      applyPayload(remote.payload);
-      applied = true;
+    // No network result can touch local state until identity is checked. Apply
+    // only the edits made during this request on top of the confirmed response.
+    assertCurrent(context);
+    const current = collectLocalPayload();
+    const next = switchingUser && !guestImportPending ? normalizePayload(remote.payload)
+      : normalizePayload(window.LogbookDataReconciliation.payload(localAtStart, current, normalizePayload(remote.payload)));
+    if (!switchingUser || guestImportPending) {
+      next.trainingExercises = mergeCollection(next.trainingExercises, current.trainingExercises, resolveExerciseConflict);
     }
-    // Reconcile recovered definitions without replacing unrelated edits made
-    // while the request was in flight. Account switches have already applied
-    // the destination account's payload above.
-    const currentLibrary = collectLocalPayload().trainingExercises;
-    const library = mergeCollection(normalizePayload(remote.payload).trainingExercises, currentLibrary, resolveExerciseConflict);
-    if (stableStringify(library) !== stableStringify(currentLibrary)) {
-      localStorage.setItem('trainingExercises', JSON.stringify(library));
-      applied = true;
+    const applied = payloadHash(current) !== payloadHash(next);
+    applyPayload(next, { preserveLocalGallery:!switchingUser && !guestImportPending });
+    if (guestImportPending) {
+      localStorage.removeItem(GUEST_IMPORT_KEY);
+      localStorage.removeItem(GUEST_KEY);
     }
+    // Metadata describes the confirmed server snapshot, not unsent local edits.
     writeMeta(id, remote);
-    setStatus('Συγχρονισμένο σε όλες τις συσκευές.', 'success');
-    if (applied) announceApplied();
+    if (payloadHash(next) !== payloadHash(remote.payload)) pendingSync = true;
+    setStatus(pendingSync ? 'Συγχρονισμός δεδομένων…' : 'Συγχρονισμένο σε όλες τις συσκευές.', pendingSync ? 'syncing' : 'success');
+    if (applied) announceApplied(context);
     return true;
   }
 
@@ -539,9 +545,18 @@
       pendingSync = true;
       return syncPromise;
     }
-    const activeUser = userId;
-    syncPromise = performSync(activeUser)
+    const context = { id:userId, revision:identityRevision, client, controller:new AbortController() };
+    activeSync = context;
+    const task = (async () => {
+      let success;
+      do {
+        pendingSync = false;
+        success = await performSync(context);
+      } while (pendingSync && isCurrent(context));
+      return success;
+    })()
       .catch(error => {
+        if (!isCurrent(context) || error?.message === 'SYNC_CANCELLED') return false;
         console.warn('Logbook cloud sync failed.', error);
         const errorCode = error?.message === 'SYNC_CONFLICT'
           ? 'sync_conflict'
@@ -556,17 +571,26 @@
         return false;
       })
       .finally(() => {
+        if (syncPromise !== task) return;
         syncPromise = null;
-        if (pendingSync && userId === activeUser) {
-          pendingSync = false;
-          synchronize();
-        }
+        activeSync = null;
       });
-    return syncPromise;
+    syncPromise = task;
+    return task;
   }
 
   function handleSession(session) {
+    sessionRevision += 1;
     const nextUserId = session?.user?.id || null;
+    if (nextUserId !== userId) {
+      identityRevision += 1;
+      activeSync?.controller.abort();
+      activeSync = null;
+      syncPromise = null;
+      pendingSync = false;
+      clearTimeout(syncTimer);
+      initialSyncUserId = null;
+    }
     userId = nextUserId;
     if (!userId) {
       clearTimeout(syncTimer);
@@ -580,6 +604,7 @@
   function startInitialSync(id, force = false) {
     if (!id || (!force && initialSyncUserId === id)) return;
     initialSyncUserId = id;
+    const revision = identityRevision;
     if (!navigator.onLine) {
       setStatus('Εκτός σύνδεσης · οι αλλαγές μένουν σε αυτή τη συσκευή.', 'offline');
       window.dispatchEvent(new CustomEvent('logbook:initial-sync-complete', {
@@ -588,7 +613,7 @@
       return;
     }
     synchronize().then(success => {
-      if (userId !== id) return;
+      if (userId !== id || identityRevision !== revision) return;
       if (!success) initialSyncUserId = null;
       window.dispatchEvent(new CustomEvent('logbook:initial-sync-complete', {
         detail:{
@@ -602,20 +627,22 @@
   async function bindClient(nextClient) {
     if (!nextClient || client === nextClient) return;
     client = nextClient;
+    const revision = sessionRevision;
+    client.auth.onAuthStateChange((_event, session) => handleSession(session));
     const { data, error } = await client.auth.getSession();
+    if (revision !== sessionRevision) return;
     if (error) {
       window.LogbookErrorTracking?.report('sync', 'sync_failure', error);
       setStatus('Δεν ήταν δυνατή η εκκίνηση του συγχρονισμού.', 'error');
     } else {
       handleSession(data?.session);
     }
-    client.auth.onAuthStateChange((_event, session) => handleSession(session));
   }
 
   window.addEventListener('logbook:supabase-ready', event => bindClient(event.detail.client));
   window.addEventListener('logbook:session-state', event => {
     const { state, userId:sessionUserId } = event.detail || {};
-    if (state === 'member' && client && !userId && sessionUserId) handleSession({ user:{ id:sessionUserId } });
+    if (state === 'member' && client && userId !== sessionUserId && sessionUserId) handleSession({ user:{ id:sessionUserId } });
     else if ((state === 'unknown' || state === 'guest') && userId) handleSession(null);
   });
   window.addEventListener('logbook:supabase-unavailable', () => setStatus('Cloud εκτός σύνδεσης · τα δεδομένα παραμένουν τοπικά.', 'offline'));

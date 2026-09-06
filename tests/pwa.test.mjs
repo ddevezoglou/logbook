@@ -66,6 +66,9 @@ test('service worker precaches the complete local shell without development seed
   for (const path of [
     './index.html',
     './privacy.html',
+    './privacy.en.html',
+    './privacy.fr.html',
+    './privacy.de.html',
     './manifest.webmanifest',
     './fonts.css',
     './tokens.css',
@@ -86,6 +89,7 @@ test('service worker precaches the complete local shell without development seed
     './auth.js?v=0.3.1',
     './session-state.js',
     './cloud-sync.js',
+    './data-reconciliation.js',
     './error-tracking.js',
     './pwa.js',
     './assets/vendor/supabase-2.110.7.min.js',
@@ -129,6 +133,9 @@ test('GitHub Pages workflow publishes a production-only artifact', () => {
   const builder = readFileSync(new URL('../scripts/build-production.mjs', import.meta.url), 'utf8');
   assert.match(builder, /'error-tracking\.js'/, 'the deployed shell includes error tracking');
   assert.match(builder, /'privacy\.html'/, 'the deployed artifact includes the privacy policy');
+  for (const page of ['privacy.en.html', 'privacy.fr.html', 'privacy.de.html']) {
+    assert.match(builder, new RegExp(`'${page.replace(/\./g, '\\.')}'`), `the deployed artifact includes the ${page} translation`);
+  }
   assert.match(builder, /'modules\/history\.js'/, 'the deployed shell includes ES modules');
   assert.match(builder, /minify:true/, 'production JS and CSS are minified');
   assert.doesNotMatch(workflow, /cp .*seed/);

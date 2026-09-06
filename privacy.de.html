@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15130d">
+  <meta name="robots" content="index,follow">
+  <title>Datenschutzerklärung — Logbook</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate" hreflang="el" href="privacy.html">
+  <link rel="alternate" hreflang="en" href="privacy.en.html">
+  <link rel="alternate" hreflang="fr" href="privacy.fr.html">
+  <link rel="alternate" hreflang="de" href="privacy.de.html">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="legal.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <a href="./">← Zurück zu Logbook</a>
+      <p>LOGBOOK · DATENSCHUTZ</p>
+      <h1>Datenschutzerklärung</h1>
+      <p>Zuletzt aktualisiert: 6. September 2026</p>
+      <nav class="langs" aria-label="Sprache">
+        <a lang="el" hreflang="el" href="privacy.html">ΕΛΛΗΝΙΚΑ</a>
+        <a lang="en" hreflang="en" href="privacy.en.html">ENGLISH</a>
+        <a lang="fr" hreflang="fr" href="privacy.fr.html">FRANÇAIS</a>
+        <strong lang="de">DEUTSCH</strong>
+      </nav>
+    </header>
+
+    <section>
+      <h2>1. Wer den Dienst betreibt</h2>
+      <p>Logbook wird vom Betreuer des Logbook-Projekts betrieben. Für Fragen oder Datenschutzanfragen können Sie uns über die <a href="https://github.com/ddevezoglou/logbook/issues">Support-Seite des Projekts</a> erreichen. Fügen Sie in eine öffentliche Anfrage weder Passwort noch Access-Token noch sensible Daten ein.</p>
+    </section>
+
+    <section>
+      <h2>2. Welche Daten verarbeitet werden</h2>
+      <ul>
+        <li><strong>Kontodaten:</strong> E-Mail-Adresse, interne Benutzerkennung und technische Sitzungsdaten. Das Passwort wird von Supabase Auth verwaltet und nicht im Anwendungscode gespeichert.</li>
+        <li><strong>Ihre Übungsbibliothek:</strong> Jede Übung ist ein eigener Datensatz mit einer festen Kennung, einem Namen, einer optionalen Notiz und den früheren Namen, unter denen sie gespeichert wurde, damit ältere Aufzeichnungen mit ihr verbunden bleiben.</li>
+        <li><strong>Trainingsdaten:</strong> Trainingspläne und ihre Tage, erfasste Trainings, Sätze, Wiederholungen, Gewichte oder Scheiben, Übungs- und Trainingskommentare sowie die daraus berechneten Bestleistungen.</li>
+        <li><strong>Profildaten und Einstellungen:</strong> Name, Geburtsdatum und ob das Alter angezeigt wird, Maßeinheit, Sprache und Erscheinungsbild.</li>
+        <li><strong>Profilfotos:</strong> Der aktive Avatar wird als Teil des Profils synchronisiert. Die übrigen Bilder der Galerie bleiben nur auf diesem Gerät und sind nicht Teil des synchronisierten Snapshots.</li>
+        <li><strong>Technische Fehlerereignisse:</strong> nur freigegebene Diagnosefelder — Fehlerquelle und Fehlercode, Fehlertyp, Anwendungsversion, Browser-Familie und Netzwerkstatus. Fehlermeldung und Stack, URL, E-Mail, Token und Trainingsinhalte werden nicht erfasst.</li>
+      </ul>
+      <p>Übungs- und Wohlbefindenseinträge können Rückschlüsse auf Ihre körperliche Verfassung zulassen. Erfassen Sie nur Daten, die Sie im Dienst speichern möchten.</p>
+    </section>
+
+    <section>
+      <h2>3. Wofür die Daten verwendet werden</h2>
+      <p>Die Daten dienen dazu, Ihr Konto zu erstellen und zu betreiben, Ihr Logbuch auf dem Gerät zu speichern, es zwischen Ihren Geräten zu synchronisieren, Verlauf und Fortschritt anzuzeigen, den Dienst abzusichern, technische Störungen zu beheben und Ihr Konto auf Wunsch endgültig zu löschen. Sie werden nicht für Werbung verwendet; es gibt keine Produktanalyse und keinen Verkauf personenbezogener Daten.</p>
+    </section>
+
+    <section>
+      <h2>4. Lokale Speicherung und Cloud-Synchronisierung</h2>
+      <p>Logbook ist local-first: Jede Änderung wird zuerst in den localStorage des Geräts geschrieben. Wenn Sie angemeldet und online sind, wird ein normalisierter Snapshot — Übungsbibliothek, Trainingspläne, Trainings und Profil — mit Supabase synchronisiert.</p>
+      <p>Die Synchronisierung arbeitet snapshot-basiert: Jedes Gerät sendet das vollständige Bild, der Server hält eine Version pro Konto, und eine Revisionsnummer erkennt einen gleichzeitigen Schreibvorgang von einem anderen Gerät. Löschungen wandern als Löschmarkierungen mit, damit ein länger offline gebliebenes Gerät Gelöschtes nicht wiederherstellt.</p>
+      <p>Vor der ersten Umstellung auf das neue Übungsmodell legt die Anwendung auf dem Gerät eine Sicherungskopie der bisherigen Datensätze an. Sie bleibt dort bis zur Abmeldung oder zur Löschung des Kontos.</p>
+      <p>Die Abmeldung fordert den Widerruf der Sitzungen auf allen Geräten an. Schlägt dies fehl, kann die Abmeldung nur lokal erfolgen; auch die Abmeldung über die Fehleranzeige der Synchronisierung erfolgt lokal. Bereits für andere Geräte ausgestellte Zugriffstoken bleiben bis zu ihrem Ablauf gültig. Eine abgeschlossene Abmeldung entfernt Übungsbibliothek, Trainingspläne, Trainings, Profil und Arbeitsentwurf aus diesem Browser.</p>
+      <p>Vor der Abmeldung wird, sofern der verfügbare Speicher es zulässt, eine Wiederherstellungskopie im localStorage unter einem an Ihre Kontokennung gebundenen Schlüssel gespeichert. Sie enthält die Daten des synchronisierten Snapshots, jedoch weder den Arbeitsentwurf noch zusätzliche Fotos oder die Sicherung vor der Umstellung. Sie kann bei der nächsten Anmeldung mit demselben Konto verwendet werden; eine neue Anmeldung nach der Abmeldung erfordert eine Netzwerkverbindung. Diese Kopie hat keine Ablauffrist und lässt sich über keinen Bildschirm direkt öffnen, kann aber mit den Entwicklerwerkzeugen des Browsers gelesen werden. Sie wird aus diesem Browser entfernt, wenn Sie das zugehörige Konto oder die Websitedaten löschen. Löschen Sie auf einem gemeinsam genutzten Gerät nach der Abmeldung die Websitedaten.</p>
+    </section>
+
+    <section>
+      <h2>5. Nutzung ohne Konto (Gastmodus)</h2>
+      <p>Sie können Logbook ohne Konto nutzen. Dann wird kein Konto angelegt, es werden keine Trainingsdaten an einen Server gesendet, und die Daten werden im localStorage des Geräts gespeichert. Es gibt keine automatische Sicherung außerhalb des Geräts. Wenn Sie die Browserdaten löschen oder das Gerät verlieren, gehen die lokalen Daten verloren; auch eine Deinstallation kann sie je nach Browser und Betriebssystem entfernen. In Safari kann eine Seite, die nicht zum Startbildschirm hinzugefügt wurde, ihren localStorage nach sieben Tagen Safari-Nutzung ohne Interaktion mit dieser Website verlieren.</p>
+      <p>Im Gastmodus werden nicht einmal technische Fehlerereignisse gesendet. Bis zu zehn davon können auf dem Gerät in einer Warteschlange liegen und werden nur übertragen, wenn Sie sich später anmelden; dann sind sie mit Ihrem Konto verknüpft. Melden Sie sich nie an, verlassen sie das Gerät nie.</p>
+      <p>Wenn Sie im Gastmodus ein Konto erstellen oder sich bei einem bestehenden Konto anmelden, werden die Daten dieses Geräts automatisch mit den Daten dieses Kontos zusammengeführt und bei der Synchronisierung an Supabase gesendet.</p>
+    </section>
+
+    <section>
+      <h2>6. Wiederherstellungs-Snapshots und Aufbewahrungsfristen</h2>
+      <ul>
+        <li>Der aktuelle Cloud-Sync-Snapshot wird so lange aufbewahrt, wie das Konto besteht.</li>
+        <li>Die private Tabelle <code>user_sync_snapshots</code> hält höchstens einen betrieblichen Wiederherstellungs-Snapshot pro Nutzer und UTC-Tag. Jeder Snapshot wird 30 Tage nach seiner Erstellung automatisch entfernt. Sie ist vom Browser-Client nicht erreichbar.</li>
+        <li>Freigegebene technische Fehlerereignisse werden höchstens 30 Tage aufbewahrt.</li>
+        <li>Lokale Kontodaten werden bei der Abmeldung oder Kontolöschung mit den in Abschnitt 4 beschriebenen Ausnahmen entfernt. Einstellungen wie Sprache und Darstellung sowie Kopien anderer Konten können im Browser verbleiben. Das Löschen der Websitedaten entfernt auch diese lokalen Daten.</li>
+        <li>Die Kontolöschung entfernt die lokalen Daten aus diesem Browser sowie die synchronisierten Daten, Wiederherstellungs-Snapshots und verknüpften Fehlerereignisse per Kaskadenlöschung aus der Datenbank.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>7. Dienstleister</h2>
+      <p>GitHub Pages hostet die statischen Dateien der Anwendung. Supabase stellt Authentifizierung und Datenbank bereit. Wenn Sie die Google-Anmeldung wählen, wirkt Google nach seiner eigenen Datenschutzerklärung an der Authentifizierung mit. Anbieter können technische Verbindungsdaten nach ihren eigenen Bedingungen verarbeiten.</p>
+    </section>
+
+    <section>
+      <h2>8. Kontrolle über Ihre Daten</h2>
+      <p>Sie können Ihren Trainingsverlauf im Bereich Profil als CSV-Datei exportieren. Die Datei enthält Datum, Trainingsname, Übung, Satz, Wiederholungen, Gewicht und Einheit, Scheiben und Kommentare. Trainingspläne, Übungsbibliothek und Profil sind nicht enthalten; einen vollständigen Export aller Ihrer Daten gibt es noch nicht.</p>
+      <p>Sie können Ihr Cloud-Konto im Kontofenster endgültig löschen. Für Auskunft, Berichtigung, Einschränkung oder andere Fragen zu Ihren Daten nutzen Sie den Kontaktweg aus Abschnitt 1.</p>
+    </section>
+
+    <section>
+      <h2>9. Sicherheit und Änderungen</h2>
+      <p>Der Dienst nutzt Row Level Security, eingeschränkte Datenbankrechte, serverseitige Validierung, globale Abmeldung, eine Content Security Policy und private Wiederherstellungs-Snapshots. Keine technische Maßnahme beseitigt jedes Risiko. Diese Seite wird aktualisiert, sobald sich die Datenverarbeitung wesentlich ändert, mit neuem Aktualisierungsdatum. Die Seite existiert in allen vier Sprachen der Anwendung; bei Abweichungen gilt der griechische Text.</p>
+    </section>
+  </main>
+</body>
+</html>

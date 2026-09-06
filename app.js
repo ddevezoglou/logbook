@@ -13,13 +13,14 @@ const store = StorageMigrations.createStore(localStorage, {
 });
 const WORKOUT_DRAFT_KEY = 'logbookWorkoutDraft';
 const WORKOUT_DRAFT_VERSION = 1;
-let workoutDraftTimer = null;
+const workoutDraftPageOwner = workoutDraftOwner();
+let workoutDraftWritable = true;
+let renderedScheduledSessionKey = null;
 let exerciseMigrationReady = true;
 
-// A cloud payload was just written into localStorage. A blind reload here would
-// wipe any half-typed workout, plan day or profile edit, so reload only when the
-// screen holds no unsaved work; otherwise defer to the next safe navigation.
-let pendingCloudReload = false;
+// Refresh cloud data in place. Rebooting the page flashes the auth gate and
+// discards navigation state; unfinished forms still defer the refresh.
+let pendingCloudRefresh = false;
 function hasUnsavedSession() {
   if (state.editingSessionId || state.copyingSessionId) return true;
   if ($('#session-comments').value.trim()) return true;
@@ -27,7 +28,7 @@ function hasUnsavedSession() {
   return fields.some(field => String(field.value).trim() !== '');
 }
 function hasUnsavedWork() {
-  if (hasUnsavedSession() || state.editingDay || $('#plan-workout-dialog')?.open || $('#exercise-library-form')?.dataset.dirty === 'true') return true;
+  if (hasUnsavedSession() || state.editingDay || state.editingRoutineId || $('#plan-workout-dialog')?.open || $('#exercise-library-form')?.dataset.dirty === 'true') return true;
   const typedFields = $$('#scheduled-session input[type="number"], #scheduled-session input[type="text"], #plan-exercises-container input[type="text"], #plan-exercises-container textarea');
   if (typedFields.some(field => String(field.value).trim() !== '')) return true;
   if ($('#session-comments').value.trim() || $('#workout-name').value.trim() || $('#routine-name').value.trim()) return true;
@@ -35,13 +36,61 @@ function hasUnsavedWork() {
 }
 window.addEventListener('logbook:cloud-data-applied', () => {
   if (hasUnsavedWork()) {
-    pendingCloudReload = true;
+    pendingCloudRefresh = true;
     toast('Ήρθαν αλλαγές από άλλη συσκευή. Θα εφαρμοστούν μόλις αποθηκεύσετε.');
     return;
   }
-  pendingCloudReload = false;
-  window.location.reload();
+  refreshCloudData();
 });
+
+function refreshCloudData() {
+  const sessionRecords = store.read('trainingSessions', { type:'array', fallback:[] });
+  const routineRecords = store.read('trainingRoutines', { type:'array', fallback:[] });
+  captureStorageBaselines();
+  const migrated = StorageMigrations.migrateLocalData({
+    savedSessions:sessionRecords.filter(item => !isDeletedRecord(item)),
+    savedRoutines:routineRecords.filter(item => !isDeletedRecord(item)),
+    savedExercises:store.read('trainingExercises', { type:'array', fallback:[] }),
+    savedProfile:store.read('userProfile', { type:'object', fallback:null }),
+  });
+  sessionTombstones = sessionRecords.filter(isDeletedRecord);
+  routineTombstones = routineRecords.filter(isDeletedRecord);
+  const previousActiveId = activeRoutine()?.id;
+  const previousPlanDay = state.selectedPlanDay;
+  const previousDeck = $('#scheduled-session .exercise-deck');
+  const previousExerciseId = previousDeck && deckCards(previousDeck)[deckIndex(previousDeck)]?.dataset.planExerciseId;
+  state.sessions = migrated.state.sessions;
+  state.routines = migrated.state.routines;
+  state.exercises = migrated.state.exercises;
+  state.profile = migrated.state.profile;
+  if (!state.routines.some(routine => routine.id === state.selectedRoutineId)) {
+    state.selectedRoutineId = migrated.state.selectedRoutineId;
+  }
+  if (previousActiveId !== activeRoutine()?.id) state.selectedPlanDay = null;
+  if (!state.sessions.some(session => session.id === state.openSessionId)) state.openSessionId = null;
+  pendingCloudRefresh = false;
+  persistMigrationRepairs(migrated.repairs);
+  renderExerciseLibrary();
+  refreshDayOptions();
+  renderRoutines();
+  renderPlan();
+  renderScheduledSession(null, { preserveUnchanged:true });
+  // A background refresh must not send someone browsing the workout back to 01.
+  // Match the plan entry so reordering (or repeated exercises) keeps the same card.
+  if (previousExerciseId && previousActiveId === activeRoutine()?.id
+    && Number(previousPlanDay) === Number(state.selectedPlanDay)) {
+    const deck = $('#scheduled-session .exercise-deck');
+    const index = deck ? deckCards(deck).findIndex(card => card.dataset.planExerciseId === previousExerciseId) : -1;
+    if (index >= 0) showDeckCard(deck, index);
+  }
+  renderOverview();
+  loadProfile();
+  renderProgressSelectors();
+  renderHome();
+  const language = localStorage.getItem('logbookLanguage');
+  if (language && language !== window.LogbookI18n?.getLanguage()) window.LogbookI18n?.setLanguage(language);
+  window.LogbookI18n?.translate(document);
+}
 
 function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.') {
   if (!exerciseMigrationReady) {
@@ -49,7 +98,20 @@ function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η �
     if (notification) { notification.textContent = message; notification.classList.add('toast-error', 'show'); }
     return false;
   }
-  return StorageMigrations.writeSafely(store, key, value, () => {
+  let reconciled = value;
+  if (storageBaselines.has(key)) {
+    try {
+      const reconcile = key === 'trainingRoutines' ? window.LogbookDataReconciliation.routines : window.LogbookDataReconciliation.rebase;
+      reconciled = reconcile(storageBaselines.get(key), value,
+        store.read(key, { type:Array.isArray(value) ? 'array' : 'object', fallback:Array.isArray(value) ? [] : null }), { rejectDeleted:true });
+    } catch (error) {
+      if (error?.message !== 'SYNC_RECORD_DELETED') { toast(message, 'error'); return false; }
+      pendingCloudRefresh = true;
+      toast('Η εγγραφή έχει διαγραφεί σε άλλη συσκευή. Κλείστε τη φόρμα για να ενημερωθούν τα δεδομένα.', 'error');
+      return false;
+    }
+  }
+  const saved = StorageMigrations.writeSafely(store, key, reconciled, () => {
     const notification = document.querySelector('#toast');
     if (notification) {
       notification.textContent = message;
@@ -58,6 +120,17 @@ function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η �
       setTimeout(() => notification.classList.remove('show'), 2200);
     }
   });
+  if (saved && storageBaselines.has(key)) {
+    storageBaselines.set(key, JSON.parse(JSON.stringify(reconciled)));
+    // Callers keep the committed collection as their next state. Do not leave
+    // stale copies in memory after preserving a concurrent remote edit.
+    if (Array.isArray(value)) value.splice(0, value.length, ...reconciled);
+    else if (value && typeof value === 'object' && reconciled && reconciled !== value) {
+      Object.keys(value).forEach(field => delete value[field]);
+      Object.assign(value, reconciled);
+    }
+  }
+  return saved;
 }
 
 const {
@@ -104,8 +177,19 @@ const { state, repairs } = StorageMigrations.migrateLocalData({
   savedExercises:store.read('trainingExercises', { type:'array', fallback:[] }),
   randomUUID:() => crypto.randomUUID(),
 });
+const storageBaselines = new Map();
+function captureStorageBaselines() {
+  for (const key of ['trainingSessions', 'trainingRoutines', 'trainingExercises', 'userProfile']) {
+    storageBaselines.set(key, store.read(key, { type:key === 'userProfile' ? 'object' : 'array', fallback:key === 'userProfile' ? null : [] }));
+  }
+}
+captureStorageBaselines();
 let customAvatarData = state.profile?.customImage || '';
 let routineCarouselIndex = 0;
+let exerciseCarouselIndex = 0;
+let exerciseSwipe = null;
+let exerciseSwipeFinished = false;
+const exerciseCardResizeObserver = 'ResizeObserver' in window ? new ResizeObserver(() => measureExerciseCarousel()) : null;
 const routineCardResizeObserver = 'ResizeObserver' in window ? new ResizeObserver(() => measureRoutineCarousel()) : null;
 let planExerciseDrafts = [];
 let routineSwipeStartX = null;
@@ -180,7 +264,6 @@ function renderHome() {
   $('#quote-index').textContent = dailyQuotes.length ? `${String(quoteIndex + 1).padStart(2, '0')} / ${String(dailyQuotes.length).padStart(2, '0')}` : '00 / 00';
   const loggedToday = state.sessions.some(session => session.date === localDateInputValue());
   $('#home-rest-stamp')?.classList.toggle('hidden', !loggedToday);
-  renderHomeProfileCard();
   renderHomeRoutineCard();
 }
 const esc = UI.escapeHtml;
@@ -196,10 +279,12 @@ function persistCollection(key, items, existingTombstones, deletedIds = []) {
   const deletedAt = new Date().toISOString();
   deletedIds.forEach(itemId => tombstones.set(String(itemId), { id:itemId, deletedAt }));
   liveIds.forEach(itemId => tombstones.delete(itemId));
-  const nextTombstones = [...tombstones.values()];
+  const records = [...items, ...tombstones.values()];
+  const saved = safeStoreWrite(key, records);
+  if (saved) items.splice(0, items.length, ...records.filter(item => !isDeletedRecord(item)));
   return {
-    saved:safeStoreWrite(key, [...items, ...nextTombstones]),
-    tombstones:nextTombstones,
+    saved,
+    tombstones:records.filter(isDeletedRecord),
   };
 }
 
@@ -215,125 +300,16 @@ function persistSessions(sessions = state.sessions, deletedIds = []) {
   return result.saved;
 }
 
-if (repairs.exercisesChanged || repairs.sessionsChanged || repairs.routinesChanged) {
-  try { ExerciseModel.backupBeforeExerciseMigration(localStorage); }
-  catch { exerciseMigrationReady = false; safeStoreWrite('trainingExercises', state.exercises); }
-  if (exerciseMigrationReady && repairs.exercisesChanged) exerciseMigrationReady = safeStoreWrite('trainingExercises', state.exercises);
-}
-if (exerciseMigrationReady && repairs.sessionsChanged) persistSessions();
-if (exerciseMigrationReady && repairs.routinesChanged) persistRoutines();
-
-const rewardLabels = ['ΔΗΜΙΟΥΡΓΙΑ ΠΡΟΓΡΑΜΜΑΤΟΣ','PLAN SETUP','KEEP UP THE WORK','NEVER GIVE UP','GYMRAT'];
-const scheduledForRoutine = (session, routine) => session?.routineId != null
-  && String(session.routineId) === String(routine?.id)
-  && session.type !== 'free';
-const shiftCycle = (routine, cycle, amount) => { const date = localDate(cycle); date.setDate(date.getDate() + amount * clampCycleLength(routine?.cycleLength)); return localDateInputValue(date); };
-const cycleStartKey = (routine, value) => {
-  const date = localDate(value) || new Date();
-  date.setDate(date.getDate() - (cycleDayForDate(routine, localDateInputValue(date)) - 1));
-  return localDateInputValue(date);
-};
-
-function createRewardTracking() {
-  const periods = {};
-  state.routines.forEach(routine => {
-    const weeks = state.sessions
-      .filter(session => scheduledForRoutine(session, routine) && session.date)
-      .map(session => cycleStartKey(routine, session.date)).sort();
-    periods[routine.id] = weeks.length ? [{ start:weeks[0], end:routine.isActive ? null : weeks.at(-1) }] : [];
-  });
-  const active = activeRoutine();
-  if (active && !periods[active.id].some(period => period.end === null)) periods[active.id].push({ start:cycleStartKey(active, localDateInputValue()), end:null });
-  return { version:1, activeRoutineId:active?.id || null, periods };
-}
-
-function reconcileRewardTracking(tracking) {
-  const activeId = activeRoutine()?.id || null;
-  state.routines.forEach(routine => {
-    const completedCycles = state.sessions
-      .filter(session => scheduledForRoutine(session, routine) && session.date)
-      .map(session => cycleStartKey(routine, session.date))
-      .sort();
-    const periods = tracking.periods[routine.id];
-    if (!periods.length) {
-      if (completedCycles.length) periods.push({ start:completedCycles[0], end:routine.id === activeId ? null : completedCycles.at(-1) });
-      else if (routine.id === activeId) periods.push({ start:cycleStartKey(routine, localDateInputValue()), end:null });
-      return;
-    }
-    periods.sort((a, b) => String(a.start).localeCompare(String(b.start)));
-    if (completedCycles.length && completedCycles[0] < periods[0].start) periods[0].start = completedCycles[0];
-    if (routine.id === activeId && !periods.some(period => period.end === null)) {
-      periods.push({ start:cycleStartKey(routine, localDateInputValue()), end:null });
-    }
-  });
-  return tracking;
-}
-
-function loadRewardTracking() {
-  const saved = store.read('routineRewardTracking', { type:'object', fallback:null });
-  const valid = !Array.isArray(saved) && saved?.version === 1 && saved.periods && typeof saved.periods === 'object';
-  const tracking = valid ? saved : createRewardTracking();
-  state.routines.forEach(routine => { if (!Array.isArray(tracking.periods[routine.id])) tracking.periods[routine.id] = []; });
-  const activeId = activeRoutine()?.id || null;
-  if (tracking.activeRoutineId !== activeId) {
-    const previousPeriods = tracking.periods[tracking.activeRoutineId] || [];
-    const previousOpen = previousPeriods.findLast?.(period => period.end === null) || [...previousPeriods].reverse().find(period => period.end === null);
-    const previousRoutine = state.routines.find(routine => routine.id === tracking.activeRoutineId);
-    if (previousOpen) previousOpen.end = cycleStartKey(previousRoutine, localDateInputValue());
-    if (activeId) tracking.periods[activeId].push({ start:cycleStartKey(activeRoutine(), localDateInputValue()), end:null });
-    tracking.activeRoutineId = activeId;
+function persistMigrationRepairs(repairs) {
+  if (repairs.exercisesChanged || repairs.sessionsChanged || repairs.routinesChanged) {
+    try { ExerciseModel.backupBeforeExerciseMigration(localStorage); }
+    catch { exerciseMigrationReady = false; safeStoreWrite('trainingExercises', state.exercises); }
+    if (exerciseMigrationReady && repairs.exercisesChanged) exerciseMigrationReady = safeStoreWrite('trainingExercises', state.exercises);
   }
-  reconcileRewardTracking(tracking);
-  safeStoreWrite('routineRewardTracking', tracking);
-  return tracking;
+  if (exerciseMigrationReady && repairs.sessionsChanged) persistSessions();
+  if (exerciseMigrationReady && repairs.routinesChanged) persistRoutines();
 }
-
-let rewardTracking = loadRewardTracking();
-
-function switchRewardRoutine(previousId, nextId) {
-  if (!nextId || previousId === nextId) return;
-  const previousRoutine = state.routines.find(routine => routine.id === previousId);
-  const nextRoutine = state.routines.find(routine => routine.id === nextId);
-  const previousPeriods = rewardTracking.periods[previousId] || [];
-  const openPeriod = previousPeriods.findLast?.(period => period.end === null) || [...previousPeriods].reverse().find(period => period.end === null);
-  if (openPeriod) openPeriod.end = cycleStartKey(previousRoutine, localDateInputValue());
-  if (!Array.isArray(rewardTracking.periods[nextId])) rewardTracking.periods[nextId] = [];
-  const last = rewardTracking.periods[nextId].at(-1);
-  if (!last || last.end !== null) rewardTracking.periods[nextId].push({ start:cycleStartKey(nextRoutine, localDateInputValue()), end:null });
-  rewardTracking.activeRoutineId = nextId;
-  safeStoreWrite('routineRewardTracking', rewardTracking);
-}
-
-function routineReward(routine = activeRoutine()) {
-  const reward = ProgressRewards.calculateRoutineReward({
-    routine,
-    sessions:state.sessions,
-    rewardTracking,
-  });
-  return { ...reward, label:rewardLabels[reward.stage], routine };
-}
-
-function renderRewards() {
-  const reward = routineReward();
-  const ring = $('#profile-reward-ring');
-  if (ring) {
-    const periodLabel = reward.routine?.cycleLength === 7
-      ? (reward.streak === 1 ? 'συνεχόμενη εβδομάδα' : 'συνεχόμενες εβδομάδες')
-      : (reward.streak === 1 ? 'συνεχόμενος μικρόκυκλος' : 'συνεχόμενοι μικρόκυκλοι');
-    const detail = reward.target
-      ? `${reward.routine.name} · ${reward.streak} ${periodLabel} · ${reward.completedThisWeek}/${reward.target} ${reward.routine.cycleLength === 7 ? 'αυτή την εβδομάδα' : 'σε αυτόν τον μικρόκυκλο'}`
-      : 'Δηλώστε τις ημέρες του πρώτου σας προγράμματος';
-    ring.className = `profile-reward-ring reward-stage-${reward.stage}`;
-    ring.setAttribute('aria-label', `${reward.label} · ${reward.stage} από 4 στάδια επιβράβευσης · ${detail}`);
-  }
-  const stamp = $('#home-reward-stamp');
-  if (stamp) {
-    stamp.classList.toggle('hidden', reward.stage === 0);
-    stamp.dataset.stage = String(reward.stage);
-    $('#home-reward-label').textContent = reward.label;
-    $('#home-profile-card').dataset.rewardStage = String(reward.stage);
-  }
-}
+persistMigrationRepairs(repairs);
 
 function setRows(count, values = [], prefix = '', options = {}) {
   return SessionTemplates.setRows(count, values, prefix, { ...options, unit:weightUnit() });
@@ -445,18 +421,46 @@ function readPlanExerciseCards() {
 }
 
 const currentExerciseName = entry => ExerciseModel.exerciseName(entry, state.exercises);
+const currentExerciseCues = entry => ExerciseModel.exerciseCues(entry, state.exercises);
 function exerciseOptionLabel(entry) {
   const homonyms = state.exercises.filter(item => item.name === entry.name);
-  return homonyms.length > 1 ? `${entry.name} (${homonyms.indexOf(entry) + 1})${entry.notes ? ` · ${entry.notes}` : ''}` : entry.name;
+  return homonyms.length > 1 ? `${entry.name} (${homonyms.indexOf(entry) + 1})${entry.cues ? ` · ${entry.cues}` : ''}` : entry.name;
 }
 function libraryOptions(selectedId = '') {
   return '<option value="">Επιλογή άσκησης</option>' + state.exercises.map(entry => `<option data-i18n-user value="${esc(entry.id)}" ${entry.id === selectedId ? 'selected' : ''}>${esc(exerciseOptionLabel(entry))}</option>`).join('');
 }
-function renderExerciseLibrary() {
-  $('#exercise-library-list').innerHTML = [...state.exercises].sort((a, b) => a.name.localeCompare(b.name, 'el')).map(entry => `<li><button type="button" class="exercise-index-row" data-edit-exercise="${esc(entry.id)}"><strong data-i18n-user>${esc(entry.name)}</strong>${entry.notes ? `<span data-i18n-user>${esc(entry.notes)}</span>` : ''}</button></li>`).join('');
+function renderExerciseLibrary(centerExerciseId = null) {
+  const list = $('#exercise-library-list');
+  const centeredId = centerExerciseId || list.querySelector('[data-carousel-position="0"] [data-edit-exercise]')?.dataset.editExercise;
+  const entries = [...state.exercises].sort((a, b) => a.name.localeCompare(b.name, 'el'));
+  list.innerHTML = entries.map(entry => `<li class="exercise-card"><button type="button" class="exercise-index-row" data-edit-exercise="${esc(entry.id)}"><strong data-i18n-user>${esc(entry.name)}</strong>${entry.cues ? `<span data-i18n-user>${esc(entry.cues)}</span>` : ''}</button></li>`).join('');
+  $('#exercise-carousel').hidden = !entries.length;
+  exerciseCardResizeObserver?.disconnect();
+  list.querySelectorAll('.exercise-card').forEach(card => exerciseCardResizeObserver?.observe(card));
+  updateExerciseCarousel(Math.max(0, entries.findIndex(entry => entry.id === centeredId)));
   $('#exercise-library-count').textContent = String(state.exercises.length).padStart(2, '0');
   $('#exercise-library-status').textContent = state.exercises.length ? '' : 'Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.';
   window.LogbookI18n?.translate($('#plan-view'));
+}
+function measureExerciseCarousel() {
+  const list = $('#exercise-library-list');
+  const tallest = Math.max(0, ...[...list.children].map(card => card.offsetHeight));
+  if (tallest) list.style.height = `${Math.ceil(tallest * 1.06) + 36}px`;
+}
+function updateExerciseCarousel(nextIndex = exerciseCarouselIndex) {
+  const cards = [...$('#exercise-library-list').children];
+  exerciseCarouselIndex = cards.length ? ((nextIndex % cards.length) + cards.length) % cards.length : 0;
+  cards.forEach((card, index) => {
+    let offset = index - exerciseCarouselIndex;
+    if (offset > cards.length / 2) offset -= cards.length;
+    if (offset < -cards.length / 2) offset += cards.length;
+    card.dataset.carouselPosition = Math.abs(offset) <= 2 ? String(offset) : 'hidden';
+    card.setAttribute('aria-hidden', String(offset !== 0));
+    card.querySelector('button').tabIndex = offset === 0 ? 0 : -1;
+  });
+  $('#exercise-carousel-count').textContent = `${String(cards.length ? exerciseCarouselIndex + 1 : 0).padStart(2, '0')} / ${String(cards.length).padStart(2, '0')}`;
+  $$('[data-exercise-scroll]').forEach(button => { button.disabled = cards.length < 2; });
+  measureExerciseCarousel();
 }
 function resetExerciseLibraryForm() {
   $('#exercise-library-form').reset();
@@ -483,16 +487,22 @@ $$('.plan-section-toggle').forEach(button => button.addEventListener('click', ()
   const expanded = button.getAttribute('aria-expanded') !== 'true';
   button.setAttribute('aria-expanded', String(expanded));
   document.getElementById(button.getAttribute('aria-controls')).hidden = !expanded;
-  if (expanded) updateRoutineCarousel();
+  if (expanded) { updateRoutineCarousel(); updateExerciseCarousel(); }
 }));
 $('#exercise-library-list').addEventListener('click', event => {
   const button = event.target.closest('[data-edit-exercise]');
   const entry = state.exercises.find(item => item.id === button?.dataset.editExercise);
   if (!entry) return;
+  if (exerciseSwipeFinished) { exerciseSwipeFinished = false; return; }
+  const card = button.closest('.exercise-card');
+  if (card?.dataset.carouselPosition !== '0') {
+    updateExerciseCarousel([...card.parentElement.children].indexOf(card));
+    return;
+  }
   $('#exercise-library-form').dataset.editingId = entry.id;
   $('#exercise-library-form').dataset.dirty = 'true';
   $('#library-exercise-name').value = entry.name;
-  $('#library-exercise-notes').value = entry.notes || '';
+  $('#library-exercise-notes').value = entry.cues || '';
   $('#cancel-library-edit').classList.remove('hidden');
   $('#library-editor').open = true;
   $('#library-exercise-name').focus();
@@ -502,11 +512,12 @@ $('#exercise-library-form').addEventListener('submit', event => {
   $('#library-exercise-name').value = $('#library-exercise-name').value.trim();
   if (!event.currentTarget.reportValidity()) return;
   let next;
-  try { next = ExerciseModel.saveExercise(state.exercises, { id:event.currentTarget.dataset.editingId, name:$('#library-exercise-name').value, notes:$('#library-exercise-notes').value }); }
+  try { next = ExerciseModel.saveExercise(state.exercises, { id:event.currentTarget.dataset.editingId, name:$('#library-exercise-name').value, cues:$('#library-exercise-notes').value }); }
   catch { $('#library-exercise-name').focus(); return; }
   if (!persistExerciseLibrary(next)) return;
+  const savedId = event.currentTarget.dataset.editingId || next.at(-1).id;
   resetExerciseLibraryForm();
-  renderExerciseLibrary(); renderPlanExercises(); renderPlan(); renderProgressSelectors();
+  renderExerciseLibrary(savedId); renderPlanExercises(); renderPlan(); renderProgressSelectors();
   if (!hasUnsavedSession()) renderScheduledSession();
   $('#exercise-library-status').textContent = 'Η άσκηση αποθηκεύτηκε.';
   $('#library-exercise-name').focus();
@@ -525,7 +536,7 @@ function renderPlanExercises() {
     <span class="builder-number">${String(i + 1).padStart(2,'0')}</span>
     <label>Άσκηση<select class="builder-name" required>${libraryOptions(planExerciseDrafts[i]?.exerciseId)}</select></label>
     <label>Εργάσιμα σετ<input class="builder-sets" type="number" min="1" max="20" value="${esc(planExerciseDrafts[i]?.workSets || 3)}" required></label>
-    <label class="builder-cue">Cues<input class="builder-cues" type="text" value="${esc(planExerciseDrafts[i]?.cues || '')}" placeholder="π.χ. ώμοι πίσω, σταθερά πόδια"></label>
+    <label class="builder-cue">Cues<textarea class="builder-cues" data-i18n-user rows="2" readonly>${esc(currentExerciseCues({ exerciseId:planExerciseDrafts[i]?.exerciseId }))}</textarea><small>Ορίζονται στις ασκήσεις μου.</small></label>
     <button class="remove-plan-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button>
   </article>`).join('');
   countInput.value = count;
@@ -561,7 +572,7 @@ function renderPlan() {
     const detail = routine?.usesWeekdays === false ? `${items.length} ασκήσεις` : workoutName;
     const number = routine?.usesWeekdays === false ? '' : `<span>${String(cycleDay).padStart(2,'0')}</span>`;
     return `<section class="day-card ${items.length ? 'active-day' : ''}"><div class="day-card-head">${number}<div><h3 ${routine?.usesWeekdays === false ? 'data-i18n-user' : ''}>${esc(heading)}</h3><p ${items.length ? 'data-i18n-user' : ''}>${esc(detail)}</p></div>${items.length ? `<div class="day-card-actions"><button class="edit-day" data-edit-day="${cycleDay}" type="button">Επεξεργασία</button><button class="delete-day" data-delete-day="${cycleDay}" aria-label="Διαγραφή προπόνησης">×</button></div>` : ''}</div>
-      <div class="day-exercises">${items.length ? items.map(item => `<article><div><strong data-i18n-user>${esc(currentExerciseName(item))}</strong><small>${item.sets?.length || item.workSets || 3} εργάσιμα σετ</small></div>${item.cues ? `<p data-i18n-user>→ ${esc(item.cues)}</p>` : ''}</article>`).join('') : '<small>Δεν έχει οριστεί προπόνηση</small>'}</div></section>`;
+      <div class="day-exercises">${items.length ? items.map(item => `<article><div><strong data-i18n-user>${esc(currentExerciseName(item))}</strong><small>${item.sets?.length || item.workSets || 3} εργάσιμα σετ</small></div>${currentExerciseCues(item) ? `<p data-i18n-user>→ ${esc(currentExerciseCues(item))}</p>` : ''}</article>`).join('') : '<small>Δεν έχει οριστεί προπόνηση</small>'}</div></section>`;
   }).join('') : '<section class="day-card"><div class="day-card-head"><div><h3>Δεν υπάρχουν προπονήσεις</h3></div></div></section>';
 }
 
@@ -745,7 +756,7 @@ function collectWorkoutDraft() {
   const deck = container.querySelector('.exercise-deck') || container;
   return {
     version:WORKOUT_DRAFT_VERSION,
-    owner:workoutDraftOwner(),
+    owner:workoutDraftPageOwner,
     savedAt:new Date().toISOString(),
     mode:state.mode,
     date:$('#log-date').value,
@@ -760,21 +771,29 @@ function collectWorkoutDraft() {
 }
 
 function clearWorkoutDraft() {
-  clearTimeout(workoutDraftTimer);
-  workoutDraftTimer = null;
+  if (!workoutDraftWritable) return;
   try { localStorage.removeItem(WORKOUT_DRAFT_KEY); } catch { /* Best effort in private browsing. */ }
+  updateWorkoutDraftStatus('');
 }
 
 function persistWorkoutDraft() {
-  clearTimeout(workoutDraftTimer);
-  workoutDraftTimer = null;
+  if (!workoutDraftWritable || workoutDraftOwner() !== workoutDraftPageOwner) return;
   if (!hasUnsavedSession()) return clearWorkoutDraft();
-  try { localStorage.setItem(WORKOUT_DRAFT_KEY, JSON.stringify(collectWorkoutDraft())); } catch { /* The open form still remains usable. */ }
+  try {
+    localStorage.setItem(WORKOUT_DRAFT_KEY, JSON.stringify(collectWorkoutDraft()));
+    updateWorkoutDraftStatus('Η πρόοδός σας αποθηκεύτηκε σε αυτή τη συσκευή. Συνεχίζετε και χωρίς σύνδεση.');
+  } catch {
+    updateWorkoutDraftStatus('Δεν ήταν δυνατή η αποθήκευση της προόδου σε αυτή τη συσκευή. Κρατήστε την εφαρμογή ανοιχτή μέχρι να αποθηκευτεί.', true);
+  }
 }
 
-function scheduleWorkoutDraftSave() {
-  clearTimeout(workoutDraftTimer);
-  workoutDraftTimer = setTimeout(persistWorkoutDraft, 120);
+function updateWorkoutDraftStatus(message, failed = false) {
+  const status = $('#workout-draft-status');
+  status.hidden = !message;
+  status.classList.toggle('draft-save-error', failed);
+  const translated = window.LogbookI18n?.t(message) || message;
+  if (status.textContent !== translated) status.textContent = message;
+  window.LogbookI18n?.translate(status);
 }
 
 function draftCardMarkup(card, index) {
@@ -799,6 +818,8 @@ function restoreWorkoutDraftValues(container, draftCards) {
   [...container.querySelectorAll('[data-exercise]')].forEach((card, cardIndex) => {
     const draftCard = draftCards[cardIndex];
     if (!draftCard) return;
+    card.dataset.planExerciseId = draftCard.planExerciseId || '';
+    card.dataset.exerciseId = draftCard.exerciseId || '';
     if (card.querySelector('.exercise-name')) card.querySelector('.exercise-name').value = draftCard.exercise;
     card.querySelector('.exercise-comments').value = draftCard.comments;
     [...card.querySelectorAll('[data-set]')].forEach((row, rowIndex) => {
@@ -817,7 +838,7 @@ function restoreWorkoutDraft() {
   let draft;
   try { draft = JSON.parse(localStorage.getItem(WORKOUT_DRAFT_KEY) || 'null'); } catch { return false; }
   if (!draft || draft.version !== WORKOUT_DRAFT_VERSION || draft.owner !== workoutDraftOwner()
-    || !['scheduled','free'].includes(draft.mode) || !Array.isArray(draft.cards) || !draft.cards.length) {
+    || !['scheduled','free'].includes(draft.mode) || !Array.isArray(draft.cards)) {
     if (draft) clearWorkoutDraft();
     return false;
   }
@@ -831,7 +852,6 @@ function restoreWorkoutDraft() {
 
   const container = draft.mode === 'scheduled' ? $('#scheduled-session') : $('#free-exercises');
   const cards = draft.cards.filter(card => Array.isArray(card.sets) && card.sets.length);
-  if (!cards.length) return false;
   const cardsMarkup = cards.map(draftCardMarkup).join('');
   if (draft.mode === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
@@ -1045,7 +1065,7 @@ function setupDeck(shell) {
 function refreshSessionDecks() { $$('#log-view .exercise-deck-shell').forEach(setupDeck); }
 window.addEventListener('resize', refreshSessionDecks);
 
-function renderScheduledSession(preferredDay = null) {
+function renderScheduledSession(preferredDay = null, { preserveUnchanged = false } = {}) {
   const date = $('#log-date').value;
   $('#scheduled-session').dataset.date = date;
   const calendarDay = dayForDate(date);
@@ -1054,10 +1074,16 @@ function renderScheduledSession(preferredDay = null) {
   const planDay = refreshWorkoutDayOptions(requestedPlanDay);
   state.selectedPlanDay = planDay;
   $('#day-badge').innerHTML = `<span>${calendarDay}</span><small>${formatDate(date)}</small>`;
-  const planned = activePlan().filter(item => itemCycleDay(item, routine) === Number(planDay)).map(item => ({ ...item, exercise:currentExerciseName(item), sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
+  const planned = activePlan().filter(item => itemCycleDay(item, routine) === Number(planDay)).map(item => ({ ...item, exercise:currentExerciseName(item), cues:currentExerciseCues(item), sets:Array.from({ length:item.sets?.length || item.workSets || 3 }, () => ({ reps:'', weight:'' })) }));
   const workoutName = planned[0]?.workoutName || 'Η προπόνηση της ημέρας';
   const slotLabel = cycleDayLabel(routine, planDay);
-  $('#scheduled-session').innerHTML = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2></div></div>${deckShellHTML(planned.map((item, index) => exerciseCard(item, false, index)).join(''))}` : `<div class="no-workout empty"><span>Δεν υπάρχει ορισμένη προπόνηση για ${esc(slotLabel)}.</span></div>`;
+  const markup = planned.length ? `<div class="session-intro"><div><span class="active-routine-label" data-i18n-user>${esc(routine?.name || 'Ενεργό πρόγραμμα')}</span><h2 data-i18n-user>${esc(workoutName)}</h2></div></div>${deckShellHTML(planned.map((item, index) => exerciseCard(item, false, index)).join(''))}` : `<div class="no-workout empty"><span>Δεν υπάρχει ορισμένη προπόνηση για ${esc(slotLabel)}.</span></div>`;
+  const renderKey = JSON.stringify([routine?.id, Number(planDay), markup]);
+  // Compare source markup, not the live DOM changed by translation and deck layout.
+  // Unrelated sync updates must not replay set animations or replace focused inputs.
+  if (preserveUnchanged && renderKey === renderedScheduledSessionKey) return;
+  renderedScheduledSessionKey = renderKey;
+  $('#scheduled-session').innerHTML = markup;
   refreshCopySetButtons($('#scheduled-session'));
   refreshSessionDecks();
 }
@@ -1418,7 +1444,6 @@ function renderProfilePreview() {
   $('#profile-preview-avatar').classList.toggle('custom-avatar', hasCustomImage);
   $('#profile-preview-image').src = customAvatarData;
   renderProfileGallery();
-  renderRewards();
 }
 
 const PROFILE_GALLERY_LIMIT = 6;
@@ -1517,12 +1542,12 @@ function homeCardStorageKey(storageKey) {
   return mobileHomeLayout() ? `${storageKey}Mobile` : storageKey;
 }
 
-function readHomeCardPosition(storageKey = 'homeProfileCardPosition') {
+function readHomeCardPosition(storageKey = 'homeRoutineCardPosition') {
   const saved = store.read(homeCardStorageKey(storageKey), { type:'object', fallback:null });
   return !Array.isArray(saved) && Number.isFinite(saved?.x) && Number.isFinite(saved?.y) ? saved : null;
 }
 
-function homeCardBounds(card = $('#home-profile-card')) {
+function homeCardBounds(card = $('#home-routine-card')) {
   const shell = $('.home-shell');
   if (mobileHomeLayout()) {
     const gutter = 16;
@@ -1570,29 +1595,25 @@ function homeRectsOverlap(first, second, gap = 20) {
 function avoidDefaultHomeCardCollisions(card, x, y, bounds, selectors = []) {
   if (window.innerWidth < 1000) return { x, y };
   setHomeCardCoordinates(card, x, y);
-  selectors.forEach(selector => {
-    const obstacle = $(selector);
-    if (!obstacle || obstacle.classList.contains('hidden')) return;
-    let cardRect = card.getBoundingClientRect();
-    const obstacleRect = obstacle.getBoundingClientRect();
-    if (!homeRectsOverlap(cardRect, obstacleRect)) return;
+  const cardRect = card.getBoundingClientRect();
+  const obstacles = selectors.map(selector => $(selector))
+    .filter(obstacle => obstacle && !obstacle.classList.contains('hidden'))
+    .map(obstacle => obstacle.getBoundingClientRect());
+  if (!obstacles.some(obstacle => homeRectsOverlap(cardRect, obstacle))) return { x, y };
 
-    const candidates = [
-      { x:x - (cardRect.right - obstacleRect.left + 24), y },
-      { x:x + (obstacleRect.right - cardRect.left + 24), y },
-      { x, y:y - (cardRect.bottom - obstacleRect.top + 24) },
-      { x, y:y + (obstacleRect.bottom - cardRect.top + 24) },
-    ].filter(candidate => candidate.x >= bounds.minX && candidate.x <= bounds.maxX && candidate.y >= bounds.minY && candidate.y <= bounds.maxY)
-      .sort((first, second) => Math.hypot(first.x - x, first.y - y) - Math.hypot(second.x - x, second.y - y));
-    if (candidates.length) ({ x, y } = candidates[0]);
-    setHomeCardCoordinates(card, x, y);
-    cardRect = card.getBoundingClientRect();
-    if (homeRectsOverlap(cardRect, obstacleRect)) {
-      y = Math.min(bounds.maxY, y + (obstacleRect.bottom - cardRect.top + 24));
-      setHomeCardCoordinates(card, x, y);
-    }
-  });
-  return { x, y };
+  // A move away from one obstacle must also clear every other obstacle.
+  const xs = [x, ...obstacles.flatMap(rect => [x + rect.left - cardRect.right - 24, x + rect.right - cardRect.left + 24])];
+  const ys = [y, ...obstacles.flatMap(rect => [y + rect.top - cardRect.bottom - 24, y + rect.bottom - cardRect.top + 24])];
+  const candidates = xs.flatMap(nextX => ys.map(nextY => ({ x:nextX, y:nextY })))
+    .filter(candidate => candidate.x >= bounds.minX && candidate.x <= bounds.maxX && candidate.y >= bounds.minY && candidate.y <= bounds.maxY)
+    .filter(candidate => !obstacles.some(obstacle => homeRectsOverlap({
+      left:cardRect.left + candidate.x - x,
+      right:cardRect.right + candidate.x - x,
+      top:cardRect.top + candidate.y - y,
+      bottom:cardRect.bottom + candidate.y - y,
+    }, obstacle)))
+    .sort((first, second) => Math.hypot(first.x - x, first.y - y) - Math.hypot(second.x - x, second.y - y));
+  return candidates[0] || { x, y };
 }
 
 function placeHomeCard(card, position, fallback) {
@@ -1609,35 +1630,12 @@ function placeHomeCard(card, position, fallback) {
   setHomeCardCoordinates(card, x, y);
 }
 
-function placeHomeProfileCard(position = readHomeCardPosition()) {
-  placeHomeCard($('#home-profile-card'), position, {
-    x:maxX => maxX * .92,
-    y:maxY => Math.min(205, maxY * .16),
-    avoid:['.daily-quote'],
-  });
-}
-
 function placeHomeRoutineCard(position = readHomeCardPosition('homeRoutineCardPosition')) {
   placeHomeCard($('#home-routine-card'), position, {
     x:maxX => maxX * .58,
     y:maxY => Math.min(330, maxY * .62),
-    avoid:['.daily-quote', '#home-profile-card', '.home-start', '.home-quick'],
+    avoid:['.daily-quote', '.home-start', '.home-quick'],
   });
-}
-
-function renderHomeProfileCard() {
-  const card = $('#home-profile-card'), profile = state.profile;
-  const hasProfile = Boolean(profile?.name);
-  card.classList.toggle('hidden', !hasProfile);
-  if (!hasProfile) return;
-  const hasCustomImage = Boolean(profile.customImage);
-  $('#home-profile-name').textContent = profile.name;
-  $('#home-profile-avatar').classList.toggle('male-avatar', !hasCustomImage);
-  $('#home-profile-avatar').classList.remove('female-avatar');
-  $('#home-profile-avatar').classList.toggle('custom-avatar', hasCustomImage);
-  $('#home-profile-image').src = hasCustomImage ? profile.customImage : '';
-  renderRewards();
-  requestAnimationFrame(() => placeHomeProfileCard());
 }
 
 function renderHomeRoutineCard() {
@@ -1711,10 +1709,6 @@ function enableHomeCardDrag(card, storageKey, placeCard) {
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(placeCard);
   });
-}
-
-function enableHomeProfileCardDrag() {
-  enableHomeCardDrag($('#home-profile-card'), 'homeProfileCardPosition', () => placeHomeProfileCard());
 }
 
 function enableHomeRoutineCardDrag() {
@@ -1903,7 +1897,7 @@ function loadSessionForCopy(sessionId) {
 }
 
 function showView(view, { skipSessionWarning = false } = {}) {
-  if (pendingCloudReload && !hasUnsavedWork()) { window.location.reload(); return; }
+  if (pendingCloudRefresh && !hasUnsavedWork()) refreshCloudData();
   const current = $('.view.active')?.id.replace('-view','');
   const labels = { home:'Αρχική', log:'Καταγραφή', plan:'Πρόγραμμα', overview:'Ιστορικό', progress:'Επίβλεψη', profile:'Προφίλ' };
   if (!labels[view]) return;
@@ -1982,6 +1976,28 @@ $('#routine-list').addEventListener('pointerup', event => {
   if (Math.abs(distance) >= 45) scrollRoutineTickets(distance < 0 ? 1 : -1);
 });
 $('#routine-list').addEventListener('pointercancel', () => { routineSwipeStartX = null; });
+$$('[data-exercise-scroll]').forEach(button => button.addEventListener('click', () => updateExerciseCarousel(exerciseCarouselIndex + Number(button.dataset.exerciseScroll))));
+$('#exercise-library-list').addEventListener('keydown', event => {
+  if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+  event.preventDefault();
+  updateExerciseCarousel(exerciseCarouselIndex + (event.key === 'ArrowRight' ? 1 : -1));
+  $('#exercise-library-list').focus();
+});
+$('#exercise-library-list').addEventListener('pointerdown', event => {
+  if (event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
+  exerciseSwipeFinished = false;
+  exerciseSwipe = { x:event.clientX, y:event.clientY };
+});
+$('#exercise-library-list').addEventListener('pointerup', event => {
+  if (!exerciseSwipe) return;
+  const x = event.clientX - exerciseSwipe.x, y = event.clientY - exerciseSwipe.y;
+  exerciseSwipe = null;
+  if (Math.abs(x) >= 45 && Math.abs(x) > Math.abs(y) * 1.25) {
+    updateExerciseCarousel(exerciseCarouselIndex + (x < 0 ? 1 : -1));
+    exerciseSwipeFinished = true;
+  }
+});
+$('#exercise-library-list').addEventListener('pointercancel', () => { exerciseSwipe = null; });
 $('#week-strip').addEventListener('pointerdown', event => {
   if (event.isPrimary === false || (event.pointerType && !['touch', 'pen'].includes(event.pointerType))) return;
   historySwipe = { pointerId:event.pointerId, x:event.clientX, y:event.clientY };
@@ -2081,11 +2097,9 @@ $('#routine-form').addEventListener('submit', event => {
   const routine = { id:id(), name, isActive:false, isPlaceholder:false, cycleLength, cycleAnchorDate, usesWeekdays, plan:[] };
   const previousSelectedRoutineId = state.selectedRoutineId;
   state.routines.push(routine);
-  rewardTracking.periods[routine.id] = [];
   state.selectedRoutineId = routine.id;
   if (!persistRoutines()) {
     state.routines.pop();
-    delete rewardTracking.periods[routine.id];
     state.selectedRoutineId = previousSelectedRoutineId;
     return;
   }
@@ -2217,17 +2231,10 @@ $('#profile-form').addEventListener('submit', event => {
     customImage:customAvatarData,
     imageGallery:profileGalleryDraft
   };
-  try {
-    store.write('userProfile', profile);
-  } catch {
-    return toast('Δεν υπάρχει αρκετός χώρος για την εικόνα. Χρειάζεται μικρότερο αρχείο.', 'error');
-  }
+  if (!safeStoreWrite('userProfile', profile, 'Δεν υπάρχει αρκετός χώρος για την εικόνα. Χρειάζεται μικρότερο αρχείο.')) return;
   state.profile = profile;
   refreshWeightUnitUI(previousUnit);
-  setProfileSlip('name', false);
-  updateProfileDraftState();
-  renderMenuIdentity();
-  renderHomeProfileCard();
+  loadProfile();
   renderOverview();
   renderProgressSelectors();
   toast('Το προφίλ αποθηκεύτηκε');
@@ -2244,7 +2251,7 @@ document.addEventListener('input', event => {
 });
 
 document.addEventListener('input', event => {
-  if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments')) scheduleWorkoutDraftSave();
+  if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments')) persistWorkoutDraft();
 });
 
 document.addEventListener('change', event => {
@@ -2260,6 +2267,9 @@ document.addEventListener('change', event => {
 });
 
 document.addEventListener('change', event => {
+  if (event.target.matches('.builder-name')) {
+    event.target.closest('.plan-exercise-fields').querySelector('.builder-cues').value = currentExerciseCues({ exerciseId:event.target.value });
+  }
   if (event.target.matches('.session-library-exercise')) {
     const definition = state.exercises.find(item => item.id === event.target.value);
     const card = event.target.closest('[data-exercise]');
@@ -2269,11 +2279,15 @@ document.addEventListener('change', event => {
       card.querySelector('.exercise-source-name').value = definition.name;
     }
   }
-  if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments, #workout-day-select')) scheduleWorkoutDraftSave();
+  if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments, #workout-day-select')) persistWorkoutDraft();
 });
 
-document.addEventListener('click', event => {
-  if (event.target.closest('#scheduled-session, #free-session, #save-session, #cancel-session-edit')) setTimeout(scheduleWorkoutDraftSave, 0);
+window.addEventListener('logbook:session-state', event => {
+  const { state:sessionState, userId } = event.detail || {};
+  const nextOwner = sessionState === 'guest' ? 'guest' : userId;
+  // This renderer belongs to one identity. A later pagehide must never recreate
+  // cleared account data or write its form under the next account's owner.
+  if (nextOwner !== workoutDraftPageOwner) workoutDraftWritable = false;
 });
 window.addEventListener('pagehide', persistWorkoutDraft);
 document.addEventListener('visibilitychange', () => {
@@ -2304,7 +2318,7 @@ $('#plan-form').addEventListener('submit', event => {
     const definition = state.exercises.find(entry => entry.id === card.querySelector('.builder-name').value);
     const workSets = Number(card.querySelector('.builder-sets').value);
     const previous = plan.find(item => item.id === card.dataset.planId);
-    return { ...previous, id:card.dataset.planId || id(), exerciseId:definition.id, cycleDay:day, day:declaredWeekday, workoutName, exercise:definition.name, workSets, cues:card.querySelector('.builder-cues').value.trim(), sets:Array.from({ length:workSets }, () => ({})) };
+    return { ...previous, id:card.dataset.planId || id(), exerciseId:definition.id, cycleDay:day, day:declaredWeekday, workoutName, exercise:definition.name, workSets, cues:definition.cues || '', sets:Array.from({ length:workSets }, () => ({})) };
   });
   const nextPlan = [...plan.filter(item => itemCycleDay(item, routine) !== day && itemCycleDay(item, routine) !== Number(sourceDay)), ...exercises];
   const nextRoutines = state.routines.map(item => item.id === routine.id ? { ...item, plan:nextPlan, isPlaceholder:false } : item);
@@ -2332,18 +2346,19 @@ function saveSession() {
     invalidField.reportValidity();
     return;
   }
-  const existing = state.sessions.find(item => String(item.id) === String(state.editingSessionId));
+  const latestSessions = store.read('trainingSessions', { type:'array', fallback:[] }).filter(item => !isDeletedRecord(item));
+  const existing = latestSessions.find(item => String(item.id) === String(state.editingSessionId));
   if (state.editingSessionId && !existing) {
-    resetSessionForm();
-    return toast('Η προπόνηση έχει διαγραφεί και δεν μπορεί να αποθηκευτεί ξανά.', 'error');
+    pendingCloudRefresh = true;
+    return toast('Η εγγραφή έχει διαγραφεί σε άλλη συσκευή. Κλείστε τη φόρμα για να ενημερωθούν τα δεδομένα.', 'error');
   }
-  const copySource = state.sessions.find(item => String(item.id) === String(state.copyingSessionId));
+  const copySource = latestSessions.find(item => String(item.id) === String(state.copyingSessionId));
   if (state.copyingSessionId && !copySource) {
     resetSessionForm();
     return toast('Η αρχική προπόνηση έχει διαγραφεί και δεν μπορεί να αντιγραφεί.', 'error');
   }
   const targetDate = $('#log-date').value;
-  const dateAlreadyLogged = state.sessions.some(item =>
+  const dateAlreadyLogged = latestSessions.some(item =>
     item.date === targetDate && String(item.id) !== String(existing?.id)
   );
   if (dateAlreadyLogged) {
@@ -2479,7 +2494,6 @@ document.addEventListener('click', event => {
       state.selectedRoutineId = previousSelectedRoutineId;
       return;
     }
-    switchRewardRoutine(previousActiveRoutineId, routineId);
     resetPlanForm();
     renderRoutines({ resetCarousel:true });
     renderPlan();
@@ -2510,10 +2524,7 @@ document.addEventListener('click', event => {
       const nextRoutines = state.routines.filter(item => item.id !== routine.id);
       if (routine.isActive) nextRoutines[0].isActive = true;
       if (!persistRoutines(nextRoutines, [routine.id])) return;
-      if (routine.isActive) switchRewardRoutine(routine.id, nextRoutines[0].id);
       state.routines = nextRoutines;
-      delete rewardTracking.periods[routine.id];
-      safeStoreWrite('routineRewardTracking', rewardTracking);
       if (state.selectedRoutineId === routine.id) state.selectedRoutineId = activeRoutine().id;
       resetPlanForm();
       renderRoutines();
@@ -2549,7 +2560,12 @@ document.addEventListener('click', event => {
   }
 });
 
-enableHomeProfileCardDrag();
+// Run after the form's click handlers, including confirmed removals and copies.
+// Synchronous storage also covers termination without a lifecycle event.
+document.addEventListener('click', event => {
+  if (event.composedPath().some(node => node.matches?.('#scheduled-session, #free-session, #save-session, #cancel-session-edit, #confirm-delete-accept, #confirm-delete-secondary, [data-edit-session], [data-copy-session], .mode-button'))) persistWorkoutDraft();
+});
+
 enableHomeRoutineCardDrag();
 renderExerciseLibrary();
 $('#log-date').max = localDateInputValue(); $('#log-date').value = localDateInputValue(); refreshDayOptions(); renderPlanExercises(); renderRoutines(); renderPlan(); renderScheduledSession(); renderOverview(); loadProfile(); renderHome();
@@ -2579,6 +2595,7 @@ document.addEventListener('click', event => {
 });
 window.LogbookI18n?.translate(document);
 if (recoveredWorkoutDraft) {
+  persistWorkoutDraft();
   showView('log', { skipSessionWarning:true });
   toast('Η προπόνησή σας επανήλθε από το πρόχειρο.');
 } else if (location.hash) showView(location.hash.slice(1));

@@ -39,3 +39,40 @@ test('published privacy policy documents private 30-day recovery snapshots', () 
   assert.match(privacy, /Δεν είναι προσβάσιμο από τον browser client/);
   assert.match(privacy, /error events διατηρούνται έως 30 ημέρες/);
 });
+
+test('the privacy policy describes the exercise library, guest mode and the sign-out recovery copy', () => {
+  assert.match(privacy, /βιβλιοθήκη ασκήσεών σου/, 'the exercise entity of 0.3.0 is named');
+  assert.match(privacy, /λειτουργία επισκέπτη/, 'guest mode has its own section');
+  assert.match(privacy, /δεν αποστέλλεται κανένα δεδομένο προπόνησης σε διακομιστή/);
+  assert.match(privacy, /αντίγραφο επαναφοράς γράφεται στο localStorage/, 'sign-out leaves a recovery copy behind');
+  assert.match(privacy, /δεν έχει προθεσμία λήξης/, 'and that copy is documented as having no expiry');
+  assert.match(privacy, /Δεν περιλαμβάνει τα προγράμματα, τη βιβλιοθήκη ασκήσεων ή το προφίλ/, 'the CSV export states what it leaves out');
+});
+
+test('the privacy policy is published in all four languages and links them to each other', () => {
+  const pages = { el:'privacy.html', en:'privacy.en.html', fr:'privacy.fr.html', de:'privacy.de.html' };
+  const guestHeadings = {
+    el:/<h2>5\. Χρήση χωρίς λογαριασμό \(λειτουργία επισκέπτη\)<\/h2>/,
+    en:/<h2>5\. Using Logbook without an account \(guest mode\)<\/h2>/,
+    fr:/<h2>5\. Utilisation sans compte \(mode invité\)<\/h2>/,
+    de:/<h2>5\. Nutzung ohne Konto \(Gastmodus\)<\/h2>/,
+  };
+
+  Object.entries(pages).forEach(([language, path]) => {
+    const page = read(path);
+    assert.match(page, new RegExp(`<html lang="${language}">`), `${path} declares its language`);
+    assert.match(page, guestHeadings[language], `${path} carries the guest mode section`);
+    assert.equal((page.match(/<section>/g) || []).length, 9, `${path} has the nine documented sections`);
+    assert.match(page, /user_sync_snapshots/, `${path} keeps the retention detail`);
+    assert.doesNotMatch(page, /\sstyle=/, `${path} stays CSP-safe`);
+    Object.entries(pages).forEach(([target, targetPath]) => {
+      const escaped = targetPath.replace(/\./g, '\\.');
+      assert.match(page, new RegExp(`hreflang="${target}" href="${escaped}"`), `${path} declares the ${target} alternate`);
+      if (target !== language) assert.match(page, new RegExp(`<a lang="${target}" hreflang="${target}" href="${escaped}">`), `${path} offers the ${target} page to the reader`);
+    });
+  });
+
+  const i18n = read('i18n.js');
+  assert.match(i18n, /const privacyPages = \{ el:'privacy\.html', en:'privacy\.en\.html', fr:'privacy\.fr\.html', de:'privacy\.de\.html' \}/);
+  assert.match(i18n, /\.side-menu-privacy'\)\.forEach\(link => link\.setAttribute\('href', privacyPages\[language\]\)\)/);
+});

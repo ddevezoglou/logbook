@@ -56,6 +56,9 @@
   }
 
   function loadLibrary() {
+    // An expired token needs the network to refresh. Open local data immediately
+    // offline and initialize authenticated network access when connectivity returns.
+    if (!initialized && !navigator.onLine) return reportUnavailable();
     if (window.supabase?.createClient) return initializeClient();
     if (library?.isConnected) return;
 

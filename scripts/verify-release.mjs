@@ -14,6 +14,7 @@ const productionScripts = [
   'app.js',
   'auth.js',
   'cloud-sync.js',
+  'data-reconciliation.js',
   'error-tracking.js',
   'i18n.js',
   'session-state.js',

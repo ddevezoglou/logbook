@@ -112,7 +112,9 @@ test('the install handler precaches the privacy policy next to the app shell', a
   const worker = await installedWorker();
   const cached = [...worker.caches.values()].flatMap(entries => [...entries.keys()]);
 
-  assert.ok(cached.includes(`${SCOPE}privacy.html`), 'privacy.html is precached');
+  for (const path of ['privacy.html', 'privacy.en.html', 'privacy.fr.html', 'privacy.de.html']) {
+    assert.ok(cached.includes(`${SCOPE}${path}`), `${path} is precached`);
+  }
   assert.ok(cached.includes(`${SCOPE}index.html`), 'index.html is precached');
 });
 
@@ -129,10 +131,11 @@ test('online navigation is served from the network so each path renders its own 
 test('offline navigation falls back to the cached document of the requested path', async () => {
   const worker = await installedWorker({ online:false });
 
-  const response = await worker.navigate('privacy.html');
-
-  assert.equal(response.from, 'cache');
-  assert.equal(response.url, `${SCOPE}privacy.html`, 'the privacy policy is not replaced by the app shell');
+  for (const path of ['privacy.html', 'privacy.en.html', 'privacy.fr.html', 'privacy.de.html']) {
+    const response = await worker.navigate(path);
+    assert.equal(response.from, 'cache');
+    assert.equal(response.url, `${SCOPE}${path}`, 'the privacy policy is not replaced by the app shell');
+  }
 });
 
 test('offline navigation to the root still boots the cached app shell', async () => {

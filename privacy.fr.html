@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15130d">
+  <meta name="robots" content="index,follow">
+  <title>Politique de confidentialité — Logbook</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate" hreflang="el" href="privacy.html">
+  <link rel="alternate" hreflang="en" href="privacy.en.html">
+  <link rel="alternate" hreflang="fr" href="privacy.fr.html">
+  <link rel="alternate" hreflang="de" href="privacy.de.html">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="legal.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <a href="./">← Retour à Logbook</a>
+      <p>LOGBOOK · CONFIDENTIALITÉ</p>
+      <h1>Politique de confidentialité</h1>
+      <p>Dernière mise à jour : 6 septembre 2026</p>
+      <nav class="langs" aria-label="Langue">
+        <a lang="el" hreflang="el" href="privacy.html">ΕΛΛΗΝΙΚΑ</a>
+        <a lang="en" hreflang="en" href="privacy.en.html">ENGLISH</a>
+        <strong lang="fr">FRANÇAIS</strong>
+        <a lang="de" hreflang="de" href="privacy.de.html">DEUTSCH</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>1. Qui exploite le service</h2>
+      <p>Logbook est exploité par le responsable du projet Logbook. Pour toute question ou demande relative à la confidentialité, vous pouvez nous contacter via la <a href="https://github.com/ddevezoglou/logbook/issues">page d'assistance du projet</a>. N'incluez ni mot de passe, ni jeton d'accès, ni données sensibles dans une demande publique.</p>
+    </section>
+
+    <section>
+      <h2>2. Quelles données sont traitées</h2>
+      <ul>
+        <li><strong>Données de compte :</strong> adresse e-mail, identifiant interne d'utilisateur et données techniques de session. Le mot de passe est géré par Supabase Auth et n'est pas stocké dans le code de l'application.</li>
+        <li><strong>Votre bibliothèque d'exercices :</strong> chaque exercice est un enregistrement distinct avec un identifiant stable, un nom, une note facultative et les anciens noms sous lesquels il a été enregistré, afin que les séances passées lui restent rattachées.</li>
+        <li><strong>Données d'entraînement :</strong> programmes et leurs jours, séances enregistrées, séries, répétitions, charges ou disques, commentaires d'exercice et de séance, ainsi que les records personnels calculés à partir de ces données.</li>
+        <li><strong>Profil et préférences :</strong> nom, date de naissance et affichage ou non de l'âge, unité de mesure, langue et thème d'affichage.</li>
+        <li><strong>Photos de profil :</strong> l'avatar actif est synchronisé avec le profil. Les autres images de la galerie restent uniquement sur cet appareil et ne font pas partie de l'instantané synchronisé.</li>
+        <li><strong>Événements techniques d'erreur :</strong> uniquement des champs de diagnostic autorisés — origine et code de l'erreur, type d'erreur, version de l'application, famille de navigateur et état du réseau. Ni le message ou la pile d'erreur, ni l'URL, ni l'e-mail, ni les jetons, ni le contenu des séances ne sont enregistrés.</li>
+      </ul>
+      <p>Les saisies d'exercice et de bien-être peuvent révéler des informations sur votre condition physique. N'enregistrez que les données que vous souhaitez conserver dans le service.</p>
+    </section>
+
+    <section>
+      <h2>3. Pourquoi ces données sont utilisées</h2>
+      <p>Les données servent à créer et faire fonctionner votre compte, à conserver votre carnet sur l'appareil, à le synchroniser entre vos appareils, à afficher votre historique et votre progression, à sécuriser le service, à traiter les défaillances techniques et à supprimer définitivement votre compte à votre demande. Elles ne servent pas à la publicité ; il n'y a ni analyse produit ni vente de données personnelles.</p>
+    </section>
+
+    <section>
+      <h2>4. Stockage local et synchronisation cloud</h2>
+      <p>Logbook est local-first : chaque modification est d'abord écrite dans le localStorage de l'appareil. Lorsque vous êtes connecté et en ligne, un instantané normalisé — bibliothèque d'exercices, programmes, séances et profil — est synchronisé vers Supabase.</p>
+      <p>La synchronisation fonctionne par instantané : chaque appareil envoie l'image complète, le serveur conserve une version par compte et un numéro de révision détecte une écriture simultanée depuis un autre appareil. Les suppressions circulent sous forme de marqueurs de suppression, afin qu'un appareil resté hors ligne ne ressuscite pas ce que vous avez supprimé.</p>
+      <p>Avant la première migration vers le nouveau modèle d'exercices, l'application conserve sur l'appareil une copie de sauvegarde des enregistrements précédents. Elle y reste jusqu'à la déconnexion ou la suppression du compte.</p>
+      <p>La déconnexion demande la révocation des sessions sur tous les appareils. En cas d'échec, elle peut se limiter à cet appareil ; la déconnexion depuis l'écran d'échec de synchronisation est également locale. Les jetons d'accès déjà délivrés aux autres appareils restent valides jusqu'à leur expiration. Une déconnexion achevée supprime de ce navigateur la bibliothèque d'exercices, les programmes, les séances, le profil et le brouillon de saisie.</p>
+      <p>Avant la déconnexion, si l'espace disponible le permet, une copie de récupération est écrite dans le localStorage sous une clé liée à l'identifiant de votre compte. Elle contient les données de l'instantané synchronisé, mais pas le brouillon, les photos supplémentaires ni la sauvegarde avant migration. Elle peut être utilisée lors de la prochaine connexion au même compte ; une nouvelle connexion après déconnexion nécessite un accès au réseau. Cette copie n'a pas de date d'expiration et aucun écran ne permet de l'ouvrir directement, mais elle reste lisible avec les outils de développement du navigateur. Elle est supprimée de ce navigateur lorsque vous supprimez le compte correspondant ou effacez les données du site. Sur un appareil partagé, effacez les données du site après la déconnexion.</p>
+    </section>
+
+    <section>
+      <h2>5. Utilisation sans compte (mode invité)</h2>
+      <p>Vous pouvez utiliser Logbook sans compte. Aucun compte n'est créé, aucune donnée d'entraînement n'est envoyée à un serveur et les données sont stockées dans le localStorage de l'appareil. Il n'existe aucune sauvegarde automatique hors de l'appareil. Effacer les données du navigateur ou perdre l'appareil entraîne la perte des données locales ; la désinstallation peut aussi les supprimer, selon le navigateur et le système d'exploitation. Dans Safari, une page qui n'a pas été ajoutée à l'écran d'accueil peut perdre son localStorage après sept jours d'utilisation de Safari sans interaction avec ce site.</p>
+      <p>En mode invité, même les événements techniques d'erreur ne sont pas envoyés. Jusqu'à dix d'entre eux peuvent attendre dans une file sur l'appareil et ne sont transmis que si vous vous connectez plus tard ; ils sont alors rattachés à votre compte. Si vous ne vous connectez jamais, ils ne partent jamais.</p>
+      <p>Si vous créez un compte ou vous connectez à un compte existant depuis le mode invité, les données de cet appareil sont automatiquement fusionnées avec celles de ce compte et envoyées à Supabase lors de la synchronisation.</p>
+    </section>
+
+    <section>
+      <h2>6. Instantanés de récupération et durées de conservation</h2>
+      <ul>
+        <li>L'instantané de synchronisation en cours est conservé tant que le compte existe.</li>
+        <li>La table privée <code>user_sync_snapshots</code> conserve au maximum un instantané de récupération par utilisateur et par jour UTC. Chaque instantané est supprimé automatiquement 30 jours après sa création. Elle n'est pas accessible depuis le client navigateur.</li>
+        <li>Les événements techniques d'erreur autorisés sont conservés au maximum 30 jours.</li>
+        <li>Les données locales du compte sont effacées lors de la déconnexion ou de la suppression du compte, avec les exceptions décrites à la section 4. Les préférences, comme la langue et le thème, ainsi que les copies d'autres comptes peuvent rester dans le navigateur. L'effacement des données du site supprime aussi ces données locales.</li>
+        <li>La suppression du compte efface les données locales de ce navigateur ainsi que les données synchronisées, les instantanés de récupération et les événements d'erreur associés dans la base, par suppression en cascade.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>7. Prestataires</h2>
+      <p>GitHub Pages héberge les fichiers statiques de l'application. Supabase fournit l'authentification et la base de données. Si vous choisissez la connexion Google, Google participe au processus d'authentification selon sa propre politique de confidentialité. Les prestataires peuvent traiter des données techniques de connexion selon leurs propres conditions.</p>
+    </section>
+
+    <section>
+      <h2>8. Contrôle de vos données</h2>
+      <p>Vous pouvez exporter votre historique de séances au format CSV depuis la section Profil. Le fichier contient la date, le nom de la séance, l'exercice, la série, les répétitions, la charge et l'unité, les disques et les commentaires. Il n'inclut ni vos programmes, ni votre bibliothèque d'exercices, ni votre profil ; un export complet de toutes vos données n'existe pas encore.</p>
+      <p>Vous pouvez supprimer définitivement votre compte cloud depuis la fenêtre du compte. Pour l'accès, la rectification, la limitation ou toute autre question relative à vos données, utilisez le canal de contact de la section 1.</p>
+    </section>
+
+    <section>
+      <h2>9. Sécurité et modifications</h2>
+      <p>Le service utilise Row Level Security, des droits de base de données restreints, une validation côté serveur, une déconnexion globale, une Content Security Policy et des instantanés de récupération privés. Aucune mesure technique n'élimine tous les risques. Cette page est mise à jour dès que le traitement des données change de manière substantielle, avec une nouvelle date de mise à jour. La page existe dans les quatre langues de l'application ; en cas de divergence, le texte grec prévaut.</p>
+    </section>
+  </main>
+</body>
+</html>

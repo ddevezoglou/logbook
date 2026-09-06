@@ -50,6 +50,130 @@ async function installSharedCloud(page, transact) {
   }, session);
 }
 
+for (const timing of ['deferred form', 'in-flight request']) {
+  test(`saving a workout preserves cloud changes during ${timing}`, async ({ page }) => {
+    let remote = { user_id:session.user.id, revision:1, payload:{
+      trainingRoutines:[{ id:'r1', name:'Plan', isActive:true, isPlaceholder:false, cycleLength:7, plan:[] }],
+      trainingSessions:[], logbookLanguage:'el',
+    } };
+    let holdRead = false, releaseRead, readArrived;
+    const arrived = new Promise(resolve => { readArrived = resolve; });
+    await installSharedCloud(page, async ({ operation, values, filters }) => {
+      if (operation === 'select') {
+        const response = { data:clone(remote), error:null };
+        if (holdRead) {
+          holdRead = false; readArrived();
+          await new Promise(resolve => { releaseRead = resolve; });
+        }
+        return response;
+      }
+      if (operation === 'insert') return { data:null, error:{ code:'23505' } };
+      if (Number(filters.revision) !== remote.revision) return { data:null, error:null };
+      remote = { ...remote, revision:remote.revision + 1, payload:clone(values.payload) };
+      return { data:clone(remote), error:null };
+    });
+    await page.goto('/');
+    await expect(page.locator('body')).toHaveClass(/app-ready/);
+    await requestSync(page);
+    await page.locator('#open-menu').click();
+    await page.locator('#side-menu [data-view="log"]').click();
+    await page.locator('[data-mode="free"]').click();
+    await page.locator('#free-exercises .exercise-name').first().fill('Local squat');
+    for (const row of await page.locator('#free-exercises [data-set]').all()) {
+      await row.locator('.set-reps').fill('8');
+      await row.locator('.set-weight').fill('55');
+    }
+    await page.locator('#log-date').fill('2026-08-03');
+    remote.payload.trainingSessions.push({ id:'remote-added', date:'2026-08-02', type:'free', exercises:[] });
+    remote.revision++;
+    if (timing === 'deferred form') {
+      await requestSync(page);
+      await expect(page.locator('#toast')).toContainText('Ήρθαν αλλαγές');
+    } else {
+      holdRead = true;
+      await page.evaluate(() => { window.pendingRaceSync = window.LogbookCloudSync.sync(); });
+      await arrived;
+    }
+    await page.locator('#save-session').click();
+    if (releaseRead) releaseRead();
+    await requestSync(page);
+    await expect.poll(() => remote.payload.trainingSessions.map(item => item.date).sort()).toEqual(['2026-08-02', '2026-08-03']);
+    const dates = await page.evaluate(() => JSON.parse(localStorage.getItem('trainingSessions')).map(item => item.date).sort());
+    expect(dates).toEqual(['2026-08-02', '2026-08-03']);
+  });
+}
+
+test('sign-out invalidates a pending cloud read before it can restore private history', async ({ page }) => {
+  let remote = { user_id:session.user.id, revision:1, payload:{ trainingSessions:[{ id:'private', date:'2026-08-01', type:'free', exercises:[] }] } };
+  let hold = false, release, arrived;
+  const waiting = new Promise(resolve => { arrived = resolve; });
+  await installSharedCloud(page, async ({ operation, values }) => {
+    if (operation !== 'select') remote = { ...remote, revision:remote.revision + 1, payload:clone(values.payload) };
+    const response = { data:clone(remote), error:null };
+    if (operation === 'select' && hold) {
+      hold = false; arrived();
+      await new Promise(resolve => { release = resolve; });
+    }
+    return response;
+  });
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  await requestSync(page);
+  remote.payload.trainingSessions.push({ id:'private-new', date:'2026-08-02', type:'free', exercises:[] }); remote.revision++;
+  hold = true;
+  await page.evaluate(() => { window.pendingRaceSync = window.LogbookCloudSync.sync(); });
+  await waiting;
+  await page.locator('#open-menu').click();
+  await page.locator('#account-open').click();
+  await page.locator('#account-signout').click();
+  await expect(page.locator('#auth-gate')).toHaveAttribute('data-state', 'login');
+  release();
+  expect(await page.evaluate(() => window.pendingRaceSync)).toBe(false);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('trainingSessions'))).toBe(null);
+  expect(await page.evaluate(() => window.LogbookSessionMachine.state)).toBe('unknown');
+});
+
+test('background cloud updates keep the page and authenticated session open', async ({ page }) => {
+  let remote = {
+    user_id:session.user.id, revision:1, updated_at:'2026-09-01T08:00:00Z',
+    payload:{ trainingRoutines:[{
+      id:'shared', name:'Shared plan', isActive:true, isPlaceholder:false,
+      cycleLength:7, cycleAnchorDate:'2026-09-01', plan:[],
+    }], trainingSessions:[], logbookLanguage:'el' },
+  };
+  await installSharedCloud(page, async ({ operation, values, filters }) => {
+    if (operation === 'select') return { data:clone(remote), error:null };
+    if (operation === 'insert') return { data:null, error:{ code:'23505' } };
+    if (Number(filters.revision) !== remote.revision) return { data:null, error:null };
+    remote = { ...remote, revision:remote.revision + 1, payload:clone(values.payload) };
+    return { data:clone(remote), error:null };
+  });
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  await page.evaluate(() => {
+    window.__cloudRefreshProbe = { gateReopened:false };
+    new MutationObserver(() => {
+      if (!document.body.classList.contains('app-ready')) window.__cloudRefreshProbe.gateReopened = true;
+    }).observe(document.body, { attributes:true, attributeFilter:['class'] });
+  });
+  let navigations = 0;
+  page.on('framenavigated', frame => { if (frame === page.mainFrame()) navigations += 1; });
+  for (const count of [1, 2]) {
+    remote = { ...remote, revision:remote.revision + 1, payload:{ ...remote.payload,
+      trainingSessions:Array.from({ length:count }, (_, index) => ({
+        id:`remote-${index}`, date:`2026-09-0${index + 1}`, type:'free',
+        exercises:[{ exercise:'Squat', sets:[{ reps:8, weight:50 + index * 5, weightMode:'kg' }] }],
+      })),
+    } };
+    await page.evaluate(() => window.LogbookCloudSync.sync());
+    await expect(page.locator('#history-session-count')).toHaveText(String(count));
+    await expect(page.locator('body')).toHaveClass(/app-ready/);
+    expect(await page.evaluate(() => window.__cloudRefreshProbe)).toEqual({ gateReopened:false });
+    expect(navigations).toBe(0);
+    expect(await page.evaluate(() => window.LogbookSessionMachine.state)).toBe('member');
+  }
+});
+
 test('simultaneous sync in two browser contexts keeps both workouts after a revision conflict', async ({ browser }) => {
   test.setTimeout(60_000);
   let remote = {

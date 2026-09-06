@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-const syncSource = readFileSync(new URL('../cloud-sync.js', import.meta.url), 'utf8');
+const syncSource = ['data-reconciliation.js', 'cloud-sync.js'].map(file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')).join('\n');
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const clone = value => value === null || value === undefined ? value : structuredClone(value);
 
@@ -112,7 +112,7 @@ async function loadSync({ seed = {}, session = null, row = null, online = true, 
   const syncStatusEvents = [];
   window.addEventListener('logbook:initial-sync-complete', event => initialSyncEvents.push(event.detail));
   window.addEventListener('logbook:sync-status', event => syncStatusEvents.push(event.detail));
-  onWindow?.(window);
+  onWindow?.(window, client);
   window.LogbookSupabase = client;
   window.eval(syncSource);
   await flush();
@@ -120,6 +120,26 @@ async function loadSync({ seed = {}, session = null, row = null, online = true, 
   await flush();
   return { window, localStorage:window.localStorage, client, initialSyncEvents, syncStatusEvents };
 }
+
+test('sync observes auth events while the initial session lookup is pending and ignores its stale result', async () => {
+  let resolveSession;
+  const { window, client } = await loadSync({ runManualSync:false, onWindow(_window, client) {
+    client.auth.getSession = () => new Promise(resolve => { resolveSession = resolve; });
+  } });
+  client.emitAuth('SIGNED_IN', { user:{ id:'user-a' } });
+  await flush();
+  await flush();
+  assert.equal(client.calls.insert, 1);
+  resolveSession({ data:{ session:null }, error:null });
+  await flush();
+  const reads = client.calls.select;
+  await window.LogbookCloudSync.sync();
+  assert.equal(client.calls.select, reads + 1, 'stale null must not disable sync');
+  client.emitAuth('SIGNED_OUT', null);
+  await window.LogbookCloudSync.sync();
+  assert.equal(client.calls.select, reads + 1, 'a real sign-out still stops sync');
+  window.close();
+});
 
 test('first connected device uploads existing local data and records its cloud revision', async () => {
   const session = { user:{ id:'user-a', email:'athlete@example.com' } };

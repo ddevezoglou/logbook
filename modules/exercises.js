@@ -3,6 +3,7 @@
 const text = value => typeof value === 'string' ? value.trim() : '';
 export const exerciseKey = entry => entry?.exerciseId || text(entry?.exercise).toLowerCase();
 export const exerciseName = (entry, library) => library.find(item => item.id === entry.exerciseId)?.name || entry.exercise;
+export const exerciseCues = (entry, library) => library.find(item => item.id === entry?.exerciseId)?.cues ?? entry?.cues ?? '';
 const legacyId = name => `legacy:${Array.from(name).map(char => char.codePointAt(0).toString(16)).join('-')}`;
 
 export function migrateExercises({ exercises = [], routines = [], sessions = [] } = {}) {
@@ -39,16 +40,27 @@ export function migrateExercises({ exercises = [], routines = [], sessions = [] 
       return resolve(entry, preferred);
     }) };
   });
+  // Promote all distinct legacy notes/cues once. An explicitly empty cues field
+  // is authoritative, so clearing it cannot resurrect old plan text on reload.
+  library.forEach(definition => {
+    if (typeof definition.cues === 'string') return;
+    const values = [text(definition.notes), ...nextRoutines.flatMap(routine =>
+      (routine.plan || []).filter(entry => entry.exerciseId === definition.id).map(entry => text(entry.cues)))];
+    definition.cues = [...new Set(values.filter(Boolean))].join('\n');
+  });
   return { exercises:library, routines:nextRoutines, sessions:nextSessions };
 }
 
-export function saveExercise(library, { id, name, notes = '' }, { randomUUID = () => crypto.randomUUID(), now = () => new Date().toISOString() } = {}) {
+export function saveExercise(library, { id, name, notes, cues }, { randomUUID = () => crypto.randomUUID(), now = () => new Date().toISOString() } = {}) {
   name = text(name);
-  if (!name || name.length > 200 || typeof notes !== 'string' || notes.length > 2000) throw new Error('Invalid exercise');
   const previous = id ? library.find(entry => entry.id === id) : null;
+  cues = cues ?? notes ?? previous?.cues ?? previous?.notes ?? '';
+  if (!name || name.length > 200 || typeof cues !== 'string') throw new Error('Invalid exercise');
+  if (cues.length > 2000 && cues !== previous?.cues) throw new Error('Invalid exercise');
   if (id && !previous) throw new Error('Unknown exercise');
   const record = {
-    ...previous, id:previous?.id || randomUUID(), name, notes:notes.trim(),
+    ...previous, id:previous?.id || randomUUID(), name, cues:cues.trim(),
+    ...(notes !== undefined ? { notes:text(notes) } : {}),
     aliases:[...new Set([...(previous?.aliases || []), ...(previous && previous.name !== name ? [previous.name] : [])])],
     updatedAt:now(),
   };

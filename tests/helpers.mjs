@@ -41,6 +41,7 @@ export function loadApp(seed = {}, options = {}) {
   }
   options.beforeApp?.(window);
   window.eval(quotesSource);
+  window.eval(readFileSync(join(root, 'data-reconciliation.js'), 'utf8'));
   window.eval(i18nSource);
   window.__LogbookModules = { ExerciseModel, StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, HistoryView, SessionTemplates, UI };
   window.eval(executableAppSource);

@@ -18,6 +18,8 @@ async function boot(page) {
   await expect(page.locator('body')).toHaveClass(/app-ready/);
   await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
   await navigate(page, 'plan');
+  await page.locator('[aria-controls="exercise-library-body"]').click();
+  await page.locator('[aria-controls="routine-manager-body"]').click();
   await page.locator('#library-editor > summary').click();
 }
 
@@ -40,6 +42,8 @@ test('exercise → routine → two days → offline logging → rename keeps his
     await page.locator('#workout-name').fill(name);
     await page.locator('#exercise-count').fill('1');
     await page.locator('.builder-name').selectOption(exerciseId);
+    await expect(page.locator('.builder-cues')).toHaveValue('Cable station');
+    await expect(page.locator('.builder-cues')).toHaveAttribute('readonly', '');
     await page.locator('.builder-sets').fill('1');
     await page.locator('#plan-submit').click();
     await expect(page.locator('#plan-workout-dialog')).not.toBeVisible();

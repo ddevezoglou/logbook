@@ -15,7 +15,6 @@ import {
   storedWeightToDisplay,
 } from '../modules/sessions.js';
 import {
-  calculateRoutineReward,
   isBetterPerformance,
   smoothPath,
   weightModeGroup,
@@ -25,6 +24,20 @@ import { buildHistoryMarkup, buildSessionCardMarkup } from '../modules/history.j
 import { exerciseCard, sessionPage, setRows } from '../modules/session-templates.js';
 import { escapeHtml, setMenuState, syncNavigationState } from '../modules/ui.js';
 import { readFileSync } from 'node:fs';
+
+test('progress ignores workouts without the selected exercise or set without diagnostic warnings', () => {
+  const exercise = sets => ({ exercise:'Squat', exerciseId:'squat', sets });
+  const set = { reps:8, weight:50, weightMode:'kg' };
+  const sessions = [
+    { date:'2026-09-01', exercises:[exercise([set, set])] },
+    { date:'2026-09-02', exercises:[{ exercise:'Row', exerciseId:'row', sets:[set] }] },
+    { date:'2026-09-03', exercises:[exercise([set])] },
+    { date:'2026-09-04', exercises:[exercise([set, { ...set, weight:55 }])] },
+  ];
+  const markup = buildProgressChartMarkup({ workout:{ sessions }, exerciseKey:'squat', setIndex:1 });
+  assert.equal((markup.match(/class="chart-point"/g) || []).length, 2);
+  assert.ok(!markup.includes('recording-warning'));
+});
 
 test('typed storage fallbacks preserve object and array boundaries', () => {
   const values = new Map([['broken', '{']]);
@@ -93,7 +106,7 @@ test('session model validates numbers, converts pounds and neutralizes CSV formu
   assert.equal(csvEscape('=SUM(A1:A2)'), "'=SUM(A1:A2)");
 });
 
-test('progress and reward helpers keep comparisons and chart math independent from rendering', () => {
+test('progress helpers keep comparisons and chart math independent from rendering', () => {
   assert.equal(weightModeGroup('mixed'), 'plates');
   assert.equal(isBetterPerformance(
     { weightMode:'kg', weight:60, reps:5 },
@@ -101,23 +114,6 @@ test('progress and reward helpers keep comparisons and chart math independent fr
   ), true);
   assert.match(smoothPath([{ x:0, y:2 }, { x:10, y:1 }, { x:20, y:3 }]), /^M 0 2 C /);
 
-  const routine = {
-    id:'r1',
-    cycleLength:7,
-    cycleAnchorDate:'2026-07-06',
-    plan:[{ cycleDay:1 }, { cycleDay:3 }],
-  };
-  const reward = calculateRoutineReward({
-    routine,
-    sessions:[
-      { routineId:'r1', type:'scheduled', date:'2026-07-06', cycleDay:1 },
-      { routineId:'r1', type:'scheduled', date:'2026-07-08', cycleDay:3 },
-    ],
-    rewardTracking:{ periods:{ r1:[{ start:'2026-07-06', end:null }] } },
-    today:'2026-07-13',
-  });
-  assert.equal(reward.stage, 2);
-  assert.equal(reward.streak, 1);
 });
 
 test('progress chart module returns complete escaped markup without a DOM', () => {

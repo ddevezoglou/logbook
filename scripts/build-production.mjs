@@ -7,6 +7,9 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT_FILES = [
   'index.html',
   'privacy.html',
+  'privacy.en.html',
+  'privacy.fr.html',
+  'privacy.de.html',
   'manifest.webmanifest',
   'favicon.svg',
   'fonts.css',
@@ -25,6 +28,7 @@ const ROOT_FILES = [
   'session-state.js',
   'auth.js',
   'cloud-sync.js',
+  'data-reconciliation.js',
   'app.js',
   'pwa.js',
   'service-worker.js',

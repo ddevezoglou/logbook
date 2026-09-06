@@ -20,6 +20,85 @@ const fixture = () => ({
 const withoutRefs = sessions => sessions.map(session => session.exercises ? { ...session, exercises:session.exercises.map(({ exerciseId, ...rest }) => rest) } : session);
 const submit = (document, selector) => document.querySelector(selector).dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
 
+test('legacy notes and distinct plan cues migrate once without losing text or reviving cleared cues', () => {
+  const source = fixture();
+  source.exercises = [{ id:'row', name:'Row', notes:'Machine 1' }];
+  const migrated = migrateExercises(source);
+  assert.equal(migrated.exercises.find(entry => entry.id === 'row').cues, 'Machine 1\nCable\nSlow');
+  assert.deepEqual(migrateExercises(migrated), migrated);
+  const cleared = saveExercise(migrated.exercises, { id:'row', name:'Row', cues:'' });
+  assert.equal(migrateExercises({ ...migrated, exercises:cleared }).exercises.find(entry => entry.id === 'row').cues, '');
+  assert.deepEqual(withoutRefs(migrated.sessions), source.sessions);
+});
+
+test('exercise cues drive plan selection, editing, scheduled cards and reload', async () => {
+  const app = loadApp({ trainingRoutines:fixture().routines });
+  const { document, localStorage } = app;
+  try {
+    const row = [...document.querySelectorAll('[data-edit-exercise]')].find(button => button.querySelector('strong').textContent === 'Row');
+    if (row.closest('.exercise-card').dataset.carouselPosition !== '0') click(document, row);
+    click(document, row);
+    const exerciseId = document.querySelector('#exercise-library-form').dataset.editingId;
+    setValue(document, '#library-exercise-notes', 'Brace\nSlow lowering', 'input');
+    submit(document, '#exercise-library-form');
+    setValue(document, '#exercise-count', '1', 'input');
+    setValue(document, '.builder-name', exerciseId);
+    assert.equal(document.querySelector('.builder-cues').value, 'Brace\nSlow lowering');
+    assert.equal(document.querySelector('.builder-cues').readOnly, true);
+    assert.match(document.querySelector('#plan-list').textContent, /Brace\nSlow lowering/);
+    setValue(document, '#log-date', '2026-07-06', 'input');
+    setValue(document, '#workout-day-select', '1');
+    assert.equal(document.querySelector('.cue-banner b').textContent, 'Brace\nSlow lowering');
+    click(document, '[data-edit-day="1"]');
+    assert.equal(document.querySelector('.builder-cues').value, 'Brace\nSlow lowering');
+    const seed = Object.fromEntries(['trainingRoutines', 'trainingExercises'].map(key => [key, JSON.parse(localStorage.getItem(key))]));
+    const reopened = loadApp(seed);
+    assert.match(reopened.document.querySelector('#plan-list').textContent, /Brace\nSlow lowering/);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    reopened.window.close();
+  } finally {
+    await new Promise(resolve => setTimeout(resolve, 0));
+    app.window.close();
+  }
+});
+
+test('plan sections start closed and toggle independently', async () => {
+  const { window, document } = loadApp();
+  for (const section of ['exercise-library-body', 'routine-manager-body']) {
+    const button = document.querySelector(`[aria-controls="${section}"]`);
+    assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.equal(document.getElementById(section).hidden, true);
+    click(document, button);
+    assert.equal(button.getAttribute('aria-expanded'), 'true');
+    assert.equal(document.getElementById(section).hidden, false);
+    click(document, button);
+    assert.equal(document.getElementById(section).hidden, true);
+  }
+  await new Promise(resolve => setTimeout(resolve, 0));
+  window.close();
+});
+
+test('exercise carousel wraps, retains its selection on reopen and only focuses the centered card', async () => {
+  const { window, document } = loadApp({ trainingRoutines:fixture().routines });
+  const centered = () => document.querySelector('#exercise-library-list [data-carousel-position="0"]');
+  click(document, '[aria-controls="exercise-library-body"]');
+  const first = centered();
+  click(document, '[data-exercise-scroll="1"]');
+  const second = centered();
+  assert.notEqual(second, first);
+  assert.equal(first.querySelector('button').tabIndex, -1);
+  assert.equal(second.querySelector('button').tabIndex, 0);
+  click(document, '[aria-controls="exercise-library-body"]');
+  click(document, '[aria-controls="exercise-library-body"]');
+  assert.equal(centered(), second);
+  click(document, '[data-exercise-scroll="-1"]');
+  assert.equal(centered(), first);
+  click(document, '[data-exercise-scroll="-1"]');
+  assert.equal(centered(), document.querySelector('#exercise-library-list').lastElementChild);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  window.close();
+});
+
 test('migration is deterministic, repeatable, additive and preserves tombstones and historical fields', () => {
   const source = fixture(), before = structuredClone(source);
   const result = migrateExercises(source);
@@ -128,6 +207,7 @@ test('progress separates homonyms and includes repeated occurrences on the same 
 
 test('library-only payloads sync and merge renames from two snapshots by revision time', () => {
   const dom = new JSDOM('', { url:'http://localhost/', runScripts:'outside-only' });
+  dom.window.eval(readFileSync(new URL('../data-reconciliation.js', import.meta.url), 'utf8'));
   dom.window.eval(readFileSync(new URL('../cloud-sync.js', import.meta.url), 'utf8'));
   const sync = dom.window.LogbookCloudSync;
   const remote = { trainingExercises:[{ id:'a', name:'Renamed', aliases:['Row'], updatedAt:'2026-09-05T12:00:00.000Z' }] };

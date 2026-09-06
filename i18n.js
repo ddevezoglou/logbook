@@ -1,16 +1,26 @@
 (function () {
   const locales = { el:'el-GR', en:'en-GB', fr:'fr-FR', de:'de-DE' };
   const languages = ['el', 'en', 'fr', 'de'];
+  const privacyPages = { el:'privacy.html', en:'privacy.en.html', fr:'privacy.fr.html', de:'privacy.de.html' };
 
   // Greek remains the stable source language so existing saved plans keep working.
   // Each entry is [English, French, German]. Longer phrases are applied first.
   const catalog = {
+    'sync.deleted-draft':['Η εγγραφή έχει διαγραφεί σε άλλη συσκευή. Κλείστε τη φόρμα για να ενημερωθούν τα δεδομένα.','This record was deleted on another device. Close the form to refresh the data.','Cet enregistrement a été supprimé sur un autre appareil. Fermez le formulaire pour actualiser les données.','Dieser Eintrag wurde auf einem anderen Gerät gelöscht. Schließen Sie das Formular, um die Daten zu aktualisieren.'],
+    'draft.saved':['Η πρόοδός σας αποθηκεύτηκε σε αυτή τη συσκευή. Συνεχίζετε και χωρίς σύνδεση.','Your progress is saved on this device. You can continue offline.','Votre progression est enregistrée sur cet appareil. Vous pouvez continuer hors connexion.','Ihr Fortschritt ist auf diesem Gerät gespeichert. Sie können offline fortfahren.'],
+    'draft.failed':['Δεν ήταν δυνατή η αποθήκευση της προόδου σε αυτή τη συσκευή. Κρατήστε την εφαρμογή ανοιχτή μέχρι να αποθηκευτεί.','Your progress could not be saved on this device. Keep the app open until it is saved.','Votre progression n’a pas pu être enregistrée sur cet appareil. Gardez l’application ouverte jusqu’à son enregistrement.','Ihr Fortschritt konnte auf diesem Gerät nicht gespeichert werden. Lassen Sie die App geöffnet, bis er gespeichert ist.'],
+    'history.load-more':['ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ','SHOW NEXT','AFFICHER LA SUITE :','WEITERE ANZEIGEN:'],
+    'history.remaining':['ΑΠΟΜΕΝΟΥΝ','REMAINING','RESTANTES :','VERBLEIBEND:'],
+    'library.list':['Ασκήσεις βιβλιοθήκης','Exercise library','Bibliothèque d’exercices','Übungsbibliothek'],
+    'library.navigation':['Πλοήγηση ασκήσεων','Exercise navigation','Navigation des exercices','Übungsnavigation'],
+    'library.previous':['Προηγούμενη άσκηση','Previous exercise','Exercice précédent','Vorherige Übung'],
+    'library.next':['Επόμενη άσκηση','Next exercise','Exercice suivant','Nächste Übung'],
     'library.from':['Από τη βιβλιοθήκη','From the library','Depuis la bibliothèque','Aus der Bibliothek'],
     'library.title':['1. Οι ασκήσεις μου','1. My exercises','1. Mes exercices','1. Meine Übungen'],
     'library.routines':['2. Τα προγράμματά μου','2. My routines','2. Mes programmes','2. Meine Trainingspläne'],
-    'library.guide':['Δημιουργήστε ασκήσεις στη βιβλιοθήκη και επιλέξτε τις στις ημέρες του προγράμματος.','Create exercises in your library, then select them for your routine days.','Créez des exercices dans votre bibliothèque, puis sélectionnez-les pour les jours du programme.','Erstellen Sie Übungen in Ihrer Bibliothek und wählen Sie diese für Ihre Trainingstage aus.'],
+    'library.guide':['Πρώτα η βιβλιοθήκη: γράψτε μια άσκηση μία φορά και χρησιμοποιήστε την σε όσες ημέρες θέλετε.','The library comes first: write an exercise once and use it on as many days as you like.','La bibliothèque d’abord : écrivez un exercice une seule fois et utilisez-le autant de jours que vous voulez.','Zuerst die Bibliothek: Schreiben Sie eine Übung einmal und verwenden Sie sie an beliebig vielen Tagen.'],
     'library.history':['Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.','Changes to routines and the library preserve past records.','Les modifications du programme et de la bibliothèque préservent les anciennes séances.','Änderungen am Trainingsplan und an der Bibliothek erhalten bisherige Aufzeichnungen.'],
-    'library.notes':['Σημειώσεις άσκησης','Exercise notes','Notes de l’exercice','Übungsnotizen'],
+    'library.cuesHelp':['Ορίζονται στις ασκήσεις μου.','Set in My exercises.','À définir dans Mes exercices.','Unter Meine Übungen festlegen.'],
     'library.save':['Αποθήκευση άσκησης','Save exercise','Enregistrer l’exercice','Übung speichern'],
     'library.choose':['Επιλογή άσκησης','Select exercise','Choisir un exercice','Übung auswählen'],
     'library.empty':['Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.','Add your first exercise to the library.','Ajoutez votre premier exercice à la bibliothèque.','Fügen Sie Ihre erste Übung zur Bibliothek hinzu.'],
@@ -58,11 +68,6 @@
     'message.0039':['Διαγραφή προπόνησης','Delete workout','Supprimer la séance','Training löschen'],
     'message.0040':['Τρόπος καταγραφής βάρους για το σετ','Weight entry method for set','Mode de saisie de la charge pour la série','Gewichtserfassung für Satz'],
     'message.0041':['Διαγραφή extra σετ','Delete extra set','Supprimer la série supplémentaire','Extrasatz löschen'],
-    'message.0042':['από 4 στάδια επιβράβευσης','of 4 reward stages','sur 4 niveaux de récompense','von 4 Belohnungsstufen'],
-    'message.0043':['συνεχόμενη εβδομάδα','consecutive week','semaine consécutive','Woche in Folge'],
-    'message.0044':['συνεχόμενες εβδομάδες','consecutive weeks','semaines consécutives','Wochen in Folge'],
-    'message.0045':['συνεχόμενος μικρόκυκλος','consecutive cycle','cycle consécutif','Zyklus in Folge'],
-    'message.0046':['συνεχόμενοι μικρόκυκλοι','consecutive cycles','cycles consécutifs','Zyklen in Folge'],
     'message.0047':['αυτή την εβδομάδα','this week','cette semaine','diese Woche'],
     'message.0048':['σε αυτόν τον μικρόκυκλο','in this cycle','dans ce cycle','in diesem Zyklus'],
     'message.0049':['Κενό πρόγραμμα','Empty routine','Programme vide','Leerer Plan'],
@@ -118,26 +123,26 @@
     'message.0099':['Οδηγίες σελίδας','Page guide','Guide de la page','Seitenanleitung'],
     'message.0100':['ΟΔΗΓΙΕΣ','GUIDE','GUIDE','ANLEITUNG'],
     'message.0101':['Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση.','Choose a date and either a “Scheduled” or “Free” workout.','Choisissez une date et une séance « Depuis le programme » ou « Libre ».','Wählen Sie ein Datum und ein Training „Nach Plan“ oder „Frei“.'],
-    'message.0102':['Μετακινηθείτε στις κάρτες ασκήσεων με τα βέλη ή με σύρσιμο.','Move through the exercise cards with the arrows or by swiping.','Parcourez les cartes d’exercices avec les flèches ou en les faisant glisser.','Wechseln Sie mit den Pfeilen oder durch Wischen zwischen den Übungskarten.'],
+    'message.0102':['Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.','Exercises come from the day of your routine; in a “Free” workout you add them from the library. Move with the arrows or by swiping.','Les exercices proviennent du jour du programme ; en séance « Libre », vous les ajoutez depuis la bibliothèque. Déplacez-vous avec les flèches ou en faisant glisser.','Die Übungen kommen vom Tag des Trainingsplans; bei „Frei“ fügen Sie sie aus der Bibliothek hinzu. Wechseln Sie mit den Pfeilen oder durch Wischen.'],
     'message.0103':['Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.','Log reps and choose kg, plates, a combination or Bodyweight.','Notez les répétitions et choisissez kg, disques, une combinaison ou le poids du corps.','Erfassen Sie Wiederholungen und wählen Sie kg, Scheiben, eine Kombination oder Körpergewicht.'],
     'message.0104':['Καταγράψτε επαναλήψεις και επιλέξτε λίβρες, πλάκες, συνδυασμό ή Bodyweight.','Log reps and choose lbs, plates, a combination or Bodyweight.','Notez les répétitions et choisissez lbs, disques, une combinaison ou le poids du corps.','Erfassen Sie Wiederholungen und wählen Sie lbs, Scheiben, eine Kombination oder Körpergewicht.'],
     'message.0105':['Προσθέστε ή αφαιρέστε σετ, αντιγράψτε το πρώτο στα υπόλοιπα και γράψτε σχόλια όπου χρειάζεται.','Add or remove sets, copy the first to the rest and add notes where needed.','Ajoutez ou retirez des séries, copiez la première sur les autres et ajoutez des notes si nécessaire.','Fügen Sie Sätze hinzu oder entfernen Sie sie, kopieren Sie den ersten auf die übrigen und ergänzen Sie bei Bedarf Notizen.'],
     'message.0106':['Με «Ολοκλήρωση προπόνησης» η καταγραφή αποθηκεύεται στο Ιστορικό. Από εκεί μπορείτε να τη διορθώσετε ή να την αντιγράψετε.','“Complete workout” saves the log to History. From there you can edit or copy it.','« Terminer la séance » enregistre la saisie dans l’historique. Vous pouvez ensuite la modifier ou la copier.','„Training abschließen“ speichert den Eintrag im Verlauf. Dort können Sie ihn bearbeiten oder kopieren.'],
     'message.0107':['Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.','Create as many routines as you like, lasting 3–10 days, with optional weekdays.','Créez autant de programmes que vous le souhaitez, sur 3 à 10 jours, avec des jours de semaine facultatifs.','Erstellen Sie beliebig viele Pläne mit 3–10 Tagen und optionalen Wochentagen.'],
     'message.0108':['Προσθέστε σε κάθε προπόνηση όνομα, ασκήσεις, εργάσιμα σετ και cues.','Add a name, exercises, working sets and cues to each workout.','Ajoutez à chaque séance un nom, des exercices, des séries de travail et des consignes.','Fügen Sie jedem Training einen Namen, Übungen, Arbeitssätze und Hinweise hinzu.'],
-    'message.0109':['Ανοίξτε ένα πρόγραμμα για επεξεργασία, αντιγραφή ή διαγραφή και ορίστε με το αστέρι ποιο είναι ενεργό.','Open a routine to edit, copy or delete it, and use the star to make it active.','Ouvrez un programme pour le modifier, le copier ou le supprimer, puis utilisez l’étoile pour l’activer.','Öffnen Sie einen Plan zum Bearbeiten, Kopieren oder Löschen und aktivieren Sie ihn mit dem Stern.'],
+    'message.0109':['Ανοίξτε ένα πρόγραμμα για να ορίσετε τις ημέρες του και δηλώστε με το αστέρι ποιο είναι σε ισχύ.','Open a routine to set its days, and use the star to mark the one in force.','Ouvrez un programme pour définir ses jours et désignez avec l’étoile celui qui est en vigueur.','Öffnen Sie einen Plan, um seine Tage festzulegen, und markieren Sie mit dem Stern den gültigen Plan.'],
     'message.0110':['Όταν αλλάζετε ημέρα ή ονόματα, επιλέξτε αν θα ενημερωθεί μαζί και το παλιό Ιστορικό.','When changing a day or names, choose whether previous History should update too.','Lorsque vous changez un jour ou des noms, choisissez si l’ancien historique doit aussi être mis à jour.','Wählen Sie beim Ändern eines Tages oder Namens, ob der frühere Verlauf ebenfalls aktualisiert werden soll.'],
     'message.0111':['Το γράφημα συγκρίνει βάρος ή πλάκες και δείχνει την πορεία των επαναλήψεων στο ίδιο φορτίο.','The chart compares weight or plates and shows how reps progress at the same load.','Le graphique compare la charge ou les disques et montre l’évolution des répétitions à charge égale.','Das Diagramm vergleicht Gewicht oder Scheiben und zeigt die Wiederholungsentwicklung bei gleicher Last.'],
     'message.0112':['Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.','Logs with an incompatible measurement are excluded and listed below the chart.','Les saisies avec une mesure incompatible sont exclues et signalées sous le graphique.','Einträge mit inkompatibler Messart werden ausgeschlossen und unter dem Diagramm aufgeführt.'],
     'message.0113':['Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.','Open “Personal Records” for the best sets in each exercise and measurement method.','Ouvrez « Personal Records » pour voir les meilleures séries de chaque exercice et mode de mesure.','Öffnen Sie „Personal Records“ für die besten Sätze jeder Übung und Messart.'],
-    'message.0114':['Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται στο προφίλ.','Upload up to six images and choose which one to use for your profile.','Importez jusqu’à six images et choisissez celle à utiliser pour votre profil.','Laden Sie bis zu sechs Bilder hoch und wählen Sie das Profilbild aus.'],
+    'message.0114':['Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται· οι υπόλοιπες μένουν σε αυτή τη συσκευή.','Upload up to six images and choose which one to use; the others stay on this device.','Importez jusqu’à six images et choisissez celle à utiliser ; les autres restent sur cet appareil.','Laden Sie bis zu sechs Bilder hoch und wählen Sie das genutzte aus; die übrigen bleiben auf diesem Gerät.'],
     'message.0115':['Δηλώστε ημερομηνία γέννησης και επιλέξτε αν η ηλικία θα φαίνεται στην κάρτα.','Enter your date of birth and choose whether age appears on the card.','Indiquez votre date de naissance et choisissez si l’âge apparaît sur la carte.','Geben Sie Ihr Geburtsdatum ein und wählen Sie, ob das Alter auf der Karte erscheint.'],
-    'message.0116':['Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.','Save your changes to update Home and the menu.','Enregistrez les modifications pour mettre à jour l’accueil et le menu.','Speichern Sie die Änderungen, um Startseite und Menü zu aktualisieren.'],
+    'message.0116':['Η «Εξαγωγή ιστορικού» κατεβάζει τις προπονήσεις σε αρχείο CSV. Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.','“Export history” downloads your workouts as a CSV file. Save your changes to update Home and the menu.','« Exporter l’historique » télécharge vos séances au format CSV. Enregistrez les modifications pour mettre à jour l’accueil et le menu.','„Verlauf exportieren“ lädt Ihre Trainings als CSV-Datei herunter. Speichern Sie die Änderungen, um Startseite und Menü zu aktualisieren.'],
     'message.0117':['Συμπληρώστε όνομα, ημερομηνία γέννησης και βάρος.','Fill in your name, birth date and weight.','Renseignez nom, date de naissance et poids.','Tragen Sie Name, Geburtsdatum und Gewicht ein.'],
     'message.0118':['Διαλέξτε έτοιμο avatar ή ανεβάστε δική σας εικόνα.','Choose a ready-made avatar or upload your own image.','Choisissez un avatar prêt à l’emploi ou importez votre image.','Wählen Sie einen fertigen Avatar oder laden Sie ein eigenes Bild hoch.'],
     'message.0119':['Ανεβάστε τη δική σας εικόνα προφίλ.','Upload your own profile image.','Importez votre propre image de profil.','Laden Sie Ihr eigenes Profilbild hoch.'],
     'message.0120':['Η κάρτα αθλητή ενημερώνεται αυτόματα και εμφανίζεται στην Αρχική.','The athlete card updates automatically and appears on Home.','La carte d’athlète se met à jour automatiquement et apparaît sur l’Accueil.','Die Athletenkarte aktualisiert sich automatisch und erscheint auf der Startseite.'],
-    'message.0121':['Επιλέξτε από τα φίλτρα πρόγραμμα, άσκηση και σετ.','Use the filters to pick a routine, exercise and set.','Utilisez les filtres pour choisir un programme, un exercice et une série.','Wählen Sie über die Filter Trainingsplan, Übung und Satz.'],
+    'message.0121':['Επιλέξτε πρώτα πρόγραμμα και μετά άσκηση και σετ — προσφέρονται μόνο όσες ανήκουν σε αυτό.','Pick a routine first, then an exercise and a set — only the ones belonging to it are offered.','Choisissez d’abord un programme, puis un exercice et une série — seuls ceux qui lui appartiennent sont proposés.','Wählen Sie zuerst einen Plan, dann Übung und Satz — angeboten wird nur, was dazugehört.'],
     'message.0122':['ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ','WEEKLY PLAN','PROGRAMME HEBDOMADAIRE','WOCHENPLAN'],
     'message.0123':['01 / ΕΒΔΟΜΑΔΙΑΙΕΣ ΡΟΥΤΙΝΕΣ','01 / WEEKLY ROUTINES','01 / PROGRAMMES HEBDOMADAIRES','01 / WOCHENPLÄNE'],
     'message.0124':['ΤΑ ΠΡΟΓΡΑΜΜΑΤΑ ΣΑΣ','YOUR ROUTINES','VOS PROGRAMMES','IHRE PLÄNE'],
@@ -491,6 +496,9 @@
     'message.0478':['ΕΚΔΟΣΗ','VERSION','VERSION','VERSION'],
     'message.0485':['Δεν ολοκληρώθηκε ο συγχρονισμός. Δοκιμάστε ξανά ή συνεχίστε με τα αποθηκευμένα δεδομένα αυτής της συσκευής.','Sync did not complete. Try again or continue with the data saved on this device.','La synchronisation n’a pas abouti. Réessayez ou continuez avec les données enregistrées sur cet appareil.','Die Synchronisierung wurde nicht abgeschlossen. Versuchen Sie es erneut oder fahren Sie mit den auf diesem Gerät gespeicherten Daten fort.'],
     'message.0486':['ΑΝΟΙΓΜΑ ΣΤΗ ΣΥΣΚΕΥΗ','OPEN ON THIS DEVICE','OUVRIR SUR CET APPAREIL','AUF DIESEM GERÄT ÖFFNEN'],
+    'message.0487':['Πατήστε μια άσκηση για επεξεργασία ή διαγραφή· η σημείωση ξεχωρίζει τις ομώνυμες.','Tap an exercise to edit or delete it; the note is what tells two exercises with the same name apart.','Touchez un exercice pour le modifier ou le supprimer ; la note distingue les homonymes.','Tippen Sie eine Übung an, um sie zu bearbeiten oder zu löschen; die Notiz unterscheidet gleichnamige Übungen.'],
+    'message.0488':['Κάθε προπόνηση πιάνει σταθερό πλάτος· σύρετε το γράφημα οριζόντια για τις παλαιότερες.','Every workout takes a fixed width; drag the chart sideways for the older ones.','Chaque séance occupe une largeur fixe ; faites glisser le graphique horizontalement pour voir les plus anciennes.','Jedes Training belegt eine feste Breite; ziehen Sie das Diagramm seitlich für ältere Trainings.'],
+    'message.0489':['Η μονάδα μέτρησης ορίζει πώς καταχωρίζετε και βλέπετε τα βάρη· οι τιμές αποθηκεύονται πάντα σε κιλά.','The measurement unit determines how you enter and view weights; values are always stored in kilograms.','L’unité de mesure définit la saisie et l’affichage des charges ; les valeurs sont toujours enregistrées en kilogrammes.','Die Maßeinheit bestimmt, wie Sie Gewichte eingeben und sehen; die Werte werden immer in Kilogramm gespeichert.'],
     'plan.library-title':['Οι ασκήσεις μου','My exercises','Mes exercices','Meine Übungen'],
     'plan.routines-title':['Τα προγράμματά μου','My routines','Mes programmes','Meine Pläne'],
     'plan.index-hint':['Πατήστε μια άσκηση για επεξεργασία.','Select an exercise to edit it.','Sélectionnez un exercice pour le modifier.','Wählen Sie eine Übung zum Bearbeiten.'],
@@ -612,6 +620,9 @@
     }));
     elements.forEach(updateGreekLanguage);
     document.documentElement.lang = language;
+    // Η πολιτική απορρήτου είναι τέσσερα στατικά αρχεία, όχι μεταφρασμένη σελίδα:
+    // ο σύνδεσμος του μενού δείχνει στη σελίδα της τρέχουσας γλώσσας.
+    document.querySelectorAll('.side-menu-privacy').forEach(link => link.setAttribute('href', privacyPages[language]));
     document.title = translateId('message.0017');
     document.querySelectorAll('[data-language]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.language === language)));
   }

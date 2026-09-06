@@ -57,23 +57,17 @@ test('seed fixture produces one active routine plus 8/9/10-day examples and thir
   for (const mode of ['kg', 'plates', 'bodyweight', 'bodyweight_extra']) assert.ok(modes.has(mode), `seed must exercise weight mode ${mode}`);
 });
 
-test('booting the app on seeded data grants stage 4 GYMRAT with correct week progress', () => {
+test('seeded history rewards only a workout recorded today', () => {
   const { routines, sessions } = runSeed();
   const { document } = loadApp({
     trainingRoutines: routines,
     trainingSessions: sessions,
     userProfile: { name: 'Δημήτρης', birthdate: '1990-01-01', weight: 80, weightUnit: 'kg', avatar: 'male', customImage: '' },
   });
-  assert.ok(document.querySelector('#profile-reward-ring').classList.contains('reward-stage-4'));
-  const progress = document.querySelector('#profile-reward-ring').getAttribute('aria-label');
-  const expectedStreak = pastWeeks + (expectedThisWeek === planOffsets.length ? 1 : 0);
-  assert.ok(progress.includes('GYMRAT'), progress);
-  assert.ok(progress.includes(`${expectedStreak} συνεχόμενες εβδομάδες`), progress);
-  assert.ok(progress.includes(`${expectedThisWeek}/4 αυτή την εβδομάδα`), progress);
-  const stamp = document.querySelector('#home-reward-stamp');
-  assert.ok(!stamp.classList.contains('hidden'));
-  assert.equal(stamp.dataset.stage, '4');
-  assert.equal(document.querySelector('#home-reward-label').textContent, 'GYMRAT');
+  assert.equal(document.querySelector('#profile-reward-ring'), null);
+  assert.equal(document.querySelector('#home-reward-stamp'), null);
+  assert.equal(document.querySelector('#home-profile-card'), null);
+  assert.equal(document.querySelector('#home-rest-stamp').classList.contains('hidden'), !planOffsets.includes(todayOffset));
 });
 
 test('seeded data feeds the overview, progress personal bests and plan board', () => {

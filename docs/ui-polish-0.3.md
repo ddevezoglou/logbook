@@ -1,4 +1,6 @@
-# Πρόγραμμα και controls — Task 0.3.1 / 0.3.2
+# Πρόγραμμα και controls — έκδοση 0.3.1
+
+Τα αρχικά Task 0.3.1 / 0.3.2 παραδίδονται μαζί στην έκδοση 0.3.1.
 
 Η οπτική γλώσσα παραμένει χαρτί, μελάνι, χρυσές λεπτομέρειες, κορδέλα και σφραγίδες. Τα χρώματα δεν άλλαξαν.
 
@@ -34,6 +36,6 @@
 - Έλεγχος overflow και clipping στα controls Ιστορικού σε 320, 390 και 1440px με EL/EN/FR/DE.
 - Τα υπάρχοντα browser tests καλύπτουν keyboard ροή βιβλιοθήκης, accessibility με axe, carousel μετά από resize, offline φόρτωση και εκτύπωση. Πρόκειται για browser ελέγχους, όχι δοκιμή με φυσικό screen reader ή φυσική συσκευή.
 
-Τελικό αποτέλεσμα: 315 unit/integration passed, 66 e2e passed και 2 προβλεπόμενα skips. Performance: shell 1.290.423 / 1.300.000 bytes, διάμεσο LCP 1.488 / 3.500ms και TBT 0 / 500ms στο emulated mobile profile του project.
+Έλεγχος 6 Σεπτεμβρίου 2026: 319 unit/integration passed, 68 e2e passed και 2 προβλεπόμενα WebKit service-worker skips. Performance: shell 1.326.106 / 1.400.000 bytes, διάμεσο LCP 1.472 / 3.500ms και TBT 10 / 500ms στο emulated mobile profile του project. Ο πλήρης απολογισμός και η ολοκληρωμένη αναβάθμιση παραγωγικής βάσης καταγράφονται στο `DEVELOPMENT.md`.
 
 Δεν αποτελεί δημοσίευση ή νέο release. Η έκδοση εργασίας παραμένει 0.3.1· τα παραπάνω νούμερα αναφέρονται στα tasks του roadmap.

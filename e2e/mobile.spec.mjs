@@ -27,6 +27,7 @@ async function installAuthenticatedStub(page, { onlineOnly = false, withWorkout 
     window.supabase = {
       createClient() {
         let row = null;
+        window.readMobileCloudRow = () => structuredClone(row);
         const listeners = [];
         return {
           auth:{
@@ -36,12 +37,19 @@ async function installAuthenticatedStub(page, { onlineOnly = false, withWorkout 
           },
           from() {
             let values = null;
+            const filters = {};
             const chain = {
               select() { return chain; },
-              eq() { return chain; },
+              eq(key, value) { filters[key] = value; return chain; },
               insert(next) { values = next; return chain; },
               update(next) { values = next; return chain; },
-              async maybeSingle() { return { data:row, error:null }; },
+              async maybeSingle() {
+                if (values) {
+                  if (!row || row.revision !== filters.revision) return { data:null, error:null };
+                  row = { ...row, payload:structuredClone(values.payload), revision:row.revision + 1 };
+                }
+                return { data:structuredClone(row), error:null };
+              },
               async single() {
                 row = { user_id:values.user_id, revision:(row?.revision || 0) + 1, payload:values.payload, updated_at:new Date().toISOString() };
                 return { data:row, error:null };
@@ -146,7 +154,7 @@ test('mobile uses the web ribbon menu and keeps every section reachable', async 
   await expectNoSeriousAxeViolations(page);
 });
 
-test('mobile home stacks the web cards and contains no section navigation buttons', async ({ page }) => {
+test('mobile home stacks the routine and quote and contains no section navigation buttons', async ({ page }) => {
   await installAuthenticatedStub(page, { withWorkout:true });
   await page.goto('/');
 
@@ -155,14 +163,12 @@ test('mobile home stacks the web cards and contains no section navigation button
   const profile = page.locator('#home-profile-card');
   await expect(routine).toBeVisible();
   await expect(quote).toBeVisible();
-  await expect(profile).toBeVisible();
+  await expect(profile).toHaveCount(0);
   await expect(page.locator('.home-intro')).toBeHidden();
   await expect(page.locator('.home-routine-open')).toBeHidden();
   const routineBox = await routine.boundingBox();
   const quoteBox = await quote.boundingBox();
-  const profileBox = await profile.boundingBox();
   expect((routineBox?.y || 0) + (routineBox?.height || 0)).toBeLessThanOrEqual(quoteBox?.y || 0);
-  expect((quoteBox?.y || 0) + (quoteBox?.height || 0)).toBeLessThanOrEqual(profileBox?.y || 0);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -206,7 +212,7 @@ test('desktop navigation remains available above the mobile breakpoint', async (
   await expect(page.locator('#open-menu')).toBeVisible();
   await expect(page.locator('.home-quick')).toBeVisible();
   await expect(page.locator('#home-routine-card')).toBeVisible();
-  await expect(page.locator('#home-profile-card')).toBeVisible();
+  await expect(page.locator('#home-profile-card')).toHaveCount(0);
   await page.locator('#open-menu').click();
   await expect(page.locator('#side-menu')).not.toHaveAttribute('inert', '');
   await expect(page.locator('#side-menu [data-view="log"]')).toBeVisible();
@@ -325,6 +331,59 @@ test('a workout in progress returns after mobile suspension and a full reload', 
   await expect(page.locator('#session-comments')).toHaveValue('Locked between sets');
   await expect(page.locator('#account-open')).toHaveClass(/is-connected/);
   await expect(page.locator('#account-menu-email')).toHaveText('mobile@example.com');
+});
+
+test('three exercises survive closing the app and complete after offline recovery', async ({ page, context, browserName }) => {
+  await context.addInitScript(() => sessionStorage.setItem('logbookLocalWorkerEnabled', 'true'));
+  await installAuthenticatedStub(context, { withWorkout:true });
+  await context.addInitScript(() => {
+    if (!navigator.onLine) {
+      const key = 'sb-hixnqtjsjcndeatxhpgd-auth-token';
+      const cached = JSON.parse(localStorage.getItem(key));
+      cached.expires_at = 1;
+      localStorage.setItem(key, JSON.stringify(cached));
+    }
+  });
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  if (browserName === 'chromium') await page.evaluate(async () => {
+    await navigator.serviceWorker.register('/service-worker.js', { scope:'/' });
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once:true }));
+  });
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="log"]').click();
+  await page.locator('[data-mode="free"]').click();
+  for (let index = 0; index < 3; index += 1) {
+    if (index) await page.locator('#add-free-exercise').click();
+    const card = page.locator('#free-exercises [data-exercise]').nth(index);
+    await card.locator('.exercise-name').fill(`Workout exercise ${index + 1}`);
+    await card.locator('.exercise-comments').fill(`Note ${index + 1}`);
+    for (let set = 0; set < 3; set += 1) {
+      await card.locator('.set-reps').nth(set).fill(String(8 + set));
+      await card.locator('.set-weight').nth(set).fill(String(20 + index + set / 2));
+    }
+  }
+  await page.locator('#session-comments').fill('Three exercises before closing');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('logbookWorkoutDraft')));
+  expect(saved.cards).toHaveLength(3);
+  await page.close(); // No synthetic pagehide or reload; launch a new renderer.
+  // WebKit's Playwright port lacks service-worker offline navigation support.
+  if (browserName === 'chromium') await context.setOffline(true);
+  const reopened = await context.newPage();
+  await reopened.goto('/', { waitUntil:'domcontentloaded' });
+  await expect(reopened.locator('body')).toHaveClass(/app-ready/);
+  await expect(reopened.locator('#log-view')).toHaveClass(/active/);
+  await expect(reopened.locator('#session-comments')).toHaveValue(saved.comments);
+  await expect(reopened.locator('#free-exercises')).toHaveAttribute('data-current-index', '2');
+  expect(await reopened.evaluate(() => JSON.parse(localStorage.getItem('logbookWorkoutDraft')).cards)).toEqual(saved.cards);
+  await expect(reopened.locator('#workout-draft-status')).toContainText('αποθηκεύτηκε');
+  await reopened.locator('#save-session').click();
+  await expect.poll(() => reopened.evaluate(() => JSON.parse(localStorage.getItem('trainingSessions')).length)).toBe(1);
+  expect(await reopened.evaluate(() => localStorage.getItem('logbookWorkoutDraft'))).toBeNull();
+  await context.setOffline(false);
+  await expect.poll(() => reopened.evaluate(() => window.readMobileCloudRow?.()?.payload?.trainingSessions?.length || 0)).toBe(1);
+  expect(await reopened.evaluate(() => window.readMobileCloudRow().payload.trainingSessions[0].exercises.length)).toBe(3);
 });
 
 test('the privacy policy opens as its own page while the service worker controls the scope', async ({ page, context, browserName }) => {

@@ -19,6 +19,7 @@ async function boot(page, sets = [3, 3, 3, 3]) {
       })),
     }]));
     localStorage.setItem('userProfile', JSON.stringify({ name:'A', birthdate:'1990-01-01', weight:80, weightUnit:'kg', avatar:'male', customImage:'' }));
+    let row = null;
     window.supabase = { createClient:() => ({
       auth:{
         async getSession() { return { data:{ session:cachedSession }, error:null }; },
@@ -26,14 +27,20 @@ async function boot(page, sets = [3, 3, 3, 3]) {
         async signOut() { return { error:null }; },
       },
       from() {
-        let row = null;
         let values = null;
+        const filters = {};
         const chain = {
           select() { return chain; },
-          eq() { return chain; },
+          eq(key, value) { filters[key] = value; return chain; },
           insert(next) { values = next; return chain; },
           update(next) { values = next; return chain; },
-          async maybeSingle() { return { data:row, error:null }; },
+          async maybeSingle() {
+            if (values) {
+              if (!row || row.revision !== filters.revision) return { data:null, error:null };
+              row = { ...row, payload:structuredClone(values.payload), revision:row.revision + 1 };
+            }
+            return { data:structuredClone(row), error:null };
+          },
           async single() {
             row = { user_id:values.user_id, revision:(row?.revision || 0) + 1, payload:values.payload, updated_at:new Date().toISOString() };
             return { data:row, error:null };
@@ -52,6 +59,7 @@ test('the exercise counter keeps existing exercises while it grows and shrinks',
   await boot(page);
   await page.locator('#open-menu').click();
   await page.locator('#side-menu [data-view="plan"]').click();
+  await page.locator('[aria-controls="routine-manager-body"]').click();
   await page.locator('[data-view-routine]').first().click();
   await page.locator('[data-edit-day="1"]').first().click();
   const counter = page.locator('#exercise-count');
@@ -90,6 +98,8 @@ test('plan sections preserve carousel state and cards fit after resizing', async
   await page.locator('#open-menu').click();
   await page.locator('#side-menu [data-view="plan"]').click();
   const toggle = page.locator('[aria-controls="routine-manager-body"]');
+  await expect(page.locator('#routine-manager-body')).toBeHidden();
+  await toggle.click();
   const centered = page.locator('.routine-card[data-carousel-position="0"]');
   const routineId = await centered.getAttribute('data-routine-id');
   await toggle.focus();
@@ -106,6 +116,8 @@ test('plan sections preserve carousel state and cards fit after resizing', async
     })).toBe(true);
   }
   const libraryToggle = page.locator('[aria-controls="exercise-library-body"]');
+  await expect(page.locator('#exercise-library-body')).toBeHidden();
+  await libraryToggle.click();
   await libraryToggle.click();
   await expect(page.locator('#exercise-library-body')).toBeHidden();
   await libraryToggle.click();

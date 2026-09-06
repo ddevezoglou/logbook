@@ -159,6 +159,7 @@ test('a cached session boots the local application when cloud code is unavailabl
     onWindow(window) {
       delete window.LogbookSupabase;
       window.LogbookOfflineSession = offlineSession;
+      window.localStorage.setItem('logbookCloudOwner', offlineSession.user.id);
     },
   });
 
@@ -178,6 +179,22 @@ test('a cached session boots the local application when cloud code is unavailabl
   }));
   assert.equal(document.querySelectorAll('script[data-logbook-app]').length, 1);
   assert.ok(document.body.classList.contains('app-ready'));
+});
+
+test('offline boot never opens another account data or unowned data', async () => {
+  for (const owner of ['user-a', null]) {
+    const { document } = await loadAuth({ onWindow(window) {
+      delete window.LogbookSupabase;
+      window.LogbookOfflineSession = { access_token:'cached-token', user:{ id:'user-b' } };
+      if (owner) window.localStorage.setItem('logbookCloudOwner', owner);
+      window.localStorage.setItem('logbookWorkoutDraft', JSON.stringify({ owner:'user-a', comments:'Private draft' }));
+    } });
+    assert.equal(document.querySelector('script[data-logbook-app]'), null);
+    assert.equal(document.querySelector('#auth-gate').dataset.state, 'error');
+    assert.ok(document.querySelector('#auth-gate-local').classList.contains('hidden'));
+    assert.match(document.defaultView.localStorage.getItem('logbookWorkoutDraft'), /Private draft/);
+    document.defaultView.close();
+  }
 });
 
 test('account signup rejects mismatched passwords before calling Supabase', async () => {
@@ -451,6 +468,53 @@ test('an initial sync that failed before the gate arms surfaces the error state'
   assert.ok(!document.querySelector('#auth-gate-recovery-actions').classList.contains('hidden'));
   assert.ok(document.querySelector('#auth-gate-local').classList.contains('hidden'));
   assert.ok(!document.querySelector('#auth-gate-signout').classList.contains('hidden'));
+});
+
+test('a delayed session lookup cannot undo a newer sign-in', async () => {
+  let resolveSession;
+  const { window, document, emitAuth } = await loadAuth({ onWindow(window) {
+    window.LogbookSupabase.auth.getSession = () => new Promise(resolve => { resolveSession = resolve; });
+  } });
+  emitAuth('SIGNED_IN', { user:{ id:'user-a', email:'athlete@example.com' } });
+  resolveSession({ data:{ session:null }, error:null });
+  await flush();
+  assert.equal(window.LogbookSessionMachine.context.session.user.id, 'user-a');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'syncing');
+  window.close();
+});
+
+test('a delayed session lookup cannot restore a session after explicit sign-out', async () => {
+  let resolveSession;
+  const session = { user:{ id:'user-a' } };
+  const { window, document, emitAuth } = await loadAuth({ onWindow(window) {
+    window.LogbookSupabase.auth.getSession = () => new Promise(resolve => { resolveSession = resolve; });
+  } });
+  emitAuth('SIGNED_IN', session);
+  click(document, '#auth-gate-signout');
+  resolveSession({ data:{ session }, error:null });
+  await flush();
+  assert.equal(window.LogbookSessionMachine.state, 'unknown');
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'login');
+  window.close();
+});
+
+test('repeated auth events during app loading cannot re-arm initial sync or reload the app', async () => {
+  const session = { user:{ id:'user-a' } };
+  const { window, document, emitAuth } = await loadAuth({ initialSession:session });
+  const complete = () => window.dispatchEvent(new window.CustomEvent('logbook:initial-sync-complete', {
+    detail:{ userId:'user-a', success:true },
+  }));
+  complete();
+  emitAuth('SIGNED_IN', session);
+  emitAuth('TOKEN_REFRESHED', { ...session, access_token:'refreshed' });
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'loading');
+  document.querySelector('script[data-logbook-app]').dispatchEvent(new window.Event('load'));
+  complete();
+  emitAuth('SIGNED_IN', session);
+  assert.equal(document.querySelector('#auth-gate').dataset.state, 'ready');
+  assert.equal(document.querySelectorAll('script[data-logbook-app]').length, 1);
+  await flush();
+  window.close();
 });
 
 test('an existing session can sign out locally while initial sync is still pending', async () => {

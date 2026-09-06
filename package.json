@@ -1,13 +1,13 @@
 {
   "name": "logbook",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve-static.mjs --port 3001",
     "test": "npm run test:unit",
     "test:unit": "node --test \"tests/**/*.test.mjs\"",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/run-e2e.mjs",
     "build:production": "node scripts/build-production.mjs",
     "check:performance": "node scripts/check-performance.mjs",
     "verify:release": "node scripts/verify-release.mjs",

@@ -11,6 +11,8 @@ p,li { font-size:1.05rem; line-height:1.65; }
 ul { padding-left:22px; }
 li+li { margin-top:10px; }
 a { color:var(--orange); font-weight:700; }
+.langs { display:flex; flex-wrap:wrap; gap:8px 20px; margin:22px 0 0; font-size:.86rem; letter-spacing:.1em; }
+.langs strong { font-weight:800; }
 code { padding:2px 5px; background:var(--paper-soft); font-size:.86em; }
 @media(max-width:600px) {
   body { padding:0; background:var(--paper); }

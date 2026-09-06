@@ -15,7 +15,7 @@ export default defineConfig({
     screenshot:'only-on-failure',
     trace:'retain-on-failure',
   },
-  webServer:{
+  webServer:process.env.LOGBOOK_MANAGED_TEST_SERVER === '1' ? undefined : {
     command:'node scripts/serve-static.mjs',
     url:'http://127.0.0.1:4173/',
     reuseExistingServer:!process.env.CI,

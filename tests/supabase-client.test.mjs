@@ -37,6 +37,23 @@ test('Supabase browser client uses the public project configuration', () => {
   assert.equal(readyClient, client);
 });
 
+test('an expired cached session opens offline immediately and initializes the client only after reconnection', () => {
+  const dom = new JSDOM('', { runScripts:'outside-only', url:'http://localhost:3000/' });
+  const session = { access_token:'expired', refresh_token:'refresh', expires_at:1, user:{ id:'offline-user' } };
+  Object.defineProperty(dom.window.navigator, 'onLine', { configurable:true, value:false });
+  dom.window.eval(configSource);
+  dom.window.localStorage.setItem('sb-hixnqtjsjcndeatxhpgd-auth-token', JSON.stringify(session));
+  let calls = 0;
+  dom.window.supabase = { createClient() { calls += 1; return { auth:{} }; } };
+  dom.window.eval(clientSource);
+  assert.equal(calls, 0);
+  assert.equal(dom.window.LogbookOfflineSession.user.id, session.user.id);
+  Object.defineProperty(dom.window.navigator, 'onLine', { configurable:true, value:true });
+  dom.window.dispatchEvent(new dom.window.Event('online'));
+  assert.equal(calls, 1);
+  dom.window.close();
+});
+
 test('opening index.html directly never advertises localhost as its auth callback', () => {
   const dom = new JSDOM('', { runScripts:'outside-only', url:'file:///C:/Users/Dimitris/logbook/index.html' });
 
@@ -88,6 +105,7 @@ test('Supabase scripts load before the application is dynamically bootstrapped',
   const errorTracking = htmlSource.indexOf('src="error-tracking.js"');
   const sessionState = htmlSource.indexOf('src="session-state.js"');
   const auth = htmlSource.indexOf('src="auth.js?v=0.3.1"');
+  const reconciliation = htmlSource.indexOf('src="data-reconciliation.js"');
   const sync = htmlSource.indexOf('src="cloud-sync.js"');
 
   assert.match(clientSource, /assets\/vendor\/supabase-2\.110\.7\.min\.js/);
@@ -96,6 +114,7 @@ test('Supabase scripts load before the application is dynamically bootstrapped',
   assert.ok(client < errorTracking);
   assert.ok(errorTracking < sessionState);
   assert.ok(sessionState < auth);
+  assert.ok(sessionState < reconciliation && reconciliation < auth);
   assert.ok(auth < sync);
   assert.equal(htmlSource.includes('<script src="app.js"></script>'), false);
   assert.match(readFileSync(new URL('../auth.js', import.meta.url), 'utf8'), /script\.src = 'app\.js'/);

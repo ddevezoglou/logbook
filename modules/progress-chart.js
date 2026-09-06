@@ -31,12 +31,10 @@ export function buildProgressChartMarkup({
 
   const occurrences = workout.sessions.flatMap(session => {
     const matches = session.exercises?.filter(item => identityKey(item) === exerciseKey) || [];
-    return matches.length ? matches.map(exercise => ({ session, exercise })) : [{ session }];
+    return matches.filter(exercise => exercise.sets?.[setIndex]).map(exercise => ({ session, exercise }));
   });
   const records = occurrences.map(({ session, exercise }) => {
-    if (!exercise) return { session, reason:'Η άσκηση δεν καταγράφηκε' };
     const set = exercise.sets?.[setIndex];
-    if (!set) return { session, reason:`Δεν καταγράφηκε το σετ ${setIndex + 1}` };
     const mode = set.weightMode || 'kg';
     const group = weightModeGroup(mode);
     const reps = Number(set.reps);

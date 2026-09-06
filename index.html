@@ -153,7 +153,7 @@
     <div class="side-menu-footer">
       <span class="brand-mark inverse mini-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <small>LOGBOOK</small>
-      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.3.1</b></span>
+      <span class="app-version"><i data-i18n-id="message.0478">ΕΚΔΟΣΗ</i><b>0.3.2</b></span>
     </div>
     <a class="side-menu-privacy" href="privacy.html" data-i18n-id="message.0470">Πολιτική απορρήτου</a>
   </aside>
@@ -169,15 +169,6 @@
         <div class="home-page-head">
           <span class="home-pageno" aria-hidden="true">PAGE 001</span>
         </div>
-        <span id="home-reward-stamp" class="home-reward-stamp hidden" role="status"><svg aria-hidden="true"><use href="#dumbbell-icon"/></svg><b id="home-reward-label">PLAN SETUP</b><svg class="flip" aria-hidden="true"><use href="#dumbbell-icon"/></svg></span>
-        <article id="home-profile-card" class="home-profile-card hidden" tabindex="0" aria-label="Κάρτα αθλητή. Σύρετε για να την μετακινήσετε στην αρχική σελίδα.">
-          <span class="home-card-tape home-card-tape-left" aria-hidden="true"></span>
-          <span class="home-card-tape home-card-tape-right" aria-hidden="true"></span>
-          <div class="home-profile-card-body">
-            <div id="home-profile-avatar" class="avatar-figure home-card-avatar male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="home-profile-image" alt=""></div>
-            <div class="home-profile-card-copy"><strong id="home-profile-name" data-i18n-user></strong></div>
-          </div>
-        </article>
         <article id="home-routine-card" class="home-routine-card hidden" tabindex="0" aria-label="Κάρτα ενεργού προγράμματος. Σύρετε για να την μετακινήσετε στην αρχική σελίδα.">
           <span class="home-routine-punch" aria-hidden="true"></span>
           <header class="home-routine-head">
@@ -230,7 +221,7 @@
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
             <li><b>01</b><span>Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση.</span></li>
-            <li><b>02</b><span>Μετακινηθείτε στις κάρτες ασκήσεων με τα βέλη ή με σύρσιμο.</span></li>
+            <li><b>02</b><span>Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.</span></li>
             <li><b>03</b><span id="log-weight-guide">Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.</span></li>
             <li><b>04</b><span>Προσθέστε ή αφαιρέστε σετ, αντιγράψτε το πρώτο στα υπόλοιπα και γράψτε σχόλια όπου χρειάζεται.</span></li>
             <li><b>05</b><span>Με «Ολοκλήρωση προπόνησης» η καταγραφή αποθηκεύεται στο Ιστορικό. Από εκεί μπορείτε να τη διορθώσετε ή να την αντιγράψετε.</span></li>
@@ -261,6 +252,7 @@
           </div>
         </div>
         <label class="full-field session-comment">Σχόλια προπόνησης<textarea id="session-comments" rows="3" placeholder="Πώς πήγε συνολικά η σημερινή προπόνηση;"></textarea></label>
+        <p id="workout-draft-status" class="workout-draft-status" role="status" hidden></p>
         <div class="session-save-actions">
           <span class="motto-stamp" aria-hidden="true"><svg><use href="#flex-icon"/></svg>EARN IT<svg class="flip"><use href="#flex-icon"/></svg></span>
           <button id="cancel-session-edit" class="secondary-button hidden" type="button">Ακύρωση διορθώσεων</button>
@@ -276,24 +268,34 @@
         <aside id="plan-guide" class="info-panel hidden">
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
-            <li><b>01</b><span>Δημιουργήστε ασκήσεις στη βιβλιοθήκη και επιλέξτε τις στις ημέρες του προγράμματος.</span></li>
-            <li><b>02</b><span>Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.</span></li>
-            <li><b>03</b><span>Ανοίξτε ένα πρόγραμμα για επεξεργασία, αντιγραφή ή διαγραφή και ορίστε με το αστέρι ποιο είναι ενεργό.</span></li>
-            <li><b>04</b><span>Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.</span></li>
+            <li><b>01</b><span>Πρώτα η βιβλιοθήκη: γράψτε μια άσκηση μία φορά και χρησιμοποιήστε την σε όσες ημέρες θέλετε.</span></li>
+            <li><b>02</b><span>Πατήστε μια άσκηση για επεξεργασία ή διαγραφή· η σημείωση ξεχωρίζει τις ομώνυμες.</span></li>
+            <li><b>03</b><span>Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.</span></li>
+            <li><b>04</b><span>Ανοίξτε ένα πρόγραμμα για να ορίσετε τις ημέρες του και δηλώστε με το αστέρι ποιο είναι σε ισχύ.</span></li>
+            <li><b>05</b><span>Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.</span></li>
           </ol>
         </aside>
       </div>
       <div class="plan-workspace">
       <section class="exercise-library" aria-labelledby="exercise-library-title">
-        <h2 id="exercise-library-title"><button class="plan-section-toggle" type="button" aria-expanded="true" aria-controls="exercise-library-body"><span><i class="plan-step" aria-hidden="true">01</i>Οι ασκήσεις μου</span><small id="exercise-library-count" data-i18n-user>00</small><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></h2>
-        <div id="exercise-library-body">
+        <h2 id="exercise-library-title"><button class="plan-section-toggle" type="button" aria-expanded="false" aria-controls="exercise-library-body"><span><i class="plan-step" aria-hidden="true">01</i>Οι ασκήσεις μου</span><small id="exercise-library-count" data-i18n-user>00</small><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></h2>
+        <div id="exercise-library-body" hidden>
         <p class="plan-section-note">Πατήστε μια άσκηση για επεξεργασία.</p>
-        <ul id="exercise-library-list"></ul>
+        <div id="exercise-carousel" class="routine-carousel">
+          <div class="routine-carousel-bar"><span><b id="exercise-carousel-count" data-i18n-user>00 / 00</b></span></div>
+          <div class="routine-carousel-stage">
+            <ul id="exercise-library-list" class="routine-list exercise-carousel-list" tabindex="0" aria-label="Ασκήσεις βιβλιοθήκης" aria-live="polite"></ul>
+            <div class="routine-carousel-controls" role="group" aria-label="Πλοήγηση ασκήσεων">
+              <button type="button" data-exercise-scroll="-1" aria-controls="exercise-library-list" aria-label="Προηγούμενη άσκηση"><svg aria-hidden="true"><use href="#arrow-left-icon"/></svg></button>
+              <button type="button" data-exercise-scroll="1" aria-controls="exercise-library-list" aria-label="Επόμενη άσκηση"><svg aria-hidden="true"><use href="#arrow-right-icon"/></svg></button>
+            </div>
+          </div>
+        </div>
         <details id="library-editor" class="plan-create">
         <summary>Νέα άσκηση</summary>
         <form id="exercise-library-form">
           <label>Όνομα άσκησης<input id="library-exercise-name" data-i18n-user type="text" maxlength="200" required></label>
-          <label>Σημειώσεις άσκησης<textarea id="library-exercise-notes" data-i18n-user maxlength="2000" rows="2"></textarea></label>
+          <label>Cues<textarea id="library-exercise-notes" data-i18n-user maxlength="2000" rows="2" placeholder="π.χ. ώμοι πίσω, σταθερά πόδια"></textarea></label>
           <div class="exercise-library-actions">
             <button class="primary-button" type="submit">Αποθήκευση άσκησης</button>
             <button id="cancel-library-edit" class="mini-button hidden" type="button">Ακύρωση</button>
@@ -304,8 +306,8 @@
         </div>
       </section>
       <section class="routine-manager" aria-label="Διαχείριση προγραμμάτων">
-        <h2><button class="plan-section-toggle" type="button" aria-expanded="true" aria-controls="routine-manager-body"><span><i class="plan-step" aria-hidden="true">02</i>Τα προγράμματά μου</span><small id="routine-total" data-i18n-user>00</small><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></h2>
-        <div id="routine-manager-body">
+        <h2><button class="plan-section-toggle" type="button" aria-expanded="false" aria-controls="routine-manager-body"><span><i class="plan-step" aria-hidden="true">02</i>Τα προγράμματά μου</span><small id="routine-total" data-i18n-user>00</small><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></h2>
+        <div id="routine-manager-body" hidden>
         <p class="plan-section-note routine-active-summary"><span>Σε ισχύ</span><strong id="plan-active-name" data-i18n-user>—</strong></p>
         <div class="routine-carousel">
           <div class="routine-carousel-bar">
@@ -370,10 +372,11 @@
         <aside id="progress-guide" class="info-panel hidden">
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
-            <li><b>01</b><span>Επιλέξτε από τα φίλτρα πρόγραμμα, άσκηση και σετ.</span></li>
+            <li><b>01</b><span>Επιλέξτε πρώτα πρόγραμμα και μετά άσκηση και σετ — προσφέρονται μόνο όσες ανήκουν σε αυτό.</span></li>
             <li><b>02</b><span>Το γράφημα συγκρίνει βάρος ή πλάκες και δείχνει την πορεία των επαναλήψεων στο ίδιο φορτίο.</span></li>
-            <li><b>03</b><span>Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.</span></li>
-            <li><b>04</b><span>Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.</span></li>
+            <li><b>03</b><span>Κάθε προπόνηση πιάνει σταθερό πλάτος· σύρετε το γράφημα οριζόντια για τις παλαιότερες.</span></li>
+            <li><b>04</b><span>Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.</span></li>
+            <li><b>05</b><span>Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.</span></li>
           </ol>
         </aside>
       </div>
@@ -410,9 +413,10 @@
           <h3>ΟΔΗΓΙΕΣ</h3>
           <ol>
             <li><b>01</b><span>Πατήστε τη φωτογραφία, το όνομα ή την ηλικία πάνω στην κάρτα.</span></li>
-            <li><b>02</b><span>Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται στο προφίλ.</span></li>
+            <li><b>02</b><span>Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται· οι υπόλοιπες μένουν σε αυτή τη συσκευή.</span></li>
             <li><b>03</b><span>Δηλώστε ημερομηνία γέννησης και επιλέξτε αν η ηλικία θα φαίνεται στην κάρτα.</span></li>
-            <li><b>04</b><span>Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.</span></li>
+            <li><b>04</b><span>Η μονάδα μέτρησης ορίζει πώς καταχωρίζετε και βλέπετε τα βάρη· οι τιμές αποθηκεύονται πάντα σε κιλά.</span></li>
+            <li><b>05</b><span>Η «Εξαγωγή ιστορικού» κατεβάζει τις προπονήσεις σε αρχείο CSV. Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.</span></li>
           </ol>
         </aside>
       </div>
@@ -424,10 +428,7 @@
                 <span class="profile-tape" aria-hidden="true"></span>
                 <button id="profile-photo-button" class="profile-photo-button" type="button" aria-expanded="false" aria-controls="profile-photo-slip" aria-label="Αλλαγή φωτογραφίας">
                   <span class="profile-polaroid-photo">
-                    <span id="profile-reward-ring" class="profile-reward-ring reward-stage-0" aria-label="0 από 4 στάδια επιβράβευσης">
-                      <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="reward-ring-track" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-1" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-2" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-3" cx="60" cy="60" r="55" pathLength="100"></circle><circle class="reward-ring-segment reward-ring-4" cx="60" cy="60" r="55" pathLength="100"></circle></svg>
-                      <span id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></span>
-                    </span>
+                    <span id="profile-preview-avatar" class="avatar-figure avatar-large male-avatar" aria-hidden="true"><i class="portrait-disc"></i><i class="portrait-neck"></i><i class="portrait-face"></i><i class="portrait-hair"></i><i class="portrait-shirt"></i><i class="portrait-detail"></i><img id="profile-preview-image" alt=""></span>
                   </span>
                   <span class="profile-photo-tag" aria-hidden="true">ΑΛΛΑΓΗ ΦΩΤΟΓΡΑΦΙΑΣ</span>
                 </button>
@@ -585,6 +586,7 @@
   <script src="supabase-client.js"></script>
   <script src="error-tracking.js"></script>
   <script src="session-state.js"></script>
+  <script src="data-reconciliation.js"></script>
   <script src="auth.js?v=0.3.1"></script>
   <script src="cloud-sync.js"></script>
   <script src="pwa.js"></script>

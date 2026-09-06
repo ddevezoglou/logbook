@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0.3.4 — Πολιτική Απορρήτου και οδηγίες χρήσης</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Roboto+Slab:wght@500;700;900&family=Playpen+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --gold:#c9a227; --orange:#8a6a1c; --pen-blue:#1f6493; --danger:#7a3325; --muted:#7c745f; --line:#b6ad97; --faded:#a89f86; --pen:#4d3f24; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans",sans-serif; }
+.grain { position:fixed; inset:0; pointer-events:none; opacity:.12; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+
+/* ===== page chrome (house style) ===== */
+.intro { padding:56px 5vw 30px; border-bottom:3px solid var(--ink); box-shadow:0 6px 0 -5px var(--ink); }
+.intro p.eyebrow { font-size:.78rem; letter-spacing:.2em; font-weight:800; color:var(--orange); margin:0 0 14px; }
+.intro h1 { font:700 clamp(2rem,4.6vw,4rem)/.92 "Roboto Slab",serif; margin:0; letter-spacing:-.05em; text-transform:uppercase; }
+.intro h1 em { color:var(--orange); font-style:normal; }
+.intro>p.lead { max-width:720px; margin:22px 0 0; padding-left:18px; border-left:2px solid var(--orange); color:var(--muted); line-height:1.55; }
+.intro>p.lead b { color:var(--ink); }
+.intro .state { display:flex; flex-wrap:wrap; gap:10px; margin:26px 0 0; }
+.intro .state span { padding:6px 12px; border:1px solid var(--line); background:rgba(255,255,255,.42); font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.intro .state span b { color:var(--pen-blue); }
+.intro .state span.open { border-style:dashed; }
+.intro .state span.open b { color:var(--danger); }
+
+.langbar { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:11px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.langbar b { font:700 .82rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.langbar small { color:var(--faded); font-size:.72rem; letter-spacing:.08em; font-weight:700; text-transform:uppercase; }
+.langbar .set { display:flex; gap:0; }
+.langbar button { border:1px solid #5a5340; background:transparent; color:var(--paper); font:800 .72rem "Alegreya Sans"; letter-spacing:.14em; padding:7px 14px; cursor:pointer; margin-left:-1px; }
+.langbar button:first-child { margin-left:0; }
+.langbar button[aria-pressed="true"] { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.langbar button:focus-visible { outline:2px solid var(--paper); outline-offset:2px; }
+
+.chapter { padding:14px 5vw; background:var(--ink); color:var(--paper); border-bottom:1px solid #3d3828; }
+.chapter b { font:700 1rem "Roboto Slab"; color:var(--gold); letter-spacing:.08em; }
+.chapter span { font-size:.78rem; color:var(--faded); letter-spacing:.1em; font-weight:700; margin-left:16px; }
+
+.stage { padding:clamp(34px,5vw,58px) 5vw 54px; background-image:linear-gradient(90deg,rgba(21,19,13,.05) 1px,transparent 1px); background-size:128px 128px; }
+.stage h3 { margin:0 0 6px; font:900 1.28rem/1.1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.stage h3 + p.sub { margin:0 0 22px; max-width:760px; color:var(--muted); line-height:1.55; }
+.stage h3 + p.sub b { color:var(--ink); }
+.stage > section { margin:0 0 clamp(34px,5vw,52px); }
+.stage > section:last-child { margin-bottom:0; }
+
+.notes { max-width:760px; margin:18px 0 0; padding:18px 22px; border:1px dashed var(--line); background:rgba(255,255,255,.34); color:var(--muted); font-size:.92rem; line-height:1.55; }
+.notes b { color:var(--ink); }
+.notes.pick { border:1px solid var(--pen-blue); border-left-width:5px; background:rgba(31,100,147,.06); }
+.notes.pick b { color:var(--pen-blue); }
+.notes.warn { border:1px solid var(--danger); border-left-width:5px; background:rgba(122,51,37,.06); }
+.notes.warn b { color:var(--danger); }
+.notes p { margin:0 0 9px; }
+.notes p:last-child { margin-bottom:0; }
+
+table { border-collapse:collapse; width:100%; max-width:1100px; margin:6px 0 0; background:rgba(255,255,255,.36); font-size:.9rem; }
+th, td { border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top; line-height:1.45; }
+th { background:rgba(21,19,13,.07); font:800 .68rem "Alegreya Sans"; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); }
+td b { color:var(--ink); }
+td.no { color:var(--danger); font-weight:700; }
+td.yes { color:var(--pen-blue); font-weight:700; }
+code { font:600 .84em ui-monospace,Menlo,Consolas,monospace; background:rgba(21,19,13,.07); padding:1px 5px; }
+
+/* ===== κείμενα ===== */
+.opt { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; max-width:1100px; margin:8px 0 0; }
+.opt article { border:1px solid var(--line); background:rgba(255,255,255,.36); padding:18px 20px; }
+.opt article.win { border:1px solid var(--pen-blue); border-top-width:5px; background:rgba(31,100,147,.06); }
+.opt h4 { margin:0 0 8px; font:800 .74rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--orange); }
+.opt article.win h4 { color:var(--pen-blue); }
+.opt p { margin:0 0 8px; font-size:.9rem; line-height:1.55; color:var(--muted); }
+.opt p:last-child { margin-bottom:0; }
+.opt p b { color:var(--ink); }
+
+.doc { max-width:820px; margin:8px 0 0; padding:clamp(24px,3.4vw,40px) clamp(22px,3.4vw,44px); background:var(--paper-soft); border:1px solid var(--line); box-shadow:6px 6px 0 -1px rgba(21,19,13,.09); }
+.doc .docmeta { display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; padding-bottom:12px; border-bottom:2px solid var(--ink); margin-bottom:22px; }
+.doc .docmeta strong { font:900 1.34rem/1 "Roboto Slab"; text-transform:uppercase; letter-spacing:-.02em; }
+.doc .docmeta span { font:800 .68rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.doc h5 { margin:26px 0 8px; font:800 .96rem "Roboto Slab"; letter-spacing:-.01em; }
+.doc h5:first-of-type { margin-top:0; }
+.doc p { margin:0 0 11px; line-height:1.62; font-size:.97rem; }
+.doc ul { margin:0 0 11px; padding-left:20px; }
+.doc li { margin:0 0 8px; line-height:1.6; font-size:.97rem; }
+.doc .newmark { border-left:4px solid var(--gold); padding-left:14px; margin-left:-18px; }
+.doc .fresh { display:inline-block; margin-left:8px; padding:2px 7px; border:1px solid var(--gold); color:var(--orange); font:800 .58rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; vertical-align:middle; }
+
+/* το πάνελ ΟΔΗΓΙΕΣ όπως τυπώνεται στην εφαρμογή */
+.guides { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:22px; max-width:1180px; margin:8px 0 0; align-items:start; }
+.guide { border:1px solid var(--line); background:rgba(255,255,255,.4); }
+.guide > header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:11px 16px; background:var(--ink); color:var(--paper); }
+.guide > header b { font:700 .92rem "Roboto Slab"; letter-spacing:.02em; }
+.guide > header span { font:800 .62rem "Alegreya Sans"; letter-spacing:.14em; text-transform:uppercase; color:var(--faded); }
+.info-panel { padding:16px 18px 18px; }
+.info-panel h6 { margin:0 0 12px; font:800 .68rem "Alegreya Sans"; letter-spacing:.2em; text-transform:uppercase; color:var(--orange); }
+.info-panel ol { list-style:none; margin:0; padding:0; }
+.info-panel li { display:flex; gap:11px; margin:0 0 11px; font-size:.9rem; line-height:1.5; }
+.info-panel li:last-child { margin-bottom:0; }
+.info-panel li b { flex:none; width:22px; font:800 .74rem "Roboto Slab"; color:var(--gold); padding-top:2px; }
+.info-panel li i { font-style:normal; }
+.info-panel li.gone { opacity:.45; text-decoration:line-through; }
+.guide .now { border-top:1px dashed var(--line); padding:14px 18px 16px; background:rgba(21,19,13,.035); }
+.guide .now strong { display:block; font:800 .62rem "Alegreya Sans"; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0 0 9px; }
+.guide .now ol { margin:0; padding-left:20px; }
+.guide .now li { font-size:.84rem; line-height:1.45; color:var(--muted); margin:0 0 6px; }
+.guide .ids { padding:9px 18px 13px; font-size:.72rem; letter-spacing:.04em; color:var(--faded); }
+.guide .ids code { background:transparent; padding:0; color:var(--muted); }
+
+.lg[hidden] { display:none; }
+.lg .tagline { display:inline-block; margin:0 0 10px; padding:2px 8px; background:var(--ink); color:var(--gold); font:800 .58rem "Alegreya Sans"; letter-spacing:.16em; }
+.allmode .lg { border-top:1px dotted var(--line); padding-top:12px; margin-top:12px; }
+.allmode .lg:first-of-type { border-top:0; padding-top:0; margin-top:0; }
+
+.foot { padding:34px 5vw 60px; border-top:3px solid var(--ink); background:var(--paper-dark); }
+.foot p { max-width:820px; margin:0 0 12px; color:var(--muted); line-height:1.6; }
+.foot p b { color:var(--ink); }
+.foot ol { max-width:820px; margin:0; padding-left:22px; color:var(--muted); }
+.foot li { margin:0 0 10px; line-height:1.55; }
+.foot li b { color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="intro">
+  <p class="eyebrow">LOGBOOK · ΕΚΔΟΣΗ 0.3.4 · ΚΕΙΜΕΝΑ ΠΡΟΣ ΕΓΚΡΙΣΗ</p>
+  <h1>ΤΑ ΚΕΙΜΕΝΑ<br><em>ΠΡΙΝ ΤΟΝ ΚΩΔΙΚΑ.</em></h1>
+  <p class="lead">Το 0.3.4 ζητά δύο πράγματα: μια <b>Πολιτική Απορρήτου που λέει την αλήθεια για το σημερινό μοντέλο</b> — βιβλιοθήκη ασκήσεων, λειτουργία επισκέπτη, τοπικό αντίγραφο επαναφοράς μετά την αποσύνδεση — και <b>οδηγίες που εξηγούν το αμέσως επόμενο βήμα</b> σε κάθε ενότητα. Εδώ είναι ολόκληρο το κείμενο και των δύο, στις τέσσερις γλώσσες, πριν αγγίξει κώδικα κανένα αρχείο. Τα ευρήματα της διάγνωσης είναι μετρημένα πάνω στον σημερινό κώδικα, όχι εικασίες.</p>
+  <div class="state">
+    <span>ΠΟΛΙΤΙΚΗ: <b>8 ενότητες → 9</b></span>
+    <span>ΟΔΗΓΙΕΣ ΣΗΜΕΡΑ: <b>4 πάνελ</b></span>
+    <span>ΟΔΗΓΙΕΣ ΠΡΟΤΑΣΗ: <b>7 σημεία</b></span>
+    <span>ΓΛΩΣΣΕΣ: <b>EL · EN · FR · DE</b></span>
+    <span>ΥΛΟΠΟΙΗΣΗ: <b>6 ΣΕΠ 2026</b></span>
+  </div>
+  <div class="notes pick" style="max-width:760px">
+    <p><b>Απόφαση της 6ης Σεπτεμβρίου 2026.</b> Η πολιτική υλοποιήθηκε ολόκληρη, σε τέσσερα στατικά αρχεία, όπως προτάθηκε στο <b>Α2 · Εκδοχή 2</b>.</p>
+    <p>Από τις οδηγίες υλοποιήθηκαν <b>μόνο τα τέσσερα πάνελ που υπήρχαν ήδη</b> — Καταγραφή, Πρόγραμμα, Επίβλεψη, Προφίλ. Οι προτάσεις για <b>Αρχική</b>, <b>Ιστορικό</b> και <b>λογαριασμό</b> απορρίφθηκαν με τον κανόνα «οδηγίες μπαίνουν μόνο όπου υπάρχουν ήδη», και μαζί τους ολόκληρο το <b>Β2</b>. Παραμένουν εδώ ως τεκμηρίωση του γύρου.</p>
+    <p>Μία απόκλιση από το προτεινόμενο κείμενο: η <b>Επίβλεψη πήγε στις πέντε γραμμές αντί για τέσσερις</b>. Το αρχείο πρότεινε να αντικατασταθεί η γραμμή για την ασύμβατη μέτρηση από τη γραμμή της κύλισης· στην υλοποίηση κρατήθηκαν και οι δύο, γιατί η πρώτη εξηγεί γιατί εξαφανίζονται καταγραφές και η συμπεριφορά υπάρχει ακόμη.</p>
+  </div>
+</header>
+
+<div class="langbar">
+  <b>ΓΛΩΣΣΑ ΚΕΙΜΕΝΩΝ</b>
+  <div class="set" role="group" aria-label="Επιλογή γλώσσας κειμένων">
+    <button type="button" data-l="el" aria-pressed="true">ΕΛ</button>
+    <button type="button" data-l="en" aria-pressed="false">EN</button>
+    <button type="button" data-l="fr" aria-pressed="false">FR</button>
+    <button type="button" data-l="de" aria-pressed="false">DE</button>
+    <button type="button" data-l="all" aria-pressed="false">ΟΛΕΣ</button>
+  </div>
+  <small>Αλλάζει μόνο τα κείμενα προς έγκριση — τα σχόλια του αρχείου μένουν ελληνικά</small>
+</div>
+
+<!-- ============================================================
+     Α. ΠΟΛΙΤΙΚΗ ΑΠΟΡΡΗΤΟΥ
+     ============================================================ -->
+<div class="chapter"><b>Α. ΠΟΛΙΤΙΚΗ ΑΠΟΡΡΗΤΟΥ</b><span>ΔΙΑΓΝΩΣΗ · ΜΗΧΑΝΙΣΜΟΣ ΓΛΩΣΣΩΝ · ΤΟ ΝΕΟ ΚΕΙΜΕΝΟ</span></div>
+
+<div class="stage">
+
+  <section>
+    <h3>Α1 · Τι δεν ισχύει σήμερα</h3>
+    <p class="sub">Η <code>privacy.html</code> γράφτηκε στις 25 Ιουλίου 2026, πριν από τη βιβλιοθήκη ασκήσεων και μετά τη λειτουργία επισκέπτη. Επτά σημεία είναι πλέον ανακριβή ή σιωπηλά. Κάθε γραμμή έχει το τεκμήριό της στον κώδικα.</p>
+    <table>
+      <thead><tr><th style="width:20%">Σημείο</th><th style="width:38%">Τι λέει ή δεν λέει σήμερα</th><th style="width:42%">Τεκμήριο και διόρθωση</th></tr></thead>
+      <tbody>
+        <tr><td><b>01 · Βιβλιοθήκη ασκήσεων</b></td><td>Η §2 απαριθμεί «προγράμματα, προπονήσεις, ασκήσεις, σετ…» σαν να είναι όλα πεδία της προπόνησης.</td><td>Από το 0.3.0 η άσκηση είναι <b>ανεξάρτητη οντότητα</b> με σταθερό <code>id</code>, σημείωση και <code>aliases</code> (<code>modules/exercises.js</code>), και ταξιδεύει ως <code>trainingExercises</code> στο snapshot. Παίρνει δική της κουκκίδα.</td></tr>
+        <tr><td><b>02 · Λειτουργία επισκέπτη</b></td><td>Δεν αναφέρεται πουθενά. Η πολιτική περιγράφει μόνο κόσμο με λογαριασμό.</td><td><code>auth.js</code> <code>GUEST_KEY</code>: καμία κλήση συγχρονισμού χωρίς χρήστη. Νέα <b>ενότητα 5</b> — χωρίς λογαριασμό, χωρίς αντίγραφο εκτός συσκευής, με τον επταήμερο κίνδυνο του iOS Safari.</td></tr>
+        <tr><td><b>03 · Ουρά σφαλμάτων επισκέπτη</b></td><td>Η §2 λέει ότι καταγράφονται τεχνικά συμβάντα, χωρίς να πει τι γίνεται όταν δεν υπάρχει λογαριασμός.</td><td><code>error-tracking.js</code>: έως 10 συμβάντα μένουν στο <code>logbookGuestErrorQueue</code> και <b>αποστέλλονται μόνο αν συνδεθεί αργότερα ο χρήστης</b>, οπότε δένονται με τον λογαριασμό. Λέγεται ρητά.</td></tr>
+        <tr><td><b>04 · Αντίγραφο μετά την αποσύνδεση</b></td><td>Η §4 λέει ότι η αποσύνδεση «αφαιρεί τα cloud cache metadata» — το αντίθετο από ό,τι κάνει.</td><td><code>auth.js</code>: πρώτα <code>archiveCurrentLocalData()</code> γράφει <code>logbookCloudCache:&lt;userId&gt;</code>, μετά <code>clearLocalUserData()</code> σβήνει τα δεδομένα εργασίας. Το αντίγραφο <b>μένει χωρίς λήξη</b>. Καταγεγραμμένος περιορισμός· μπαίνει στην πολιτική.</td></tr>
+        <tr><td><b>05 · Αντίγραφο πριν τη μετάβαση</b></td><td>Δεν αναφέρεται.</td><td><code>backupBeforeExerciseMigration()</code> κρατά τοπικά τα προ-μετάβασης κλειδιά· καθαρίζεται στην αποσύνδεση (είναι στα <code>LOCAL_USER_DATA_KEYS</code>). Μία πρόταση στην §4.</td></tr>
+        <tr><td><b>06 · Τι καλύπτει το CSV</b></td><td>Η §7 λέει «μπορείς να εξαγάγεις το ιστορικό σου σε CSV» χωρίς να πει τι δεν περιλαμβάνει.</td><td><code>sessionsToCsvRows()</code>: ημερομηνία, προπόνηση, άσκηση, σετ, επαναλήψεις, βάρος, μονάδα, πλάκες, σχόλια. <b>Όχι</b> προγράμματα, βιβλιοθήκη, προφίλ. Λέγεται, μαζί με το ότι πλήρης εξαγωγή δεν υπάρχει ακόμη.</td></tr>
+        <tr><td><b>07 · Μία γλώσσα</b></td><td>Η σελίδα είναι μόνο ελληνική, ενώ η εφαρμογή μιλά τέσσερις.</td><td>Η <code>privacy.html</code> δεν φορτώνει το <code>i18n.js</code>. Χρειάζεται μηχανισμός — <b>Α2</b>.</td></tr>
+      </tbody>
+    </table>
+    <div class="notes warn"><p><b>Εκτός 0.3.4:</b> το κανάλι επικοινωνίας της §1 παραμένει σελίδα GitHub issues. Η διεύθυνση επικοινωνίας είναι <b>εμπορικό προαπαιτούμενο του 1.0</b> και έχει δικό της TODO στο roadmap. Το κείμενο της §1 μένει ως έχει· αλλάζει μόνο όταν υπάρξει διεύθυνση.</p></div>
+  </section>
+
+  <section>
+    <h3>Α2 · Πώς γίνεται τετράγλωσση η σελίδα</h3>
+    <p class="sub">Τρεις δρόμοι. Το κριτήριο δεν είναι η κομψότητα αλλά το εξής: <b>μια πολιτική απορρήτου πρέπει να διαβάζεται χωρίς JavaScript, να ευρετηριάζεται και να παραπέμπεται με σταθερό σύνδεσμο</b> — τη ζητούν το Google OAuth verification και κάθε store.</p>
+    <div class="opt">
+      <article>
+        <h4>Εκδοχή 1 — μία σελίδα, τέσσερις ενότητες</h4>
+        <p>Ένα αρχείο με τέσσερα <code>&lt;section lang&gt;</code> και έναν διακόπτη που δείχνει ένα κάθε φορά.</p>
+        <p><b>Κόστος:</b> ο διακόπτης θέλει script· το CSP της σελίδας (<code>default-src 'self'</code>) απαγορεύει inline script, άρα χρειάζεται νέο αρχείο <code>legal.js</code>. Χωρίς JavaScript η σελίδα δείχνει και τις τέσσερις μαζί. Ένα URL για τέσσερα κείμενα.</p>
+      </article>
+      <article class="win">
+        <h4>Εκδοχή 2 — τέσσερα στατικά αρχεία <span class="fresh">Πρόταση</span></h4>
+        <p><code>privacy.html</code> (ελληνικά, ο σημερινός σταθερός σύνδεσμος) και δίπλα <code>privacy.en.html</code>, <code>privacy.fr.html</code>, <code>privacy.de.html</code>. Κάθε σελίδα ανοίγει με μια σειρά συνδέσμων προς τις άλλες τρεις.</p>
+        <p><b>Μηδέν JavaScript, μηδέν CSP ερώτημα.</b> Κάθε γλώσσα έχει δικό της URL για store και OAuth. Ο σύνδεσμος του μενού διαλέγει αρχείο με βάση το <code>logbookLanguage</code> — μία γραμμή στο <code>i18n.js</code>. Το <code>service-worker.js</code> προσθέτει τρία μικρά αρχεία στο precache.</p>
+      </article>
+      <article>
+        <h4>Εκδοχή 3 — μέσω του i18n.js</h4>
+        <p>Η σελίδα φορτώνει το <code>i18n.js</code> και μεταφράζεται όπως η εφαρμογή.</p>
+        <p><b>Απορρίπτεται:</b> ο μηχανισμός αντικαθιστά <i>ελληνικές συμβολοσειρές-πηγές</i>, οπότε ολόκληρη η πολιτική θα έμπαινε στο catalog ως δεκάδες τεράστιες εγγραφές, θα φορτωνόταν σε κάθε άνοιγμα της εφαρμογής και θα άλλαζε το κείμενο μιας νομικής σελίδας με regex.</p>
+      </article>
+    </div>
+    <div class="notes pick"><p><b>Πρόταση: Εκδοχή 2.</b> Και μία δικλείδα στο τέλος κάθε μετάφρασης: «σε περίπτωση απόκλισης υπερισχύει το ελληνικό κείμενο». Η γλώσσα-πηγή του Logbook είναι ήδη τα ελληνικά — η πολιτική απλώς το δηλώνει.</p></div>
+  </section>
+
+  <section>
+    <h3>Α3 · Το νέο κείμενο</h3>
+    <p class="sub">Ολόκληρη η πολιτική, όπως θα τυπωθεί. Οι <span class="fresh" style="margin-left:0">νέες</span> ενότητες και παράγραφοι έχουν χρυσή γραμμή στο περιθώριο· ό,τι δεν είναι σημειωμένο μεταφέρεται αυτούσιο ή με ελάχιστη ακρίβεια από το σημερινό κείμενο. Το ύφος του ενικού («μπορείς») διατηρείται στα ελληνικά, όπως σήμερα — οι οδηγίες της εφαρμογής μιλούν στον πληθυντικό και αυτό δεν αλλάζει εδώ.</p>
+
+    <div class="doc">
+      <div class="docmeta"><strong>Πολιτική απορρήτου</strong><span>Τελευταία ενημέρωση: ημέρα υλοποίησης</span></div>
+
+      <div class="lg" data-l="el">
+        <span class="tagline">ΕΛΛΗΝΙΚΑ — ΓΛΩΣΣΑ ΠΗΓΗ</span>
+        <h5>1. Ποιος λειτουργεί την υπηρεσία</h5>
+        <p>Το Logbook λειτουργεί από τον διαχειριστή του έργου Logbook. Για ερωτήσεις ή αιτήματα απορρήτου μπορείς να επικοινωνήσεις μέσω της σελίδας υποστήριξης του έργου. Μην συμπεριλάβεις κωδικό πρόσβασης, access token ή ευαίσθητα δεδομένα σε δημόσιο αίτημα.</p>
+
+        <h5>2. Ποια δεδομένα επεξεργαζόμαστε</h5>
+        <ul>
+          <li><b>Στοιχεία λογαριασμού:</b> email, εσωτερικό αναγνωριστικό χρήστη και τεχνικά στοιχεία συνεδρίας. Ο κωδικός πρόσβασης διαχειρίζεται από το Supabase Auth και δεν αποθηκεύεται στον κώδικα της εφαρμογής.</li>
+          <li class="newmark"><b>Η βιβλιοθήκη ασκήσεών σου:</b> κάθε άσκηση είναι ξεχωριστή εγγραφή με σταθερό αναγνωριστικό, όνομα, προαιρετική σημείωση και τα παλαιότερα ονόματα με τα οποία έχει αποθηκευτεί, ώστε οι παλιές καταγραφές να μένουν συνδεδεμένες μαζί της. <span class="fresh">Νέο</span></li>
+          <li><b>Δεδομένα προπόνησης:</b> προγράμματα και οι ημέρες τους, καταγεγραμμένες προπονήσεις, σετ, επαναλήψεις, βάρη ή πλάκες, σχόλια άσκησης και προπόνησης, και οι καλύτερες επιδόσεις που υπολογίζονται από αυτά.</li>
+          <li><b>Στοιχεία προφίλ και προτιμήσεις:</b> όνομα, ημερομηνία γέννησης και αν εμφανίζεται η ηλικία, μονάδα μέτρησης, γλώσσα και θέμα εμφάνισης.</li>
+          <li><b>Φωτογραφίες προφίλ:</b> το ενεργό avatar συγχρονίζεται ως μέρος του προφίλ. Οι υπόλοιπες εικόνες της συλλογής παραμένουν μόνο στη συγκεκριμένη συσκευή και δεν περιλαμβάνονται στο συγχρονισμένο snapshot.</li>
+          <li><b>Τεχνικά συμβάντα σφάλματος:</b> μόνο επιτρεπόμενα πεδία λειτουργικής διάγνωσης — προέλευση και κωδικός σφάλματος, τύπος σφάλματος, έκδοση εφαρμογής, οικογένεια browser και κατάσταση δικτύου. Δεν καταγράφονται μήνυμα ή stack σφάλματος, URL, email, token ή περιεχόμενο προπόνησης.</li>
+        </ul>
+        <p>Οι καταχωρίσεις άσκησης και ευεξίας μπορεί να αποκαλύπτουν πληροφορίες σχετικές με τη φυσική σου κατάσταση. Καταχώρισε μόνο δεδομένα που θέλεις να αποθηκεύσεις στην υπηρεσία.</p>
+
+        <h5>3. Γιατί χρησιμοποιούνται</h5>
+        <p>Τα δεδομένα χρησιμοποιούνται για τη δημιουργία και λειτουργία του λογαριασμού, την τοπική αποθήκευση του ημερολογίου σου, τον συγχρονισμό μεταξύ των συσκευών σου, την εμφάνιση ιστορικού και προόδου, την ασφάλεια της υπηρεσίας, την αντιμετώπιση τεχνικών αστοχιών και την οριστική διαγραφή λογαριασμού όταν ζητηθεί. Δεν χρησιμοποιούνται για διαφημίσεις και δεν υπάρχει product analytics ή πώληση προσωπικών δεδομένων.</p>
+
+        <h5>4. Τοπική αποθήκευση και συγχρονισμός</h5>
+        <p>Το Logbook είναι local-first: κάθε αλλαγή γράφεται πρώτα στο localStorage της συσκευής. Όταν είσαι συνδεδεμένος και υπάρχει δίκτυο, ένα κανονικοποιημένο snapshot — βιβλιοθήκη ασκήσεων, προγράμματα, προπονήσεις και προφίλ — συγχρονίζεται στο Supabase.</p>
+        <p class="newmark">Ο συγχρονισμός είναι snapshot-based: κάθε συσκευή στέλνει ολόκληρη την εικόνα, ο διακομιστής κρατά μία έκδοση ανά λογαριασμό και ένας αριθμός αναθεώρησης εντοπίζει ταυτόχρονη εγγραφή από άλλη συσκευή. Οι διαγραφές ταξιδεύουν ως σημάδια διαγραφής, ώστε μια συσκευή που έμεινε εκτός σύνδεσης να μην επαναφέρει ό,τι έσβησες. <span class="fresh">Νέο</span></p>
+        <p class="newmark">Πριν από την πρώτη μετάβαση στο νέο μοντέλο ασκήσεων, η εφαρμογή κρατά στη συσκευή ένα αντίγραφο ασφαλείας των προηγούμενων εγγραφών. Παραμένει εκεί μέχρι την αποσύνδεση ή τη διαγραφή του λογαριασμού. <span class="fresh">Νέο</span></p>
+        <p class="newmark">Η αποσύνδεση ακυρώνει τις συνεδρίες σε όλες τις συσκευές και αφαιρεί από αυτή εδώ τη βιβλιοθήκη ασκήσεων, τα προγράμματα, τις προπονήσεις, το προφίλ και το πρόχειρο καταγραφής. Λίγο πριν καθαριστούν, ένα αντίγραφο επαναφοράς γράφεται στο localStorage με κλειδί δεμένο στο αναγνωριστικό του λογαριασμού σου, ώστε η επόμενη σύνδεση με τον ίδιο λογαριασμό να ξαναβρεί τα δεδομένα ακόμη και χωρίς δίκτυο. Το αντίγραφο δεν έχει προθεσμία λήξης και δεν είναι προσβάσιμο από καμία οθόνη της εφαρμογής, είναι όμως αναγνώσιμο με τα εργαλεία προγραμματιστή του browser. Σε κοινόχρηστη συσκευή, καθάρισε τα δεδομένα ιστοτόπου μετά την αποσύνδεση. <span class="fresh">Νέο</span></p>
+
+        <h5 class="newmark">5. Χρήση χωρίς λογαριασμό (λειτουργία επισκέπτη) <span class="fresh">Νέα ενότητα</span></h5>
+        <p>Μπορείς να χρησιμοποιήσεις το Logbook χωρίς λογαριασμό. Τότε δεν δημιουργείται λογαριασμός, δεν αποστέλλεται κανένα δεδομένο προπόνησης σε διακομιστή και τα πάντα μένουν στο localStorage της συσκευής. Δεν υπάρχει αντίγραφο εκτός συσκευής: αν καθαρίσεις τα δεδομένα του browser, απεγκαταστήσεις την εφαρμογή ή χάσεις τη συσκευή, τα δεδομένα χάνονται. Στο iOS Safari, μια σελίδα που δεν έχει προστεθεί στην αρχική οθόνη μπορεί να χάσει το localStorage της μετά από επτά ημέρες χωρίς χρήση.</p>
+        <p>Ως επισκέπτης δεν αποστέλλονται ούτε τεχνικά συμβάντα σφάλματος. Έως δέκα από αυτά μπορεί να περιμένουν σε ουρά στη συσκευή και μεταδίδονται μόνο αν συνδεθείς αργότερα, οπότε συνδέονται με τον λογαριασμό σου. Αν δεν συνδεθείς ποτέ, δεν φεύγουν ποτέ.</p>
+        <p>Αν δημιουργήσεις λογαριασμό ενώ βρίσκεσαι σε λειτουργία επισκέπτη, τα δεδομένα αυτής της συσκευής ανεβαίνουν στον λογαριασμό.</p>
+
+        <h5>6. Recovery snapshots και χρόνοι διατήρησης</h5>
+        <ul>
+          <li>Το τρέχον cloud sync snapshot διατηρείται όσο υπάρχει ο λογαριασμός.</li>
+          <li>Ο ιδιωτικός πίνακας <code>user_sync_snapshots</code> κρατά έως ένα λειτουργικό recovery snapshot ανά χρήστη και UTC ημέρα. Κάθε snapshot αφαιρείται αυτόματα όταν περάσουν 30 ημέρες από τη δημιουργία του. Δεν είναι προσβάσιμο από τον browser client.</li>
+          <li>Τα επιτρεπόμενα τεχνικά error events διατηρούνται έως 30 ημέρες.</li>
+          <li class="newmark">Τα δεδομένα localStorage παραμένουν στη συσκευή μέχρι να διαγραφούν από την εφαρμογή (αποσύνδεση ή διαγραφή λογαριασμού), από τις ρυθμίσεις του browser ή με εκκαθάριση των δεδομένων ιστοτόπου. Εξαίρεση το τοπικό αντίγραφο επαναφοράς της ενότητας 4, που μένει χωρίς προθεσμία. <span class="fresh">Νέο</span></li>
+          <li>Η διαγραφή λογαριασμού αφαιρεί τα τοπικά δεδομένα από αυτόν τον browser και τα συγχρονισμένα δεδομένα, τα recovery snapshots και τα συνδεδεμένα error events από τη βάση μέσω διαγραφής cascade.</li>
+        </ul>
+
+        <h5>7. Πάροχοι υπηρεσιών</h5>
+        <p>Το GitHub Pages φιλοξενεί τα στατικά αρχεία της εφαρμογής. Το Supabase παρέχει authentication και βάση δεδομένων. Αν επιλέξεις Google sign-in, η Google συμμετέχει στη διαδικασία ταυτοποίησης σύμφωνα με τη δική της πολιτική απορρήτου. Οι πάροχοι μπορεί να επεξεργάζονται τεχνικά δεδομένα σύνδεσης σύμφωνα με τους δικούς τους όρους.</p>
+
+        <h5>8. Έλεγχος των δεδομένων σου</h5>
+        <p class="newmark">Μπορείς να εξαγάγεις το ιστορικό προπονήσεων σε αρχείο CSV από την ενότητα Προφίλ. Το αρχείο περιέχει ημερομηνία, όνομα προπόνησης, άσκηση, σετ, επαναλήψεις, βάρος και μονάδα, πλάκες και σχόλια. Δεν περιλαμβάνει τα προγράμματα, τη βιβλιοθήκη ασκήσεων ή το προφίλ· πλήρης εξαγωγή όλων των δεδομένων σου δεν υπάρχει ακόμη. <span class="fresh">Νέο</span></p>
+        <p>Μπορείς να διαγράψεις οριστικά τον cloud λογαριασμό από το παράθυρο λογαριασμού. Για πρόσβαση, διόρθωση, περιορισμό ή άλλη ερώτηση σχετικά με τα δεδομένα σου, χρησιμοποίησε το κανάλι επικοινωνίας της ενότητας 1.</p>
+
+        <h5>9. Ασφάλεια και αλλαγές</h5>
+        <p>Η υπηρεσία χρησιμοποιεί Row Level Security, περιορισμένα database grants, server-side validation, global sign-out, Content Security Policy και ιδιωτικά recovery snapshots. Καμία τεχνική προστασία δεν εξαλείφει κάθε κίνδυνο. Η παρούσα σελίδα ενημερώνεται όταν αλλάζει ουσιωδώς ο τρόπος επεξεργασίας δεδομένων, με νέα ημερομηνία ενημέρωσης. <span class="newmark" style="display:inline; border-left:0; padding-left:0; margin-left:0; background:rgba(201,162,39,.16)">Η σελίδα υπάρχει και στις τέσσερις γλώσσες της εφαρμογής· σε περίπτωση απόκλισης υπερισχύει το ελληνικό κείμενο.</span> <span class="fresh">Νέο</span></p>
+      </div>
+
+      <div class="lg" data-l="en" hidden>
+        <span class="tagline">ENGLISH</span>
+        <h5>1. Who operates the service</h5>
+        <p>Logbook is operated by the maintainer of the Logbook project. For questions or privacy requests you can get in touch through the project support page. Do not include a password, access token or sensitive data in a public request.</p>
+
+        <h5>2. What data we process</h5>
+        <ul>
+          <li><b>Account details:</b> email, an internal user identifier and technical session data. Your password is handled by Supabase Auth and is not stored in the application code.</li>
+          <li class="newmark"><b>Your exercise library:</b> every exercise is a separate record with a stable identifier, a name, an optional note and the earlier names it has been saved under, so that older records stay attached to it. <span class="fresh">New</span></li>
+          <li><b>Training data:</b> routines and their days, logged workouts, sets, reps, weight or plates, exercise and workout comments, and the personal bests calculated from them.</li>
+          <li><b>Profile details and preferences:</b> name, date of birth and whether your age is shown, measurement unit, language and appearance theme.</li>
+          <li><b>Profile photos:</b> the active avatar is synced as part of your profile. The other images in the gallery stay on that device only and are not part of the synced snapshot.</li>
+          <li><b>Technical error events:</b> only allowlisted operational diagnostic fields — error source and code, error type, application version, browser family and network status. The error message and stack, the URL, your email, tokens and workout content are not recorded.</li>
+        </ul>
+        <p>Exercise and wellbeing entries may reveal information about your physical condition. Only enter data you want to store in the service.</p>
+
+        <h5>3. Why the data is used</h5>
+        <p>The data is used to create and run your account, store your logbook on the device, sync it between your devices, show your history and progress, keep the service secure, deal with technical failures and permanently delete your account when you ask. It is not used for advertising, and there is no product analytics and no sale of personal data.</p>
+
+        <h5>4. Local storage and cloud sync</h5>
+        <p>Logbook is local-first: every change is written to the device's localStorage first. When you are signed in and online, a normalised snapshot — exercise library, routines, workouts and profile — is synced to Supabase.</p>
+        <p class="newmark">Sync is snapshot-based: each device sends the whole picture, the server keeps one version per account, and a revision number detects a concurrent write from another device. Deletions travel as deletion markers, so a device that has been offline cannot bring back what you deleted. <span class="fresh">New</span></p>
+        <p class="newmark">Before the first migration to the new exercise model, the application keeps a backup copy of the previous records on the device. It stays there until you sign out or delete your account. <span class="fresh">New</span></p>
+        <p class="newmark">Signing out ends your sessions on every device and removes the exercise library, routines, workouts, profile and the working draft from this one. Just before they are cleared, a recovery copy is written to localStorage under a key tied to your account identifier, so that the next sign-in with the same account finds your data again even without a network. This copy has no expiry and is not reachable from any screen of the application, but it can be read with the browser's developer tools. On a shared device, clear the site data after signing out. <span class="fresh">New</span></p>
+
+        <h5 class="newmark">5. Using Logbook without an account (guest mode) <span class="fresh">New section</span></h5>
+        <p>You can use Logbook without an account. No account is created, no workout data is sent to any server, and everything stays in the localStorage of the device. There is no copy off the device: if you clear the browser data, uninstall the application or lose the device, the data is gone. On iOS Safari, a page that has not been added to the home screen may lose its localStorage after seven days without use.</p>
+        <p>As a guest, not even technical error events are sent. Up to ten of them may wait in a queue on the device and are transmitted only if you sign in later, at which point they are linked to your account. If you never sign in, they never leave.</p>
+        <p>If you create an account while in guest mode, the data on this device is uploaded to that account.</p>
+
+        <h5>6. Recovery snapshots and retention periods</h5>
+        <ul>
+          <li>The current cloud sync snapshot is kept for as long as the account exists.</li>
+          <li>The private <code>user_sync_snapshots</code> table keeps at most one operational recovery snapshot per user and UTC day. Each snapshot is removed automatically 30 days after it was created. It is not reachable from the browser client.</li>
+          <li>Allowlisted technical error events are kept for up to 30 days.</li>
+          <li class="newmark">localStorage data stays on the device until it is deleted by the application (sign-out or account deletion), by your browser settings or by clearing site data. The exception is the local recovery copy described in section 4, which has no expiry. <span class="fresh">New</span></li>
+          <li>Deleting your account removes the local data from this browser and the synced data, recovery snapshots and linked error events from the database through a cascading delete.</li>
+        </ul>
+
+        <h5>7. Service providers</h5>
+        <p>GitHub Pages hosts the static files of the application. Supabase provides authentication and the database. If you choose Google sign-in, Google takes part in the authentication process under its own privacy policy. Providers may process technical connection data under their own terms.</p>
+
+        <h5>8. Control over your data</h5>
+        <p class="newmark">You can export your workout history as a CSV file from the Profile section. The file contains date, workout name, exercise, set, reps, weight and unit, plates and comments. It does not include your routines, your exercise library or your profile; a full export of all your data does not exist yet. <span class="fresh">New</span></p>
+        <p>You can permanently delete your cloud account from the account panel. For access, correction, restriction or any other question about your data, use the contact channel in section 1.</p>
+
+        <h5>9. Security and changes</h5>
+        <p>The service uses Row Level Security, restricted database grants, server-side validation, global sign-out, a Content Security Policy and private recovery snapshots. No technical measure removes every risk. This page is updated whenever the way data is processed changes materially, with a new update date. <span style="background:rgba(201,162,39,.16)">The page exists in all four languages of the application; if the versions differ, the Greek text prevails.</span> <span class="fresh">New</span></p>
+      </div>
+
+      <div class="lg" data-l="fr" hidden>
+        <span class="tagline">FRANÇAIS</span>
+        <h5>1. Qui exploite le service</h5>
+        <p>Logbook est exploité par le responsable du projet Logbook. Pour toute question ou demande relative à la confidentialité, vous pouvez nous contacter via la page d'assistance du projet. N'incluez ni mot de passe, ni jeton d'accès, ni données sensibles dans une demande publique.</p>
+
+        <h5>2. Quelles données sont traitées</h5>
+        <ul>
+          <li><b>Données de compte :</b> adresse e-mail, identifiant interne d'utilisateur et données techniques de session. Le mot de passe est géré par Supabase Auth et n'est pas stocké dans le code de l'application.</li>
+          <li class="newmark"><b>Votre bibliothèque d'exercices :</b> chaque exercice est un enregistrement distinct avec un identifiant stable, un nom, une note facultative et les anciens noms sous lesquels il a été enregistré, afin que les séances passées lui restent rattachées. <span class="fresh">Nouveau</span></li>
+          <li><b>Données d'entraînement :</b> programmes et leurs jours, séances enregistrées, séries, répétitions, charges ou disques, commentaires d'exercice et de séance, ainsi que les records personnels calculés à partir de ces données.</li>
+          <li><b>Profil et préférences :</b> nom, date de naissance et affichage ou non de l'âge, unité de mesure, langue et thème d'affichage.</li>
+          <li><b>Photos de profil :</b> l'avatar actif est synchronisé avec le profil. Les autres images de la galerie restent uniquement sur cet appareil et ne font pas partie de l'instantané synchronisé.</li>
+          <li><b>Événements techniques d'erreur :</b> uniquement des champs de diagnostic autorisés — origine et code de l'erreur, type d'erreur, version de l'application, famille de navigateur et état du réseau. Ni le message ou la pile d'erreur, ni l'URL, ni l'e-mail, ni les jetons, ni le contenu des séances ne sont enregistrés.</li>
+        </ul>
+        <p>Les saisies d'exercice et de bien-être peuvent révéler des informations sur votre condition physique. N'enregistrez que les données que vous souhaitez conserver dans le service.</p>
+
+        <h5>3. Pourquoi ces données sont utilisées</h5>
+        <p>Les données servent à créer et faire fonctionner votre compte, à conserver votre carnet sur l'appareil, à le synchroniser entre vos appareils, à afficher votre historique et votre progression, à sécuriser le service, à traiter les défaillances techniques et à supprimer définitivement votre compte à votre demande. Elles ne servent pas à la publicité ; il n'y a ni analyse produit ni vente de données personnelles.</p>
+
+        <h5>4. Stockage local et synchronisation</h5>
+        <p>Logbook est local-first : chaque modification est d'abord écrite dans le localStorage de l'appareil. Lorsque vous êtes connecté et en ligne, un instantané normalisé — bibliothèque d'exercices, programmes, séances et profil — est synchronisé vers Supabase.</p>
+        <p class="newmark">La synchronisation fonctionne par instantané : chaque appareil envoie l'image complète, le serveur conserve une version par compte et un numéro de révision détecte une écriture simultanée depuis un autre appareil. Les suppressions circulent sous forme de marqueurs de suppression, afin qu'un appareil resté hors ligne ne ressuscite pas ce que vous avez supprimé. <span class="fresh">Nouveau</span></p>
+        <p class="newmark">Avant la première migration vers le nouveau modèle d'exercices, l'application conserve sur l'appareil une copie de sauvegarde des enregistrements précédents. Elle y reste jusqu'à la déconnexion ou la suppression du compte. <span class="fresh">Nouveau</span></p>
+        <p class="newmark">La déconnexion met fin aux sessions sur tous les appareils et supprime de celui-ci la bibliothèque d'exercices, les programmes, les séances, le profil et le brouillon de saisie. Juste avant leur effacement, une copie de récupération est écrite dans le localStorage sous une clé liée à l'identifiant de votre compte, afin que la prochaine connexion avec le même compte retrouve vos données, même sans réseau. Cette copie n'a pas de date d'expiration et n'est accessible depuis aucun écran de l'application, mais elle reste lisible avec les outils de développement du navigateur. Sur un appareil partagé, effacez les données du site après la déconnexion. <span class="fresh">Nouveau</span></p>
+
+        <h5 class="newmark">5. Utilisation sans compte (mode invité) <span class="fresh">Nouvelle section</span></h5>
+        <p>Vous pouvez utiliser Logbook sans compte. Aucun compte n'est créé, aucune donnée d'entraînement n'est envoyée à un serveur et tout reste dans le localStorage de l'appareil. Il n'existe aucune copie hors de l'appareil : si vous effacez les données du navigateur, désinstallez l'application ou perdez l'appareil, les données sont perdues. Sur iOS Safari, une page qui n'a pas été ajoutée à l'écran d'accueil peut perdre son localStorage après sept jours sans utilisation.</p>
+        <p>En mode invité, même les événements techniques d'erreur ne sont pas envoyés. Jusqu'à dix d'entre eux peuvent attendre dans une file sur l'appareil et ne sont transmis que si vous vous connectez plus tard ; ils sont alors rattachés à votre compte. Si vous ne vous connectez jamais, ils ne partent jamais.</p>
+        <p>Si vous créez un compte depuis le mode invité, les données de cet appareil sont téléversées vers ce compte.</p>
+
+        <h5>6. Instantanés de récupération et durées de conservation</h5>
+        <ul>
+          <li>L'instantané de synchronisation en cours est conservé tant que le compte existe.</li>
+          <li>La table privée <code>user_sync_snapshots</code> conserve au maximum un instantané de récupération par utilisateur et par jour UTC. Chaque instantané est supprimé automatiquement 30 jours après sa création. Elle n'est pas accessible depuis le client navigateur.</li>
+          <li>Les événements techniques d'erreur autorisés sont conservés au maximum 30 jours.</li>
+          <li class="newmark">Les données du localStorage restent sur l'appareil jusqu'à leur suppression par l'application (déconnexion ou suppression du compte), par les réglages du navigateur ou par l'effacement des données du site. Exception : la copie de récupération locale décrite à la section 4, qui n'a pas de date d'expiration. <span class="fresh">Nouveau</span></li>
+          <li>La suppression du compte efface les données locales de ce navigateur ainsi que les données synchronisées, les instantanés de récupération et les événements d'erreur associés dans la base, par suppression en cascade.</li>
+        </ul>
+
+        <h5>7. Prestataires</h5>
+        <p>GitHub Pages héberge les fichiers statiques de l'application. Supabase fournit l'authentification et la base de données. Si vous choisissez la connexion Google, Google participe au processus d'authentification selon sa propre politique de confidentialité. Les prestataires peuvent traiter des données techniques de connexion selon leurs propres conditions.</p>
+
+        <h5>8. Contrôle de vos données</h5>
+        <p class="newmark">Vous pouvez exporter votre historique de séances au format CSV depuis la section Profil. Le fichier contient la date, le nom de la séance, l'exercice, la série, les répétitions, la charge et l'unité, les disques et les commentaires. Il n'inclut ni vos programmes, ni votre bibliothèque d'exercices, ni votre profil ; un export complet de toutes vos données n'existe pas encore. <span class="fresh">Nouveau</span></p>
+        <p>Vous pouvez supprimer définitivement votre compte cloud depuis la fenêtre du compte. Pour l'accès, la rectification, la limitation ou toute autre question relative à vos données, utilisez le canal de contact de la section 1.</p>
+
+        <h5>9. Sécurité et modifications</h5>
+        <p>Le service utilise Row Level Security, des droits de base de données restreints, une validation côté serveur, une déconnexion globale, une Content Security Policy et des instantanés de récupération privés. Aucune mesure technique n'élimine tous les risques. Cette page est mise à jour dès que le traitement des données change de manière substantielle, avec une nouvelle date de mise à jour. <span style="background:rgba(201,162,39,.16)">La page existe dans les quatre langues de l'application ; en cas de divergence, le texte grec prévaut.</span> <span class="fresh">Nouveau</span></p>
+      </div>
+
+      <div class="lg" data-l="de" hidden>
+        <span class="tagline">DEUTSCH</span>
+        <h5>1. Wer den Dienst betreibt</h5>
+        <p>Logbook wird vom Betreuer des Logbook-Projekts betrieben. Für Fragen oder Datenschutzanfragen können Sie uns über die Support-Seite des Projekts erreichen. Fügen Sie in eine öffentliche Anfrage weder Passwort noch Access-Token noch sensible Daten ein.</p>
+
+        <h5>2. Welche Daten verarbeitet werden</h5>
+        <ul>
+          <li><b>Kontodaten:</b> E-Mail-Adresse, interne Benutzerkennung und technische Sitzungsdaten. Das Passwort wird von Supabase Auth verwaltet und nicht im Anwendungscode gespeichert.</li>
+          <li class="newmark"><b>Ihre Übungsbibliothek:</b> Jede Übung ist ein eigener Datensatz mit einer festen Kennung, einem Namen, einer optionalen Notiz und den früheren Namen, unter denen sie gespeichert wurde, damit ältere Aufzeichnungen mit ihr verbunden bleiben. <span class="fresh">Neu</span></li>
+          <li><b>Trainingsdaten:</b> Trainingspläne und ihre Tage, erfasste Trainings, Sätze, Wiederholungen, Gewichte oder Scheiben, Übungs- und Trainingskommentare sowie die daraus berechneten Bestleistungen.</li>
+          <li><b>Profildaten und Einstellungen:</b> Name, Geburtsdatum und ob das Alter angezeigt wird, Maßeinheit, Sprache und Erscheinungsbild.</li>
+          <li><b>Profilfotos:</b> Der aktive Avatar wird als Teil des Profils synchronisiert. Die übrigen Bilder der Galerie bleiben nur auf diesem Gerät und sind nicht Teil des synchronisierten Snapshots.</li>
+          <li><b>Technische Fehlerereignisse:</b> nur freigegebene Diagnosefelder — Fehlerquelle und Fehlercode, Fehlertyp, Anwendungsversion, Browser-Familie und Netzwerkstatus. Fehlermeldung und Stack, URL, E-Mail, Token und Trainingsinhalte werden nicht erfasst.</li>
+        </ul>
+        <p>Übungs- und Wohlbefindenseinträge können Rückschlüsse auf Ihre körperliche Verfassung zulassen. Erfassen Sie nur Daten, die Sie im Dienst speichern möchten.</p>
+
+        <h5>3. Wofür die Daten verwendet werden</h5>
+        <p>Die Daten dienen dazu, Ihr Konto zu erstellen und zu betreiben, Ihr Logbuch auf dem Gerät zu speichern, es zwischen Ihren Geräten zu synchronisieren, Verlauf und Fortschritt anzuzeigen, den Dienst abzusichern, technische Störungen zu beheben und Ihr Konto auf Wunsch endgültig zu löschen. Sie werden nicht für Werbung verwendet; es gibt keine Produktanalyse und keinen Verkauf personenbezogener Daten.</p>
+
+        <h5>4. Lokale Speicherung und Synchronisierung</h5>
+        <p>Logbook ist local-first: Jede Änderung wird zuerst in den localStorage des Geräts geschrieben. Wenn Sie angemeldet und online sind, wird ein normalisierter Snapshot — Übungsbibliothek, Trainingspläne, Trainings und Profil — mit Supabase synchronisiert.</p>
+        <p class="newmark">Die Synchronisierung arbeitet snapshot-basiert: Jedes Gerät sendet das vollständige Bild, der Server hält eine Version pro Konto, und eine Revisionsnummer erkennt einen gleichzeitigen Schreibvorgang von einem anderen Gerät. Löschungen wandern als Löschmarkierungen mit, damit ein länger offline gebliebenes Gerät Gelöschtes nicht wiederherstellt. <span class="fresh">Neu</span></p>
+        <p class="newmark">Vor der ersten Umstellung auf das neue Übungsmodell legt die Anwendung auf dem Gerät eine Sicherungskopie der bisherigen Datensätze an. Sie bleibt dort bis zur Abmeldung oder zur Löschung des Kontos. <span class="fresh">Neu</span></p>
+        <p class="newmark">Die Abmeldung beendet die Sitzungen auf allen Geräten und entfernt von diesem Gerät Übungsbibliothek, Trainingspläne, Trainings, Profil und den Arbeitsentwurf. Unmittelbar davor wird eine Wiederherstellungskopie im localStorage unter einem Schlüssel gespeichert, der an Ihre Kontokennung gebunden ist, damit die nächste Anmeldung mit demselben Konto Ihre Daten auch ohne Netzwerk wiederfindet. Diese Kopie hat keine Ablauffrist und ist über keinen Bildschirm der Anwendung erreichbar, kann aber mit den Entwicklerwerkzeugen des Browsers gelesen werden. Löschen Sie auf einem gemeinsam genutzten Gerät nach der Abmeldung die Websitedaten. <span class="fresh">Neu</span></p>
+
+        <h5 class="newmark">5. Nutzung ohne Konto (Gastmodus) <span class="fresh">Neuer Abschnitt</span></h5>
+        <p>Sie können Logbook ohne Konto nutzen. Dann wird kein Konto angelegt, es werden keine Trainingsdaten an einen Server gesendet, und alles bleibt im localStorage des Geräts. Es gibt keine Kopie außerhalb des Geräts: Wenn Sie die Browserdaten löschen, die Anwendung deinstallieren oder das Gerät verlieren, sind die Daten verloren. In iOS Safari kann eine Seite, die nicht zum Startbildschirm hinzugefügt wurde, ihren localStorage nach sieben Tagen ohne Nutzung verlieren.</p>
+        <p>Im Gastmodus werden nicht einmal technische Fehlerereignisse gesendet. Bis zu zehn davon können auf dem Gerät in einer Warteschlange liegen und werden nur übertragen, wenn Sie sich später anmelden; dann sind sie mit Ihrem Konto verknüpft. Melden Sie sich nie an, verlassen sie das Gerät nie.</p>
+        <p>Wenn Sie aus dem Gastmodus heraus ein Konto erstellen, werden die Daten dieses Geräts in dieses Konto hochgeladen.</p>
+
+        <h5>6. Wiederherstellungs-Snapshots und Aufbewahrungsfristen</h5>
+        <ul>
+          <li>Der aktuelle Cloud-Sync-Snapshot wird so lange aufbewahrt, wie das Konto besteht.</li>
+          <li>Die private Tabelle <code>user_sync_snapshots</code> hält höchstens einen betrieblichen Wiederherstellungs-Snapshot pro Nutzer und UTC-Tag. Jeder Snapshot wird 30 Tage nach seiner Erstellung automatisch entfernt. Sie ist vom Browser-Client nicht erreichbar.</li>
+          <li>Freigegebene technische Fehlerereignisse werden höchstens 30 Tage aufbewahrt.</li>
+          <li class="newmark">Daten im localStorage bleiben auf dem Gerät, bis sie von der Anwendung (Abmeldung oder Kontolöschung), von den Browsereinstellungen oder durch das Löschen der Websitedaten entfernt werden. Ausnahme ist die lokale Wiederherstellungskopie aus Abschnitt 4, die keine Frist hat. <span class="fresh">Neu</span></li>
+          <li>Die Kontolöschung entfernt die lokalen Daten aus diesem Browser sowie die synchronisierten Daten, Wiederherstellungs-Snapshots und verknüpften Fehlerereignisse per Kaskadenlöschung aus der Datenbank.</li>
+        </ul>
+
+        <h5>7. Dienstleister</h5>
+        <p>GitHub Pages hostet die statischen Dateien der Anwendung. Supabase stellt Authentifizierung und Datenbank bereit. Wenn Sie die Google-Anmeldung wählen, wirkt Google nach seiner eigenen Datenschutzerklärung an der Authentifizierung mit. Anbieter können technische Verbindungsdaten nach ihren eigenen Bedingungen verarbeiten.</p>
+
+        <h5>8. Kontrolle über Ihre Daten</h5>
+        <p class="newmark">Sie können Ihren Trainingsverlauf im Bereich Profil als CSV-Datei exportieren. Die Datei enthält Datum, Trainingsname, Übung, Satz, Wiederholungen, Gewicht und Einheit, Scheiben und Kommentare. Trainingspläne, Übungsbibliothek und Profil sind nicht enthalten; einen vollständigen Export aller Ihrer Daten gibt es noch nicht. <span class="fresh">Neu</span></p>
+        <p>Sie können Ihr Cloud-Konto im Kontofenster endgültig löschen. Für Auskunft, Berichtigung, Einschränkung oder andere Fragen zu Ihren Daten nutzen Sie den Kontaktweg aus Abschnitt 1.</p>
+
+        <h5>9. Sicherheit und Änderungen</h5>
+        <p>Der Dienst nutzt Row Level Security, eingeschränkte Datenbankrechte, serverseitige Validierung, globale Abmeldung, eine Content Security Policy und private Wiederherstellungs-Snapshots. Keine technische Maßnahme beseitigt jedes Risiko. Diese Seite wird aktualisiert, sobald sich die Datenverarbeitung wesentlich ändert, mit neuem Aktualisierungsdatum. <span style="background:rgba(201,162,39,.16)">Die Seite existiert in allen vier Sprachen der Anwendung; bei Abweichungen gilt der griechische Text.</span> <span class="fresh">Neu</span></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     Β. ΟΔΗΓΙΕΣ
+     ============================================================ -->
+<div class="chapter"><b>Β. ΟΙ ΟΔΗΓΙΕΣ ΑΝΑ ΕΝΟΤΗΤΑ</b><span>ΠΟΥ ΥΠΑΡΧΟΥΝ · ΠΟΥ ΛΕΙΠΟΥΝ · ΤΑ ΚΕΙΜΕΝΑ</span></div>
+
+<div class="stage">
+
+  <section>
+    <h3>Β1 · Πού υπάρχει σήμερα το ( i )</h3>
+    <p class="sub">Το πάνελ <code>.info-panel</code> με τη σφραγίδα <code>( i )</code> ζει σε τέσσερις από τις έξι ενότητες. Το 0.3.4 ζητά οδηγίες και για τις έξι, συν τον λογαριασμό.</p>
+    <table>
+      <thead><tr><th style="width:18%">Ενότητα</th><th style="width:14%">( i ) σήμερα</th><th style="width:30%">Θέση στο markup</th><th style="width:38%">Τι κάνει το 0.3.4</th></tr></thead>
+      <tbody>
+        <tr><td><b>Αρχική</b></td><td class="no">ΟΧΙ</td><td><code>#home-view</code> — χωρίς hero, το <code>.home-shell</code> είναι σελίδα τετραδίου</td><td>Νέο πάνελ 4 γραμμών. Θέση: <b>Β2</b>.</td></tr>
+        <tr><td><b>Καταγραφή</b></td><td class="yes">ΝΑΙ</td><td><code>#log-guide</code> — 5 γραμμές</td><td>Αναθεώρηση: η 02 λέει από πού έρχονται οι ασκήσεις μετά τη βιβλιοθήκη.</td></tr>
+        <tr><td><b>Πρόγραμμα</b></td><td class="yes">ΝΑΙ</td><td><code>#plan-guide</code> — 4 γραμμές (0.3.1)</td><td>Αναθεώρηση σε 5: η βιβλιοθήκη προηγείται ρητά, η σημείωση λύνει τις ομώνυμες.</td></tr>
+        <tr><td><b>Ιστορικό</b></td><td class="no">ΟΧΙ</td><td><code>#overview-view</code> — <code>.overview-hero</code> με τη σφραγίδα μετρητή δεξιά</td><td>Νέο πάνελ 4 γραμμών. Σύγκρουση θέσης με τον μετρητή: <b>Β2</b>.</td></tr>
+        <tr><td><b>Επίβλεψη</b></td><td class="yes">ΝΑΙ</td><td><code>#progress-guide</code> — 4 γραμμές</td><td>Αναθεώρηση: σειρά φίλτρων και οριζόντια κύλιση του γραφήματος.</td></tr>
+        <tr><td><b>Προφίλ</b></td><td class="yes">ΝΑΙ</td><td><code>#profile-guide</code> — 4 γραμμές</td><td>Αναθεώρηση: μπαίνουν μονάδα μέτρησης και εξαγωγή, που ζουν στην ίδια οθόνη και δεν αναφέρονται.</td></tr>
+        <tr><td><b>Λογαριασμός</b></td><td class="no">ΟΧΙ</td><td><code>#account-dialog</code> — φύλλο με MEMBER, ΑΠΟΣΥΝΔΕΣΗ, ΔΙΑΓΡΑΦΗ</td><td>Όχι πάνελ: <b>τρεις σταθερές γραμμές μέσα στον διάλογο</b>, γιατί εκεί δύο κουμπιά είναι μη αναστρέψιμα.</td></tr>
+      </tbody>
+    </table>
+    <div class="notes"><p>Το <b>Προφίλ</b> δεν αναφέρεται στη διατύπωση του 0.3.4, έχει όμως ήδη πάνελ που περιγράφει μόνο τη φωτογραφία και το όνομα, ενώ στην ίδια οθόνη κάθονται η μονάδα μέτρησης και η εξαγωγή ιστορικού. Αναθεωρείται μαζί με τα υπόλοιπα — αλλιώς μένει το μόνο πάνελ που λέει λιγότερα από όσα κάνει η οθόνη του.</p></div>
+  </section>
+
+  <section>
+    <h3>Β2 · Πού μπαίνει το ( i ) εκεί που λείπει</h3>
+    <p class="sub">Η σφραγίδα <code>( i )</code> κάθεται σήμερα μέσα στο hero, δεξιά από τον τίτλο. Η Αρχική δεν έχει hero και το Ιστορικό έχει ήδη κατειλημμένη τη θέση.</p>
+    <div class="opt">
+      <article class="win">
+        <h4>Αρχική — στο περιθώριο, δίπλα στο PAGE 001 <span class="fresh">Πρόταση</span></h4>
+        <p>Το <code>.home-page-head</code> κρατά ήδη τον αριθμό σελίδας πάνω δεξιά. Η σφραγίδα μπαίνει δίπλα του, στο ίδιο τυπωμένο στρώμα, και το πάνελ ανοίγει από κάτω.</p>
+        <p><b>Γιατί:</b> δεν αγγίζει τα δύο κουμπιά ούτε τις κάρτες που σύρονται, και δεν προσθέτει κουμπί σε άδεια οθόνη — <b>το ( i ) δεν είναι CTA, είναι το ίδιο αντικείμενο που υπάρχει ήδη σε τέσσερις οθόνες.</b></p>
+      </article>
+      <article class="win">
+        <h4>Ιστορικό — αριστερά από τον μετρητή <span class="fresh">Πρόταση</span></h4>
+        <p>Το <code>.overview-hero</code> έχει τίτλο αριστερά και τη σφραγίδα «<i>n</i> Logged Workouts» δεξιά. Το <code>( i )</code> μπαίνει ανάμεσά τους, με το πάνελ να ανοίγει κάτω από ολόκληρο το hero.</p>
+        <p><b>Εναλλακτικά</b>, αν στο κινητό στριμώχνεται: κάτω από τη λωρίδα ημερών, πάνω από την πρώτη κάρτα. Απόφαση στη μέτρηση, όχι εδώ.</p>
+      </article>
+      <article>
+        <h4>Λογαριασμός — χωρίς ( i )</h4>
+        <p>Ο διάλογος ανοίγει ήδη ως απάντηση σε ερώτηση («τι γίνεται με τον λογαριασμό μου»). Ένα δεύτερο κρυφό πάνελ μέσα σε ένα φύλλο 300 pixel είναι κρύψιμο, όχι οδηγία.</p>
+        <p>Οι τρεις γραμμές τυπώνονται <b>σταθερά, κάτω από την κάρτα MEMBER και πάνω από τα κουμπιά</b>. Η γραμμή του επισκέπτη πηγαίνει στην πύλη, δίπλα στο «ΛΕΙΤΟΥΡΓΙΑ ΕΠΙΣΚΕΠΤΗ».</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h3>Β3 · Τα κείμενα</h3>
+    <p class="sub">Κάθε πάνελ όπως θα τυπωθεί, με το σημερινό από κάτω για σύγκριση. Οι γραμμές κρατιούνται κάτω από ~110 χαρακτήρες, μιλούν στον πληθυντικό όπως σήμερα, και <b>καμία δεν περιγράφει συμπεριφορά που δεν υπάρχει</b>.</p>
+
+    <div class="guides">
+
+      <!-- ΑΡΧΙΚΗ -->
+      <div class="guide">
+        <header><b>ΑΡΧΙΚΗ</b><span>ΑΠΟΡΡΙΦΘΗΚΕ — δεν υλοποιήθηκε</span></header>
+        <div class="info-panel">
+          <h6>ΟΔΗΓΙΕΣ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Ξεκινήστε από την «ΚΑΤΑΓΡΑΦΗ ΠΡΟΠΟΝΗΣΗΣ» για τη σημερινή σας προπόνηση.</i></li>
+            <li><b>02</b><i>Το «ΠΡΟΓΡΑΜΜΑ» φτιάχνει ασκήσεις και ημέρες· το «ΙΣΤΟΡΙΚΟ» δείχνει ό,τι έχει καταγραφεί.</i></li>
+            <li><b>03</b><i>Η κάρτα αθλητή και η κάρτα προγράμματος εμφανίζονται μόλις υπάρξουν προφίλ και ενεργό πρόγραμμα. Σύρετέ τις όπου θέλετε.</i></li>
+            <li><b>04</b><i>Το μενού πάνω δεξιά ανοίγει τις ενότητες, τον λογαριασμό, τη γλώσσα και την εμφάνιση.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>Start with “WORKOUT LOG” for today’s session.</i></li>
+            <li><b>02</b><i>“ROUTINE” builds exercises and days; “HISTORY” shows everything you have logged.</i></li>
+            <li><b>03</b><i>The athlete card and the routine card appear once you have a profile and an active routine. Drag them wherever you like.</i></li>
+            <li><b>04</b><i>The menu at the top right opens the sections, your account, the language and the appearance.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>Commencez par « SAISIE D’ENTRAÎNEMENT » pour la séance du jour.</i></li>
+            <li><b>02</b><i>« PROGRAMME » crée les exercices et les jours ; « HISTORIQUE » montre tout ce qui a été enregistré.</i></li>
+            <li><b>03</b><i>La carte d’athlète et la carte du programme apparaissent dès qu’il y a un profil et un programme actif. Faites-les glisser où vous voulez.</i></li>
+            <li><b>04</b><i>Le menu en haut à droite ouvre les sections, le compte, la langue et l’affichage.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Beginnen Sie mit „TRAININGSEINTRAG“ für das heutige Training.</i></li>
+            <li><b>02</b><i>„PLAN“ erstellt Übungen und Tage; „VERLAUF“ zeigt alles Erfasste.</i></li>
+            <li><b>03</b><i>Athletenkarte und Plankarte erscheinen, sobald ein Profil und ein aktiver Plan vorhanden sind. Ziehen Sie sie beliebig.</i></li>
+            <li><b>04</b><i>Das Menü oben rechts öffnet die Bereiche, das Konto, die Sprache und das Erscheinungsbild.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Σήμερα</strong><p style="margin:0; font-size:.84rem; color:var(--muted); line-height:1.45">Καμία οδηγία. Η Αρχική εξηγείται μόνο από τα ίδια της τα κουμπιά. Οι κάρτες γεννιούνται <code>hidden</code>, οπότε ο νέος χρήστης δεν ξέρει καν ότι υπάρχουν.</p></div>
+        <div class="ids">Νέες εγγραφές catalog: <code>4</code> · IDs από <code>message.0487</code></div>
+      </div>
+
+      <!-- ΠΡΟΓΡΑΜΜΑ -->
+      <div class="guide">
+        <header><b>ΠΡΟΓΡΑΜΜΑ</b><span>Αναθεώρηση · 4 → 5 γραμμές</span></header>
+        <div class="info-panel">
+          <h6>ΟΔΗΓΙΕΣ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Πρώτα η βιβλιοθήκη: γράψτε μια άσκηση μία φορά και χρησιμοποιήστε την σε όσες ημέρες θέλετε.</i></li>
+            <li><b>02</b><i>Πατήστε μια άσκηση για επεξεργασία ή διαγραφή· η σημείωση ξεχωρίζει τις ομώνυμες.</i></li>
+            <li><b>03</b><i>Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.</i></li>
+            <li><b>04</b><i>Ανοίξτε ένα πρόγραμμα για να ορίσετε τις ημέρες του και δηλώστε με το αστέρι ποιο είναι σε ισχύ.</i></li>
+            <li><b>05</b><i>Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>The library comes first: write an exercise once and use it on as many days as you like.</i></li>
+            <li><b>02</b><i>Tap an exercise to edit or delete it; the note is what tells two exercises with the same name apart.</i></li>
+            <li><b>03</b><i>Create as many routines as you like, lasting 3–10 days, with optional weekdays.</i></li>
+            <li><b>04</b><i>Open a routine to set its days, and use the star to mark the one in force.</i></li>
+            <li><b>05</b><i>Changes to routines and the library preserve past records.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>La bibliothèque d’abord : écrivez un exercice une seule fois et utilisez-le autant de jours que vous voulez.</i></li>
+            <li><b>02</b><i>Touchez un exercice pour le modifier ou le supprimer ; la note distingue les homonymes.</i></li>
+            <li><b>03</b><i>Créez autant de programmes que vous le souhaitez, sur 3 à 10 jours, avec des jours de semaine facultatifs.</i></li>
+            <li><b>04</b><i>Ouvrez un programme pour définir ses jours et désignez avec l’étoile celui qui est en vigueur.</i></li>
+            <li><b>05</b><i>Les modifications du programme et de la bibliothèque préservent les anciennes séances.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Zuerst die Bibliothek: Schreiben Sie eine Übung einmal und verwenden Sie sie an beliebig vielen Tagen.</i></li>
+            <li><b>02</b><i>Tippen Sie eine Übung an, um sie zu bearbeiten oder zu löschen; die Notiz unterscheidet gleichnamige Übungen.</i></li>
+            <li><b>03</b><i>Erstellen Sie beliebig viele Pläne mit 3–10 Tagen und optionalen Wochentagen.</i></li>
+            <li><b>04</b><i>Öffnen Sie einen Plan, um seine Tage festzulegen, und markieren Sie mit dem Stern den gültigen Plan.</i></li>
+            <li><b>05</b><i>Änderungen am Trainingsplan und an der Bibliothek erhalten bisherige Aufzeichnungen.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Σήμερα (4 γραμμές)</strong><ol>
+          <li>Δημιουργήστε ασκήσεις στη βιβλιοθήκη και επιλέξτε τις στις ημέρες του προγράμματος.</li>
+          <li>Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας. <i>(μένει)</i></li>
+          <li>Ανοίξτε ένα πρόγραμμα για επεξεργασία, αντιγραφή ή διαγραφή και ορίστε με το αστέρι ποιο είναι ενεργό.</li>
+          <li>Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές. <i>(μένει)</i></li>
+        </ol></div>
+        <div class="ids">Μένουν: <code>message.0107</code>, <code>library.history</code> · Αλλάζουν: <code>library.guide</code>, <code>message.0109</code> · Νέα: <code>1</code></div>
+      </div>
+
+      <!-- ΚΑΤΑΓΡΑΦΗ -->
+      <div class="guide">
+        <header><b>ΚΑΤΑΓΡΑΦΗ</b><span>Αναθεώρηση · 5 γραμμές</span></header>
+        <div class="info-panel">
+          <h6>ΟΔΗΓΙΕΣ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση.</i></li>
+            <li><b>02</b><i>Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.</i></li>
+            <li><b>03</b><i>Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.</i></li>
+            <li><b>04</b><i>Προσθέστε ή αφαιρέστε σετ, αντιγράψτε το πρώτο στα υπόλοιπα και γράψτε σχόλια όπου χρειάζεται.</i></li>
+            <li><b>05</b><i>Με «Ολοκλήρωση προπόνησης» η καταγραφή αποθηκεύεται στο Ιστορικό. Από εκεί μπορείτε να τη διορθώσετε ή να την αντιγράψετε.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>Choose a date and either a “Scheduled” or “Free” workout.</i></li>
+            <li><b>02</b><i>Exercises come from the day of your routine; in a “Free” workout you add them from the library. Move with the arrows or by swiping.</i></li>
+            <li><b>03</b><i>Log reps and choose kg, plates, a combination or Bodyweight.</i></li>
+            <li><b>04</b><i>Add or remove sets, copy the first to the rest and add notes where needed.</i></li>
+            <li><b>05</b><i>“Complete workout” saves the log to History. From there you can edit or copy it.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>Choisissez une date et une séance « Depuis le programme » ou « Libre ».</i></li>
+            <li><b>02</b><i>Les exercices proviennent du jour du programme ; en séance « Libre », vous les ajoutez depuis la bibliothèque. Déplacez-vous avec les flèches ou en faisant glisser.</i></li>
+            <li><b>03</b><i>Notez les répétitions et choisissez kg, disques, une combinaison ou le poids du corps.</i></li>
+            <li><b>04</b><i>Ajoutez ou retirez des séries, copiez la première sur les autres et ajoutez des notes si nécessaire.</i></li>
+            <li><b>05</b><i>« Terminer la séance » enregistre la saisie dans l’historique. Vous pouvez ensuite la modifier ou la copier.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Wählen Sie ein Datum und ein Training „Nach Plan“ oder „Frei“.</i></li>
+            <li><b>02</b><i>Die Übungen kommen vom Tag des Trainingsplans; bei „Frei“ fügen Sie sie aus der Bibliothek hinzu. Wechseln Sie mit den Pfeilen oder durch Wischen.</i></li>
+            <li><b>03</b><i>Erfassen Sie Wiederholungen und wählen Sie kg, Scheiben, eine Kombination oder Körpergewicht.</i></li>
+            <li><b>04</b><i>Fügen Sie Sätze hinzu oder entfernen Sie sie, kopieren Sie den ersten auf die übrigen und ergänzen Sie bei Bedarf Notizen.</i></li>
+            <li><b>05</b><i>„Training abschließen“ speichert den Eintrag im Verlauf. Dort können Sie ihn bearbeiten oder kopieren.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Σήμερα (5 γραμμές)</strong><ol>
+          <li>Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση. <i>(μένει)</i></li>
+          <li>Μετακινηθείτε στις κάρτες ασκήσεων με τα βέλη ή με σύρσιμο. <i>(απορροφάται στην 02)</i></li>
+          <li>Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight. <i>(μένει, δύο εκδοχές μονάδας)</i></li>
+          <li>Προσθέστε ή αφαιρέστε σετ… <i>(μένει)</i></li>
+          <li>Με «Ολοκλήρωση προπόνησης»… <i>(μένει)</i></li>
+        </ol></div>
+        <div class="ids">Μένουν: <code>0101</code>, <code>0103</code>, <code>0104</code>, <code>0105</code>, <code>0106</code> · Αντικαθίσταται: <code>0102</code> · Νέα: <code>1</code></div>
+      </div>
+
+      <!-- ΙΣΤΟΡΙΚΟ -->
+      <div class="guide">
+        <header><b>ΙΣΤΟΡΙΚΟ</b><span>ΑΠΟΡΡΙΦΘΗΚΕ — δεν υλοποιήθηκε</span></header>
+        <div class="info-panel">
+          <h6>ΟΔΗΓΙΕΣ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Η λωρίδα ημερών πάνω μετακινεί το ιστορικό· τα βέλη πηγαίνουν μία ημέρα πίσω ή μπροστά.</i></li>
+            <li><b>02</b><i>Πατήστε το όνομα μιας προπόνησης για να δείτε ασκήσεις, σετ και σχόλια.</i></li>
+            <li><b>03</b><i>Με την «ΕΠΙΛΟΓΗ» εμφανίζονται η επεξεργασία, η αντιγραφή και η διαγραφή της προπόνησης.</i></li>
+            <li><b>04</b><i>Η «ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ» φέρνει παλαιότερες προπονήσεις· η σφραγίδα μετράει το σύνολο.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>The day strip at the top moves the history; the arrows step one day back or forward.</i></li>
+            <li><b>02</b><i>Tap the name of a workout to see its exercises, sets and comments.</i></li>
+            <li><b>03</b><i>“SELECT” reveals edit, copy and delete for that workout.</i></li>
+            <li><b>04</b><i>“SHOW MORE” brings in older workouts; the stamp counts the total.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>La bande de jours en haut déplace l’historique ; les flèches avancent ou reculent d’un jour.</i></li>
+            <li><b>02</b><i>Touchez le nom d’une séance pour voir ses exercices, ses séries et ses commentaires.</i></li>
+            <li><b>03</b><i>« SÉLECTIONNER » fait apparaître la modification, la copie et la suppression de la séance.</i></li>
+            <li><b>04</b><i>« AFFICHER PLUS » charge des séances plus anciennes ; le tampon compte le total.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Der Tagesstreifen oben verschiebt den Verlauf; die Pfeile gehen einen Tag zurück oder vor.</i></li>
+            <li><b>02</b><i>Tippen Sie auf den Namen eines Trainings, um Übungen, Sätze und Kommentare zu sehen.</i></li>
+            <li><b>03</b><i>„AUSWÄHLEN“ zeigt Bearbeiten, Kopieren und Löschen des Trainings.</i></li>
+            <li><b>04</b><i>„MEHR ANZEIGEN“ lädt ältere Trainings; der Stempel zählt die Gesamtzahl.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Σήμερα</strong><p style="margin:0; font-size:.84rem; color:var(--muted); line-height:1.45">Καμία οδηγία. Η <b>«ΕΠΙΛΟΓΗ»</b> είναι το ακριβώς αόρατο βήμα: χωρίς αυτήν δεν φαίνονται επεξεργασία, αντιγραφή και διαγραφή, και τίποτα στην οθόνη δεν το λέει.</p></div>
+        <div class="ids">Νέες εγγραφές catalog: <code>4</code> · Προσοχή: η ετικέτα <code>ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ … ΑΠΟΜΕΝΟΥΝ …</code> δεν έχει καμία εγγραφή σήμερα</div>
+      </div>
+
+      <!-- ΕΠΙΒΛΕΨΗ -->
+      <div class="guide">
+        <header><b>ΕΠΙΒΛΕΨΗ</b><span>Υλοποιήθηκε · 5 γραμμές</span></header>
+        <div class="info-panel">
+          <h6>ΟΔΗΓΙΕΣ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Επιλέξτε πρώτα πρόγραμμα και μετά άσκηση και σετ — προσφέρονται μόνο όσες ανήκουν σε αυτό.</i></li>
+            <li><b>02</b><i>Το γράφημα συγκρίνει βάρος ή πλάκες και δείχνει την πορεία των επαναλήψεων στο ίδιο φορτίο.</i></li>
+            <li><b>03</b><i>Κάθε προπόνηση πιάνει σταθερό πλάτος· σύρετε το γράφημα οριζόντια για τις παλαιότερες.</i></li>
+            <li><b>04</b><i>Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.</i></li>
+            <li><b>05</b><i>Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>Pick a routine first, then an exercise and a set — only the ones belonging to it are offered.</i></li>
+            <li><b>02</b><i>The chart compares weight or plates and shows how reps progress at the same load.</i></li>
+            <li><b>03</b><i>Every workout takes a fixed width; drag the chart sideways for the older ones.</i></li>
+            <li><b>04</b><i>Logs with an incompatible measurement are excluded and listed below the chart.</i></li>
+            <li><b>05</b><i>Open “Personal Records” for the best sets in each exercise and measurement method.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>Choisissez d’abord un programme, puis un exercice et une série — seuls ceux qui lui appartiennent sont proposés.</i></li>
+            <li><b>02</b><i>Le graphique compare la charge ou les disques et montre l’évolution des répétitions à charge égale.</i></li>
+            <li><b>03</b><i>Chaque séance occupe une largeur fixe ; faites glisser le graphique horizontalement pour voir les plus anciennes.</i></li>
+            <li><b>04</b><i>Les saisies avec une mesure incompatible sont exclues et signalées sous le graphique.</i></li>
+            <li><b>05</b><i>Ouvrez « Personal Records » pour voir les meilleures séries de chaque exercice et mode de mesure.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Wählen Sie zuerst einen Plan, dann Übung und Satz — angeboten wird nur, was dazugehört.</i></li>
+            <li><b>02</b><i>Das Diagramm vergleicht Gewicht oder Scheiben und zeigt die Wiederholungsentwicklung bei gleicher Last.</i></li>
+            <li><b>03</b><i>Jedes Training belegt eine feste Breite; ziehen Sie das Diagramm seitlich für ältere Trainings.</i></li>
+            <li><b>04</b><i>Einträge mit inkompatibler Messart werden ausgeschlossen und unter dem Diagramm aufgeführt.</i></li>
+            <li><b>05</b><i>Öffnen Sie „Personal Records“ für die besten Sätze jeder Übung und Messart.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Σήμερα (4 γραμμές)</strong><ol>
+          <li>Επιλέξτε από τα φίλτρα πρόγραμμα, άσκηση και σετ. <i>(δεν λέει ότι η σειρά μετράει)</i></li>
+          <li>Το γράφημα συγκρίνει βάρος ή πλάκες… <i>(μένει)</i></li>
+          <li>Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.</li>
+          <li>Ανοίξτε το «Personal Records»… <i>(μένει)</i></li>
+        </ol></div>
+        <div class="ids">Μένουν: <code>0111</code>, <code>0112</code>, <code>0113</code> · Άλλαξε: <code>0121</code> · Νέο: <code>message.0488</code></div>
+      </div>
+
+      <!-- ΠΡΟΦΙΛ -->
+      <div class="guide">
+        <header><b>ΠΡΟΦΙΛ</b><span>Αναθεώρηση · 5 γραμμές</span></header>
+        <div class="info-panel">
+          <h6>ΟΔΗΓΙΕΣ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Πατήστε τη φωτογραφία, το όνομα ή την ηλικία πάνω στην κάρτα.</i></li>
+            <li><b>02</b><i>Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται· οι υπόλοιπες μένουν σε αυτή τη συσκευή.</i></li>
+            <li><b>03</b><i>Δηλώστε ημερομηνία γέννησης και επιλέξτε αν η ηλικία θα φαίνεται στην κάρτα.</i></li>
+            <li><b>04</b><i>Η μονάδα μέτρησης αλλάζει μόνο την εμφάνιση των κιλών, όχι τις αποθηκευμένες τιμές.</i></li>
+            <li><b>05</b><i>Η «Εξαγωγή ιστορικού» κατεβάζει τις προπονήσεις σε αρχείο CSV. Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>Tap the photo, name, or age on the card.</i></li>
+            <li><b>02</b><i>Upload up to six images and choose which one to use; the others stay on this device.</i></li>
+            <li><b>03</b><i>Enter your date of birth and choose whether age appears on the card.</i></li>
+            <li><b>04</b><i>The measurement unit only changes how weights are shown, not the stored values.</i></li>
+            <li><b>05</b><i>“Export history” downloads your workouts as a CSV file. Save your changes to update Home and the menu.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>Touchez la photo, le nom ou l’âge sur la carte.</i></li>
+            <li><b>02</b><i>Importez jusqu’à six images et choisissez celle à utiliser ; les autres restent sur cet appareil.</i></li>
+            <li><b>03</b><i>Indiquez votre date de naissance et choisissez si l’âge apparaît sur la carte.</i></li>
+            <li><b>04</b><i>L’unité de mesure change seulement l’affichage des charges, pas les valeurs enregistrées.</i></li>
+            <li><b>05</b><i>« Exporter l’historique » télécharge vos séances au format CSV. Enregistrez les modifications pour mettre à jour l’accueil et le menu.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Tippen Sie auf Foto, Name oder Alter auf der Karte.</i></li>
+            <li><b>02</b><i>Laden Sie bis zu sechs Bilder hoch und wählen Sie das genutzte aus; die übrigen bleiben auf diesem Gerät.</i></li>
+            <li><b>03</b><i>Geben Sie Ihr Geburtsdatum ein und wählen Sie, ob das Alter auf der Karte erscheint.</i></li>
+            <li><b>04</b><i>Die Maßeinheit ändert nur die Anzeige der Gewichte, nicht die gespeicherten Werte.</i></li>
+            <li><b>05</b><i>„Verlauf exportieren“ lädt Ihre Trainings als CSV-Datei herunter. Speichern Sie die Änderungen, um Startseite und Menü zu aktualisieren.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Σήμερα (4 γραμμές)</strong><ol>
+          <li>Πατήστε τη φωτογραφία, το όνομα ή την ηλικία πάνω στην κάρτα. <i>(μένει)</i></li>
+          <li>Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται στο προφίλ.</li>
+          <li>Δηλώστε ημερομηνία γέννησης… <i>(μένει)</i></li>
+          <li>Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού. <i>(απορροφάται στην 05)</i></li>
+        </ol></div>
+        <div class="ids">Μένουν: <code>0236</code>, <code>0115</code> · Αλλάζουν: <code>0114</code>, <code>0116</code> · Νέα: <code>1</code></div>
+      </div>
+
+      <!-- ΛΟΓΑΡΙΑΣΜΟΣ -->
+      <div class="guide">
+        <header><b>ΛΟΓΑΡΙΑΣΜΟΣ</b><span>ΑΠΟΡΡΙΦΘΗΚΕ — δεν υλοποιήθηκε</span></header>
+        <div class="info-panel">
+          <h6>ΜΕΣΑ ΣΤΟΝ ΔΙΑΛΟΓΟ, ΠΑΝΩ ΑΠΟ ΤΑ ΚΟΥΜΠΙΑ</h6>
+          <div class="lg" data-l="el"><ol>
+            <li><b>01</b><i>Ο λογαριασμός κρατά ασκήσεις, προγράμματα, προπονήσεις και προφίλ συγχρονισμένα σε κάθε συσκευή σας.</i></li>
+            <li><b>02</b><i>Η αποσύνδεση κλείνει τη συνεδρία σε όλες τις συσκευές και καθαρίζει τα δεδομένα από αυτή εδώ.</i></li>
+            <li><b>03</b><i>Η διαγραφή λογαριασμού είναι οριστική. Κατεβάστε πρώτα το ιστορικό σας από το Προφίλ.</i></li>
+            <li><b>04</b><i>Χωρίς λογαριασμό όλα μένουν σε αυτή τη συσκευή. Αν καθαρίσετε τα δεδομένα του browser, χάνονται.</i></li>
+          </ol></div>
+          <div class="lg" data-l="en" hidden><ol>
+            <li><b>01</b><i>Your account keeps exercises, routines, workouts and profile synced on every device of yours.</i></li>
+            <li><b>02</b><i>Signing out ends the session on every device and clears the data from this one.</i></li>
+            <li><b>03</b><i>Deleting the account is permanent. Download your history from Profile first.</i></li>
+            <li><b>04</b><i>Without an account everything stays on this device. If you clear the browser data, it is gone.</i></li>
+          </ol></div>
+          <div class="lg" data-l="fr" hidden><ol>
+            <li><b>01</b><i>Le compte garde exercices, programmes, séances et profil synchronisés sur tous vos appareils.</i></li>
+            <li><b>02</b><i>La déconnexion met fin à la session sur tous les appareils et efface les données de celui-ci.</i></li>
+            <li><b>03</b><i>La suppression du compte est définitive. Téléchargez d’abord votre historique depuis le Profil.</i></li>
+            <li><b>04</b><i>Sans compte, tout reste sur cet appareil. Si vous effacez les données du navigateur, tout est perdu.</i></li>
+          </ol></div>
+          <div class="lg" data-l="de" hidden><ol>
+            <li><b>01</b><i>Das Konto hält Übungen, Trainingspläne, Trainings und Profil auf allen Ihren Geräten synchron.</i></li>
+            <li><b>02</b><i>Die Abmeldung beendet die Sitzung auf allen Geräten und löscht die Daten von diesem Gerät.</i></li>
+            <li><b>03</b><i>Die Kontolöschung ist endgültig. Laden Sie zuerst Ihren Verlauf im Profil herunter.</i></li>
+            <li><b>04</b><i>Ohne Konto bleibt alles auf diesem Gerät. Wenn Sie die Browserdaten löschen, ist es weg.</i></li>
+          </ol></div>
+        </div>
+        <div class="now"><strong>Πού πάει η καθεμία</strong><ol>
+          <li><b>01–03</b> στο <code>#account-member</code>, ανάμεσα στην κάρτα MEMBER και στα δύο κουμπιά.</li>
+          <li><b>04</b> στην πύλη, κάτω από το «ΛΕΙΤΟΥΡΓΙΑ ΕΠΙΣΚΕΠΤΗ» — <i>δεν αντικαθιστά</i> τη λωρίδα υπενθύμισης, που μένει όπως είναι.</li>
+        </ol></div>
+        <div class="ids">Νέες εγγραφές catalog: <code>4</code> · Η 02 λέει για πρώτη φορά ότι η αποσύνδεση σβήνει τοπικά δεδομένα</div>
+      </div>
+
+    </div>
+    <div class="notes warn"><p><b>Παράπλευρο εύρημα.</b> Η οδηγία <b>Ιστορικό 04</b> παραπέμπει στο κουμπί «ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ <i>n</i> · ΑΠΟΜΕΝΟΥΝ <i>m</i>», που παράγεται δυναμικά στο <code>modules/history.js</code> και <b>δεν έχει καμία εγγραφή στο catalog</b> — σήμερα μένει ελληνικό και στις τρεις άλλες γλώσσες. Θα ήταν παράλογο μια αγγλική οδηγία να παραπέμπει σε ελληνικό κουμπί, οπότε η μετάφρασή του μπαίνει στο ίδιο πακέτο (η μεταβλητή μέρα του απαιτεί παραμετρική εγγραφή, όπως ήδη υποστηρίζει το <code>translateId</code> με <code>interpolate</code>).</p></div>
+  </section>
+
+  <section>
+    <h3>Β4 · Οι κενές καταστάσεις</h3>
+    <p class="sub">Το Definition of Done ζητά να καλύπτονται «οι νέες και οι κενές καταστάσεις». Οι κενές οθόνες <b>έχουν ήδη κείμενο</b> και η απόφαση της 29ης Ιουλίου 2026 τις κρατά ως διαπίστωση χωρίς πρόσθετο control. Άρα δεν γράφονται νέα μηνύματα — ελέγχεται μόνο ότι κάθε κενή κατάσταση έχει την οδηγία που της αντιστοιχεί.</p>
+    <table>
+      <thead><tr><th style="width:26%">Κενή κατάσταση</th><th style="width:36%">Σημερινό κείμενο</th><th style="width:38%">Ποια οδηγία την καλύπτει</th></tr></thead>
+      <tbody>
+        <tr><td>Αρχική νέου χρήστη</td><td>Δύο κουμπιά και το απόφθεγμα· οι κάρτες <code>hidden</code></td><td>Αρχική <b>01</b> και <b>03</b> — η 03 εξηγεί γιατί λείπουν οι κάρτες. <span class="fresh">Νέο</span></td></tr>
+        <tr><td>Κενή βιβλιοθήκη</td><td>«Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.»</td><td>Πρόγραμμα <b>01</b> — μένει ως έχει.</td></tr>
+        <tr><td>Κενό πρόγραμμα</td><td>«Προσθέστε την πρώτη ημέρα προπόνησης» + ΑΝΟΙΓΜΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</td><td>Πρόγραμμα <b>04</b> — μένει ως έχει.</td></tr>
+        <tr><td>Ημέρα χωρίς προπόνηση</td><td>«Επιλέξτε άλλη ημέρα μικρόκυκλου ή ξεκινήστε μια “Ελεύθερη” καταγραφή.»</td><td>Καταγραφή <b>01</b> και <b>02</b> — μένει ως έχει.</td></tr>
+        <tr><td>Κενό Ιστορικό</td><td>«Ολοκληρώστε την πρώτη προπόνηση…» + Έναρξη καταγραφής</td><td>Ιστορικό <b>02</b> και <b>03</b> — γίνονται χρήσιμες μόλις υπάρξει η πρώτη κάρτα. <span class="fresh">Νέο</span></td></tr>
+        <tr><td>Κενή Επίβλεψη</td><td>Το ύψος του γραφήματος μένει, χωρίς control</td><td>Επίβλεψη <b>01</b> — λέει ότι πρώτα θέλει πρόγραμμα.</td></tr>
+        <tr><td>Χωρίς προπονήσεις για εξαγωγή</td><td>«Δεν υπάρχουν καταγεγραμμένες προπονήσεις για εξαγωγή.»</td><td>Προφίλ <b>05</b> — μένει ως έχει.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     Γ + Δ
+     ============================================================ -->
+<div class="chapter"><b>Γ. ΤΙ ΑΛΛΑΖΕΙ ΚΑΙ ΤΙ ΟΧΙ</b><span>ΚΑΙ ΤΑ ΑΝΟΙΧΤΑ ΕΡΩΤΗΜΑΤΑ</span></div>
+
+<div class="stage">
+  <section>
+    <table>
+      <thead><tr><th style="width:34%">Περιοχή</th><th style="width:33%">Αλλάζει</th><th style="width:33%">Δεν αλλάζει</th></tr></thead>
+      <tbody>
+        <tr><td><b>Δεδομένα και αποθήκευση</b></td><td>Τίποτα.</td><td>Κανένα κλειδί <code>localStorage</code>, κανένα schema, καμία μετάβαση. Το 0.3.4 είναι <b>μόνο κείμενο</b>.</td></tr>
+        <tr><td><b>privacy.html</b></td><td>Νέο κείμενο, ενότητα 5, ημερομηνία ενημέρωσης. Τρία αδελφά αρχεία γλωσσών.</td><td>Η διαδρομή <code>privacy.html</code>, το CSP της σελίδας, το <code>legal.css</code>.</td></tr>
+        <tr><td><b>service-worker.js</b></td><td>Τρία αρχεία στο precache και νέα έκδοση cache.</td><td>Η λογική του, η ειδική μεταχείριση της σελίδας απορρήτου.</td></tr>
+        <tr><td><b>index.html</b></td><td>Δύο νέα <code>.info-panel</code> (Αρχική, Ιστορικό), αναθεωρημένες γραμμές στα υπόλοιπα τέσσερα, τρεις γραμμές στον διάλογο λογαριασμού.</td><td>Η δομή των views, τα κουμπιά, οι κάρτες, το μενού, η λωρίδα επισκέπτη.</td></tr>
+        <tr><td><b>i18n.js</b></td><td>~16 νέες εγγραφές catalog και ~6 αναθεωρημένες, στις τέσσερις γλώσσες.</td><td>Ο μηχανισμός μετάφρασης, η αρίθμηση των υπαρχόντων IDs.</td></tr>
+        <tr><td><b>Design & προσβασιμότητα</b></td><td>Τίποτα από τις κλεισμένες αποφάσεις.</td><td>Καμία κάτω μπάρα, κανένα κουμπί σε άδεια οθόνη, καμία αλλαγή στον επισκέπτη. Το <code>( i )</code> είναι υπάρχον μοτίβο, όχι νέο control.</td></tr>
+        <tr><td><b>Tests</b></td><td>Ελέγχεται ότι κάθε νέα γραμμή έχει εγγραφή catalog και στις τρεις μεταφράσεις.</td><td>Τα υπάρχοντα e2e για τη σελίδα απορρήτου συνεχίζουν να δείχνουν στην ελληνική διαδρομή.</td></tr>
+      </tbody>
+    </table>
+    <div class="notes warn"><p><b>Παγίδα υλοποίησης.</b> Η μετάφραση γίνεται με αντιστοίχιση <i>ελληνικής συμβολοσειράς-πηγής</i> μέσα στα text nodes (<code>i18n.js · convert()</code>), όχι με IDs στο markup. Άρα κάθε νέα γραμμή οδηγίας πρέπει να υπάρχει στο catalog <b>ακριβώς όπως γράφτηκε</b> — ένα κόμμα διαφορά και η γραμμή μένει σιωπηλά ελληνική στα EN/FR/DE, χωρίς κανένα σφάλμα. Το ίδιο ισχύει για τα εισαγωγικά «» και τα typographic “ ”.</p></div>
+  </section>
+
+  <section>
+    <h3>Δ · Ανοιχτά ερωτήματα</h3>
+    <ol style="max-width:820px; color:var(--muted); line-height:1.6">
+      <li><b>Ημερομηνία ενημέρωσης.</b> Μπαίνει η ημέρα που θα γίνει merge ή η ημέρα του release; Οι δύο συνήθως δεν συμπίπτουν και η σελίδα δηλώνει «τελευταία ενημέρωση».</li>
+      <li><b>Η σφραγίδα ( i ) στην Αρχική.</b> Δίπλα στο <code>PAGE 001</code> ή αλλού; Είναι η μόνη οθόνη χωρίς hero, άρα η μόνη χωρίς έτοιμη θέση.</li>
+      <li><b>Το ( i ) του Ιστορικού στο κινητό.</b> Χωράει αριστερά από τη σφραγίδα του μετρητή στα 390px ή πέφτει κάτω από τη λωρίδα ημερών;</li>
+      <li><b>Ο σύνδεσμος του μενού.</b> Δείχνει στη σελίδα της τρέχουσας γλώσσας ή πάντα στην ελληνική; Το πρώτο θέλει μία γραμμή στο <code>i18n.js</code>· το δεύτερο είναι κακή υποδοχή για τον Γερμανό χρήστη.</li>
+      <li><b>Ο ενικός της πολιτικής.</b> Τα ελληνικά της πολιτικής μιλούν στον ενικό, οι οδηγίες στον πληθυντικό. Μένει η διαφορά — νομικό κείμενο έναντι οδηγίας χρήσης — ή ενοποιείται;</li>
+      <li><b>Τα e2e της σελίδας απορρήτου.</b> Επεκτείνονται και στις τέσσερις διαδρομές ή αρκεί η ελληνική συν ένας έλεγχος ότι υπάρχουν τα τρία αρχεία;</li>
+      <li><b>Το κανάλι επικοινωνίας.</b> Αν η διεύθυνση email αποφασιστεί πριν το merge του 0.3.4, μπαίνει τώρα στην §1 και κλείνει μισό εμπορικό TODO — ή μένει αυστηρά εκτός;</li>
+    </ol>
+  </section>
+</div>
+
+<footer class="foot">
+  <p><b>Κατάσταση:</b> εγκρίθηκε και υλοποιήθηκε στις 6 Σεπτεμβρίου 2026, με τους περιορισμούς που περιγράφει η απόφαση στην κορυφή. Άλλαξαν <code>privacy.html</code> (και τα τρία νέα αδελφά αρχεία), <code>index.html</code>, <code>i18n.js</code>, <code>legal.css</code>, <code>service-worker.js</code>, <code>scripts/build-production.mjs</code> και <code>performance-budget.json</code>. Το αρχείο μένει ως τεκμηρίωση του γύρου — και ως το σημείο όπου διαβάζονται τα τέσσερα κείμενα δίπλα-δίπλα.</p>
+  <p><b>Διορθωτικός έλεγχος, 6 Σεπτεμβρίου 2026:</b> το «ΕΜΦΑΝΙΣΗ ΑΚΟΜΗ … ΑΠΟΜΕΝΟΥΝ …» μεταφράζεται πλέον με τις εγγραφές <code>history.load-more</code> και <code>history.remaining</code>, διατηρώντας τους δυναμικούς αριθμούς και χωρίς νέο πάνελ Ιστορικού. Διορθώθηκαν επίσης στις τέσσερις πολιτικές η τοπική αποσύνδεση, το περιεχόμενο και η διατήρηση του αντιγράφου επαναφοράς, η μεταφορά επισκέπτη σε υπάρχοντα λογαριασμό και η περιγραφή απώλειας τοπικών δεδομένων. Η οδηγία μονάδων αναφέρει πλέον και την καταχώριση βαρών. Τα παραπάνω προσχέδια καταγράφουν την αρχική πρόταση· τα τελικά κείμενα βρίσκονται στα <code>privacy*.html</code> και <code>index.html</code>.</p>
+  <p>Τα ευρήματα του <b>Α1</b> είναι μετρημένα στον κώδικα της έκδοσης εργασίας 0.3.1: <code>modules/exercises.js</code>, <code>auth.js</code>, <code>cloud-sync.js</code>, <code>error-tracking.js</code>, <code>app.js · sessionsToCsvRows()</code> και τα migrations <code>202607220001</code>, <code>202607230001</code>.</p>
+</footer>
+
+<script>
+(function () {
+  const buttons = [...document.querySelectorAll('.langbar [data-l]')];
+  const blocks = [...document.querySelectorAll('.lg')];
+  function apply(choice) {
+    document.body.classList.toggle('allmode', choice === 'all');
+    blocks.forEach(block => { block.hidden = choice !== 'all' && block.dataset.l !== choice; });
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.l === choice)));
+  }
+  buttons.forEach(button => button.addEventListener('click', () => apply(button.dataset.l)));
+  apply('el');
+}());
+</script>
+</body>
+</html>

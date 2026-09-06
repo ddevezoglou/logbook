@@ -58,12 +58,19 @@ export async function installAuthenticatedStub(page, { theme } = {}) {
           },
           from() {
             let values = null;
+            const filters = {};
             const chain = {
               select() { return chain; },
-              eq() { return chain; },
+              eq(key, value) { filters[key] = value; return chain; },
               insert(next) { values = next; return chain; },
               update(next) { values = next; return chain; },
-              async maybeSingle() { return { data:row, error:null }; },
+              async maybeSingle() {
+                if (values) {
+                  if (!row || row.revision !== filters.revision) return { data:null, error:null };
+                  row = { ...row, payload:structuredClone(values.payload), revision:row.revision + 1 };
+                }
+                return { data:structuredClone(row), error:null };
+              },
               async single() {
                 row = { user_id:values.user_id, revision:(row?.revision || 0) + 1, payload:values.payload, updated_at:new Date().toISOString() };
                 return { data:row, error:null };
