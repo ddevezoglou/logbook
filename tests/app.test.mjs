@@ -945,15 +945,25 @@ test('progress chart tooltip card grows with long mixed-mode labels', () => {
   });
 });
 
-test('progress chart raises the hovered point above later points', () => {
+test('progress tooltips paint above the series without moving focusable points', () => {
   const mkSession = (id, date, weight) => ({ id, date, type: 'free', comments: '', exercises: [{ exercise: 'Squat', comments: '', sets: [{ reps: 8, weight, weightMode: 'kg', plates: null }] }] });
   const { document } = loadApp({ trainingSessions: [mkSession('s1', '2026-06-01', 60), mkSession('s2', '2026-06-08', 65), mkSession('s3', '2026-06-15', 70)] });
   click(document, '.nav-button[data-view="progress"]');
   const firstPoint = document.querySelector('#progress-panel .chart-point');
   const svg = firstPoint.closest('svg');
-  assert.notEqual(svg.lastElementChild, firstPoint, 'first point starts below its siblings');
+  const points = [...svg.querySelectorAll('.chart-point')];
   firstPoint.dispatchEvent(new document.defaultView.Event('mouseover', { bubbles: true }));
-  assert.equal(svg.lastElementChild, firstPoint, 'hovered point moves to the top of the paint order');
+  assert.deepEqual([...svg.querySelectorAll('.chart-point')], points, 'hover preserves chronological keyboard order');
+  assert.ok(svg.lastElementChild.matches('.chart-tooltip-overlay'), 'only the tooltip paints above the points');
+  assert.equal(svg.lastElementChild.textContent, firstPoint.querySelector('.chart-tooltip-card').textContent);
+  assert.equal(svg.lastElementChild.getAttribute('aria-hidden'), 'true');
+  firstPoint.dispatchEvent(new document.defaultView.MouseEvent('mouseout', { bubbles:true }));
+  assert.equal(svg.querySelector('.chart-tooltip-overlay'), null, 'leaving an unfocused point removes the tooltip');
+  points[1].dispatchEvent(new document.defaultView.FocusEvent('focusin', { bubbles:true }));
+  assert.equal(svg.lastElementChild.textContent, points[1].querySelector('.chart-tooltip-card').textContent);
+  assert.deepEqual([...svg.querySelectorAll('.chart-point')], points, 'keyboard focus also preserves point order');
+  points[1].dispatchEvent(new document.defaultView.FocusEvent('focusout', { bubbles:true }));
+  assert.equal(svg.querySelector('.chart-tooltip-overlay'), null);
 });
 
 test('progress chart annotates weight plateaus with rep-cycle brackets', () => {

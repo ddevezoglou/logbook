@@ -245,11 +245,11 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 .chart-point:hover .chart-dot,.chart-point:focus .chart-dot { r:9; fill:var(--gold); }
 .chart-point:hover .chart-reps-dot,.chart-point:focus .chart-reps-dot { r:7; }
 .chart-point:hover .chart-guide,.chart-point:focus .chart-guide { stroke:var(--orange); stroke-width:2; stroke-dasharray:2 4; }
-.chart-tooltip-card { opacity:0; pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
-.chart-point:hover .chart-tooltip-card,.chart-point:focus .chart-tooltip-card { opacity:1; }
-.chart-tooltip-card rect { fill:var(--ink); stroke:var(--gold); stroke-width:1; filter:drop-shadow(0 4px 8px rgba(var(--shadow-rgb),.18)); }
-.chart-tooltip-card text { fill:var(--paper); font:700 11px var(--font-ui); }
-.chart-tooltip-card text tspan:last-child { fill:var(--gold); font-size:10px; font-weight:600; }
+.chart-tooltip-card { visibility:hidden; pointer-events:none; }
+.chart-tooltip-overlay { pointer-events:none; }
+.chart-tooltip-card rect,.chart-tooltip-overlay rect { fill:var(--ink); stroke:var(--gold); stroke-width:1; filter:drop-shadow(0 4px 8px rgba(var(--shadow-rgb),.18)); }
+.chart-tooltip-card text,.chart-tooltip-overlay text { fill:var(--paper); font:700 11px var(--font-ui); }
+.chart-tooltip-card text tspan:last-child,.chart-tooltip-overlay text tspan:last-child { fill:var(--gold); font-size:10px; font-weight:600; }
 .chart-hint { margin-left:auto; color:var(--muted); font-size:.62rem; font-weight:600; letter-spacing:.03em; text-transform:none; }.chart-hint::before { display:none; }
 .chart-summary small { display:block; margin-top:7px; color:var(--muted); font-size:.72rem; letter-spacing:.04em; }
 .chart-latest { margin-left:auto; padding:10px 14px; border-left:2px solid var(--orange); text-align:left; }
@@ -265,7 +265,7 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
    πλάτος του κυλιόμενου γραφήματος έρχεται από τα attributes width/height του SVG —
    αυτά ισχύουν μόνο αν το CSS πάψει να το τεντώνει στο 100%. */
 .chart-wrap.is-scrollable .progress-chart { width:auto; height:auto; }
-.chart-wrap.is-scrollable { overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.chart-wrap.is-scrollable { overflow-x:auto; overflow-y:hidden; scroll-behavior:auto; overflow-anchor:none; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
 .chart-wrap.is-scrollable:focus-visible { outline:2px solid var(--orange); outline-offset:3px; }
 .chart-wrap.is-scrollable::-webkit-scrollbar { height:7px; }
 .chart-wrap.is-scrollable::-webkit-scrollbar-thumb { background:var(--line); border-radius:4px; }

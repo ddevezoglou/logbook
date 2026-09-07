@@ -433,7 +433,7 @@ function renderExerciseLibrary(centerExerciseId = null) {
   const list = $('#exercise-library-list');
   const centeredId = centerExerciseId || list.querySelector('[data-carousel-position="0"] [data-edit-exercise]')?.dataset.editExercise;
   const entries = [...state.exercises].sort((a, b) => a.name.localeCompare(b.name, 'el'));
-  list.innerHTML = entries.map(entry => `<li class="exercise-card"><button type="button" class="exercise-index-row" data-edit-exercise="${esc(entry.id)}"><strong data-i18n-user>${esc(entry.name)}</strong>${entry.cues ? `<span data-i18n-user>${esc(entry.cues)}</span>` : ''}</button></li>`).join('');
+  list.innerHTML = entries.map(entry => `<li class="exercise-card"><button type="button" class="exercise-index-row" data-edit-exercise="${esc(entry.id)}"><strong data-i18n-user>${esc(entry.name)}</strong><span class="exercise-card-cues"><b>Cues:</b> <span data-i18n-user>${entry.cues ? esc(entry.cues) : '—'}</span></span></button></li>`).join('');
   $('#exercise-carousel').hidden = !entries.length;
   exerciseCardResizeObserver?.disconnect();
   list.querySelectorAll('.exercise-card').forEach(card => exerciseCardResizeObserver?.observe(card));
@@ -2052,10 +2052,36 @@ $('#personal-records-trigger').addEventListener('click', event => {
   trigger.setAttribute('aria-label', `${willOpen ? 'Κλείσιμο' : 'Άνοιγμα'} Personal Records`);
   $('#personal-records-sheet').hidden = !willOpen;
 });
-// SVG has no z-index: the tooltip of an early point paints below later points, so lift the active point last in the tree.
-const raiseChartPoint = target => { const point = target.closest?.('.chart-point'); if (point?.parentNode && point.parentNode.lastElementChild !== point) point.parentNode.appendChild(point); };
-document.addEventListener('mouseover', event => raiseChartPoint(event.target));
-document.addEventListener('focusin', event => raiseChartPoint(event.target));
+// Paint only the tooltip above the series. Moving a focusable point in the SVG
+// changes keyboard order and can pull the scroller back during interaction.
+function showChartTooltip(point, chart = point?.closest('svg.progress-chart')) {
+  if (!chart) return;
+  chart.querySelector('.chart-tooltip-overlay')?.remove();
+  const source = point?.querySelector('.chart-tooltip-card');
+  if (!source) return;
+  const overlay = source.cloneNode(true);
+  overlay.setAttribute('class', 'chart-tooltip-overlay');
+  chart.appendChild(overlay);
+}
+document.addEventListener('mouseover', event => {
+  const point = event.target.closest?.('.chart-point');
+  if (point && !point.contains(event.relatedTarget)) showChartTooltip(point);
+});
+document.addEventListener('mouseout', event => {
+  const point = event.target.closest?.('.chart-point');
+  if (!point || point.contains(event.relatedTarget)) return;
+  const chart = point.closest('svg.progress-chart');
+  const focused = document.activeElement?.closest?.('.chart-point');
+  showChartTooltip(chart.contains(focused) ? focused : null, chart);
+});
+document.addEventListener('focusin', event => {
+  const point = event.target.closest?.('.chart-point');
+  if (point) showChartTooltip(point);
+});
+document.addEventListener('focusout', event => {
+  const point = event.target.closest?.('.chart-point');
+  if (point) showChartTooltip(null, point.closest('svg.progress-chart'));
+});
 $('.brand')?.addEventListener('click', event => { event.preventDefault(); showView('home'); });
 document.addEventListener('click', event => { const action = event.target.closest('[data-home-action]'); if (action) showView(action.dataset.homeAction); });
 $$('.mode-button').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
