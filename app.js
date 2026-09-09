@@ -44,6 +44,9 @@ window.addEventListener('logbook:cloud-data-applied', () => {
 });
 
 function refreshCloudData() {
+  const editingExerciseId = $('#exercise-library-form').dataset.editingId;
+  const exerciseFormWasDirty = $('#exercise-library-form').dataset.dirty === 'true';
+  const progressChartScroll = captureProgressChartScroll();
   const sessionRecords = store.read('trainingSessions', { type:'array', fallback:[] });
   const routineRecords = store.read('trainingRoutines', { type:'array', fallback:[] });
   captureStorageBaselines();
@@ -70,7 +73,12 @@ function refreshCloudData() {
   if (!state.sessions.some(session => session.id === state.openSessionId)) state.openSessionId = null;
   pendingCloudRefresh = false;
   persistMigrationRepairs(migrated.repairs);
-  renderExerciseLibrary();
+  renderExerciseLibrary(editingExerciseId);
+  if (editingExerciseId && !exerciseFormWasDirty) {
+    const exercise = state.exercises.find(item => String(item.id) === String(editingExerciseId));
+    if (exercise) loadExerciseLibraryForm(exercise);
+    else resetExerciseLibraryForm();
+  }
   refreshDayOptions();
   renderRoutines();
   renderPlan();
@@ -85,7 +93,7 @@ function refreshCloudData() {
   }
   renderOverview();
   loadProfile();
-  renderProgressSelectors();
+  renderProgressSelectors({ chartScroll:progressChartScroll });
   renderHome();
   const language = localStorage.getItem('logbookLanguage');
   if (language && language !== window.LogbookI18n?.getLanguage()) window.LogbookI18n?.setLanguage(language);
@@ -194,6 +202,7 @@ const routineCardResizeObserver = 'ResizeObserver' in window ? new ResizeObserve
 let planExerciseDrafts = [];
 let routineSwipeStartX = null;
 let historySwipe = null;
+const selectedHistorySessionIds = new Set();
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 
@@ -468,20 +477,45 @@ function resetExerciseLibraryForm() {
   delete $('#exercise-library-form').dataset.dirty;
   $('#cancel-library-edit').classList.add('hidden');
 }
+function updateExerciseLibraryFormState() {
+  const form = $('#exercise-library-form');
+  const entry = state.exercises.find(item => String(item.id) === String(form.dataset.editingId));
+  const dirty = $('#library-exercise-name').value !== (entry?.name || '')
+    || $('#library-exercise-notes').value !== (entry?.cues || '');
+  form.dataset.dirty = String(dirty);
+}
+function loadExerciseLibraryForm(entry, { focus = false } = {}) {
+  const form = $('#exercise-library-form');
+  form.dataset.editingId = entry.id;
+  $('#library-exercise-name').value = entry.name;
+  $('#library-exercise-notes').value = entry.cues || '';
+  updateExerciseLibraryFormState();
+  $('#cancel-library-edit').classList.remove('hidden');
+  $('#library-editor').open = true;
+  if (focus) $('#library-exercise-name').focus();
+}
 function persistExerciseLibrary(next) {
-  // A sync can finish while the form is dirty; preserve remote additions/edits.
-  const merged = new Map(store.read('trainingExercises', { type:'array', fallback:[] }).map(item => [item.id, item]));
-  next.forEach(item => {
-    const remote = merged.get(item.id);
-    const winner = !remote || (item.updatedAt || '') >= (remote.updatedAt || '') ? item : remote;
-    merged.set(item.id, { ...winner, aliases:[...new Set([...(remote?.aliases || []), ...(item.aliases || [])])].sort() });
-  });
-  const records = [...merged.values()];
-  if (!safeStoreWrite('trainingExercises', records)) return false;
-  state.exercises = records;
+  // safeStoreWrite rebases fields changed by this form onto the latest storage
+  // snapshot, so a concurrent sync cannot replace the user's just-saved edit.
+  const latest = new Map(store.read('trainingExercises', { type:'array', fallback:[] }).map(item => [String(item.id), item]));
+  next = next.map(item => ({
+    ...item,
+    aliases:[...new Set([...(latest.get(String(item.id))?.aliases || []), ...(item.aliases || [])])].sort(),
+  }));
+  if (!safeStoreWrite('trainingExercises', next)) return false;
+  state.exercises = next;
   return true;
 }
-$('#exercise-library-form').addEventListener('input', () => { $('#exercise-library-form').dataset.dirty = 'true'; });
+function nextExerciseUpdatedAt(exerciseId) {
+  const latest = store.read('trainingExercises', { type:'array', fallback:[] })
+    .find(item => String(item.id) === String(exerciseId));
+  const latestTime = Date.parse(latest?.updatedAt || '');
+  const monotonicTime = Number.isFinite(latestTime) && latestTime < 8.64e15
+    ? Math.max(Date.now(), latestTime + 1)
+    : Date.now();
+  return new Date(monotonicTime).toISOString();
+}
+$('#exercise-library-form').addEventListener('input', updateExerciseLibraryFormState);
 $('#cancel-library-edit').addEventListener('click', resetExerciseLibraryForm);
 $$('.plan-section-toggle').forEach(button => button.addEventListener('click', () => {
   const expanded = button.getAttribute('aria-expanded') !== 'true';
@@ -499,23 +533,24 @@ $('#exercise-library-list').addEventListener('click', event => {
     updateExerciseCarousel([...card.parentElement.children].indexOf(card));
     return;
   }
-  $('#exercise-library-form').dataset.editingId = entry.id;
-  $('#exercise-library-form').dataset.dirty = 'true';
-  $('#library-exercise-name').value = entry.name;
-  $('#library-exercise-notes').value = entry.cues || '';
-  $('#cancel-library-edit').classList.remove('hidden');
-  $('#library-editor').open = true;
-  $('#library-exercise-name').focus();
+  loadExerciseLibraryForm(entry, { focus:true });
 });
 $('#exercise-library-form').addEventListener('submit', event => {
   event.preventDefault();
   $('#library-exercise-name').value = $('#library-exercise-name').value.trim();
   if (!event.currentTarget.reportValidity()) return;
+  const editingId = event.currentTarget.dataset.editingId;
   let next;
-  try { next = ExerciseModel.saveExercise(state.exercises, { id:event.currentTarget.dataset.editingId, name:$('#library-exercise-name').value, cues:$('#library-exercise-notes').value }); }
+  try {
+    next = ExerciseModel.saveExercise(
+      state.exercises,
+      { id:editingId, name:$('#library-exercise-name').value, cues:$('#library-exercise-notes').value },
+      { now:() => nextExerciseUpdatedAt(editingId) }
+    );
+  }
   catch { $('#library-exercise-name').focus(); return; }
   if (!persistExerciseLibrary(next)) return;
-  const savedId = event.currentTarget.dataset.editingId || next.at(-1).id;
+  const savedId = editingId || next.at(-1).id;
   resetExerciseLibraryForm();
   renderExerciseLibrary(savedId); renderPlanExercises(); renderPlan(); renderProgressSelectors();
   if (!hasUnsavedSession()) renderScheduledSession();
@@ -1326,6 +1361,10 @@ function selectHistoryDate(date) {
 
 function renderOverview() {
   state.sessions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const liveSessionIds = new Set(state.sessions.map(session => String(session.id)));
+  selectedHistorySessionIds.forEach(sessionId => {
+    if (!liveSessionIds.has(sessionId)) selectedHistorySessionIds.delete(sessionId);
+  });
   const pageSize = 30;
   state.historyVisibleCount = Math.max(pageSize, Number(state.historyVisibleCount) || pageSize);
   const visibleSessions = state.sessions.slice(0, state.historyVisibleCount);
@@ -1338,6 +1377,11 @@ function renderOverview() {
     getWorkoutName:sessionWorkoutName,
     getDayLabel:dayForDate,
     formatDate,
+  });
+  $$('[data-select-session]').forEach(input => {
+    const selected = selectedHistorySessionIds.has(String(input.dataset.selectSession));
+    input.checked = selected;
+    input.closest('.session-card').classList.toggle('session-selected', selected);
   });
   renderHistoryWeek();
 }
@@ -1371,7 +1415,7 @@ function progressWorkouts() {
   return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, 'el'));
 }
 
-function renderProgressSelectors() {
+function renderProgressSelectors({ chartScroll = null } = {}) {
   renderPersonalBests();
   const workouts = progressWorkouts(), workoutSelect = $('#progress-workout'), previousWorkout = workoutSelect.value;
   workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option data-i18n-user value="${esc(item.key)}">${esc(item.name)}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
@@ -1392,10 +1436,23 @@ function renderProgressSelectors() {
   }, 0) || 0;
   setSelect.innerHTML = maxSets ? Array.from({ length:maxSets }, (_, index) => `<option value="${index}">Σετ ${index + 1}</option>`).join('') : '<option value="">Δεν υπάρχουν σετ</option>';
   if (previousSet !== '' && Number(previousSet) < maxSets) setSelect.value = previousSet;
-  renderProgressChart();
+  renderProgressChart(chartScroll);
 }
 
-function renderProgressChart() {
+function captureProgressChartScroll() {
+  const wrap = $('#progress-panel')?.querySelector('.chart-wrap.is-scrollable');
+  if (!wrap) return null;
+  const max = Math.max(0, wrap.scrollWidth - wrap.clientWidth);
+  return {
+    left:wrap.scrollLeft,
+    atEnd:max - wrap.scrollLeft <= 2,
+    workout:$('#progress-workout').value,
+    exercise:$('#progress-exercise').value,
+    set:$('#progress-set').value,
+  };
+}
+
+function renderProgressChart(previousScroll = null) {
   const panel = $('#progress-panel');
   const workout = progressWorkouts().find(item => item.key === $('#progress-workout').value);
   panel.innerHTML = ProgressChart.buildProgressChartMarkup({
@@ -1411,8 +1468,18 @@ function renderProgressChart() {
   // Όταν το γράφημα κυλάει, ανοίγει στην τελευταία προπόνηση — εκεί που κοιτάς.
   const wrap = panel.querySelector('.chart-wrap.is-scrollable');
   if (!wrap) return;
-  if (typeof wrap.scrollTo === 'function') wrap.scrollTo({ left:wrap.scrollWidth, behavior:'instant' });
-  else wrap.scrollLeft = wrap.scrollWidth;
+  const sameChart = previousScroll
+    && previousScroll.workout === $('#progress-workout').value
+    && previousScroll.exercise === $('#progress-exercise').value
+    && previousScroll.set === $('#progress-set').value;
+  const position = () => {
+    const max = Math.max(0, wrap.scrollWidth - wrap.clientWidth);
+    wrap.scrollLeft = sameChart && !previousScroll.atEnd
+      ? Math.min(previousScroll.left, max)
+      : max;
+  };
+  position();
+  requestAnimationFrame(position);
 }
 
 function toast(message, kind = 'recorded') { const el = $('#toast'); el.textContent = message; el.classList.toggle('toast-error', kind === 'error'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
@@ -2289,6 +2356,9 @@ document.addEventListener('change', event => {
     return;
   }
   if (!event.target.matches('[data-select-session]')) return;
+  const sessionId = String(event.target.dataset.selectSession);
+  if (event.target.checked) selectedHistorySessionIds.add(sessionId);
+  else selectedHistorySessionIds.delete(sessionId);
   event.target.closest('.session-card').classList.toggle('session-selected', event.target.checked);
 });
 
@@ -2601,7 +2671,7 @@ document.addEventListener('logbook:languagechange', () => {
   const logDate = $('#log-date').value;
   if (logDate) $('#day-badge').innerHTML = `<span>${dayForDate(logDate)}</span><small>${formatDate(logDate)}</small>`;
   renderOverview();
-  renderProgressChart();
+  renderProgressChart(captureProgressChartScroll());
   renderHome();
 });
 $$('.info-stamp').forEach(button => {

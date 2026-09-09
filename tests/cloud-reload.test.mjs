@@ -36,6 +36,74 @@ test('cloud data refreshes the current screen without reloading or losing the ac
   assert.equal(document.querySelector('#history-session-count').textContent, '2');
 });
 
+test('opening an exercise is pristine and accepts a background refresh without a false conflict', () => {
+  const exercise = { id:'row', name:'Row', cues:'Cable', aliases:[], updatedAt:'2026-09-01T08:00:00.000Z' };
+  const { window, document, localStorage } = loadAppWithReloadSpy({ trainingExercises:[exercise] });
+  try {
+    click(document, '[data-edit-exercise="row"]');
+    assert.equal(document.querySelector('#exercise-library-form').dataset.dirty, 'false');
+
+    localStorage.setItem('trainingExercises', JSON.stringify([{
+      ...exercise,
+      name:'Seated Row',
+      cues:'Chest supported',
+      updatedAt:'2026-09-02T08:00:00.000Z',
+    }]));
+    window.dispatchEvent(new window.CustomEvent('logbook:cloud-data-applied'));
+
+    assert.equal(document.querySelector('#library-exercise-name').value, 'Seated Row');
+    assert.equal(document.querySelector('#library-exercise-notes').value, 'Chest supported');
+    assert.equal(document.querySelector('#exercise-library-form').dataset.dirty, 'false');
+    assert.notEqual(document.querySelector('#toast').textContent, 'Ήρθαν αλλαγές από άλλη συσκευή. Θα εφαρμοστούν μόλις αποθηκεύσετε.');
+  } finally {
+    window.close();
+  }
+});
+
+test('history selection survives a background cloud refresh', () => {
+  const workout = { id:'session-1', date:'2026-09-01', type:'free', exercises:[{ exercise:'Row', sets:[{ reps:8, weight:50 }] }] };
+  const { window, document } = loadAppWithReloadSpy({ trainingSessions:[workout] });
+  try {
+    const checkbox = document.querySelector('[data-select-session="session-1"]');
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new window.Event('change', { bubbles:true }));
+    assert.ok(checkbox.closest('.session-card').classList.contains('session-selected'));
+
+    window.dispatchEvent(new window.CustomEvent('logbook:cloud-data-applied'));
+
+    const refreshed = document.querySelector('[data-select-session="session-1"]');
+    assert.equal(refreshed.checked, true);
+    assert.ok(refreshed.closest('.session-card').classList.contains('session-selected'));
+  } finally {
+    window.close();
+  }
+});
+
+test('progress keeps its horizontal position through a background cloud refresh', () => {
+  const sessions = Array.from({ length:13 }, (_, index) => ({
+    id:`session-${index}`,
+    date:`2026-08-${String(index + 1).padStart(2, '0')}`,
+    type:'free',
+    exercises:[{ exercise:'Squat', sets:[{ reps:8, weight:50 + index, weightMode:'kg' }] }],
+  }));
+  const { window, document } = loadAppWithReloadSpy({ trainingSessions:sessions });
+  try {
+    click(document, '.nav-button[data-view="progress"]');
+    Object.defineProperties(window.HTMLElement.prototype, {
+      scrollWidth:{ configurable:true, get() { return this.matches?.('.chart-wrap.is-scrollable') ? 1000 : 0; } },
+      clientWidth:{ configurable:true, get() { return this.matches?.('.chart-wrap.is-scrollable') ? 300 : 0; } },
+    });
+    const wrap = document.querySelector('#progress-panel .chart-wrap.is-scrollable');
+    wrap.scrollLeft = 700;
+
+    window.dispatchEvent(new window.CustomEvent('logbook:cloud-data-applied'));
+
+    assert.equal(document.querySelector('#progress-panel .chart-wrap.is-scrollable').scrollLeft, 700);
+  } finally {
+    window.close();
+  }
+});
+
 test('cloud data applied while choosing exercises in a new plan day defers refresh', () => {
   const { window, document, reloads } = loadAppWithReloadSpy();
   document.querySelector('#plan-workout-dialog').showModal();

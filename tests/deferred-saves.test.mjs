@@ -18,6 +18,29 @@ function draftWorkout(app) {
   app.document.querySelector('#log-date').value = '2026-08-03';
 }
 
+test('saving an exercise rebases the edited fields onto a newer cloud copy', async () => {
+  const original = { id:'row', name:'Row', cues:'Cable', aliases:[], updatedAt:'2026-09-01T08:00:00.000Z' };
+  const app = loadApp({ trainingExercises:[original] });
+  try {
+    click(app.document, '[data-edit-exercise="row"]');
+    setValue(app.document, '#library-exercise-name', 'Seated Row', 'input');
+    remote(app, 'trainingExercises', [{
+      ...original,
+      cues:'Chest supported',
+      aliases:['Old Row'],
+      updatedAt:'2999-09-01T08:00:00.000Z',
+    }]);
+
+    submit(app, '#exercise-library-form');
+
+    const saved = JSON.parse(app.localStorage.getItem('trainingExercises'))[0];
+    assert.equal(saved.name, 'Seated Row');
+    assert.equal(saved.cues, 'Chest supported');
+    assert.deepEqual(saved.aliases.sort(), ['Old Row', 'Row']);
+    assert.ok(saved.updatedAt > '2999-09-01T08:00:00.000Z', 'the explicit save remains newer for the next cloud merge');
+  } finally { await tick(); app.window.close(); }
+});
+
 for (const change of ['add', 'edit', 'delete']) {
   test(`saving a workout with a deferred cloud ${change} preserves the latest history`, async () => {
     const app = loadApp({ trainingSessions:[workout('original', '2026-08-01')] });

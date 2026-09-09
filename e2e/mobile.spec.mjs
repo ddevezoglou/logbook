@@ -221,6 +221,42 @@ test('desktop navigation remains available above the mobile breakpoint', async (
   await expectNoHorizontalOverflow(page);
 });
 
+test('mobile cloud refresh keeps history actions open and the progress chart at the latest entry', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('trainingSessions', JSON.stringify(Array.from({ length:13 }, (_, index) => ({
+      id:`mobile-session-${index}`,
+      date:`2026-08-${String(index + 1).padStart(2, '0')}`,
+      type:'free',
+      comments:'',
+      exercises:[{ exercise:'Squat', comments:'', sets:[{ reps:8, weight:50 + index, weightMode:'kg', plates:null }] }],
+    }))));
+  });
+  await installAuthenticatedStub(page);
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="overview"]').click();
+  const selection = page.locator('[data-select-session="mobile-session-12"]');
+  await selection.check();
+  await expect(page.locator('.session-card[data-session-id="mobile-session-12"] .card-selection-actions')).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('logbook:cloud-data-applied')));
+  await expect(page.locator('[data-select-session="mobile-session-12"]')).toBeChecked();
+  await expect(page.locator('.session-card[data-session-id="mobile-session-12"] .card-selection-actions')).toBeVisible();
+
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="progress"]').click();
+  const chart = page.locator('#progress-panel .chart-wrap.is-scrollable');
+  await expect(chart).toBeVisible();
+  await chart.evaluate(element => { element.scrollLeft = element.scrollWidth - element.clientWidth; });
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('logbook:cloud-data-applied')));
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const distanceFromLatest = await page.locator('#progress-panel .chart-wrap.is-scrollable').evaluate(
+    element => element.scrollWidth - element.clientWidth - element.scrollLeft
+  );
+  expect(distanceFromLatest).toBeLessThanOrEqual(2);
+});
+
 test('workout deck keeps compact set lines, dynamic weight fields and completion reachable', async ({ page }) => {
   await installAuthenticatedStub(page, { withWorkout:true });
   await page.goto('/');
