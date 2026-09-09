@@ -44,7 +44,7 @@ test('boots with empty storage without throwing', () => {
   assert.equal(document.querySelector('.nav-button.active').dataset.view, 'home');
   assert.ok(document.querySelector('#daily-quote-text').textContent.length > 20);
   assert.ok(document.querySelector('#plan-list').innerHTML.includes('Δευτέρα'));
-  assert.equal(document.querySelector('.app-version b').textContent, '0.3.2');
+  assert.equal(document.querySelector('.app-version b').textContent, '0.3.3');
   assert.equal(document.querySelector('#home-profile-card'), null);
   assert.equal(document.querySelector('.home-pageno').textContent, 'PAGE 001');
 });

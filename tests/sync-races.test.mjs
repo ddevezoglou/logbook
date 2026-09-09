@@ -81,6 +81,26 @@ async function harness({ guest = false } = {}) {
   };
 }
 
+test('an offline cue edit survives a newer remote timestamp and preserves a remote rename', async () => {
+  const h = await harness();
+  try {
+    const original = { id:'row', name:'Row', cues:'Original', aliases:[], updatedAt:'2026-01-01T00:00:00.000Z' };
+    h.window.localStorage.setItem('trainingExercises', JSON.stringify([original]));
+    await h.sync();
+    const remote = h.rows.get('a');
+    remote.payload.trainingExercises = [{ ...original, name:'Remote Row', updatedAt:'2999-01-01T00:00:00.000Z' }];
+    remote.revision++;
+    h.window.localStorage.setItem('trainingExercises', JSON.stringify([{ ...original, cues:'Local cue', updatedAt:'2026-09-09T12:00:00.000Z' }]));
+    await h.sync();
+    const saved = JSON.parse(h.window.localStorage.getItem('trainingExercises'))[0];
+    assert.equal(saved.cues, 'Local cue');
+    assert.equal(saved.name, 'Remote Row');
+    assert.equal(h.rows.get('a').payload.trainingExercises[0].cues, 'Local cue');
+    await h.sync();
+    assert.equal(JSON.parse(h.window.localStorage.getItem('trainingExercises'))[0].cues, 'Local cue');
+  } finally { h.window.close(); }
+});
+
 for (const operation of ['read', 'update']) {
   test(`sign-out discards a delayed ${operation} response even after guest data is saved`, async () => {
     const h = await harness();

@@ -1,4 +1,8 @@
-const CACHE_VERSION = 'logbook-0.3.2';
+const CACHE_VERSION = 'logbook-0.3.3';
+// The production builder fingerprints every shipped file, including quotes.
+// A content change must install a new shell even if the version was not bumped.
+const BUILD_ID = 'development';
+const CACHE_NAME = `${CACHE_VERSION}-${BUILD_ID}`;
 const OFFLINE_PAGE = new URL('./index.html', self.registration.scope).href;
 const APP_SHELL = [
   './',
@@ -63,14 +67,17 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(
+    APP_SHELL.map(path => new Request(new URL(path, self.registration.scope), { cache:'reload' }))
+  )));
+  // Let open pages finish on their own release. Activation happens after they
+  // close; forcing takeover can mix old modules with the new shell mid-workout.
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key.startsWith('logbook-') && key !== CACHE_VERSION).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => key.startsWith('logbook-') && key !== CACHE_NAME).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -83,24 +90,25 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    // Network-first ανά διαδρομή. Cache-first εδώ σήμαινε ότι κάθε πλοήγηση έπαιρνε
-    // το `index.html` — η `privacy.html` γινόταν απρόσιτη σε κάθε χρήστη με ενεργό
-    // worker. Η απόκριση δικτύου δεν μπαίνει στην cache: το shell ανανεώνεται μόνο
-    // ολόκληρο στο install, ώστε το HTML να μη διαφωνεί ποτέ με το cached JS.
+    // Serve each cached document from the SAME release as its scripts/styles.
+    // A network-first document plus cache-first scripts produces a mixed app.
     event.respondWith(
-      fetch(request).catch(() => caches.match(request, { ignoreSearch:true })
-        .then(cached => cached || caches.match(OFFLINE_PAGE))
-        .then(cached => cached || Response.error()))
+      caches.open(CACHE_NAME).then(async cache => {
+        const cached = await cache.match(request, { ignoreSearch:true });
+        if (cached) return cached;
+        return fetch(request).catch(async () => (await cache.match(OFFLINE_PAGE)) || Response.error());
+      })
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request, { ignoreSearch:true }).then(cached => {
+    caches.open(CACHE_NAME).then(async cache => {
+      const cached = await cache.match(request);
       if (cached) return cached;
       return fetch(request).then(response => {
         if (response.ok && response.type === 'basic') {
-          caches.open(CACHE_VERSION).then(cache => cache.put(request, response.clone()));
+          event.waitUntil(cache.put(request, response.clone()));
         }
         return response;
       });

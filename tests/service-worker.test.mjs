@@ -13,6 +13,8 @@ function createWorkerScope({ online = true } = {}) {
   const listeners = new Map();
   const caches = new Map();
   const networkLog = [];
+  const installRequests = [];
+  let takeovers = 0;
 
   const key = resource => (typeof resource === 'string' ? resource : resource.url);
   const withoutSearch = url => url.split('?')[0];
@@ -23,18 +25,26 @@ function createWorkerScope({ online = true } = {}) {
     return {
       async addAll(paths) {
         for (const path of paths) {
-          const url = new URL(path, SCOPE).href;
+          installRequests.push(path);
+          const url = new URL(key(path), SCOPE).href;
           entries.set(url, { url, from:'cache', ok:true, type:'basic', clone() { return this; } });
         }
       },
       async put(request, response) {
         entries.set(key(request), { ...response, from:'cache' });
       },
+      async match(resource, { ignoreSearch = false } = {}) {
+        const wanted = ignoreSearch ? withoutSearch(key(resource)) : key(resource);
+        for (const [url, response] of entries) {
+          if ((ignoreSearch ? withoutSearch(url) : url) === wanted) return response;
+        }
+      },
     };
   }
 
   const scope = {
     URL,
+    Request,
     Promise,
     console,
     Response:{ error:() => ({ type:'error', from:'network-error' }) },
@@ -62,7 +72,7 @@ function createWorkerScope({ online = true } = {}) {
       location:new URL(SCOPE),
       registration:{ scope:SCOPE },
       clients:{ claim:async () => {} },
-      skipWaiting() {},
+      skipWaiting() { takeovers++; },
       addEventListener(type, listener) { listeners.set(type, listener); },
     },
   };
@@ -86,6 +96,8 @@ function createWorkerScope({ online = true } = {}) {
   return {
     caches,
     networkLog,
+    installRequests,
+    takeovers:() => takeovers,
     install:() => dispatch('install', {}),
     activate:() => dispatch('activate', {}),
     request(path, { mode = 'no-cors', method = 'GET' } = {}) {
@@ -118,14 +130,29 @@ test('the install handler precaches the privacy policy next to the app shell', a
   assert.ok(cached.includes(`${SCOPE}index.html`), 'index.html is precached');
 });
 
-test('online navigation is served from the network so each path renders its own document', async () => {
+test('online navigation serves each document from the installed release, even when the network has a newer one', async () => {
   const worker = await installedWorker();
 
   const response = await worker.navigate('privacy.html');
 
-  assert.equal(response.from, 'network');
+  assert.equal(response.from, 'cache');
   assert.equal(response.url, `${SCOPE}privacy.html`);
-  assert.deepEqual(worker.networkLog, [`${SCOPE}privacy.html`]);
+  assert.deepEqual(worker.networkLog, []);
+});
+
+test('install bypasses stale HTTP cache and waits for open pages to close before upgrading', async () => {
+  const worker = await installedWorker();
+  assert.ok(worker.installRequests.length > 0);
+  assert.ok(worker.installRequests.every(request => request.cache === 'reload'));
+  assert.equal(worker.takeovers(), 0);
+});
+
+test('a waiting release cannot leak files from a previous shell cache', async () => {
+  const worker = createWorkerScope();
+  worker.caches.set('logbook-old', new Map([[`${SCOPE}quotes.js`, { from:'old-quotes' }]]));
+  await worker.install();
+  assert.equal((await worker.fetchAsset('quotes.js')).from, 'cache');
+  assert.equal((await worker.navigate('index.html')).from, 'cache');
 });
 
 test('offline navigation falls back to the cached document of the requested path', async () => {

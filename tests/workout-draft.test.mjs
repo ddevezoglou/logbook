@@ -70,6 +70,18 @@ test('a scheduled workout restores all three exercises, weight modes, date and n
   assert.deepEqual(draft(reopened).cards, saved.cards);
 });
 
+test('a draft keeps the physical weight when the account changes units before reopening', t => {
+  const app = start(t);
+  setValue(app.document, '#free-exercises .exercise-name', 'Press', 'input');
+  setValue(app.document, '#free-exercises .set-reps', '8', 'input');
+  setValue(app.document, '#free-exercises .set-weight', '50', 'input');
+  const reopened = loadApp({ logbookWorkoutDraft:draft(app), userProfile:{ weightUnit:'lbs' } });
+  t.after(() => reopened.window.close());
+  const pounds = Number(reopened.document.querySelector('#free-exercises .set-weight').value);
+  assert.ok(Math.abs(pounds / 2.2046226218 - 50) < 0.01);
+  assert.equal(draft(reopened).weightUnit, 'lbs');
+});
+
 test('notes survive reopening even before any exercise is added', t => {
   const app = loadApp();
   t.after(() => app.window.close());

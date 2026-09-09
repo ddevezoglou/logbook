@@ -1,7 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { VirtualConsole } from 'jsdom';
-import { loadApp, click } from './helpers.mjs';
+import { loadApp, click, setValue } from './helpers.mjs';
+
+test('duplicate sync notifications do not announce conflicts while typing cues', () => {
+  const app = loadApp({ trainingExercises:[{ id:'row', name:'Row', cues:'', aliases:[] }] });
+  try {
+    click(app.document, '[data-edit-exercise="row"]');
+    setValue(app.document, '#library-exercise-notes', 'Keep chest up', 'input');
+    app.window.dispatchEvent(new app.window.CustomEvent('logbook:cloud-data-applied'));
+    assert.equal(app.document.querySelector('#library-exercise-notes').value, 'Keep chest up');
+    assert.ok(!app.document.querySelector('#toast').textContent.includes('άλλη συσκευή'));
+  } finally { app.window.close(); }
+});
+
+test('a profile-only cloud update preserves the actual history controls and chart scroller', () => {
+  const sessions = Array.from({ length:13 }, (_, i) => ({ id:`s${i}`, type:'free', date:`2026-08-${String(i + 1).padStart(2, '0')}`, exercises:[{ exercise:'Row', sets:[{ reps:8, weight:50 + i }] }] }));
+  const app = loadApp({ trainingSessions:sessions });
+  try {
+    click(app.document, '.nav-button[data-view="progress"]');
+    const chart = app.document.querySelector('.chart-wrap.is-scrollable');
+    const checkbox = app.document.querySelector('[data-select-session]');
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new app.window.Event('change', { bubbles:true }));
+    app.localStorage.setItem('userProfile', JSON.stringify({ name:'Updated name', weightUnit:'kg' }));
+    app.window.dispatchEvent(new app.window.CustomEvent('logbook:cloud-data-applied'));
+    assert.equal(app.document.querySelector('.chart-wrap.is-scrollable'), chart);
+    assert.equal(app.document.querySelector('[data-select-session]'), checkbox);
+    assert.equal(checkbox.checked, true);
+  } finally { app.window.close(); }
+});
 
 // Cloud changes refresh the current page without replaying authentication;
 // unfinished forms defer the refresh until safe navigation.

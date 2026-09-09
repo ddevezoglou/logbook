@@ -33,9 +33,12 @@
     }
 
     const serviceWorkerUrl = new URL('./service-worker.js', document.baseURI);
-    navigator.serviceWorker.register(serviceWorkerUrl, { scope:'./' })
+    navigator.serviceWorker.register(serviceWorkerUrl, { scope:'./', updateViaCache:'none' })
       .then(registration => {
         window.addEventListener('online', () => registration.update(), { passive:true });
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') registration.update().catch(() => {});
+        });
       })
       .catch(error => {
         console.warn('Logbook service worker registration failed.', error);

@@ -16,11 +16,18 @@ const WORKOUT_DRAFT_VERSION = 1;
 const workoutDraftPageOwner = workoutDraftOwner();
 let workoutDraftWritable = true;
 let renderedScheduledSessionKey = null;
+let renderedHistoryMarkup = null;
+let renderedProgressMarkup = null;
 let exerciseMigrationReady = true;
 
 // Refresh cloud data in place. Rebooting the page flashes the auth gate and
 // discards navigation state; unfinished forms still defer the refresh.
 let pendingCloudRefresh = false;
+function cloudViewSnapshot() {
+  return JSON.stringify(['routineRewardTracking', 'homeProfileCardPosition', 'homeRoutineCardPosition']
+    .map(key => localStorage.getItem(key)));
+}
+let cloudViewBaseline = cloudViewSnapshot();
 function hasUnsavedSession() {
   if (state.editingSessionId || state.copyingSessionId) return true;
   if ($('#session-comments').value.trim()) return true;
@@ -35,6 +42,11 @@ function hasUnsavedWork() {
   return $('#profile-form').dataset.dirty === 'true';
 }
 window.addEventListener('logbook:cloud-data-applied', () => {
+  // Sync acknowledgements and duplicate notifications are not remote edits.
+  if (![...storageBaselines].some(([key, baseline]) => !window.LogbookDataReconciliation.equal(
+    baseline, store.read(key, { type:key === 'userProfile' ? 'object' : 'array', fallback:key === 'userProfile' ? null : [] })
+  )) && cloudViewBaseline === cloudViewSnapshot()
+    && (localStorage.getItem('logbookLanguage') || 'el') === window.LogbookI18n?.getLanguage()) return;
   if (hasUnsavedWork()) {
     pendingCloudRefresh = true;
     toast('Ήρθαν αλλαγές από άλλη συσκευή. Θα εφαρμοστούν μόλις αποθηκεύσετε.');
@@ -187,6 +199,7 @@ const { state, repairs } = StorageMigrations.migrateLocalData({
 });
 const storageBaselines = new Map();
 function captureStorageBaselines() {
+  cloudViewBaseline = cloudViewSnapshot();
   for (const key of ['trainingSessions', 'trainingRoutines', 'trainingExercises', 'userProfile']) {
     storageBaselines.set(key, store.read(key, { type:key === 'userProfile' ? 'object' : 'array', fallback:key === 'userProfile' ? null : [] }));
   }
@@ -794,6 +807,7 @@ function collectWorkoutDraft() {
     owner:workoutDraftPageOwner,
     savedAt:new Date().toISOString(),
     mode:state.mode,
+    weightUnit:weightUnit(),
     date:$('#log-date').value,
     selectedPlanDay:state.selectedPlanDay,
     editingSessionId:state.editingSessionId,
@@ -886,7 +900,15 @@ function restoreWorkoutDraft() {
   setMode(draft.mode);
 
   const container = draft.mode === 'scheduled' ? $('#scheduled-session') : $('#free-exercises');
-  const cards = draft.cards.filter(card => Array.isArray(card.sets) && card.sets.length);
+  const cards = draft.cards.filter(card => card && Array.isArray(card.sets) && card.sets.length).map(card => ({
+    ...card,
+    sets:card.sets.map(set => ({
+      ...set,
+      weight:set.weight !== '' && draft.weightUnit && draft.weightUnit !== weightUnit()
+        ? String(storedWeightToDisplay(inputWeightToStored(set.weight, draft.weightUnit)))
+        : set.weight,
+    })),
+  }));
   const cardsMarkup = cards.map(draftCardMarkup).join('');
   if (draft.mode === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
@@ -1370,7 +1392,7 @@ function renderOverview() {
   const visibleSessions = state.sessions.slice(0, state.historyVisibleCount);
   $('#history-session-count').textContent = state.sessions.length;
   $('#history-counter').classList.toggle('hidden', !state.sessions.length);
-  $('#session-cards').innerHTML = HistoryView.buildHistoryMarkup({
+  const markup = HistoryView.buildHistoryMarkup({
     sessions:visibleSessions,
     totalCount:state.sessions.length,
     pageSize,
@@ -1378,6 +1400,10 @@ function renderOverview() {
     getDayLabel:dayForDate,
     formatDate,
   });
+  if (markup !== renderedHistoryMarkup) {
+    $('#session-cards').innerHTML = markup;
+    renderedHistoryMarkup = markup;
+  }
   $$('[data-select-session]').forEach(input => {
     const selected = selectedHistorySessionIds.has(String(input.dataset.selectSession));
     input.checked = selected;
@@ -1455,7 +1481,7 @@ function captureProgressChartScroll() {
 function renderProgressChart(previousScroll = null) {
   const panel = $('#progress-panel');
   const workout = progressWorkouts().find(item => item.key === $('#progress-workout').value);
-  panel.innerHTML = ProgressChart.buildProgressChartMarkup({
+  const markup = ProgressChart.buildProgressChartMarkup({
     workout,
     exerciseKey:$('#progress-exercise').value,
     setIndex:Number($('#progress-set').value),
@@ -1465,6 +1491,9 @@ function renderProgressChart(previousScroll = null) {
     locale:window.LogbookI18n?.getLocale() || 'el-GR',
     formatDate,
   });
+  if (markup === renderedProgressMarkup) return;
+  panel.innerHTML = markup;
+  renderedProgressMarkup = markup;
   // Όταν το γράφημα κυλάει, ανοίγει στην τελευταία προπόνηση — εκεί που κοιτάς.
   const wrap = panel.querySelector('.chart-wrap.is-scrollable');
   if (!wrap) return;
@@ -1479,7 +1508,10 @@ function renderProgressChart(previousScroll = null) {
       : max;
   };
   position();
-  requestAnimationFrame(position);
+  const initialLeft = wrap.scrollLeft;
+  requestAnimationFrame(() => {
+    if (wrap.isConnected && wrap.scrollLeft === initialLeft) position();
+  });
 }
 
 function toast(message, kind = 'recorded') { const el = $('#toast'); el.textContent = message; el.classList.toggle('toast-error', kind === 'error'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }

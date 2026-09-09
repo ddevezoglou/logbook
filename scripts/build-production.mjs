@@ -1,4 +1,5 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { dirname, extname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { transform } from 'esbuild';
@@ -72,12 +73,36 @@ async function writeAsset(path, output) {
   await writeFile(outputPath, result.code, 'utf8');
 }
 
+export async function fingerprintDirectory(output) {
+  const digest = createHash('sha256');
+  async function fingerprint(directory) {
+    const entries = await readdir(directory, { withFileTypes:true });
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) await fingerprint(path);
+      else {
+        digest.update(relative(output, path).split(sep).join('/'));
+        digest.update('\0');
+        digest.update(await readFile(path));
+        digest.update('\0');
+      }
+    }
+  }
+  await fingerprint(output);
+  return digest.digest('hex').slice(0, 20);
+}
+
 export async function buildProduction(outputValue = '_site') {
   const output = safeOutputPath(outputValue);
   await rm(output, { recursive:true, force:true });
   await mkdir(output, { recursive:true });
   await Promise.all([...ROOT_FILES, ...MODULE_FILES].map(path => writeAsset(path, output)));
   await cp(resolve(projectRoot, 'assets'), resolve(output, 'assets'), { recursive:true });
+  const buildId = await fingerprintDirectory(output);
+  const workerSource = (await readFile(resolve(projectRoot, 'service-worker.js'), 'utf8'))
+    .replace("const BUILD_ID = 'development';", `const BUILD_ID = '${buildId}';`);
+  const worker = await transform(workerSource, { loader:'js', minify:true, target:'es2020', legalComments:'inline' });
+  await writeFile(resolve(output, 'service-worker.js'), worker.code, 'utf8');
   await writeFile(resolve(output, '.nojekyll'), '', 'utf8');
   return { output, files:[...ROOT_FILES, ...MODULE_FILES] };
 }

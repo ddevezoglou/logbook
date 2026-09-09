@@ -464,6 +464,25 @@
     const localHash = payloadHash(local);
     let remote = await fetchRemote(id, context);
 
+    // A cue entered offline is an explicit edit, even if another device's clock
+    // is ahead. Rebase against the last acknowledged snapshot BEFORE the
+    // timestamp-based library recovery below can discard that edit.
+    if (remote && !switchingUser && !guestImportPending && meta && cached
+      && payloadHash(cached) === meta.hash && meta.hash !== localHash) {
+      const base = normalizePayload(cached).trainingExercises;
+      const remoteLibrary = normalizePayload(remote.payload).trainingExercises;
+      const editedIds = new Set(local.trainingExercises.filter(item =>
+        !window.LogbookDataReconciliation.equal(base.find(before => before.id === item.id), item)
+      ).map(item => item.id));
+      const library = window.LogbookDataReconciliation.rebase(base, local.trainingExercises, remoteLibrary);
+      local = { ...local, trainingExercises:library.map(item => {
+        const other = remoteLibrary.find(entry => entry.id === item.id);
+        if (!editedIds.has(item.id) || !other || window.LogbookDataReconciliation.equal(item, other)) return item;
+        const timestamps = [Date.now(), Date.parse(item.updatedAt), Date.parse(other.updatedAt)].filter(Number.isFinite);
+        return { ...item, updatedAt:new Date(Math.min(8.64e15, Math.max(...timestamps) + 1)).toISOString() };
+      }) };
+    }
+
     if (guestImportPending) {
       const nextPayload = remote ? mergePayloads(remote.payload, local) : local;
       remote = await saveWithConflictRetry(id, nextPayload, remote, context);
