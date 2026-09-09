@@ -3,6 +3,82 @@ import assert from 'node:assert/strict';
 import { VirtualConsole } from 'jsdom';
 import { loadApp, click, setValue } from './helpers.mjs';
 
+function loadInteractionApp(seed) {
+  const observers = [];
+  const app = loadApp(seed, { beforeApp(window) {
+    const Observer = window.MutationObserver;
+    window.MutationObserver = class extends Observer {
+      constructor(callback) { super(callback); observers.push(this); }
+    };
+  } });
+  return { ...app, dispose() {
+    // Deck observers can queue DOM writes while jsdom tears the document down.
+    observers.forEach(observer => observer.disconnect());
+    app.window.close();
+  } };
+}
+
+test('a cloud response during a history tap does not detach the checkbox before change', async () => {
+  const app = loadInteractionApp({ trainingSessions:[{ id:'tap', date:'2026-09-01', type:'free', exercises:[] }] });
+  try {
+    click(app.document, '.nav-button[data-view="overview"]');
+    const checkbox = app.document.querySelector('[data-select-session="tap"]');
+    checkbox.dispatchEvent(new app.window.Event('pointerdown', { bubbles:true }));
+    checkbox.addEventListener('input', () => {
+      const sessions = JSON.parse(app.localStorage.getItem('trainingSessions'));
+      sessions[0].comments = 'Remote comment';
+      app.localStorage.setItem('trainingSessions', JSON.stringify(sessions));
+      app.window.dispatchEvent(new app.window.CustomEvent('logbook:cloud-data-applied'));
+    }, { once:true });
+    checkbox.click();
+    assert.equal(app.document.querySelector('[data-select-session="tap"]'), checkbox);
+    assert.equal(checkbox.checked, true);
+    assert.ok(checkbox.closest('.session-card').classList.contains('session-selected'));
+    click(app.document, '.nav-button[data-view="home"]');
+    click(app.document, '.nav-button[data-view="overview"]');
+    assert.equal(app.document.querySelector('[data-select-session="tap"]').checked, true);
+    assert.match(app.document.querySelector('#session-cards').textContent, /Remote comment/);
+  } finally { app.dispose(); }
+});
+
+test('a cloud response does not replace a chart during or after its swipe', async () => {
+  const sessions = Array.from({ length:13 }, (_, i) => ({ id:`swipe-${i}`, date:`2026-08-${String(i + 1).padStart(2, '0')}`, type:'free', exercises:[{ exercise:'Row', sets:[{ reps:8, weight:50 + i }] }] }));
+  const app = loadInteractionApp({ trainingSessions:sessions });
+  try {
+    click(app.document, '.nav-button[data-view="progress"]');
+    const chart = app.document.querySelector('.chart-wrap');
+    chart.dispatchEvent(new app.window.Event('pointerdown', { bubbles:true }));
+    chart.dispatchEvent(new app.window.Event('pointercancel', { bubbles:true }));
+    const latest = JSON.parse(app.localStorage.getItem('trainingSessions'));
+    latest[0].exercises[0].sets[0].weight = 120;
+    app.localStorage.setItem('trainingSessions', JSON.stringify(latest));
+    app.window.dispatchEvent(new app.window.CustomEvent('logbook:cloud-data-applied'));
+    assert.equal(app.document.querySelector('.chart-wrap'), chart, 'native scrolling continues after pointercancel');
+    click(app.document, '.nav-button[data-view="home"]');
+    click(app.document, '.nav-button[data-view="progress"]');
+    assert.notEqual(app.document.querySelector('.chart-wrap'), chart, 'navigation applies the queued snapshot');
+  } finally { app.dispose(); }
+});
+
+test('a pending cloud response cannot reset a cue field between focus and first input', async () => {
+  const app = loadInteractionApp({ trainingExercises:[{ id:'row', name:'Row', cues:'Original', aliases:[] }] });
+  try {
+    click(app.document, '.nav-button[data-view="plan"]');
+    click(app.document, '[data-edit-exercise="row"]');
+    const field = app.document.querySelector('#library-exercise-notes');
+    field.dispatchEvent(new app.window.Event('pointerdown', { bubbles:true }));
+    const latest = JSON.parse(app.localStorage.getItem('trainingExercises'));
+    latest[0].cues = 'Remote cue';
+    app.localStorage.setItem('trainingExercises', JSON.stringify(latest));
+    app.window.dispatchEvent(new app.window.CustomEvent('logbook:cloud-data-applied'));
+    assert.equal(field.value, 'Original');
+    setValue(app.document, '#library-exercise-notes', 'My cue', 'input');
+    app.document.querySelector('#exercise-library-form').dispatchEvent(new app.window.Event('submit', { bubbles:true, cancelable:true }));
+    assert.equal(JSON.parse(app.localStorage.getItem('trainingExercises'))[0].cues, 'My cue');
+    assert.ok(!app.document.querySelector('#toast').textContent.includes('άλλη συσκευή'));
+  } finally { app.dispose(); }
+});
+
 test('duplicate sync notifications do not announce conflicts while typing cues', () => {
   const app = loadApp({ trainingExercises:[{ id:'row', name:'Row', cues:'', aliases:[] }] });
   try {
@@ -150,8 +226,7 @@ test('cloud data applied with unsaved work defers refresh and applies it on safe
   assert.equal(document.querySelector('#session-comments').value, 'Μισογραμμένη προπόνηση');
   assert.equal(document.querySelector('#profile-name').value, '');
   const toast = document.querySelector('#toast');
-  assert.ok(toast.classList.contains('show'));
-  assert.equal(toast.textContent, 'Ήρθαν αλλαγές από άλλη συσκευή. Θα εφαρμοστούν μόλις αποθηκεύσετε.');
+  assert.ok(!toast.classList.contains('show'), 'an ordinary background update is not a save conflict');
 
   // Discarding the draft allows a refresh and the requested navigation together.
   document.querySelector('#session-comments').value = '';
@@ -213,6 +288,10 @@ test('cloud refresh keeps the selected scheduled exercise, including after plan 
     localStorage.setItem('trainingRoutines', JSON.stringify(routines));
     window.dispatchEvent(new window.CustomEvent('logbook:cloud-data-applied'));
     assert.equal(activeCard().dataset.planExerciseId, 'p2');
+    assert.equal(document.querySelector('#scheduled-session .deck-stamp').textContent, 'ΑΣΚΗΣΗ 02 / 03');
+    assert.equal(document.activeElement, weightInput, 'the focused workout stays stable until navigation');
+    click(document, '.nav-button[data-view="home"]');
+    click(document, '.nav-button[data-view="log"]');
     assert.equal(document.querySelector('#scheduled-session .deck-stamp').textContent, 'ΑΣΚΗΣΗ 03 / 03');
 
     routines[0].plan = routines[0].plan.filter(item => item.id !== 'p2');

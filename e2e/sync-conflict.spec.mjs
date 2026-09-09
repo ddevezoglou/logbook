@@ -50,6 +50,81 @@ async function installSharedCloud(page, transact) {
   }, session);
 }
 
+test('cloud responses during interaction preserve history, chart and a saved cue', async ({ page }) => {
+  test.setTimeout(60_000);
+  let remote = { user_id:session.user.id, revision:1, payload:{
+    trainingExercises:[{ id:'row', name:'Row', cues:'Original', aliases:[], updatedAt:'2026-01-01T00:00:00.000Z' }],
+    trainingRoutines:[],
+    trainingSessions:Array.from({ length:13 }, (_, i) => ({ id:`race-${i}`, date:`2026-08-${String(i + 1).padStart(2, '0')}`, type:'free', comments:'', exercises:[{ exerciseId:'row', exercise:'Row', sets:[{ reps:8, weight:50 + i, weightMode:'kg' }] }] })),
+    logbookLanguage:'el',
+  } };
+  await installSharedCloud(page, async ({ operation, values, filters }) => {
+    if (operation === 'select') return { data:clone(remote), error:null };
+    if (operation === 'insert') return { data:null, error:{ code:'23505' } };
+    if (Number(filters.revision) !== remote.revision) return { data:null, error:null };
+    remote = { ...remote, revision:remote.revision + 1, payload:clone(values.payload) };
+    return { data:clone(remote), error:null };
+  });
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/app-ready/);
+  await page.addStyleTag({ url:'/e2e/fixtures/no-animations.css' });
+  await requestSync(page);
+  const navigate = async view => {
+    await page.locator('#open-menu').click();
+    await page.locator(`#side-menu [data-view="${view}"]`).click();
+    await expect(page.locator(`#${view}-view`)).toHaveClass(/active/);
+  };
+  const applyRemote = async change => {
+    change(remote.payload);
+    remote.revision++;
+    await page.evaluate(() => {
+      window.syncInteractionApplied = false;
+      window.addEventListener('logbook:cloud-data-applied', () => { window.syncInteractionApplied = true; }, { once:true });
+    });
+    await requestSync(page);
+    await page.waitForFunction(() => window.syncInteractionApplied);
+  };
+
+  await navigate('overview');
+  const selection = page.locator('[data-select-session="race-12"]');
+  await selection.scrollIntoViewIfNeeded();
+  await selection.evaluate(element => { window.interactionControl = element; });
+  const bounds = await selection.boundingBox();
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await applyRemote(payload => { payload.trainingSessions.find(item => item.id === 'race-12').comments = 'Remote comment'; });
+  await expect(selection).toHaveJSProperty('isConnected', true);
+  expect(await selection.evaluate(element => element === window.interactionControl)).toBe(true);
+  await page.mouse.up();
+  await expect(selection).toBeChecked();
+
+  await navigate('progress');
+  const chart = page.locator('.chart-wrap.is-scrollable');
+  await expect(chart).toBeVisible();
+  await chart.evaluate(element => { window.interactionChart = element; element.scrollLeft = 100; });
+  // pointercancel is how the browser hands the gesture over to native scrolling.
+  await chart.dispatchEvent('pointerdown', { pointerType:'touch', pointerId:1 });
+  await chart.dispatchEvent('pointercancel', { pointerType:'touch', pointerId:1 });
+  await applyRemote(payload => { payload.trainingSessions[0].exercises[0].sets[0].weight = 125; });
+  expect(await chart.evaluate(element => element === window.interactionChart && element.scrollLeft === 100)).toBe(true);
+
+  await navigate('plan');
+  await page.locator('[aria-controls="exercise-library-body"]').click();
+  await page.locator('[data-edit-exercise="row"]').click();
+  const cue = page.locator('#library-exercise-notes');
+  await cue.focus();
+  await applyRemote(payload => { payload.trainingExercises[0].cues = 'Remote cue'; payload.trainingExercises[0].updatedAt = '2026-09-01T00:00:00.000Z'; });
+  await expect(cue).toHaveValue('Original');
+  await cue.fill('My saved cue');
+  await page.locator('#exercise-library-form [type="submit"]').click();
+  await requestSync(page);
+  expect(remote.payload.trainingExercises.find(item => item.id === 'row').cues).toBe('My saved cue');
+  await navigate('overview');
+  await expect(page.locator('[data-select-session="race-12"]')).toBeChecked();
+  await expect(page.locator('[data-session-id="race-12"] .card-comment')).toHaveText('Remote comment');
+  await expect(page.locator('#toast')).not.toContainText('άλλη συσκευή');
+});
+
 for (const timing of ['deferred form', 'in-flight request']) {
   test(`saving a workout preserves cloud changes during ${timing}`, async ({ page }) => {
     let remote = { user_id:session.user.id, revision:1, payload:{
@@ -88,7 +163,8 @@ for (const timing of ['deferred form', 'in-flight request']) {
     remote.revision++;
     if (timing === 'deferred form') {
       await requestSync(page);
-      await expect(page.locator('#toast')).toContainText('Ήρθαν αλλαγές');
+      await expect(page.locator('#free-exercises .exercise-name').first()).toHaveValue('Local squat');
+      await expect(page.locator('#toast')).not.toContainText('Ήρθαν αλλαγές');
     } else {
       holdRead = true;
       await page.evaluate(() => { window.pendingRaceSync = window.LogbookCloudSync.sync(); });

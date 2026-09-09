@@ -23,6 +23,17 @@ let exerciseMigrationReady = true;
 // Refresh cloud data in place. Rebooting the page flashes the auth gate and
 // discards navigation state; unfinished forms still defer the refresh.
 let pendingCloudRefresh = false;
+let cloudInteractionView = null;
+// A network response must not replace controls between pointerdown, native
+// activation and change, or while native scrolling continues after pointercancel.
+// Keep this screen stable until navigation; storage still receives cloud data
+// and safeStoreWrite rebases explicit saves against that latest snapshot.
+for (const type of ['pointerdown', 'focusin', 'beforeinput', 'wheel']) {
+  document.addEventListener(type, event => {
+    const view = event.target.closest?.('.view.active');
+    if (view) cloudInteractionView = view;
+  }, { capture:true, passive:true });
+}
 function cloudViewSnapshot() {
   return JSON.stringify(['routineRewardTracking', 'homeProfileCardPosition', 'homeRoutineCardPosition']
     .map(key => localStorage.getItem(key)));
@@ -47,9 +58,8 @@ window.addEventListener('logbook:cloud-data-applied', () => {
     baseline, store.read(key, { type:key === 'userProfile' ? 'object' : 'array', fallback:key === 'userProfile' ? null : [] })
   )) && cloudViewBaseline === cloudViewSnapshot()
     && (localStorage.getItem('logbookLanguage') || 'el') === window.LogbookI18n?.getLanguage()) return;
-  if (hasUnsavedWork()) {
+  if (hasUnsavedWork() || cloudInteractionView?.classList.contains('active')) {
     pendingCloudRefresh = true;
-    toast('Ήρθαν αλλαγές από άλλη συσκευή. Θα εφαρμοστούν μόλις αποθηκεύσετε.');
     return;
   }
   refreshCloudData();
@@ -1996,10 +2006,13 @@ function loadSessionForCopy(sessionId) {
 }
 
 function showView(view, { skipSessionWarning = false } = {}) {
-  if (pendingCloudRefresh && !hasUnsavedWork()) refreshCloudData();
   const current = $('.view.active')?.id.replace('-view','');
   const labels = { home:'Αρχική', log:'Καταγραφή', plan:'Πρόγραμμα', overview:'Ιστορικό', progress:'Επίβλεψη', profile:'Προφίλ' };
   if (!labels[view]) return;
+  if (view !== current) {
+    cloudInteractionView = null;
+    if (pendingCloudRefresh && !hasUnsavedWork()) refreshCloudData();
+  }
   closeMenu();
   if (!skipSessionWarning && current === 'log' && view !== 'log' && hasUnsavedSession()) {
     askToChoose(
