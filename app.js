@@ -97,7 +97,7 @@ function refreshCloudData() {
   persistMigrationRepairs(migrated.repairs);
   renderExerciseLibrary(editingExerciseId);
   if (editingExerciseId && !exerciseFormWasDirty) {
-    const exercise = state.exercises.find(item => String(item.id) === String(editingExerciseId));
+    const exercise = ExerciseModel.liveExercises(state.exercises).find(item => String(item.id) === String(editingExerciseId));
     if (exercise) loadExerciseLibraryForm(exercise);
     else resetExerciseLibraryForm();
   }
@@ -141,6 +141,11 @@ function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η �
       return false;
     }
   }
+  // A stale plan editor or a concurrent routine merge cannot restore a
+  // reference whose exercise has already been deleted on this device.
+  if (key === 'trainingRoutines') reconciled = ExerciseModel.removeDeletedPlanExercises(
+    reconciled, store.read('trainingExercises', { type:'array', fallback:[] })
+  );
   const saved = StorageMigrations.writeSafely(store, key, reconciled, () => {
     const notification = document.querySelector('#toast');
     if (notification) {
@@ -454,24 +459,26 @@ function readPlanExerciseCards() {
 
 const currentExerciseName = entry => ExerciseModel.exerciseName(entry, state.exercises);
 const currentExerciseCues = entry => ExerciseModel.exerciseCues(entry, state.exercises);
+const availableExercises = () => ExerciseModel.liveExercises(state.exercises);
+const isRemovedExercise = entry => state.exercises.some(item => item.id === entry.exerciseId && ExerciseModel.isDeletedExercise(item));
 function exerciseOptionLabel(entry) {
-  const homonyms = state.exercises.filter(item => item.name === entry.name);
+  const homonyms = availableExercises().filter(item => item.name === entry.name);
   return homonyms.length > 1 ? `${entry.name} (${homonyms.indexOf(entry) + 1})${entry.cues ? ` · ${entry.cues}` : ''}` : entry.name;
 }
 function libraryOptions(selectedId = '') {
-  return '<option value="">Επιλογή άσκησης</option>' + state.exercises.map(entry => `<option data-i18n-user value="${esc(entry.id)}" ${entry.id === selectedId ? 'selected' : ''}>${esc(exerciseOptionLabel(entry))}</option>`).join('');
+  return '<option value="">Επιλογή άσκησης</option>' + availableExercises().map(entry => `<option data-i18n-user value="${esc(entry.id)}" ${entry.id === selectedId ? 'selected' : ''}>${esc(exerciseOptionLabel(entry))}</option>`).join('');
 }
 function renderExerciseLibrary(centerExerciseId = null) {
   const list = $('#exercise-library-list');
   const centeredId = centerExerciseId || list.querySelector('[data-carousel-position="0"] [data-edit-exercise]')?.dataset.editExercise;
-  const entries = [...state.exercises].sort((a, b) => a.name.localeCompare(b.name, 'el'));
-  list.innerHTML = entries.map(entry => `<li class="exercise-card"><button type="button" class="exercise-index-row" data-edit-exercise="${esc(entry.id)}"><strong data-i18n-user>${esc(entry.name)}</strong><span class="exercise-card-cues"><b>Cues:</b> <span data-i18n-user>${entry.cues ? esc(entry.cues) : '—'}</span></span></button></li>`).join('');
+  const entries = availableExercises().sort((a, b) => a.name.localeCompare(b.name, 'el'));
+  list.innerHTML = entries.map(entry => `<li class="exercise-card"><div class="exercise-index-row"><strong data-i18n-user>${esc(entry.name)}</strong><span class="exercise-card-cues"><b>Cues:</b> <span data-i18n-user>${entry.cues ? esc(entry.cues) : '—'}</span></span></div><div class="routine-actions exercise-card-actions"><button type="button" class="routine-rename" data-edit-exercise="${esc(entry.id)}" aria-label="Επεξεργασία άσκησης" title="Επεξεργασία άσκησης">✎</button><button type="button" class="routine-delete" data-delete-library-exercise="${esc(entry.id)}" aria-label="Διαγραφή άσκησης" title="Διαγραφή άσκησης">×</button></div></li>`).join('');
   $('#exercise-carousel').hidden = !entries.length;
   exerciseCardResizeObserver?.disconnect();
   list.querySelectorAll('.exercise-card').forEach(card => exerciseCardResizeObserver?.observe(card));
   updateExerciseCarousel(Math.max(0, entries.findIndex(entry => entry.id === centeredId)));
-  $('#exercise-library-count').textContent = String(state.exercises.length).padStart(2, '0');
-  $('#exercise-library-status').textContent = state.exercises.length ? '' : 'Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.';
+  $('#exercise-library-count').textContent = String(entries.length).padStart(2, '0');
+  $('#exercise-library-status').textContent = entries.length ? '' : 'Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.';
   window.LogbookI18n?.translate($('#plan-view'));
 }
 function measureExerciseCarousel() {
@@ -488,7 +495,7 @@ function updateExerciseCarousel(nextIndex = exerciseCarouselIndex) {
     if (offset < -cards.length / 2) offset += cards.length;
     card.dataset.carouselPosition = Math.abs(offset) <= 2 ? String(offset) : 'hidden';
     card.setAttribute('aria-hidden', String(offset !== 0));
-    card.querySelector('button').tabIndex = offset === 0 ? 0 : -1;
+    card.querySelectorAll('button').forEach(button => { button.tabIndex = offset === 0 ? 0 : -1; });
   });
   $('#exercise-carousel-count').textContent = `${String(cards.length ? exerciseCarouselIndex + 1 : 0).padStart(2, '0')} / ${String(cards.length).padStart(2, '0')}`;
   $$('[data-exercise-scroll]').forEach(button => { button.disabled = cards.length < 2; });
@@ -547,8 +554,8 @@ $$('.plan-section-toggle').forEach(button => button.addEventListener('click', ()
   if (expanded) { updateRoutineCarousel(); updateExerciseCarousel(); }
 }));
 $('#exercise-library-list').addEventListener('click', event => {
-  const button = event.target.closest('[data-edit-exercise]');
-  const entry = state.exercises.find(item => item.id === button?.dataset.editExercise);
+  const button = event.target.closest('[data-edit-exercise], [data-delete-library-exercise]');
+  const entry = availableExercises().find(item => item.id === (button?.dataset.editExercise || button?.dataset.deleteLibraryExercise));
   if (!entry) return;
   if (exerciseSwipeFinished) { exerciseSwipeFinished = false; return; }
   const card = button.closest('.exercise-card');
@@ -556,7 +563,22 @@ $('#exercise-library-list').addEventListener('click', event => {
     updateExerciseCarousel([...card.parentElement.children].indexOf(card));
     return;
   }
-  loadExerciseLibraryForm(entry, { focus:true });
+  if (button.dataset.deleteLibraryExercise) {
+    askToConfirm('Διαγραφή άσκησης', window.LogbookI18n.tId('library.delete-warning', { name:entry.name }), () => {
+      const deletedAt = nextExerciseUpdatedAt(entry.id);
+      // The tombstone is the authoritative write. Startup/cloud migration also
+      // removes plan references, even if the following routine write fails.
+      if (!persistExerciseLibrary(state.exercises.map(item => item.id === entry.id ? { id:item.id, deletedAt } : item))) return;
+      const routines = ExerciseModel.removeDeletedPlanExercises(state.routines, state.exercises);
+      const saved = persistRoutines(routines);
+      state.routines = ExerciseModel.removeDeletedPlanExercises(routines, state.exercises);
+      if ($('#exercise-library-form').dataset.editingId === entry.id) resetExerciseLibraryForm();
+      renderExerciseLibrary(); renderPlanExercises(); refreshDayOptions(); renderRoutines(); renderPlan(); renderProgressSelectors(); renderHome();
+      if (!hasUnsavedSession()) renderScheduledSession();
+      if (saved) $('#exercise-library-status').textContent = window.LogbookI18n.tId('library.deleted');
+      ($('#exercise-library-list [data-carousel-position="0"] [data-edit-exercise]') || $('#library-exercise-name')).focus();
+    });
+  } else loadExerciseLibraryForm(entry, { focus:true });
 });
 $('#exercise-library-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -590,7 +612,7 @@ function renderPlanExercises() {
   const requestedCount = Math.trunc(Number(countInput.value));
   if (!Number.isFinite(requestedCount)) return;
   const count = Math.max(1, Math.min(15, requestedCount));
-  $('#plan-exercises-container').innerHTML = (state.exercises.length ? '' : '<p>Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.</p><button class="mini-button" type="button" data-open-exercise-library>1. Οι ασκήσεις μου</button>') + Array.from({ length:count }, (_, i) => `<article class="plan-exercise-fields" data-plan-id="${esc(planExerciseDrafts[i]?.id || id())}">
+  $('#plan-exercises-container').innerHTML = (availableExercises().length ? '' : '<p>Προσθέστε την πρώτη άσκηση στη βιβλιοθήκη.</p><button class="mini-button" type="button" data-open-exercise-library>1. Οι ασκήσεις μου</button>') + Array.from({ length:count }, (_, i) => `<article class="plan-exercise-fields" data-plan-id="${esc(planExerciseDrafts[i]?.id || id())}">
     <span class="builder-number">${String(i + 1).padStart(2,'0')}</span>
     <label>Άσκηση<select class="builder-name" required>${libraryOptions(planExerciseDrafts[i]?.exerciseId)}</select></label>
     <label>Εργάσιμα σετ<input class="builder-sets" type="number" min="1" max="20" value="${esc(planExerciseDrafts[i]?.workSets || 3)}" required></label>
@@ -769,7 +791,7 @@ function duplicateRoutine(routineId) {
 
 function exerciseCard(exercise, free = false, exerciseIndex = 0, { custom = false } = {}) {
   return SessionTemplates.exerciseCard(exercise, {
-    library:state.exercises.map(entry => ({ ...entry, label:exerciseOptionLabel(entry) })),
+    library:availableExercises().map(entry => ({ ...entry, label:exerciseOptionLabel(entry) })),
     free,
     exerciseIndex,
     custom,
@@ -1425,6 +1447,7 @@ function renderOverview() {
 function renderPersonalBests() {
   const bests = new Map();
   state.sessions.forEach(session => session.exercises.forEach(ex => ex.sets.forEach(set => {
+    if (isRemovedExercise(ex)) return;
     const mode = set.weightMode || 'kg';
     if (!(Number(set.reps) > 0)) return;
     const hasValidLoad = mode === 'bodyweight' || (['kg','bodyweight_extra'].includes(mode) && Number(set.weight) > 0) || (mode === 'plates' && Number(set.plates) > 0) || (mode === 'mixed' && (Number(set.plates) > 0 || Number(set.weight) > 0));
@@ -1458,6 +1481,7 @@ function renderProgressSelectors({ chartScroll = null } = {}) {
   if (workouts.some(item => item.key === previousWorkout)) workoutSelect.value = previousWorkout;
   const selected = workouts.find(item => item.key === workoutSelect.value), exercises = new Map();
   const addExercise = exercise => {
+    if (isRemovedExercise(exercise)) return;
     const key = ExerciseModel.exerciseKey(exercise), definition = state.exercises.find(item => item.id === exercise.exerciseId);
     if (!exercises.has(key)) exercises.set(key, definition ? exerciseOptionLabel(definition) : exercise.exercise);
   };
@@ -2412,7 +2436,7 @@ document.addEventListener('change', event => {
     event.target.closest('.plan-exercise-fields').querySelector('.builder-cues').value = currentExerciseCues({ exerciseId:event.target.value });
   }
   if (event.target.matches('.session-library-exercise')) {
-    const definition = state.exercises.find(item => item.id === event.target.value);
+    const definition = availableExercises().find(item => item.id === event.target.value);
     const card = event.target.closest('[data-exercise]');
     card.dataset.exerciseId = definition?.id || '';
     if (definition) {
@@ -2454,7 +2478,7 @@ $('#plan-form').addEventListener('submit', event => {
   if (!$('#plan-form').reportValidity()) return;
   const cards = $$('.plan-exercise-fields');
   if (!cards.length) return toast('Χρειάζεται τουλάχιστον μία άσκηση', 'error');
-  if (cards.some(card => !state.exercises.some(entry => entry.id === card.querySelector('.builder-name').value))) return;
+  if (cards.some(card => !availableExercises().some(entry => entry.id === card.querySelector('.builder-name').value))) return;
   const exercises = cards.map(card => {
     const definition = state.exercises.find(entry => entry.id === card.querySelector('.builder-name').value);
     const workSets = Number(card.querySelector('.builder-sets').value);

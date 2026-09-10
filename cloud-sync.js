@@ -147,7 +147,7 @@
   function normalizePayload(value = {}) {
     const payload = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     return {
-      trainingExercises:Array.isArray(payload.trainingExercises) ? payload.trainingExercises.filter(item => isRecord(item) && typeof item.id === 'string' && typeof item.name === 'string').map(item => ({ ...item, aliases:Array.isArray(item.aliases) ? item.aliases.filter(alias => typeof alias === 'string') : [] })) : [],
+      trainingExercises:Array.isArray(payload.trainingExercises) ? payload.trainingExercises.filter(item => isRecord(item) && typeof item.id === 'string' && (typeof item.name === 'string' || normalizeDeletedRecord(item))).map(item => normalizeDeletedRecord(item) || ({ ...item, aliases:Array.isArray(item.aliases) ? item.aliases.filter(alias => typeof alias === 'string') : [] })) : [],
       trainingRoutines:Array.isArray(payload.trainingRoutines) ? payload.trainingRoutines.map(normalizeRoutine).filter(Boolean) : [],
       trainingSessions:Array.isArray(payload.trainingSessions) ? payload.trainingSessions.map(normalizeSession).filter(Boolean) : [],
       userProfile:normalizeProfile(payload.userProfile),

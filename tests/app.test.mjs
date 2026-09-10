@@ -341,7 +341,7 @@ test('program tickets expose plan and workout popups while the main section stay
     planDay('Τρίτη', 'Squat', { cycleDay:2, workoutName:'Lower A' }),
   ];
   const { document } = loadApp({ trainingRoutines:routineWith(plan) });
-  const actionLabels = [...document.querySelector('.routine-actions').querySelectorAll('button')].map(button => button.getAttribute('aria-label'));
+  const actionLabels = [...document.querySelector('#routine-list .routine-actions').querySelectorAll('button')].map(button => button.getAttribute('aria-label'));
   assert.deepEqual(actionLabels, ['Προβολή πλάνου', 'Προσθήκη προπόνησης', 'Ενεργό πρόγραμμα', 'Αντιγραφή προγράμματος', 'Μετονομασία προγράμματος', 'Διαγραφή προγράμματος']);
   assert.equal(document.querySelector('#plan-view .workspace'), null, 'the old scroll-down workspace is removed from the page');
   assert.ok(document.querySelector('#plan-form').closest('#plan-workout-dialog'));

@@ -20,6 +20,73 @@ const fixture = () => ({
 const withoutRefs = sessions => sessions.map(session => session.exercises ? { ...session, exercises:session.exercises.map(({ exerciseId, ...rest }) => rest) } : session);
 const submit = (document, selector) => document.querySelector(selector).dispatchEvent(new document.defaultView.Event('submit', { bubbles:true, cancelable:true }));
 
+test('library deletion cancels safely, removes all plan uses and progress, and preserves history across reload', async () => {
+  const source = fixture();
+  source.routines.push({ ...source.routines[0], id:'other', name:'Other', isActive:false });
+  const app = loadApp({ trainingRoutines:source.routines, trainingSessions:source.sessions });
+  const { document, localStorage } = app;
+  const snapshot = () => Object.fromEntries(['trainingExercises', 'trainingRoutines', 'trainingSessions'].map(key => [key, JSON.parse(localStorage.getItem(key))]));
+  try {
+    const row = [...document.querySelectorAll('[data-edit-exercise]')].find(button => button.closest('.exercise-card').querySelector('strong').textContent === 'Row');
+    const exerciseId = row.dataset.editExercise;
+    if (row.closest('.exercise-card').dataset.carouselPosition !== '0') click(document, row);
+    click(document, row);
+    const before = snapshot();
+    const remove = () => click(document, `[data-delete-library-exercise="${exerciseId}"]`);
+    remove();
+    assert.match(document.querySelector('#exercise-delete-message').textContent, /Row.*όλα τα προγράμματα.*επίβλεψη.*ιστορικό/);
+    click(document, '#confirm-delete-cancel');
+    assert.deepEqual(snapshot(), before);
+    remove();
+    click(document, '#confirm-delete-accept');
+    assert.equal(document.querySelector(`[data-edit-exercise="${exerciseId}"]`), null);
+    assert.equal(document.querySelector('#exercise-library-form').dataset.editingId, undefined);
+    const after = snapshot();
+    assert.ok(after.trainingExercises.find(item => item.id === exerciseId).deletedAt);
+    assert.ok(after.trainingRoutines.every(routine => !routine.plan?.some(item => item.exerciseId === exerciseId)));
+    assert.deepEqual(after.trainingSessions, before.trainingSessions);
+    assert.ok(![...document.querySelectorAll('#progress-exercise option')].some(option => option.value === exerciseId));
+    assert.doesNotMatch(document.querySelector('#personal-bests').textContent, /Row/);
+    const reopened = loadApp(after);
+    try {
+      assert.equal(reopened.document.querySelector(`[data-edit-exercise="${exerciseId}"]`), null);
+      assert.deepEqual(JSON.parse(reopened.localStorage.getItem('trainingSessions')), before.trainingSessions);
+      assert.ok(![...reopened.document.querySelectorAll('#progress-exercise option')].some(option => option.value === exerciseId));
+      assert.equal(reopened.document.querySelectorAll('[data-edit-exercise]').length, before.trainingExercises.length - 1);
+    } finally { await new Promise(resolve => setTimeout(resolve, 0)); reopened.window.close(); }
+  } finally { await new Promise(resolve => setTimeout(resolve, 0)); app.window.close(); }
+});
+
+test('deleted identity survives stale plans and history without hiding a live homonym', () => {
+  const deleted = { id:'gone', deletedAt:'2026-09-10T12:00:00.000Z' };
+  const sessions = [{ id:'s', exercises:[{ exerciseId:'gone', exercise:'Row', sets:[{ reps:8, weight:40 }] }] }];
+  const migrated = migrateExercises({ exercises:[deleted, { id:'live', name:'Row', cues:'' }], sessions,
+    routines:[{ id:'r', plan:[{ id:'a', exerciseId:'gone', exercise:'Row' }, { id:'b', exerciseId:'live', exercise:'Row' }] }] });
+  assert.deepEqual(migrated.exercises[0], deleted);
+  assert.deepEqual(migrated.sessions, sessions);
+  assert.deepEqual(migrated.routines[0].plan.map(item => item.id), ['b']);
+  assert.deepEqual(migrateExercises(migrated), migrated);
+  assert.throws(() => saveExercise(migrated.exercises, { id:'gone', name:'Row' }), /Deleted exercise/);
+});
+
+test('a failed library deletion write preserves the card, plans and history', async () => {
+  const app = loadApp({ trainingRoutines:fixture().routines, trainingSessions:fixture().sessions });
+  try {
+    const { document, localStorage, window } = app;
+    const before = ['trainingExercises', 'trainingRoutines', 'trainingSessions'].map(key => localStorage.getItem(key));
+    const button = document.querySelector('[data-carousel-position="0"] [data-delete-library-exercise]');
+    const original = window.Storage.prototype.setItem;
+    window.Storage.prototype.setItem = function (key, value) {
+      if (key === 'trainingExercises') throw new Error('Quota exceeded');
+      return original.call(this, key, value);
+    };
+    click(document, button);
+    click(document, '#confirm-delete-accept');
+    assert.deepEqual(['trainingExercises', 'trainingRoutines', 'trainingSessions'].map(key => localStorage.getItem(key)), before);
+    assert.ok(document.contains(button));
+  } finally { await new Promise(resolve => setTimeout(resolve, 0)); app.window.close(); }
+});
+
 test('legacy notes and distinct plan cues migrate once without losing text or reviving cleared cues', () => {
   const source = fixture();
   source.exercises = [{ id:'row', name:'Row', notes:'Machine 1' }];
@@ -35,7 +102,7 @@ test('exercise cues drive plan selection, editing, scheduled cards and reload', 
   const app = loadApp({ trainingRoutines:fixture().routines });
   const { document, localStorage } = app;
   try {
-    const row = [...document.querySelectorAll('[data-edit-exercise]')].find(button => button.querySelector('strong').textContent === 'Row');
+    const row = [...document.querySelectorAll('[data-edit-exercise]')].find(button => button.closest('.exercise-card').querySelector('strong').textContent === 'Row');
     if (row.closest('.exercise-card').dataset.carouselPosition !== '0') click(document, row);
     click(document, row);
     const exerciseId = document.querySelector('#exercise-library-form').dataset.editingId;

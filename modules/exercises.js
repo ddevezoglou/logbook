@@ -5,6 +5,14 @@ export const exerciseKey = entry => entry?.exerciseId || text(entry?.exercise).t
 export const exerciseName = (entry, library) => library.find(item => item.id === entry.exerciseId)?.name || entry.exercise;
 export const exerciseCues = (entry, library) => library.find(item => item.id === entry?.exerciseId)?.cues ?? entry?.cues ?? '';
 const legacyId = name => `legacy:${Array.from(name).map(char => char.codePointAt(0).toString(16)).join('-')}`;
+export const isDeletedExercise = entry => typeof entry?.deletedAt === 'string';
+export const liveExercises = library => library.filter(entry => !isDeletedExercise(entry));
+export function removeDeletedPlanExercises(routines, library) {
+  const deleted = new Set(library.filter(isDeletedExercise).map(entry => entry.id));
+  return routines.map(routine => routine.deletedAt ? routine : {
+    ...routine, plan:(routine.plan || []).filter(entry => !deleted.has(entry.exerciseId)),
+  });
+}
 
 export function migrateExercises({ exercises = [], routines = [], sessions = [] } = {}) {
   const library = exercises.map(entry => ({ ...entry }));
@@ -43,17 +51,19 @@ export function migrateExercises({ exercises = [], routines = [], sessions = [] 
   // Promote all distinct legacy notes/cues once. An explicitly empty cues field
   // is authoritative, so clearing it cannot resurrect old plan text on reload.
   library.forEach(definition => {
+    if (isDeletedExercise(definition)) return;
     if (typeof definition.cues === 'string') return;
     const values = [text(definition.notes), ...nextRoutines.flatMap(routine =>
       (routine.plan || []).filter(entry => entry.exerciseId === definition.id).map(entry => text(entry.cues)))];
     definition.cues = [...new Set(values.filter(Boolean))].join('\n');
   });
-  return { exercises:library, routines:nextRoutines, sessions:nextSessions };
+  return { exercises:library, routines:removeDeletedPlanExercises(nextRoutines, library), sessions:nextSessions };
 }
 
 export function saveExercise(library, { id, name, notes, cues }, { randomUUID = () => crypto.randomUUID(), now = () => new Date().toISOString() } = {}) {
   name = text(name);
   const previous = id ? library.find(entry => entry.id === id) : null;
+  if (isDeletedExercise(previous)) throw new Error('Deleted exercise');
   cues = cues ?? notes ?? previous?.cues ?? previous?.notes ?? '';
   if (!name || name.length > 200 || typeof cues !== 'string') throw new Error('Invalid exercise');
   if (cues.length > 2000 && cues !== previous?.cues) throw new Error('Invalid exercise');

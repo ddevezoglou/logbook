@@ -8,6 +8,18 @@ const syncSource = ['data-reconciliation.js', 'cloud-sync.js'].map(file => readF
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const clone = value => value === null || value === undefined ? value : structuredClone(value);
 
+test('exercise deletion tombstones survive cloud normalization and stale live definitions in either direction', async () => {
+  const deleted = { id:'row', deletedAt:'2026-09-10T12:00:00.000Z' };
+  const live = { id:'row', name:'Row', aliases:[], updatedAt:'2026-09-10T13:00:00.000Z' };
+  for (const [local, remote] of [[deleted, live], [live, deleted]]) {
+    const { client, localStorage } = await loadSync({ session:{ user:{ id:'user-a' } }, seed:{
+      trainingExercises:[local], logbookCloudOwner:'user-a',
+    }, row:{ user_id:'user-a', revision:1, payload:{ trainingExercises:[remote] }, updated_at:'2026-09-10T13:00:00Z' } });
+    assert.deepEqual(client.row.payload.trainingExercises, [deleted]);
+    assert.deepEqual(JSON.parse(localStorage.getItem('trainingExercises')), [deleted]);
+  }
+});
+
 test('a library-only device uploads definitions even beside an empty placeholder', async () => {
   const { client } = await loadSync({ session:{ user:{ id:'user-a' } }, seed:{
     trainingExercises:[{ id:'exercise-a', name:'Row', aliases:[] }],
