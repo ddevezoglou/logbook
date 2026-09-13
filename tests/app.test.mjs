@@ -878,6 +878,34 @@ test('personal bests pick the heavier set', () => {
   assert.ok(document.querySelector('#personal-bests').innerHTML.includes('110'), 'best should be 110kg');
 });
 
+test('progress follows exercise identity across routines, old routines and free sessions', () => {
+  const exercises = [{ id:'row', name:'Row', cues:'' }, { id:'other-row', name:'Row', cues:'Other machine' }];
+  const sessions = ['r1', 'r2', 'deleted-routine', null].map((routineId, index) => ({
+    id:`s${index}`, date:`2026-07-0${index + 1}`, type:routineId ? 'scheduled' : 'free', routineId,
+    exercises:[{ exerciseId:'row', exercise:index ? 'Row' : 'Old Row Name', sets:Array.from({ length:index + 1 }, () => ({ reps:8, weight:40 + index * 5, weightMode:'kg' })) }],
+  }));
+  sessions.push({ id:'homonym', date:'2026-07-05', type:'free', exercises:[{ exerciseId:'other-row', exercise:'Row', sets:[{ reps:8, weight:200, weightMode:'kg' }] }] });
+  const { document, localStorage } = loadApp({ trainingExercises:exercises, trainingRoutines:[
+    { id:'r1', name:'First', isActive:true, plan:[] }, { id:'r2', name:'Second', isActive:false, plan:[] },
+  ], trainingSessions:sessions });
+  const savedHistory = localStorage.getItem('trainingSessions');
+  click(document, '.nav-button[data-view="progress"]');
+  setValue(document, '#progress-exercise', 'row', 'change');
+  assert.equal(document.querySelector('#progress-workout'), null);
+  assert.equal(document.querySelectorAll('#progress-exercise option').length, 2, 'homonyms keep separate identities');
+  assert.equal(document.querySelectorAll('#progress-panel .chart-point').length, 4, 'all four contexts contribute to the same exercise');
+  assert.equal(document.querySelectorAll('#progress-set option').length, 4, 'set choices include free-session history');
+  setValue(document, '#progress-set', '2', 'change');
+  assert.equal(document.querySelectorAll('#progress-panel .chart-point').length, 2, 'later sets use old-routine and free-session records');
+  click(document, '.nav-button[data-view="overview"]');
+  click(document, '.nav-button[data-view="progress"]');
+  assert.equal(document.querySelector('#progress-exercise').value, 'row');
+  assert.equal(document.querySelector('#progress-set').value, '2');
+  setValue(document, '#progress-exercise', 'other-row', 'change');
+  assert.equal(document.querySelectorAll('#progress-panel .chart-point').length, 0, 'a homonym does not borrow the other exercise history');
+  assert.equal(localStorage.getItem('trainingSessions'), savedHistory, 'viewing progress leaves recorded history untouched');
+});
+
 test('personal records move from history to an expandable sheet below progress', () => {
   const { document } = loadApp();
   assert.equal(document.querySelector('#overview-view #personal-bests'), null, 'history no longer contains personal records');

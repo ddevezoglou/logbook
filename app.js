@@ -1463,35 +1463,21 @@ function renderPersonalBests() {
   $('#personal-bests').innerHTML = ranked.length ? ranked.map(best => `<article><div><strong data-i18n-user>${esc(best.name)}</strong><small>${best.set.reps} επαναλήψεις</small></div><b>${bestValue(best)}</b></article>`).join('') : '<div class="empty"><span>Οι καλύτερες επιδόσεις υπολογίζονται αυτόματα από τις καταγραφές σας.</span></div>';
 }
 
-function progressWorkouts() {
-  const groups = new Map(state.routines.filter(routine => !routine.isPlaceholder).map(routine => [routine.id, { key:routine.id, name:routine.name, plan:routine.plan, sessions:[] }]));
-  state.sessions.forEach(session => {
-    const key = session.routineId || 'free';
-    const name = session.routineId ? session.workoutName || 'Παλαιό πρόγραμμα' : 'Ελεύθερη προπόνηση';
-    if (!groups.has(key)) groups.set(key, { key, name, plan:[], sessions:[] });
-    groups.get(key).sessions.push(session);
-  });
-  return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, 'el'));
-}
-
 function renderProgressSelectors({ chartScroll = null } = {}) {
   renderPersonalBests();
-  const workouts = progressWorkouts(), workoutSelect = $('#progress-workout'), previousWorkout = workoutSelect.value;
-  workoutSelect.innerHTML = workouts.length ? workouts.map(item => `<option data-i18n-user value="${esc(item.key)}">${esc(item.name)}</option>`).join('') : '<option value="">Δεν υπάρχουν προπονήσεις</option>';
-  if (workouts.some(item => item.key === previousWorkout)) workoutSelect.value = previousWorkout;
-  const selected = workouts.find(item => item.key === workoutSelect.value), exercises = new Map();
+  const exercises = new Map();
   const addExercise = exercise => {
     if (isRemovedExercise(exercise)) return;
     const key = ExerciseModel.exerciseKey(exercise), definition = state.exercises.find(item => item.id === exercise.exerciseId);
     if (!exercises.has(key)) exercises.set(key, definition ? exerciseOptionLabel(definition) : exercise.exercise);
   };
-  selected?.plan.forEach(addExercise);
-  selected?.sessions.forEach(session => session.exercises.forEach(addExercise));
+  state.routines.filter(routine => !routine.isPlaceholder).forEach(routine => routine.plan.forEach(addExercise));
+  state.sessions.forEach(session => session.exercises.forEach(addExercise));
   const exerciseSelect = $('#progress-exercise'), previousExercise = exerciseSelect.value;
-  exerciseSelect.innerHTML = exercises.size ? [...exercises].map(([key, name]) => `<option data-i18n-user value="${esc(key)}">${esc(name)}</option>`).join('') : '<option value="">Δεν υπάρχουν ασκήσεις</option>';
+  exerciseSelect.innerHTML = exercises.size ? [...exercises].sort((a, b) => a[1].localeCompare(b[1], 'el')).map(([key, name]) => `<option data-i18n-user value="${esc(key)}">${esc(name)}</option>`).join('') : '<option value="">Δεν υπάρχουν ασκήσεις</option>';
   if (exercises.has(previousExercise)) exerciseSelect.value = previousExercise;
   const selectedExerciseKey = exerciseSelect.value, setSelect = $('#progress-set'), previousSet = setSelect.value;
-  const maxSets = selected?.sessions.reduce((maximum, session) => {
+  const maxSets = state.sessions.reduce((maximum, session) => {
     return Math.max(maximum, ...session.exercises.filter(item => ExerciseModel.exerciseKey(item) === selectedExerciseKey).map(item => item.sets?.length || 0));
   }, 0) || 0;
   setSelect.innerHTML = maxSets ? Array.from({ length:maxSets }, (_, index) => `<option value="${index}">Σετ ${index + 1}</option>`).join('') : '<option value="">Δεν υπάρχουν σετ</option>';
@@ -1506,7 +1492,6 @@ function captureProgressChartScroll() {
   return {
     left:wrap.scrollLeft,
     atEnd:max - wrap.scrollLeft <= 2,
-    workout:$('#progress-workout').value,
     exercise:$('#progress-exercise').value,
     set:$('#progress-set').value,
   };
@@ -1514,9 +1499,8 @@ function captureProgressChartScroll() {
 
 function renderProgressChart(previousScroll = null) {
   const panel = $('#progress-panel');
-  const workout = progressWorkouts().find(item => item.key === $('#progress-workout').value);
   const markup = ProgressChart.buildProgressChartMarkup({
-    workout,
+    workout:{ sessions:state.sessions },
     exerciseKey:$('#progress-exercise').value,
     setIndex:Number($('#progress-set').value),
     panelWidth:panel.clientWidth || 900,
@@ -1532,7 +1516,6 @@ function renderProgressChart(previousScroll = null) {
   const wrap = panel.querySelector('.chart-wrap.is-scrollable');
   if (!wrap) return;
   const sameChart = previousScroll
-    && previousScroll.workout === $('#progress-workout').value
     && previousScroll.exercise === $('#progress-exercise').value
     && previousScroll.set === $('#progress-set').value;
   const position = () => {
@@ -2178,7 +2161,6 @@ document.addEventListener('keydown', event => {
   }
   if (event.key === 'Escape') closeMenu();
 });
-$('#progress-workout').addEventListener('change', renderProgressSelectors);
 $('#progress-exercise').addEventListener('change', renderProgressSelectors);
 $('#progress-set').addEventListener('change', renderProgressChart);
 $('#personal-records-trigger').addEventListener('click', event => {

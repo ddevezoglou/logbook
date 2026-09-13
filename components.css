@@ -554,6 +554,8 @@ button:disabled { cursor:not-allowed; opacity:.42; filter:saturate(.55); }
 .session-select { min-height:var(--control-height-compact); padding:0 10px; border:1px solid transparent; }
 .session-select:hover { border-color:var(--line); color:var(--ink); }
 .session-select input { width:22px; height:22px; }
+.session-select input:focus:not(:checked) { background:transparent; border-color:var(--ink); box-shadow:none; }
+.session-select input:focus-visible { outline:2px solid var(--orange); outline-offset:3px; }
 .history-week-arrow,.routine-carousel-controls button { min-width:44px; }
 .profile-save,.save-session { min-height:var(--control-height-primary); }
 

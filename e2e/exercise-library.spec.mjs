@@ -36,7 +36,6 @@ test('exercise → routine → two days → offline logging → rename keeps his
   await page.locator('#routine-form [type="submit"]').click();
   const routineCard = page.locator('.routine-card').filter({ has:page.locator('.routine-select', { hasText:'Strength' }) });
   await routineCard.locator('[data-activate-routine]').click();
-  const routineId = await routineCard.getAttribute('data-routine-id');
   for (const name of ['Upper A', 'Upper B']) {
     await routineCard.locator('[data-add-routine-workout]').click();
     await page.locator('#workout-name').fill(name);
@@ -68,7 +67,6 @@ test('exercise → routine → two days → offline logging → rename keeps his
   await page.locator('#exercise-library-form [type="submit"]').click();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('trainingSessions')))).toEqual(history);
   await navigate(page, 'progress');
-  await page.locator('#progress-workout').selectOption(routineId);
   await expect(page.locator('#progress-exercise option')).toHaveCount(1);
   await expect(page.locator('#progress-exercise option')).toHaveText('Seated Cable Row');
   await expect(page.locator('#progress-panel .chart-point')).toHaveCount(2);

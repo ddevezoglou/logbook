@@ -232,7 +232,7 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 @media(max-width:600px){.progress-hero,.progress-content{padding-left:22px;padding-right:22px}.progress-panel{padding:18px}.chart-summary{align-items:flex-start;flex-direction:column}.chart-summary>div:last-child{text-align:left}}
 @media(max-width:600px){.personal-records-sheet{width:100%}.personal-records-sheet .personal-bests{padding-right:14px;padding-left:14px}}
 @media(prefers-reduced-motion:reduce){.personal-records-stamp{transition:none}.personal-records-sheet{animation:none;transform:rotate(-.15deg)}.chart-wrap.is-scrollable{scroll-behavior:auto}}
-.progress-controls { grid-template-columns:1fr 1fr .55fr; max-width:980px; }
+.progress-controls { grid-template-columns:minmax(0,1fr) minmax(120px,.35fr); max-width:980px; }
 .chart-legend { display:flex; justify-content:flex-end; gap:20px; padding-top:14px; color:var(--muted); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }.chart-legend span::before { content:""; display:inline-block; width:22px; height:3px; margin-right:7px; vertical-align:middle; }.weight-key::before { background:var(--orange); }.reps-key::before { background:var(--ink); }
 .chart-reps-line { fill:none; stroke:var(--ink); stroke-width:3; stroke-dasharray:8 7; stroke-linecap:round; }.chart-reps-dot { stroke:var(--ink); stroke-width:2; }
 .cycle-bracket { fill:none; stroke:var(--pen-blue); stroke-width:1.8; opacity:.9; }
@@ -277,7 +277,6 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 .chart-grid { stroke:var(--line); stroke-width:1; stroke-dasharray:1 5; }
 .chart-tick { font:600 10.5px var(--font-ui); fill:var(--muted); }
 .progress-verdict { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }.progress-verdict>span { padding:9px 12px; background:var(--ink-surface); color:var(--on-ink); font-size:.72rem; }.progress-verdict>span b { color:var(--orange); font:700 1.2rem "Roboto Slab"; margin-right:3px; }.progress-verdict.is-alert { display:block; }.progress-alert { max-width:350px; padding:12px 15px; border-left:4px solid var(--orange); background:var(--alert-bg); text-align:left; }.progress-alert strong,.progress-alert span { display:block; }.progress-alert strong { text-transform:uppercase; }.progress-alert span { margin-top:4px; color:var(--warning-text); font-size:.82rem; letter-spacing:0; text-transform:none; }
-@media(max-width:850px){.progress-controls{grid-template-columns:1fr 1fr}.progress-controls label:last-child{grid-column:span 2}}
 @media(max-width:600px){.progress-controls{grid-template-columns:1fr}.progress-controls label:last-child{grid-column:auto}.progress-verdict{justify-content:flex-start}}
 @media(max-width:600px){.chart-latest{width:100%;margin-left:0;border-left:0;border-top:1px solid var(--line);padding:10px 0 0}.chart-summary .progress-verdict{width:100%}.chart-hint{display:block;width:100%;margin:8px 0 0}}
 @media(max-width:850px) and (min-width:601px){.session-toolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.session-toolbar>*{min-width:0}.day-badge{grid-column:span 2;text-align:left}.mode-toggle{max-width:100%}.mode-button{padding-left:12px;padding-right:12px}}
