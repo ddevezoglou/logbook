@@ -23,6 +23,10 @@ export function setRows(count, values = [], prefix = '', { extra = false, startI
   }).join('');
 }
 
+export function cueBanner(cues) {
+  return cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${escapeHtml(cues)}</b></div>` : '';
+}
+
 export function exerciseCard(exercise = {}, {
   free = false,
   exerciseIndex = 0,
@@ -38,7 +42,7 @@ export function exerciseCard(exercise = {}, {
     <div class="exercise-title">${free ? `<input class="exercise-name" data-i18n-user type="text" value="${esc(exercise.exercise || '')}" placeholder="Όνομα άσκησης" required>` : `<div><span class="exercise-order">ΑΣΚΗΣΗ ${exerciseIndex + 1}</span><h3 data-i18n-user>${esc(exercise.exercise)}</h3></div>`}
       ${free ? '<button class="remove-exercise" type="button" aria-label="Αφαίρεση">×</button>' : `<div class="exercise-title-actions"><span class="planned-tag">${sets.length} σετ</span><button class="remove-planned-exercise" type="button" aria-label="Διαγραφή άσκησης">×</button></div>`}</div>
     ${free && library.length ? `<label class="full-field">Από τη βιβλιοθήκη<select class="session-library-exercise"><option value="">Επιλογή άσκησης</option>${library.map(entry => `<option data-i18n-user value="${esc(entry.id)}" ${entry.id === exercise.exerciseId ? 'selected' : ''}>${esc(entry.label || entry.name)}</option>`).join('')}</select></label>` : ''}
-    ${exercise.cues ? `<div class="cue-banner"><span>CUES</span><b data-i18n-user>${esc(exercise.cues)}</b></div>` : ''}
+    ${cueBanner(exercise.cues)}
     ${free ? `<label class="free-set-selector">Αριθμός σετ<input class="free-set-count" type="number" min="1" max="20" value="${sets.length}"></label>` : ''}
     <div class="sets-header"><span>ΣΕΤ</span><span>ΕΠΑΝΑΛΗΨΕΙΣ</span><span></span><span>ΒΑΡΟΣ / ΜΕΤΡΗΣΗ</span><span></span></div>
     <div class="exercise-sets">${setRows(sets.length, sets, '', { unit })}</div>

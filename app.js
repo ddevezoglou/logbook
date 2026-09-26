@@ -800,6 +800,14 @@ function exerciseCard(exercise, free = false, exerciseIndex = 0, { custom = fals
   });
 }
 
+function refreshExerciseCardCues(card) {
+  const name = card.querySelector('.exercise-name');
+  const renamed = name && name.value.trim() !== card.querySelector('.exercise-source-name').value.trim();
+  const cues = renamed ? '' : currentExerciseCues({ exerciseId:card.dataset.exerciseId });
+  card.querySelector('.cue-banner')?.remove();
+  card.querySelector('.free-set-selector, .sets-header').insertAdjacentHTML('beforebegin', SessionTemplates.cueBanner(cues));
+}
+
 function workoutDraftOwner() {
   try {
     if (localStorage.getItem('logbookGuest') === '1') return 'guest';
@@ -1994,12 +2002,16 @@ function loadSessionForCopy(sessionId) {
   $('#log-date').value = today;
   $('#session-comments').value = '';
   setMode(session.type);
+  // Copy the recorded exercise identities and loads, with today's library cues.
+  // isCustom records how an exercise was added; it does not require an editor
+  // when the exercise is already known in a copied scheduled workout.
+  const exercises = session.exercises.map(item => ({ ...item, comments:'', cues:currentExerciseCues(item) }));
   if (session.type === 'scheduled') {
     refreshWorkoutDayOptions(state.selectedPlanDay);
     $('#day-badge').innerHTML = `<span>${dayForDate(today)}</span><small>${formatDate(today)}</small>`;
-    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Προσαρμόστε ό,τι εκτελέσατε σήμερα και ολοκληρώστε τη νέα προπόνηση.</p></div></div>${deckShellHTML(session.exercises.map((item, index) => exerciseCard({ ...item, comments:'' }, Boolean(item.isCustom), index, { custom:Boolean(item.isCustom) })).join(''))}`;
+    $('#scheduled-session').innerHTML = `<div class="session-intro"><div><h2 data-i18n-user>${esc(sessionWorkoutName(session))}</h2><p>Προσαρμόστε ό,τι εκτελέσατε σήμερα και ολοκληρώστε τη νέα προπόνηση.</p></div></div>${deckShellHTML(exercises.map((item, index) => exerciseCard(item, false, index, { custom:Boolean(item.isCustom) })).join(''))}`;
   } else {
-    $('#free-exercises').innerHTML = session.exercises.map(item => exerciseCard({ ...item, comments:'' }, true)).join('');
+    $('#free-exercises').innerHTML = exercises.map(item => exerciseCard(item, true)).join('');
   }
   refreshCopySetButtons();
   refreshSessionDecks();
@@ -2395,6 +2407,7 @@ document.addEventListener('input', event => {
 });
 
 document.addEventListener('input', event => {
+  if (event.target.matches('.exercise-name')) refreshExerciseCardCues(event.target.closest('[data-exercise]'));
   if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments')) persistWorkoutDraft();
 });
 
@@ -2425,6 +2438,7 @@ document.addEventListener('change', event => {
       card.querySelector('.exercise-name').value = definition.name;
       card.querySelector('.exercise-source-name').value = definition.name;
     }
+    refreshExerciseCardCues(card);
   }
   if (event.target.closest('#scheduled-session, #free-session') || event.target.matches('#log-date, #session-comments, #workout-day-select')) persistWorkoutDraft();
 });

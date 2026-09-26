@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.3.3';
+const CACHE_VERSION = 'logbook-0.3.4';
 // The production builder fingerprints every shipped file, including quotes.
 // A content change must install a new shell even if the version was not bumped.
 const BUILD_ID = 'development';
