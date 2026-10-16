@@ -7,6 +7,7 @@ import * as ProgressChart from './modules/progress-chart.js';
 import * as HistoryView from './modules/history.js';
 import * as SessionTemplates from './modules/session-templates.js';
 import * as UI from './modules/ui.js';
+import * as GuideTour from './modules/guide-tour.js';
 
 const store = StorageMigrations.createStore(localStorage, {
   onWrite:key => window.dispatchEvent(new CustomEvent('logbook:local-data-changed', { detail:{ key } })),
@@ -124,8 +125,7 @@ function refreshCloudData() {
 
 function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.') {
   if (!exerciseMigrationReady) {
-    const notification = document.querySelector('#toast');
-    if (notification) { notification.textContent = message; notification.classList.add('toast-error', 'show'); }
+    toast(message, 'error', { persist:true });
     return false;
   }
   let reconciled = value;
@@ -146,15 +146,7 @@ function safeStoreWrite(key, value, message = 'Δεν ήταν δυνατή η �
   if (key === 'trainingRoutines') reconciled = ExerciseModel.removeDeletedPlanExercises(
     reconciled, store.read('trainingExercises', { type:'array', fallback:[] })
   );
-  const saved = StorageMigrations.writeSafely(store, key, reconciled, () => {
-    const notification = document.querySelector('#toast');
-    if (notification) {
-      notification.textContent = message;
-      notification.classList.add('toast-error');
-      notification.classList.add('show');
-      setTimeout(() => notification.classList.remove('show'), 2200);
-    }
-  });
+  const saved = StorageMigrations.writeSafely(store, key, reconciled, () => toast(message, 'error'));
   if (saved && storageBaselines.has(key)) {
     storageBaselines.set(key, JSON.parse(JSON.stringify(reconciled)));
     // Callers keep the committed collection as their next state. Do not leave
@@ -687,7 +679,6 @@ function measureRoutineCarousel() {
 
 function renderRoutines({ resetCarousel = false, centerRoutineId = null } = {}) {
   $('#routine-total').textContent = String(state.routines.length).padStart(2, '0');
-  $('#plan-active-name').textContent = state.routines.find(routine => routine.isActive)?.name || '—';
   const list = $('#routine-list');
   const previousCenteredRoutineId = resetCarousel ? null : list.querySelector('[data-carousel-position="0"]')?.dataset.routineId;
   const routines = [...state.routines].sort((a, b) => Number(b.isActive) - Number(a.isActive));
@@ -1539,7 +1530,18 @@ function renderProgressChart(previousScroll = null) {
   });
 }
 
-function toast(message, kind = 'recorded') { const el = $('#toast'); el.textContent = message; el.classList.toggle('toast-error', kind === 'error'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
+// Errors stay longer and interrupt screen readers; a new message restarts the timer.
+function toast(message, kind = 'recorded', { persist = false } = {}) {
+  const el = document.querySelector('#toast');
+  if (!el) return;
+  const error = kind === 'error';
+  el.setAttribute('role', error ? 'alert' : 'status');
+  el.textContent = message;
+  el.classList.toggle('toast-error', error);
+  el.classList.add('show');
+  clearTimeout(toast.timer);
+  if (!persist) toast.timer = setTimeout(() => el.classList.remove('show'), error ? 5500 : 2800);
+}
 
 function profileAge(birthdate) {
   if (!birthdate) return null;
@@ -2739,19 +2741,16 @@ document.addEventListener('logbook:languagechange', () => {
   renderProgressChart(captureProgressChartScroll());
   renderHome();
 });
+// Το ( i ) ανοίγει την ξενάγηση. Τα .info-panel μένουν κρυφά στο DOM: είναι η
+// μεταφρασμένη πηγή των λεζαντών και το κείμενο της οδηγίας για screen readers.
+const guideTours = GuideTour.createGuideTours({
+  document, window,
+  guides:{ log:'log-guide', plan:'plan-guide', progress:'progress-guide', profile:'profile-guide' },
+});
 $$('.info-stamp').forEach(button => {
   button.addEventListener('click', event => {
     event.stopPropagation();
-    const panel = document.getElementById(button.getAttribute('aria-controls'));
-    const nowHidden = panel.classList.toggle('hidden');
-    button.setAttribute('aria-expanded', String(!nowHidden));
-  });
-});
-document.addEventListener('click', event => {
-  $$('.info-panel:not(.hidden)').forEach(panel => {
-    if (panel.contains(event.target)) return;
-    panel.classList.add('hidden');
-    document.querySelector(`[aria-controls="${panel.id}"]`)?.setAttribute('aria-expanded', 'false');
+    guideTours.open(button.dataset.guide, button);
   });
 });
 window.LogbookI18n?.translate(document);

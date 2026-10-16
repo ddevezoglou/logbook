@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ξενάγηση σε όλες τις ενότητες</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Roboto+Slab:wght@500;700&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme:light;
+    --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --field:#f7f1e3;
+    --line:#b6ad97; --line-card:#c7bca3; --line-soft:rgba(21,19,13,.12);
+    --orange:#7d601a; --orange-rgb:125,96,26; --gold:#c9a227; --gold-rgb:201,162,39; --pen-blue:#1f6493; --pen-rgb:31,100,147; --danger:#7a3325;
+    --muted:#6d6551; --muted-soft:#8a8168; --ink-meta:#948b73; --ink-lede:#cfc6ac; --ink-border:#4b4537;
+    --ink-surface:#15130d; --on-ink:#efe8d8; --on-gold:#15130d; --tape:rgba(213,194,145,.72);
+    --portrait-bg:#d9c8d4; --portrait-sil:#5c5c5e;
+    --kg:#8a6a1c; --rp:#1f6493;
+    --shadow-rgb:21,19,13; --rule:rgba(21,19,13,.055); --page:#d8cfba;
+    --finger:rgba(21,19,13,.2); --finger-ring:rgba(255,255,255,.95);
+    --sh:620px;
+  }
+  :root[data-theme="dark"] {
+    color-scheme:dark;
+    --ink:#ece2c9; --paper:#17140e; --paper-soft:#1f1b14; --paper-dark:#100e09; --field:#100e09;
+    --line:#3a3428; --line-card:#383226; --line-soft:rgba(236,226,201,.1);
+    --orange:#e0a94a; --orange-rgb:224,169,74; --gold:#d4ae33; --gold-rgb:212,174,51; --pen-blue:#74aed6; --pen-rgb:116,174,214; --danger:#cf7a63;
+    --muted:#9a917a; --muted-soft:#8a8474; --ink-meta:#a89f86; --ink-lede:#d8cfb6; --ink-border:#5c5544;
+    --ink-surface:#2e2a1f; --on-ink:#f2ead4; --on-gold:#17140e; --tape:rgba(151,136,101,.36);
+    --kg:#e0a94a; --rp:#74aed6;
+    --shadow-rgb:0,0,0; --rule:rgba(236,226,201,.045); --page:#0d0b08;
+    --finger:rgba(236,226,201,.26); --finger-ring:rgba(23,20,14,.9);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink); font-family:"Source Sans 3",sans-serif; padding:40px 4vw 120px; transition:background .3s,color .3s; }
+  h1.page { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; letter-spacing:-.02em; }
+  .intro { color:var(--muted); max-width:900px; line-height:1.55; margin:0 0 14px; }
+  .intro b, .sec-note b { color:var(--orange); }
+  h2.sec { font-family:"Roboto Slab",serif; font-size:1.35rem; margin:64px 0 6px; }
+  h2.sec small { font:800 .62rem "Source Sans 3"; letter-spacing:.18em; color:var(--orange); display:block; margin-bottom:4px; }
+  .sec-note { color:var(--muted); max-width:880px; line-height:1.55; margin:0 0 22px; }
+  code { font-size:.85em; background:var(--paper-dark); padding:1px 5px; }
+  .topbar { position:fixed; top:14px; right:14px; z-index:80; display:flex; gap:6px; }
+  .topbar button { border:1px solid var(--line); background:var(--paper-soft); color:var(--ink); font:800 .64rem "Source Sans 3"; letter-spacing:.14em; padding:9px 12px; cursor:pointer; }
+  .topbar button[aria-pressed="true"] { background:var(--ink-surface); color:var(--on-ink); }
+  .box { background:var(--paper); border:1px solid var(--line); padding:20px 22px; }
+  .grid2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+  @media (max-width:900px) { .grid2 { grid-template-columns:1fr; } }
+  ul.tight { margin:0; padding-left:20px; line-height:1.55; }
+  ul.tight li { margin:6px 0; }
+  table.cmp { width:100%; border-collapse:collapse; background:var(--paper); border:1px solid var(--line); font-size:.88rem; }
+  table.cmp th, table.cmp td { text-align:left; vertical-align:top; padding:9px 11px; border-bottom:1px solid var(--line-soft); line-height:1.4; }
+  table.cmp thead th { font:800 .62rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); background:var(--paper-dark); }
+  table.cmp tbody th { font:700 .78rem "Roboto Slab"; white-space:nowrap; }
+  .scroll-x { overflow-x:auto; }
+
+  /* ---------- improvements strip ---------- */
+  .improve { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-top:18px; }
+  .improve div { background:var(--paper); border:1px solid var(--line); padding:13px 15px; font-size:.86rem; line-height:1.45; }
+  .improve div b { display:block; font:700 .84rem "Roboto Slab"; margin-bottom:3px; }
+  .improve div b i { font:800 .6rem "Source Sans 3"; font-style:normal; color:var(--orange); letter-spacing:.12em; margin-right:6px; }
+
+  /* ---------- page blocks ---------- */
+  .blocks { display:grid; grid-template-columns:repeat(auto-fit,minmax(640px,1fr)); gap:26px; }
+  @media (max-width:720px) { .blocks { grid-template-columns:1fr; } }
+  .block { background:var(--paper); border:1px solid var(--line); padding:22px; display:grid; grid-template-columns:320px minmax(0,1fr); gap:24px; align-items:start; }
+  @media (max-width:720px) { .block { grid-template-columns:1fr; } .block .phone { margin:0 auto; } }
+  .steps h3 { margin:0; font:700 1.25rem "Roboto Slab"; }
+  .steps .sub { margin:4px 0 16px; font:800 .58rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .steps ol { list-style:none; margin:0; padding:0; }
+  .steps li { display:grid; grid-template-columns:30px 1fr; gap:8px; padding:10px 10px 10px 8px; border-top:1px solid var(--line-soft); cursor:pointer; border-left:3px solid transparent; transition:background .25s, border-color .25s; }
+  .steps li:hover { background:rgba(var(--orange-rgb),.05); }
+  .steps li.on { background:rgba(var(--orange-rgb),.1); border-left-color:var(--orange); }
+  .steps li > b { font:700 .8rem "Roboto Slab"; color:var(--orange); line-height:1.5; }
+  .steps li strong { display:block; font:700 .9rem "Roboto Slab"; margin-bottom:2px; }
+  .steps li span { display:block; font-size:.86rem; line-height:1.45; color:var(--muted); font-weight:500; }
+  .steps li.on span { color:var(--ink); }
+  .steps .start { margin-top:14px; border:0; background:var(--ink-surface); color:var(--on-ink); font:800 .62rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; padding:11px 16px; cursor:pointer; border-radius:6px; }
+
+  /* ---------- phone ---------- */
+  .phone { width:320px; height:640px; border:10px solid #1b1914; border-radius:36px; position:relative; overflow:hidden; background:var(--paper); box-shadow:0 18px 40px rgba(0,0,0,.25); }
+  .screen { position:absolute; inset:0; overflow:hidden; background:var(--paper); }
+  .ph-hero { position:relative; height:118px; padding:30px 18px 0; background:var(--paper); border-bottom:1px solid var(--line-soft); }
+  .ph-hero h1 { margin:0; max-width:190px; font:700 1.38rem/1.05 "Roboto Slab"; letter-spacing:-.02em; }
+  .ph-hero h1 em { font-style:normal; color:var(--orange); }
+  .ph-hero.dark { background:var(--ink-surface); color:var(--on-ink); border-bottom-color:var(--ink-border); }
+  .ph-hero.dark h1 em { color:var(--gold); }
+  .ph-ribbon { position:absolute; top:0; right:16px; width:26px; height:60px; background:linear-gradient(#6b5518,#2e2710); clip-path:polygon(0 0,100% 0,100% 100%,50% 84%,0 100%); }
+  .istamp { position:absolute; right:56px; top:26px; width:40px; height:40px; padding:0; background:transparent; border:2.5px solid currentColor; border-radius:50%; color:rgba(var(--orange-rgb),.65); font:700 1.1rem "Roboto Slab"; display:grid; place-items:center; cursor:pointer; transform:rotate(-8deg); transition:color .25s, transform .25s; z-index:6; }
+  .istamp::before { content:""; position:absolute; inset:3px; border:1px solid currentColor; border-radius:50%; opacity:.65; }
+  .istamp:hover, .istamp[aria-expanded="true"] { color:var(--orange); transform:rotate(-4deg); }
+  .dark .istamp { color:rgba(var(--gold-rgb),.7); }
+  .dark .istamp:hover, .dark .istamp[aria-expanded="true"] { color:var(--gold); }
+  .istamp.nudge { animation:nudge 1.6s ease-in-out 2; }
+  @keyframes nudge { 0%,100% { transform:rotate(-8deg) scale(1); } 50% { transform:rotate(-2deg) scale(1.12); } }
+  .touring .istamp { z-index:31; }
+
+  /* ---------- stage, finger, spotlight ---------- */
+  .stage { position:absolute; left:0; right:0; top:118px; bottom:0; }
+  .stage .view { position:absolute; inset:0; overflow:hidden; background:var(--paper); }
+  .stage .view.fade { animation:fadeBack .45s ease-out; }
+  @keyframes fadeBack { from { opacity:.25; } }
+  .stage .view > .ms { transform-origin:0 0; transition:transform .45s cubic-bezier(.4,.1,.2,1); }
+  .finger { position:absolute; left:0; top:0; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%; background:var(--finger); border:2px solid var(--finger-ring); box-shadow:0 3px 10px rgba(0,0,0,.3); opacity:0; pointer-events:none; z-index:40;
+    transition:transform .5s cubic-bezier(.45,.05,.25,1), opacity .25s, width .14s, height .14s, margin .14s, background .14s; }
+  .finger.on { opacity:1; }
+  .finger.jump { transition:none; }
+  .finger.press { width:24px; height:24px; margin:-12px 0 0 -12px; background:rgba(var(--gold-rgb),.6); }
+  .finger.drag { transition:opacity .25s, width .14s, height .14s, margin .14s, background .14s; }
+  .ripple { position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; border:2px solid var(--gold); animation:rip .55s ease-out forwards; pointer-events:none; z-index:39; }
+  @keyframes rip { to { transform:scale(4); opacity:0; } }
+  .spot { position:absolute; left:0; top:0; width:0; height:0; border-radius:9px; box-shadow:0 0 0 2px var(--gold), 0 0 0 6px rgba(var(--gold-rgb),.22), 0 0 0 1600px rgba(12,10,6,.6); opacity:0; pointer-events:none; z-index:30;
+    transition:left .5s cubic-bezier(.45,.05,.25,1), top .5s cubic-bezier(.45,.05,.25,1), width .5s cubic-bezier(.45,.05,.25,1), height .5s cubic-bezier(.45,.05,.25,1), opacity .3s; }
+  .spot.on { opacity:1; }
+  .spot.track { transition:opacity .3s; }
+  .ov { position:absolute; z-index:25; opacity:0; transform:translateY(10px); transition:opacity .3s, transform .3s; }
+  .ov.in { opacity:1; transform:none; }
+  .ov.bottom { left:8px; right:8px; bottom:8px; }
+  .ov.center { inset:0; display:grid; place-items:center; background:rgba(12,10,6,.32); transform:none; }
+  .ov.full { inset:0; background:var(--paper); transform:translateX(30px); }
+  .ov.full.in { transform:none; }
+  .ms-stamp { position:absolute; left:50%; top:40%; z-index:45; display:flex; align-items:center; gap:7px; white-space:nowrap; background:var(--paper); color:var(--ink); border:2px solid var(--orange); outline:1px solid var(--orange); outline-offset:3px; padding:8px 12px; font-size:.76rem; font-weight:700; box-shadow:0 12px 22px rgba(var(--shadow-rgb),.2); opacity:0; transform:translateX(-50%) scale(1.18) rotate(-4deg); transition:opacity .16s, transform .22s cubic-bezier(.3,1.6,.5,1); }
+  .ms-stamp.show { opacity:1; transform:translateX(-50%) rotate(-1.4deg); }
+  .ms-stamp i { font-style:normal; width:15px; height:15px; border-radius:50%; background:var(--orange); color:var(--paper); display:grid; place-items:center; font-size:.6rem; font-weight:800; }
+
+  /* ---------- coach card ---------- */
+  .coach { position:absolute; left:10px; right:10px; bottom:10px; z-index:55; background:var(--ink-surface); color:var(--on-ink); border:1px solid var(--ink-border); border-radius:10px; padding:12px 14px 12px; box-shadow:0 16px 34px rgba(0,0,0,.45);
+    transform:translateY(calc(100% + 24px)); transition:transform .38s cubic-bezier(.3,.8,.2,1); touch-action:pan-y; }
+  .touring .coach { transform:none; }
+  :root[data-theme="dark"] .coach { border-color:rgba(var(--gold-rgb),.35); }
+  .touring .coach.top { transform:translateY(calc(-1 * (var(--sh) - 100% - 20px))); }
+  .coach-x { position:absolute; top:8px; right:8px; width:28px; height:28px; border:0; background:none; color:var(--ink-lede); font:700 .9rem "Source Sans 3"; cursor:pointer; padding:0; }
+  .coach-t { margin:0 0 3px; padding-right:28px; font:700 1.02rem/1.2 "Roboto Slab"; letter-spacing:-.005em; }
+  .coach-p { margin:0; font:500 .8rem/1.45 "Source Sans 3"; color:var(--ink-lede); min-height:4.35em; }
+  .coach-seg { display:flex; gap:4px; margin:10px 0 10px; }
+  .coach-seg i { flex:1; height:3px; border-radius:2px; background:rgba(239,232,216,.16); overflow:hidden; }
+  .coach-seg i s { display:block; height:100%; width:0; background:var(--gold); }
+  .coach-seg i.done s { width:100%; }
+  .coach-f { display:flex; align-items:center; gap:6px; }
+  .coach-f button { width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--ink-border); background:none; color:var(--on-ink); font:700 1rem/1 "Roboto Slab"; padding:0; border-radius:50%; cursor:pointer; }
+  .coach-f .again { font-size:.95rem; }
+  .coach-f .next { margin-left:auto; width:36px; height:36px; font-size:1rem; background:var(--gold); color:var(--on-gold); border-color:var(--gold); }
+  .coach-f .next.ready { animation:ready 1.4s ease-in-out infinite; }
+  @keyframes ready { 50% { box-shadow:0 0 0 5px rgba(var(--gold-rgb),.25); } }
+  .coach-f button:disabled { opacity:.35; cursor:default; }
+
+  /* ========== miniature shared ========== */
+  .ms { position:relative; width:300px; font-family:"Source Sans 3",sans-serif; color:var(--ink); background:var(--paper); background-image:linear-gradient(var(--rule) 1px,transparent 1px); background-size:100% 22px; padding:14px 14px 18px; }
+  .ms.nofx, .ms.nofx * { transition:none !important; animation:none !important; }
+  .ms.nofx .mg-plot .ln { stroke-dashoffset:0; }
+  .ms-lab { font:800 .5rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:9px 0 3px; }
+  .ms-f { position:relative; display:flex; align-items:center; gap:6px; min-height:30px; padding:0 9px; background:var(--field); border:1px solid var(--line); border-radius:6px; font-size:.76rem; font-weight:600; transition:border-color .2s, box-shadow .2s, background .3s; }
+  .ms-f .ph { display:none; color:var(--muted-soft); font-weight:400; font-style:normal; }
+  .ms-f .v:empty + .ph { display:inline; }
+  .ms-f em { margin-left:auto; font-style:normal; font-size:.6rem; color:var(--muted); }
+  .ms-f svg { margin-left:auto; width:13px; height:13px; fill:none; stroke:var(--muted); stroke-width:2; }
+  .ms-f.is-focus { border-color:var(--pen-blue); box-shadow:0 0 0 3px rgba(var(--pen-rgb),.18); }
+  .is-focus .v::after { content:""; display:inline-block; width:1.5px; height:1em; margin-left:1px; vertical-align:-2px; background:var(--pen-blue); animation:blink .8s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  /* Τιμές-δείγματα: ίδια στιβαρή γραμματοσειρά με την εφαρμογή, διακριτές μόνο από
+     το μπλε του στυλό και τον μαρκαδόρο από κάτω — ποτέ σαν αληθινή καταγραφή */
+  .gv { color:var(--pen-blue) !important; font-weight:700 !important; background:linear-gradient(transparent 60%, rgba(var(--pen-rgb),.16) 60%); }
+  .ghost .demo { outline:1.5px dashed var(--pen-blue); outline-offset:2px; }
+  .ms-area { min-height:34px; align-items:flex-start; padding-top:7px; font-weight:500; }
+  .ms-toggle { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--ink); border-radius:6px; overflow:hidden; margin-top:10px; }
+  .ms-toggle b { padding:8px 4px; text-align:center; font:700 .6rem/1.1 "Source Sans 3"; letter-spacing:.05em; text-transform:uppercase; transition:background .25s, color .25s; }
+  .ms-toggle b.on { background:var(--ink-surface); color:var(--on-ink); }
+  .ms-btn { margin-top:9px; background:var(--ink-surface); color:var(--on-ink); text-align:center; padding:9px; border-radius:6px; font:800 .56rem "Source Sans 3"; letter-spacing:.12em; text-transform:uppercase; }
+  .ms-btn.alt { background:transparent; color:var(--ink); border:1px solid var(--ink); }
+  .ms-mini { font:800 .5rem "Source Sans 3"; letter-spacing:.1em; text-transform:uppercase; border:1px solid var(--ink); border-radius:5px; padding:6px 8px; }
+  .ms-mini.off { display:none; }
+  .ms-save { margin-top:14px; background:var(--ink-surface); color:var(--on-ink); text-align:center; padding:13px; border-radius:7px; font:800 .6rem "Source Sans 3"; letter-spacing:.14em; }
+  .ms-pop { position:absolute; z-index:12; background:var(--paper-soft); border:1px solid var(--line); border-radius:6px; box-shadow:0 10px 22px rgba(var(--shadow-rgb),.22); padding:3px; animation:popIn .18s ease-out; }
+  .ms-pop div { padding:7px 9px; font-size:.72rem; font-weight:600; border-radius:4px; white-space:nowrap; }
+  .ms-pop div.hl { background:rgba(var(--orange-rgb),.12); }
+  .ms-pop div.sel { background:var(--orange); color:var(--paper); }
+  @keyframes popIn { from { opacity:0; transform:translateY(-4px); } }
+  .is-pressed { scale:.95; }
+  .pulse { animation:pulse .7s ease-out 1; border-radius:5px; }
+  @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(var(--gold-rgb),.7); } 100% { box-shadow:0 0 0 12px rgba(var(--gold-rgb),0); } }
+  .flash { animation:flash .7s ease-out; }
+  @keyframes flash { 0% { background-color:rgba(var(--pen-rgb),.22); } }
+  .rm-mark { outline:2px dashed var(--gold); outline-offset:2px; border-radius:6px; }
+
+  /* ========== ΚΑΤΑΓΡΑΦΗ ========== */
+  .ms-log:not(.has-day) .ms-deck { opacity:.32; }
+  .ms-log.is-free [data-k="day"] { opacity:.35; }
+  .ms-deck { margin-top:14px; transition:opacity .35s; }
+  .ms-deckhead { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .ms-arr { width:28px; height:28px; border-radius:50%; border:1.5px solid var(--ink); display:grid; place-items:center; font:700 1rem/1 "Roboto Slab"; }
+  .ms-dstamp { font:800 .54rem "Source Sans 3"; letter-spacing:.18em; color:var(--orange); border:1.5px solid var(--orange); padding:4px 8px; transform:rotate(-2deg); }
+  .ms-dview { overflow:hidden; margin:0 -3px; padding:9px 3px 4px; }
+  .ms-track { display:flex; gap:10px; transition:transform .42s cubic-bezier(.3,.8,.2,1); }
+  .ms-track.drag { transition:none; }
+  .ms-card { flex:0 0 100%; position:relative; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:14px 10px 10px; box-shadow:0 3px 0 rgba(var(--shadow-rgb),.05); }
+  .ms-tape { position:absolute; top:-7px; left:50%; width:54px; height:14px; margin-left:-27px; background:var(--tape); transform:rotate(-2deg); }
+  .ms-ctitle { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .ms-ctitle small { font:800 .48rem "Source Sans 3"; letter-spacing:.16em; color:var(--orange); }
+  .ms-ctitle h4 { margin:2px 0 0; font:700 .9rem "Roboto Slab"; }
+  .ms-tag { font:700 .5rem "Source Sans 3"; letter-spacing:.1em; border:1px solid var(--line); padding:3px 6px; border-radius:3px; text-transform:uppercase; }
+  .ms-shead, .ms-row { display:grid; grid-template-columns:16px 1fr 7px 1.3fr 1fr 16px; gap:5px; align-items:center; }
+  .ms-shead span { font:800 .42rem "Source Sans 3"; letter-spacing:.08em; color:var(--muted); }
+  .ms-row { margin-top:5px; transition:opacity .3s, transform .3s; }
+  .ms-row .n { font:700 .58rem "Roboto Slab"; color:var(--orange); }
+  .ms-row.extra .n { color:var(--pen-blue); }
+  .ms-f.sm { min-height:26px; padding:0 6px; font-size:.7rem; }
+  .ms-row .x { font-size:.6rem; color:var(--muted); text-align:center; }
+  .ms-row .rm { width:16px; height:16px; border-radius:50%; border:1px solid var(--line); display:grid; place-items:center; font-size:.7rem; color:var(--muted); }
+  .ms-row.enter { animation:rowIn .35s ease-out; }
+  .ms-row.leave { opacity:0; transform:translateX(24px); }
+  @keyframes rowIn { from { opacity:0; transform:translateY(-6px); } }
+  .ms-acts { display:flex; gap:6px; margin-top:8px; }
+  .ms-dprog { height:3px; background:var(--line-soft); margin-top:8px; border-radius:2px; overflow:hidden; }
+  .ms-dprog i { display:block; height:100%; width:33.3%; background:var(--orange); transition:width .4s; }
+  .hist { padding:14px; }
+  .hist-h { font:700 1rem "Roboto Slab"; margin-bottom:10px; }
+  .hist-card { display:flex; justify-content:space-between; align-items:center; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px 11px; }
+  .hist-card small { font:800 .48rem "Source Sans 3"; letter-spacing:.14em; color:var(--muted); }
+  .hist-card b { display:block; font:700 .82rem "Roboto Slab"; margin:2px 0; }
+  .hist-card span { font-size:.62rem; color:var(--muted); }
+  .hist-card .logged { font:800 .5rem "Source Sans 3"; letter-spacing:.16em; color:var(--orange); border:1.5px solid var(--orange); padding:4px 6px; transform:rotate(-6deg); font-style:normal; }
+  .hist-acts { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+
+  /* ========== ΠΡΟΓΡΑΜΜΑ ========== */
+  .mp-sec { border-top:2px solid var(--ink); margin-top:4px; }
+  .mp-sec + .mp-sec { margin-top:14px; }
+  .mp-head { display:flex; align-items:center; gap:8px; padding:10px 2px; font:700 .84rem "Roboto Slab"; border-bottom:3px double var(--ink); }
+  .mp-sec.open .mp-head { border-bottom-color:transparent; }
+  .mp-head i { font:800 .48rem "Source Sans 3"; color:var(--orange); font-style:normal; border:1px solid var(--orange); border-radius:50%; width:20px; height:20px; display:grid; place-items:center; }
+  .mp-head small { margin-left:auto; font:700 .62rem "Roboto Slab"; color:var(--muted); }
+  .mp-head em { font-style:normal; font-size:.6rem; transition:transform .3s; }
+  .mp-sec.open .mp-head em { transform:rotate(180deg); }
+  .mp-body { display:none; }
+  .mp-sec.open .mp-body { display:block; animation:popIn .3s ease-out; }
+  .mp-car { overflow:hidden; padding:4px 3px 2px; margin:0 -3px; }
+  .mp-track { display:flex; gap:8px; transition:transform .42s cubic-bezier(.3,.8,.2,1); align-items:stretch; }
+  .mp-track.drag { transition:none; }
+  .mp-ex { flex:0 0 46%; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:9px 9px 30px; position:relative; transition:border-color .25s, box-shadow .25s; }
+  .mp-ex.enter, .mp-rt.enter { animation:rowIn .4s ease-out; }
+  .mp-ex.editing { border-color:var(--pen-blue); box-shadow:0 0 0 2px rgba(var(--pen-rgb),.18); }
+  .mp-ex b { display:block; font:700 .72rem/1.2 "Roboto Slab"; }
+  .mp-ex small { display:block; font-size:.62rem; color:var(--muted); margin-top:3px; min-height:1em; font-weight:600; }
+  .mp-ic { position:absolute; right:6px; bottom:6px; display:flex; gap:4px; }
+  .mp-ic i { width:20px; height:20px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; font-size:.62rem; font-style:normal; background:var(--paper); }
+  .mp-arrows { display:flex; justify-content:flex-end; gap:6px; margin-top:6px; }
+  .mp-arrows b { width:24px; height:24px; border:1.5px solid var(--ink); border-radius:50%; display:grid; place-items:center; font-size:.72rem; }
+  .mp-new { margin-top:8px; font:700 .68rem "Source Sans 3"; padding:8px 10px; border:1px dashed var(--line); border-radius:6px; }
+  .mp-new::before { content:"＋ "; color:var(--orange); }
+  .mp-form { display:none; padding:2px 0 6px; }
+  .mp-form.open { display:block; animation:popIn .3s ease-out; }
+  .mp-rt { flex:0 0 80%; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px; position:relative; transition:background .3s, color .3s; }
+  .mp-rt b { font:700 .84rem "Roboto Slab"; display:block; padding-right:24px; }
+  .mp-rt small { font:800 .48rem "Source Sans 3"; letter-spacing:.12em; color:var(--muted); }
+  .mp-rt .star { position:absolute; top:7px; right:8px; font-size:1.05rem; line-height:1; color:var(--line); font-style:normal; }
+  .mp-rt .live { display:none; margin-left:6px; font:800 .44rem "Source Sans 3"; letter-spacing:.14em; color:var(--gold); border:1px solid var(--gold); padding:2px 4px; vertical-align:1px; }
+  .mp-rt.active { background:var(--ink-surface); color:var(--on-ink); }
+  .mp-rt.active small { color:var(--ink-meta); }
+  .mp-rt.active .star { color:var(--gold); }
+  .mp-rt.active .live { display:inline-block; }
+  .mp-days { display:none; margin-top:8px; border-top:1px dashed var(--line); padding-top:4px; }
+  .mp-rt.open .mp-days { display:block; animation:popIn .25s ease-out; }
+  .mp-day { display:flex; gap:5px; align-items:center; padding:4px 0; flex-wrap:wrap; font-size:.6rem; }
+  .mp-day > span { font:800 .46rem "Source Sans 3"; letter-spacing:.1em; color:var(--orange); width:44px; }
+  .mp-chip { border:1px solid var(--line); border-radius:10px; padding:2px 7px; font-size:.58rem; font-weight:700; animation:popIn .25s; }
+  .mp-add { border:1px dashed var(--orange); color:var(--orange); border-radius:10px; padding:1px 7px; font-weight:800; }
+  .mp-dur { display:flex; align-items:center; width:max-content; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--field); }
+  .mp-dur b { width:30px; height:28px; display:grid; place-items:center; font-weight:800; }
+  .mp-dur span { min-width:30px; text-align:center; font:700 .8rem "Roboto Slab"; border-left:1px solid var(--line); border-right:1px solid var(--line); line-height:28px; }
+  .mp-wk { display:none; gap:4px; margin-top:6px; }
+  .mp-wk.on { display:flex; animation:popIn .25s; }
+  .mp-wk i { width:24px; height:24px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; font:700 .54rem "Source Sans 3"; font-style:normal; transition:background .2s, color .2s; }
+  .mp-wk i.on { background:var(--pen-blue); color:var(--paper); border-color:var(--pen-blue); }
+  .mp-confirm { width:84%; background:var(--paper-soft); border:1px solid var(--line); border-radius:6px; padding:14px; box-shadow:0 16px 30px rgba(0,0,0,.3); }
+  .mp-confirm b { font:700 .86rem "Roboto Slab"; display:block; }
+  .mp-confirm p { font-size:.7rem; line-height:1.4; margin:6px 0 10px; color:var(--muted); font-weight:500; }
+  .mp-confirm div { display:flex; gap:6px; justify-content:flex-end; }
+  .mp-confirm .danger { background:var(--danger); color:var(--paper); border-color:var(--danger); }
+  .mp-hist { background:var(--paper-soft); border:1px solid var(--line); border-radius:5px; padding:10px 12px; box-shadow:0 10px 24px rgba(var(--shadow-rgb),.22); position:relative; }
+  .mp-hist small { font:800 .46rem "Source Sans 3"; letter-spacing:.14em; color:var(--muted); }
+  .mp-hist b { display:block; font:700 .78rem "Roboto Slab"; margin:2px 0; }
+  .mp-hist span { font-size:.64rem; color:var(--muted); font-weight:600; }
+  .mp-hist i { position:absolute; right:10px; top:12px; font:800 .5rem "Source Sans 3"; letter-spacing:.14em; color:var(--orange); border:1.5px solid var(--orange); padding:4px 6px; transform:rotate(-6deg); font-style:normal; transition:transform .25s; }
+  .mp-hist.stamped i { transform:rotate(-6deg) scale(1.15); background:rgba(var(--orange-rgb),.12); }
+
+  /* ========== ΕΠΙΒΛΕΨΗ ========== */
+  .mg-ctrl { display:grid; grid-template-columns:1.4fr 1fr; gap:8px; }
+  .mg-panel { margin-top:12px; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px; }
+  .mg-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .mg-top b { font:800 .5rem "Source Sans 3"; letter-spacing:.16em; color:var(--muted); }
+  .mg-leg { display:flex; gap:9px; font-size:.58rem; font-weight:700; }
+  .mg-leg span { display:flex; align-items:center; gap:4px; padding:1px 3px; }
+  .mg-leg i { width:8px; height:8px; border-radius:50%; }
+  .mg-leg .kgl i { background:var(--kg); } .mg-leg .rpl i { background:var(--rp); }
+  .mg-chart { display:flex; height:158px; position:relative; }
+  .mg-rail { width:24px; flex:0 0 24px; height:158px; }
+  .mg-rail text { font:700 8px "Source Sans 3"; fill:var(--muted); }
+  .mg-scroll { flex:1; overflow:hidden; position:relative; }
+  .mg-plot { display:block; transition:transform .4s cubic-bezier(.3,.8,.2,1); }
+  .mg-plot.drag { transition:none; }
+  .mg-empty { position:absolute; inset:0; display:grid; place-items:center; font-size:.7rem; color:var(--muted); }
+  .ms-prog:not(.drawn) .mg-plot { visibility:hidden; }
+  .ms-prog.drawn .mg-empty { display:none; }
+  .mg-plot .grid line { stroke:var(--line-soft); }
+  .mg-plot .ln { fill:none; stroke-width:2; stroke-dasharray:900; stroke-dashoffset:900; transition:opacity .3s; }
+  .ms-prog.drawn .mg-plot .ln { animation:draw 1.3s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  .mg-plot .kg { stroke:var(--kg); } .mg-plot .rp { stroke:var(--rp); stroke-width:1.5; }
+  .mg-plot circle.kg { fill:var(--paper-soft); stroke-width:2; }
+  .mg-plot circle.rp { fill:var(--rp); stroke:none; }
+  .mg-plot text { font:700 7.5px "Source Sans 3"; fill:var(--muted); }
+  .mg-plot text.rv { fill:var(--rp); font-size:8px; }
+  .mg-plot .dots { opacity:0; transition:opacity .4s .9s; }
+  .ms-prog.drawn .mg-plot .dots { opacity:1; }
+  .mg-plot .br { fill:rgba(var(--orange-rgb),.1); stroke:var(--orange); stroke-dasharray:3 2; opacity:0; transition:opacity .35s; }
+  .ms-prog.show-br .mg-plot .br { opacity:1; }
+  .ms-prog.hi-kg .rp, .ms-prog.hi-kg .rv { opacity:.15; }
+  .ms-prog.hi-rp .kg { opacity:.15; }
+  .mg-hint { font-size:.56rem; color:var(--muted); margin-top:4px; text-align:right; font-weight:600; }
+  .mg-audit { margin-top:12px; border:1px solid var(--line); border-radius:4px; background:var(--paper); }
+  .mg-ah { display:flex; justify-content:space-between; padding:9px 10px; font-size:.66rem; font-weight:700; }
+  .mg-ah em { font-style:normal; transition:transform .3s; }
+  .mg-audit.open .mg-ah em { transform:rotate(180deg); }
+  .mg-ab { display:none; padding:0 10px 8px; }
+  .mg-audit.open .mg-ab { display:block; animation:popIn .25s; }
+  .mg-ab div { font-size:.62rem; color:var(--muted); padding:4px 0; border-top:1px dashed var(--line); font-weight:600; }
+  .mg-pr { margin:16px auto 0; width:max-content; display:flex; align-items:center; gap:7px; border:2px solid var(--gold); outline:1px solid var(--gold); outline-offset:3px; padding:7px 12px; font:800 .56rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; color:var(--orange); transform:rotate(-2deg); }
+  .mg-pr svg { width:14px; height:14px; fill:var(--gold); }
+  .mg-sheet { display:none; margin-top:14px; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px; }
+  .mg-sheet.open { display:block; animation:popIn .3s; }
+  .mg-sh { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .mg-sh b { font:800 .54rem "Source Sans 3"; letter-spacing:.16em; }
+  .mg-sh i { font:800 .5rem "Source Sans 3"; color:var(--paper); background:var(--orange); border-radius:50%; width:22px; height:22px; display:grid; place-items:center; font-style:normal; }
+  .mg-r { display:flex; justify-content:space-between; padding:5px 0; border-top:1px dashed var(--line); font-size:.64rem; font-weight:600; }
+  .mg-r b { font:700 .7rem "Roboto Slab"; }
+
+  /* ========== ΠΡΟΦΙΛ ========== */
+  .mf-card { background:var(--ink-surface); color:var(--on-ink); border-radius:10px; padding:12px 14px 10px; position:relative; }
+  .mf-top { display:flex; justify-content:space-between; align-items:center; font:800 .48rem "Source Sans 3"; letter-spacing:.16em; color:var(--gold); }
+  .mf-brand { display:flex; gap:2px; } .mf-brand i { width:3px; height:12px; background:var(--gold); }
+  .mf-pol { background:var(--paper-soft); color:var(--ink); margin:14px auto 10px; width:168px; padding:9px 9px 10px; transform:rotate(-2deg); position:relative; box-shadow:0 6px 14px rgba(0,0,0,.35); }
+  .mf-tape { position:absolute; top:-8px; left:50%; margin-left:-28px; width:56px; height:15px; background:var(--tape); transform:rotate(3deg); }
+  .mf-photo { height:118px; background:var(--portrait-bg); position:relative; overflow:hidden; display:grid; place-items:end center; }
+  .mf-photo svg { width:96px; height:96px; fill:var(--portrait-sil); }
+  .mf-photo .mf-img { position:absolute; inset:0; opacity:0; transition:opacity .4s; }
+  .mf-photo.img-b .mf-img { opacity:1; }
+  .ph-a { background:radial-gradient(circle at 50% 40%, #e3b08e 0 15%, transparent 16%), radial-gradient(ellipse at 50% 108%, #3f5a6b 0 40%, transparent 41%), linear-gradient(160deg,#c9b68f,#8c7a55); }
+  .ph-b, .mf-photo .mf-img { background:radial-gradient(circle at 50% 40%, #d79a76 0 15%, transparent 16%), radial-gradient(circle at 50% 30%, #2c2118 0 18%, transparent 19%), radial-gradient(ellipse at 50% 108%, #7a3325 0 40%, transparent 41%), linear-gradient(200deg,#9fb2a6,#5b6e66); }
+  .mf-photo em { position:absolute; top:6px; left:6px; font:800 .4rem "Source Sans 3"; letter-spacing:.12em; background:rgba(0,0,0,.55); color:#fff; padding:2px 4px; font-style:normal; }
+  .mf-name { font:700 1rem "Roboto Slab"; text-align:center; margin-top:8px; letter-spacing:.04em; }
+  .mf-age { display:flex; justify-content:center; gap:6px; align-items:baseline; font:800 .48rem "Source Sans 3"; letter-spacing:.14em; color:var(--muted); margin-top:3px; }
+  .mf-age b { font:700 .9rem "Roboto Slab"; color:var(--ink); letter-spacing:0; }
+  .mf-foot { text-align:center; font:800 .46rem "Source Sans 3"; letter-spacing:.3em; color:var(--ink-meta); }
+  .mf-slip { display:none; margin-top:10px; background:var(--paper-soft); border:1px solid var(--line-card); padding:2px 10px 10px; border-radius:4px; box-shadow:0 6px 14px rgba(var(--shadow-rgb),.12); }
+  .mf-slip.open { display:block; animation:popIn .3s ease-out; }
+  .mf-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  .mf-grid i { aspect-ratio:1; border:1px dashed var(--line); border-radius:4px; display:grid; place-items:center; font-style:normal; color:var(--muted); font-size:.8rem; position:relative; }
+  .mf-grid i.up { border-style:solid; border-color:var(--orange); color:var(--orange); }
+  .mf-grid i.ph-a, .mf-grid i.ph-b { border-style:solid; animation:popIn .3s; }
+  .mf-grid i.sel { outline:2px solid var(--pen-blue); outline-offset:1px; }
+  .mf-grid i.sel::after { content:"✓"; position:absolute; right:-5px; top:-6px; background:var(--pen-blue); color:var(--paper); width:13px; height:13px; border-radius:50%; font-size:.48rem; display:grid; place-items:center; }
+  .mf-sw { display:flex; align-items:center; gap:8px; margin-top:8px; font-size:.64rem; font-weight:700; }
+  .mf-sw i { width:30px; height:17px; border-radius:9px; background:var(--line); position:relative; transition:background .25s; }
+  .mf-sw i::after { content:""; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:var(--paper-soft); transition:left .25s; }
+  .mf-sw.on i { background:var(--pen-blue); } .mf-sw.on i::after { left:15px; }
+  .mf-unit { margin-top:12px; }
+  .mf-ex { display:flex; justify-content:space-between; align-items:baseline; margin-top:7px; font:700 .9rem "Roboto Slab"; padding:2px 4px; border-radius:4px; }
+  .mf-ex small { font:700 .56rem "Source Sans 3"; color:var(--muted); padding:1px 3px; }
+  .mf-exp { margin-top:14px; border:1.5px dashed var(--ink); padding:10px; text-align:center; font:800 .56rem "Source Sans 3"; letter-spacing:.14em; border-radius:6px; }
+  .mf-file { display:none; align-items:center; justify-content:space-between; margin-top:6px; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:7px 10px; }
+  .mf-file.show { display:flex; animation:popIn .35s; }
+  .mf-file b { font-size:.64rem; } .mf-file small { font-size:.56rem; color:var(--muted); font-weight:600; }
+
+  /* ---------- typography before / after ---------- */
+  .type-cmp { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:18px; }
+  .type-cmp figure { margin:0; }
+  .type-cmp figcaption { font:800 .6rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .old-card { background:var(--paper-soft); border:1px solid var(--line); border-radius:8px; padding:12px 14px; box-shadow:0 12px 26px rgba(0,0,0,.18); }
+  .old-card p { margin:0 0 8px; font-family:"Playpen Sans",cursive; font-size:.72rem; line-height:1.45; font-weight:500; }
+  .old-card div { display:flex; gap:6px; align-items:center; }
+  .old-card span { font:700 .6rem "Roboto Slab"; color:var(--orange); margin-right:auto; }
+  .old-card button { border:1px solid var(--ink); background:none; color:var(--ink); font:800 .54rem "Source Sans 3"; letter-spacing:.1em; padding:6px 9px; border-radius:5px; }
+  .static-coach { position:relative; left:auto; right:auto; bottom:auto; transform:none !important; max-width:300px; }
+  .spec { margin:12px 0 0; padding-left:18px; color:var(--muted); font-size:.84rem; line-height:1.5; }
+  .spec b { color:var(--ink); }
+  .vals { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+  .vals .ms-f { width:120px; }
+
+  /* ---------- mirror diagram ---------- */
+  .layers { display:flex; gap:0; flex-wrap:wrap; align-items:stretch; }
+  .layers > div { flex:1 1 200px; background:var(--paper-soft); border:1px solid var(--line); padding:13px 15px; }
+  .layers > div b { display:block; font:700 .84rem "Roboto Slab"; margin-bottom:4px; }
+  .layers > div small { color:var(--muted); font-size:.84rem; line-height:1.45; display:block; }
+  .layers > div i { font:800 .58rem "Source Sans 3"; font-style:normal; letter-spacing:.14em; color:var(--orange); display:block; margin-bottom:4px; }
+  .layers > span { align-self:center; padding:0 8px; color:var(--orange); font-weight:800; }
+  ol.qs { line-height:1.55; padding-left:22px; max-width:920px; }
+  ol.qs li { margin:8px 0; }
+  .verdict { margin-top:22px; background:var(--ink-surface); color:var(--on-ink); padding:20px 22px; border-radius:4px; line-height:1.55; }
+  .verdict b { color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button id="motion-btn" type="button" aria-pressed="false">ΚΙΝΗΣΗ: ON</button>
+  <button id="theme-btn" type="button" aria-pressed="false">DARK MODE</button>
+</div>
+
+<h1 class="page">Ξενάγηση σε όλες τις ενότητες</h1>
+<p class="intro">Συνέχεια του <code>animated-instructions-designs.html</code>: επιλέχθηκε το <b>Γ, το χέρι πάνω στη σελίδα</b>. Εδώ η ξενάγηση εφαρμόζεται σε <b>όλες τις ενότητες που έχουν ( i )</b>: Καταγραφή, Πρόγραμμα, Επίβλεψη και Προφίλ. Κάθε κινητό είναι λειτουργικό. Πατήστε το <b>( i )</b> ή οποιοδήποτε βήμα της λίστας δίπλα του. Με το πληκτρολόγιο: <b>→</b> επόμενο, <b>←</b> προηγούμενο, <b>Esc</b> κλείσιμο. Δεν έχει αλλάξει τίποτα στην εφαρμογή.</p>
+
+<div class="improve">
+  <div><b><i>01</i>Στιβαρή γραμματοσειρά</b>Το χειρόγραφο Playpen φεύγει από την ξενάγηση. Τίτλος σε Roboto Slab 700 και κείμενο σε Source Sans 3 500, όπως σε όλο το theme (§2).</div>
+  <div><b><i>02</i>Κάρτα-οδηγός στη γλώσσα της εφαρμογής</b>Μελανί κάρτα με χρυσό, όπως η κάρτα αθλητή και το ενεργό πρόγραμμα. Έχει μόνο σύντομο τίτλο, το σημερινό κείμενο από κάτω, μπάρα πέντε τμημάτων και τρία κουμπιά-σύμβολα. Δεν έχει καμία ετικέτα ή μέτρηση από πάνω.</div>
+  <div><b><i>03</i>Η κάρτα δεν κρύβει ποτέ τον στόχο</b>Η κάρτα κάθεται κάτω. Αν από κάτω δεν μένει χώρος για να μη σκεπάσει τον στόχο, ανεβαίνει επάνω. Σε μεγάλους στόχους μένει κάτω, ώστε να φαίνεται η κορυφή τους.</div>
+  <div><b><i>04</i>Ο προβολέας ακολουθεί την κύλιση</b>Όταν η σελίδα κυλά προς το επόμενο σημείο, ο προβολέας μένει κολλημένος στο στοιχείο και δεν μένει πίσω στην παλιά του θέση.</div>
+  <div><b><i>05</i>Ξεκινά από τη δική σας σελίδα</b>Η ξενάγηση παίζει πάνω σε ό,τι ήδη βλέπετε, όχι σε άδεια σελίδα. Στο τέλος η σελίδα επανέρχεται ακριβώς όπως ήταν (§3).</div>
+  <div><b><i>06</i>Τα δείγματα φαίνονται ως δείγματα</b>Οι τιμές που γράφει η ξενάγηση είναι μπλε με μαρκαδόρο, και τα νέα στοιχεία έχουν διακεκομμένο περίγραμμα.</div>
+  <div><b><i>07</i>Έλεγχος από τον χρήστη</b>Τρία κουμπιά χωρίς κείμενο: ‹ προηγούμενο, ↻ ξανά, › επόμενο. Το › ανασαίνει όταν τελειώσει το βήμα, το σύρσιμο πάνω στην κάρτα αλλάζει βήμα, και στο desktop δουλεύουν τα βελάκια και το Esc.</div>
+  <div><b><i>08</i>Χωρίς κίνηση</b>Με reduced motion δεν υπάρχει δάχτυλο: κάθε βήμα δείχνει την τελική του εικόνα, με τον προβολέα στο στοιχείο που θα πατιόταν.</div>
+</div>
+
+<!-- ================= §1 ================= -->
+<h2 class="sec"><small>§1 · ΟΛΕΣ ΟΙ ΕΝΟΤΗΤΕΣ</small>Τέσσερις ξεναγήσεις, είκοσι βήματα</h2>
+<p class="sec-note">Δίπλα σε κάθε κινητό υπάρχει ολόκληρη η οδηγία της ενότητας: ο <b>σύντομος τίτλος</b> (νέος, 2–4 λέξεις) και από κάτω η <b>σημερινή γραμμή αυτούσια</b>. Πάτημα σε ένα βήμα ξεκινά την ξενάγηση από εκείνο το σημείο.</p>
+<div class="blocks">
+  <section class="block" id="t-log"></section>
+  <section class="block" id="t-plan"></section>
+  <section class="block" id="t-prog"></section>
+  <section class="block" id="t-prof"></section>
+</div>
+
+<!-- ================= §2 ================= -->
+<h2 class="sec"><small>§2 · ΓΡΑΜΜΑΤΟΣΕΙΡΑ</small>Από χειρόγραφο σε στιβαρό</h2>
+<p class="sec-note">Το Playpen Sans ταιριάζει στο σημείωμα με τον συνδετήρα, αλλά σε κάρτα που μιλά πάνω από σκοτεινή σελίδα διαβάζεται αδύναμο και παιχνιδιάρικο. Η κάρτα-οδηγός παίρνει την τυπογραφία της υπόλοιπης εφαρμογής, με την ίδια ιεραρχία που έχουν η κάρτα άσκησης και οι σφραγίδες.</p>
+<div class="type-cmp">
+  <figure><figcaption>Πριν · Playpen Sans 500</figcaption>
+    <div class="old-card"><p>Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.</p><div><span>02 / 05</span><button>ΠΑΡΑΛΕΙΨΗ</button><button>ΕΠΟΜΕΝΟ ›</button></div></div>
+  </figure>
+  <figure><figcaption>Τώρα · Roboto Slab 700 + Source Sans 3</figcaption>
+    <div class="coach static-coach">
+      <button class="coach-x" type="button" aria-label="Κλείσιμο">✕</button>
+      <h4 class="coach-t">Σύρετε τις ασκήσεις</h4>
+      <p class="coach-p">Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.</p>
+      <div class="coach-seg"><i class="done"><s></s></i><i><s style="width:60%"></s></i><i><s></s></i><i><s></s></i><i><s></s></i></div>
+      <div class="coach-f"><button class="prev" type="button" aria-label="Προηγούμενο βήμα">‹</button><button class="again" type="button" aria-label="Ξανά">↻</button><button class="next" type="button" aria-label="Επόμενο βήμα">›</button></div>
+    </div>
+  </figure>
+  <figure><figcaption>Η κλίμακα</figcaption>
+    <ul class="spec">
+      <li><b>Τίτλος βήματος</b>: Roboto Slab 700 · 1.02rem (όπως ο τίτλος της κάρτας άσκησης)</li>
+      <li><b>Κείμενο</b>: Source Sans 3 500 · .8rem / 1.45 · <code>--ink-lede</code> πάνω στο μελανί</li>
+      <li><b>Κουμπιά</b>: μόνο σύμβολα (‹ ↻ ›) σε Roboto Slab 700, στρογγυλά, με <code>aria-label</code>. Το › έχει το ίδιο μέγεθος με τα άλλα και ξεχωρίζει μόνο από το χρυσό, με μελανί σύμβολο (<code>--on-gold</code>), και στο τελευταίο βήμα γίνεται ✓.</li>
+      <li><b>Τιμές-δείγματα</b>: ίδια γραμματοσειρά με τα πεδία, 700, <code>--pen-blue</code> με μαρκαδόρο:</li>
+    </ul>
+    <div class="vals"><div class="ms-f"><span class="v">10</span></div><div class="ms-f"><span class="v gv">10</span></div></div>
+  </figure>
+</div>
+
+<!-- ================= §3 ================= -->
+<h2 class="sec"><small>§3 · ΑΣΦΑΛΕΙΑ</small>Πώς το Γ παύει να είναι επικίνδυνο: το αντίγραφο-καθρέφτης</h2>
+<p class="sec-note">Το μειονέκτημα του Γ ήταν ότι πατά πάνω στην αληθινή φόρμα. Η λύση είναι να μην την αγγίζει ποτέ. Τη στιγμή που πατιέται το ( i ), η ενότητα <b>αντιγράφεται</b> και το αντίγραφο μπαίνει ακριβώς από πάνω της. Η ξενάγηση γράφει μόνο στο αντίγραφο, και στο τέλος το αντίγραφο σβήνει.</p>
+<div class="layers">
+  <div><i>1 · ΠΑΤΗΜΑ ( i )</i><b>Αντίγραφο της ενότητας</b><small><code>section.cloneNode(true)</code>: ίδια εικόνα, ίδια κατάσταση, ίδιες τιμές. Οι listeners δεν αντιγράφονται, άρα κανένα κουμπί του αντιγράφου δεν κάνει τίποτα.</small></div>
+  <span>→</span>
+  <div><i>2 · ΠΑΝΩ ΑΠΟ ΤΗΝ ΑΛΗΘΙΝΗ</i><b>Η αληθινή σελίδα γίνεται <code>inert</code></b><small>Το αντίγραφο στέκεται στην ίδια θέση και είναι <code>aria-hidden</code>. Η αληθινή μένει από κάτω, αμετάβλητη και χωρίς focus.</small></div>
+  <span>→</span>
+  <div><i>3 · ΣΕΝΑΡΙΟ</i><b>Γράφει μόνο στο αντίγραφο</b><small>Πρόχειρο, <code>sessions</code>, autosave και συγχρονισμός δεν ακούν τίποτα, γιατί δεν τρέχει κανένα event της εφαρμογής.</small></div>
+  <span>→</span>
+  <div><i>4 · ΤΕΛΟΣ</i><b>Το αντίγραφο σβήνει</b><small>Με ένα σύντομο fade η αληθινή σελίδα ξαναφαίνεται, ακριβώς όπως ήταν, με το scroll στην ίδια θέση.</small></div>
+</div>
+<div class="grid2" style="margin-top:18px">
+  <div class="box"><ul class="tight">
+    <li><b>Η μεταβλητή κατάσταση λύνεται με «γράψε από πάνω».</b> Κάθε βήμα γράφει τις τιμές που χρειάζεται και δεν υποθέτει ότι είναι άδειες. Αν λείπει κάτι (π.χ. ένας επισκέπτης χωρίς καμία άσκηση στη βιβλιοθήκη), το σενάριο προσθέτει στο αντίγραφο ένα στοιχείο-δείγμα με διακεκομμένο περίγραμμα.</li>
+    <li><b>Τα demo εδώ το κάνουν ήδη έτσι:</b> η Επίβλεψη ξεκινά με επιλεγμένη άσκηση και γράφημα, και η Καταγραφή με ημερομηνία και PUSH. Η ξενάγηση πατά από πάνω τους χωρίς να τα «καθαρίσει» πρώτα.</li>
+  </ul></div>
+  <div class="box"><ul class="tight">
+    <li><b>Δεν χρειάζεται δεύτερο markup.</b> Ο κινητήρας είναι ο ίδιος με τη μινιατούρα, μόνο που η «μινιατούρα» είναι πλέον το αντίγραφο της ίδιας της ενότητας, σε κλίμακα 1:1.</li>
+    <li><b>Τα selectors είναι το μόνο σημείο που μπορεί να σπάσει.</b> Ένα e2e τρέχει κάθε σενάριο σε fast mode και αποτυγχάνει αν λείπει κάποιος selector, ώστε μια αλλαγή στο markup να μην περάσει αθόρυβα.</li>
+  </ul></div>
+</div>
+
+<!-- ================= §4 ================= -->
+<h2 class="sec"><small>§4 · ΥΛΟΠΟΙΗΣΗ</small>Τι χρειάζεται και τι μένει ανοιχτό</h2>
+<div class="scroll-x">
+<table class="cmp">
+  <thead><tr><th></th><th>Τι</th><th>Κόστος</th></tr></thead>
+  <tbody>
+    <tr><th>Νέο</th><td><code>modules/guide-tour.js</code> (κινητήρας, καθρέφτης, κάρτα, πλήκτρα) και ένα σενάριο ανά ενότητα (~40 γραμμές το καθένα)</td><td>~350 γραμμές JS + ~120 CSS</td></tr>
+    <tr><th>Νέα κείμενα</th><td>20 τίτλοι βημάτων + 5 <code>aria-label</code> για τα κουμπιά-σύμβολα (Προηγούμενο, Ξανά, Επόμενο, Τέλος, Κλείσιμο)</td><td>25 συμβολοσειρές × 4 γλώσσες</td></tr>
+    <tr><th>Αλλάζει</th><td>Το ( i ) ανοίγει την ξενάγηση αντί για το <code>.info-panel</code>. Το <code>&lt;ol&gt;</code> μένει στο DOM ως πηγή του κειμένου και για screen readers.</td><td>μικρό</td></tr>
+    <tr><th>Δεν αλλάζει</th><td>Schema, αποθήκευση, συγχρονισμός, CSV, CSP, οι σημερινές 20 γραμμές και τα i18n IDs τους</td><td>—</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="verdict">Πρόταση: <b>Γ με αντίγραφο-καθρέφτη</b>, κάρτα-οδηγό σε μελανί και χρυσό με την τυπογραφία του theme, και αυτόματη αλλαγή θέσης της κάρτας. Παίζει μόνο όταν πατηθεί το ( i ). Την πρώτη φορά που ανοίγει μια ενότητα, το ( i ) απλώς «ανασαίνει» δύο φορές.</div>
+<h3 style="font-family:'Roboto Slab';margin:30px 0 4px">Ανοιχτά ερωτήματα</h3>
+<ol class="qs">
+  <li><b>Σύντομοι τίτλοι:</b> τους κρατάμε (24 νέες συμβολοσειρές × 4 γλώσσες) ή η κάρτα δείχνει μόνο το σημερινό κείμενο; Χωρίς τίτλο η κάρτα κονταίνει κατά ~22px, αλλά διαβάζεται πιο αργά.</li>
+  <li><b>Αρχική και Ιστορικό.</b> Ο κανόνας της 0.3.4 λέει «οδηγίες μόνο όπου υπάρχει ήδη ( i )». Στο Ιστορικό όμως η «ΕΠΙΛΟΓΗ» κρύβει επεξεργασία, αντιγραφή και διαγραφή, κάτι που μια ξενάγηση δείχνει σε τρία δευτερόλεπτα. Ανοίγει ξανά το θέμα;</li>
+  <li><b>Desktop.</b> Στα &gt;850px η κάρτα μπορεί να κάθεται <i>δίπλα</i> στον προβολέα με ένα βελάκι, αντί για πάνω ή κάτω, γιατί υπάρχει χώρος. Θέλουμε ξεχωριστή συμπεριφορά;</li>
+  <li><b>Λίστα βημάτων στο κινητό.</b> Τα πέντε τμήματα της μπάρας στην κάρτα θα μπορούσαν να πατιούνται, ώστε να πηγαίνει κανείς κατευθείαν σε ένα βήμα χωρίς να προσθέσουμε αριθμό ή λίστα.</li>
+  <li><b>«Το είδα».</b> Αν ο χρήστης φτάσει στο 05, σβήνει το «ανάσασμα» του ( i ) για εκείνη την ενότητα. Αυτό θέλει τοπικό κλειδί, χωρίς συγχρονισμό.</li>
+</ol>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+const pad = n => String(n).padStart(2, '0');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const CANCEL = Symbol('cancel');
+let RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const GV = '.ms-f, .mf-name, .mf-age, .mp-ex b, .mp-ex small, .mf-ex';
+function within(e, root, prop) { let v = 0; while (e && e !== root) { v += e[prop]; e = e.offsetParent; } return v; }
+
+/* ======================= ENGINE ======================= */
+class Ctx {
+  constructor(p, rid) { this.p = p; this.rid = rid; this.fast = true; this.mark = false; this.lastMark = null; }
+  get root() { return this.p.scene; }
+  alive() { if (this.rid !== this.p.rid) throw CANCEL; }
+  q(s) {
+    if (typeof s !== 'string') return s;
+    const n = this.p.scene.querySelector(s) || this.p.stage.querySelector(s);
+    if (!n) throw new Error('missing ' + s);
+    return n;
+  }
+  marked(e) { if (this.mark) { e.classList.add('rm-mark'); this.lastMark = e; } }
+  async wait(ms) {
+    this.alive(); if (this.fast) return;
+    let left = ms;
+    while (left > 0) { const d = Math.min(left, 30); await sleep(d); this.alive(); if (!this.p.paused) { left -= d; this.p.tick(d); } }
+  }
+  async cam(s, off = 14) {
+    this.alive();
+    const p = this.p; let y = 0;
+    if (s != null) y = within(this.q(s), p.scene, 'offsetTop') - off;
+    const max = p.scene.offsetHeight - p.view.clientHeight / p.k;
+    const ny = Math.round(Math.max(0, Math.min(y, Math.max(0, max))));
+    const moved = ny !== p.y;
+    p.y = ny; p.applyCam();
+    if (!moved || this.fast) return;
+    /* ο προβολέας μένει κολλημένος στο στοιχείο όσο κυλά η σελίδα */
+    const t = p.spotTarget, sp = p.spotEl;
+    if (sp && t && t.isConnected && sp.classList.contains('on')) {
+      sp.classList.add('track');
+      const t0 = performance.now();
+      while (performance.now() - t0 < 480) { await sleep(16); this.alive(); if (t.isConnected) p.spotOn(t, false); }
+      sp.classList.remove('track');
+    } else await this.wait(480);
+  }
+  pos(e, ax = .5, ay = .5) { const r = e.getBoundingClientRect(), s = this.p.stage.getBoundingClientRect(); return [r.left - s.left + r.width * ax, r.top - s.top + r.height * ay]; }
+  async move(s, ax, ay) {
+    this.alive(); if (this.fast) return;
+    const e = this.q(s), f = this.p.finger;
+    const [x, y] = this.pos(e, ax, ay);
+    const first = !f.classList.contains('on');
+    if (first) { f.classList.add('jump'); f.style.transform = `translate(${x}px,${y + 46}px)`; void f.offsetWidth; f.classList.remove('jump'); f.classList.add('on'); }
+    f.style.transform = `translate(${x}px,${y}px)`;
+    this.p.spotOn(e);
+    await this.wait(first ? 430 : 520);
+  }
+  async tap(s, ax, ay) {
+    const e = this.q(s);
+    if (this.fast) { this.marked(e); return; }
+    await this.move(e, ax, ay);
+    const f = this.p.finger;
+    f.classList.add('press'); e.classList.add('is-pressed'); this.ripple(e, ax, ay);
+    await this.wait(170);
+    f.classList.remove('press'); e.classList.remove('is-pressed');
+    await this.wait(150);
+  }
+  async point(s, ax, ay) {
+    const e = this.q(s);
+    if (this.fast) { this.marked(e); return; }
+    await this.move(e, ax, ay);
+    e.classList.remove('pulse'); void e.offsetWidth; e.classList.add('pulse');
+    await this.wait(720); e.classList.remove('pulse');
+  }
+  ripple(e, ax, ay) { const [x, y] = this.pos(e, ax, ay); const r = el('span', 'ripple'); r.style.left = x + 'px'; r.style.top = y + 'px'; this.p.stage.append(r); setTimeout(() => r.remove(), 600); }
+  val(s, t) {
+    const e = this.q(s), v = e.querySelector('.v') || e;
+    v.textContent = t;
+    if (this.p.ghost && e.matches(GV)) v.classList.add('gv');
+  }
+  text(s, t) { this.q(s).textContent = t; }
+  cls(s, c, on = true) { this.q(s).classList.toggle(c, on); }
+  flash(s) { if (this.fast) return; const e = this.q(s); e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); }
+  async type(s, t, mirror) {
+    this.alive();
+    const e = this.q(s);
+    if (this.fast) { this.val(e, t); if (mirror) this.val(mirror, t); return; }
+    e.classList.add('is-focus'); this.val(e, '');
+    let acc = '';
+    for (const ch of t) { acc += ch; this.val(e, acc); if (mirror) this.val(mirror, acc); await this.wait(t.length > 14 ? 62 : 95); }
+    await this.wait(260); e.classList.remove('is-focus');
+  }
+  async pick(s, opts, idx, { browse = false, set = true } = {}) {
+    const e = this.q(s);
+    if (this.fast) { if (set) this.val(e, opts[idx]); this.marked(e); return; }
+    await this.tap(e);
+    const p = this.p, pop = el('div', 'ms-pop', opts.map(o => `<div>${o}</div>`).join(''));
+    pop.style.top = (within(e, p.scene, 'offsetTop') + e.offsetHeight + 3) + 'px';
+    pop.style.left = within(e, p.scene, 'offsetLeft') + 'px';
+    pop.style.minWidth = e.offsetWidth + 'px';
+    p.scene.append(pop);
+    await this.wait(260);
+    const items = [...pop.children];
+    if (browse) for (const it of items) { await this.move(it, .35, .5); it.classList.add('hl'); await this.wait(120); it.classList.remove('hl'); }
+    await this.tap(items[idx], .35, .5);
+    items[idx].classList.add('sel');
+    if (set) this.val(e, opts[idx]);
+    await this.wait(200); pop.remove();
+    if (this.p.spotEl) this.p.spotOn(e);
+  }
+  async drag(s, dx, dy, frame, { ax = .5, ay = .5, dur = 700 } = {}) {
+    const e = this.q(s);
+    if (this.fast) { this.marked(e); frame && frame(1); return; }
+    await this.move(e, ax, ay);
+    const [x, y] = this.pos(e, ax, ay), f = this.p.finger, k = this.p.k;
+    f.classList.add('press', 'drag');
+    const N = Math.max(10, Math.round(dur / 16));
+    for (let i = 1; i <= N; i++) { const t = ease(i / N); f.style.transform = `translate(${x + dx * k * t}px,${y + dy * k * t}px)`; frame && frame(t); await this.wait(16); }
+    f.classList.remove('press', 'drag');
+    await this.wait(180);
+  }
+  toast(t) {
+    const n = el('div', 'ms-stamp', `<i>✓</i>${t}`);
+    this.p.stage.append(n);
+    if (this.fast) n.classList.add('show'); else requestAnimationFrame(() => requestAnimationFrame(() => n.classList.add('show')));
+    return n;
+  }
+  overlay(html, cls = 'bottom') { const n = el('div', 'ov ' + cls, html); this.p.stage.append(n); if (!this.fast) void n.offsetWidth; n.classList.add('in'); return n; }
+  async close(n) { if (this.fast) { n.remove(); return; } n.classList.remove('in'); await this.wait(300); n.remove(); }
+  fingerOff() { this.p.finger.classList.remove('on'); }
+}
+
+class Player {
+  constructor(o) {
+    Object.assign(this, { pause: 0, ghost: true, prep: null, onSpot() {}, onStep() {}, onProgress() {}, onDone() {}, onEnd() {} }, o);
+    this.view = this.stage.querySelector('.view');
+    this.finger = el('div', 'finger'); this.stage.append(this.finger);
+    this.spotEl = el('div', 'spot'); this.stage.append(this.spotEl);
+    this.rid = 0; this.hidden = false; this.cur = 0; this.y = 0; this.spotTarget = null;
+    new IntersectionObserver(([e]) => { this.hidden = !e.isIntersecting; }).observe(this.stage);
+  }
+  get paused() { return this.hidden || document.hidden; }
+  build() {
+    this.stage.querySelectorAll('.ov,.ms-stamp,.ripple').forEach(n => n.remove());
+    this.view.innerHTML = this.def.html();
+    this.scene = this.view.firstElementChild;
+    this.scene.setAttribute('aria-hidden', 'true');
+    this.scene.classList.add('nofx');
+    if (this.prep) this.prep(this.scene);
+    this.measure(); this.y = 0; this.applyCam();
+    this.finger.className = 'finger';
+    this.spotEl.classList.remove('on'); this.spotTarget = null;
+  }
+  idle() {
+    this.stop(); this.build();
+    this.view.classList.remove('fade'); void this.view.offsetWidth; this.view.classList.add('fade');
+  }
+  measure() { this.k = (this.view.clientWidth || this.def.width) / this.def.width; }
+  applyCam() { this.scene.style.transform = `translate3d(0,${(-this.y * this.k).toFixed(1)}px,0) scale(${this.k})`; }
+  spotOn(e, dock = true) {
+    const r = e.getBoundingClientRect(), s = this.stage.getBoundingClientRect(), p = 5;
+    Object.assign(this.spotEl.style, { left: (r.left - s.left - p) + 'px', top: (r.top - s.top - p) + 'px', width: (r.width + 2 * p) + 'px', height: (r.height + 2 * p) + 'px' });
+    this.spotEl.classList.add('on'); this.spotTarget = e;
+    if (dock) this.onSpot(r);
+  }
+  tick(ms) { this.elapsed += ms; const d = (this.def.dur && this.def.dur[this.cur]) || 5000; this.onProgress(this.cur, Math.min(this.elapsed / d, .96)); }
+  stop() { this.rid++; this.finger.classList.remove('on'); this.spotEl.classList.remove('on'); }
+  async run(from = 0) {
+    const rid = ++this.rid, c = new Ctx(this, rid), n = this.def.steps.length;
+    from = Math.max(0, Math.min(from, n - 1));
+    this.build();
+    this.scene.classList.add('ghost');
+    try {
+      for (let i = 0; i < from; i++) await this.def.steps[i](c);
+      this.cur = from;
+      if (RM) {
+        /* Στατικό καρέ: τελική εικόνα του βήματος, προβολέας στο στοιχείο που θα πατιόταν */
+        c.mark = true; await this.def.steps[from](c); c.mark = false;
+        this.onStep(from); this.onProgress(from, 1);
+        if (c.lastMark) this.spotOn(c.lastMark);
+        this.onDone(from);
+        return;
+      }
+      void this.scene.offsetWidth; this.scene.classList.remove('nofx');
+      c.fast = false; this.elapsed = 0; this.onStep(from);
+      await this.def.steps[from](c);
+      this.onProgress(from, 1);
+      await c.wait(250); c.fingerOff();
+      if (rid === this.rid) this.onDone(from);
+    } catch (e) { if (e !== CANCEL) console.error(e); }
+  }
+}
+
+function swipe(node, cb) {
+  let x0 = null;
+  node.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; x0 = e.clientX; });
+  node.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 36) cb(dx < 0 ? 1 : -1); });
+  node.addEventListener('pointercancel', () => { x0 = null; });
+}
+
+/* ======================= SCENE: ΚΑΤΑΓΡΑΦΗ ======================= */
+const cal = '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
+const setRow = (i, extra) => `<div class="ms-row${extra ? ' extra enter demo' : ''}" data-row="${i}"><span class="n">${pad(i + 1)}</span><span class="ms-f sm" data-k="r${i}"><span class="v"></span><i class="ph">0</i></span><span class="x">×</span><span class="ms-f sm ms-sel" data-k="m${i}"><span class="v">Κιλά</span><em>▾</em></span><span class="ms-f sm" data-k="w${i}"><span class="v"></span><i class="ph">kg</i></span><b class="rm" data-k="rm${i}">−</b></div>`;
+const logCard = (i, name, live) => `<article class="ms-card" data-c="${i}"><span class="ms-tape"></span>
+  <div class="ms-ctitle"><div><small>ΑΣΚΗΣΗ ${i + 1}</small><h4>${name}</h4></div><span class="ms-tag">3 σετ</span></div>
+  <div class="ms-shead"><span>ΣΕΤ</span><span>ΕΠΑΝ.</span><span></span><span>ΜΕΤΡΗΣΗ</span><span>ΒΑΡΟΣ</span><span></span></div>
+  <div class="ms-sets">${live ? [0, 1, 2].map(n => setRow(n)).join('') : [0, 1, 2].map(n => setRow(n).replace(/ data-k="[^"]+"/g, '')).join('')}</div>
+  <div class="ms-acts"><b class="ms-mini off"${live ? ' data-k="copy"' : ''}>ΑΝΤΙΓΡΑΦΗ</b><b class="ms-mini"${live ? ' data-k="extra"' : ''}>＋ Extra σετ</b></div>
+  <div class="ms-lab">Σχόλια άσκησης</div>
+  <div class="ms-f ms-area"${live ? ' data-k="com"' : ''}><span class="v"></span><i class="ph">Τεχνική, αίσθηση, RPE...</i></div>
+</article>`;
+const deckTo = (c, pos, drag = false) => {
+  const tr = c.q('.ms-track'); tr.classList.toggle('drag', drag);
+  tr.style.transform = `translateX(calc(${-pos * 100}% - ${pos * 10}px))`;
+  const i = Math.round(pos);
+  c.text('.ms-dstamp .v', `ΑΣΚΗΣΗ ${i + 1} / 3`);
+  c.q('.ms-dprog i').style.width = ((i + 1) / 3 * 100) + '%';
+};
+const logMode = (c, m) => { c.cls('[data-k=sch]', 'on', m === 'sch'); c.cls('[data-k=free]', 'on', m === 'free'); c.cls(c.root, 'is-free', m === 'free'); };
+
+const LOG = {
+  width: 300, name: 'Καταγραφή',
+  titles: ['Ημερομηνία και τύπος', 'Σύρετε τις ασκήσεις', 'Επαναλήψεις και βάρος', 'Σετ και σχόλια', 'Ολοκλήρωση'],
+  captions: [
+    'Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση.',
+    'Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.',
+    'Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.',
+    'Προσθέστε ή αφαιρέστε σετ, αντιγράψτε το πρώτο στα υπόλοιπα και γράψτε σχόλια όπου χρειάζεται.',
+    'Με «Ολοκλήρωση προπόνησης» η καταγραφή αποθηκεύεται στο Ιστορικό. Από εκεί μπορείτε να τη διορθώσετε ή να την αντιγράψετε.'
+  ],
+  dur: [6200, 6400, 7400, 9600, 6200],
+  html: () => `<div class="ms ms-log">
+    <div class="ms-tool">
+      <div class="ms-lab" style="margin-top:0">Ημερομηνία</div>
+      <div class="ms-f" data-k="date"><span class="v"></span><i class="ph">ηη/μμ/εεεε</i>${cal}</div>
+      <div class="ms-toggle"><b data-k="sch" class="on">Από το πρόγραμμα</b><b data-k="free">Ελεύθερη</b></div>
+      <div class="ms-lab">Προπόνηση ημέρας</div>
+      <div class="ms-f ms-sel" data-k="day"><span class="v"></span><i class="ph">Επιλογή</i><em>▾</em></div>
+    </div>
+    <div class="ms-deck">
+      <div class="ms-deckhead"><b class="ms-arr" data-k="prev">‹</b><span class="ms-dstamp"><span class="v">ΑΣΚΗΣΗ 1 / 3</span></span><b class="ms-arr" data-k="next">›</b></div>
+      <div class="ms-dview"><div class="ms-track">${logCard(0, 'Πιέσεις πάγκου', true)}${logCard(1, 'Στρατιωτικές πιέσεις')}${logCard(2, 'Βυθίσεις')}</div></div>
+      <div class="ms-dprog"><i></i></div>
+    </div>
+    <div class="ms-save" data-k="save">ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ</div>
+  </div>`,
+  prep: s => { s.classList.add('has-day'); s.querySelector('[data-k=date] .v').textContent = '16/10/2026'; s.querySelector('[data-k=day] .v').textContent = 'PUSH · Ημέρα 1'; },
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=date]'); c.val('[data-k=date]', '16/10/2026'); c.flash('[data-k=date]'); await c.wait(380);
+      await c.tap('[data-k=free]'); logMode(c, 'free'); await c.wait(600);
+      await c.tap('[data-k=sch]'); logMode(c, 'sch'); await c.wait(300);
+      await c.pick('[data-k=day]', ['PUSH · Ημέρα 1', 'PULL · Ημέρα 2', 'LEGS · Ημέρα 3'], 0);
+      c.cls(c.root, 'has-day'); await c.wait(420);
+    },
+    async c => {
+      await c.cam('.ms-deck', 8);
+      await c.drag('.ms-dview', -150, 0, t => deckTo(c, t * .55, true), { ax: .78, ay: .4, dur: 620 });
+      deckTo(c, 1); await c.wait(520);
+      await c.tap('[data-k=next]'); deckTo(c, 2); await c.wait(520);
+      await c.tap('[data-k=prev]'); deckTo(c, 1); await c.wait(380);
+      await c.drag('.ms-dview', 150, 0, t => deckTo(c, 1 - t * .55, true), { ax: .22, ay: .4, dur: 620 });
+      deckTo(c, 0); await c.wait(420);
+    },
+    async c => {
+      await c.cam('.ms-card[data-c="0"] .ms-shead', 46);
+      await c.tap('[data-k=r0]'); await c.type('[data-k=r0]', '10');
+      await c.pick('[data-k=m0]', ['Κιλά', 'Πλάκες', 'Συνδυασμός', 'Bodyweight'], 0, { browse: true });
+      await c.tap('[data-k=w0]'); await c.type('[data-k=w0]', '60');
+      c.cls('[data-k=copy]', 'off', false); c.flash('[data-k=copy]'); await c.wait(500);
+    },
+    async c => {
+      await c.cam('.ms-card[data-c="0"] .ms-shead', 30);
+      await c.tap('[data-k=copy]');
+      for (const i of [1, 2]) { c.val(`[data-k=r${i}]`, '10'); c.val(`[data-k=w${i}]`, '60'); c.flash(`[data-row="${i}"]`); }
+      await c.wait(560);
+      await c.tap('[data-k=extra]');
+      c.q('.ms-card[data-c="0"] .ms-sets').insertAdjacentHTML('beforeend', setRow(3, true));
+      await c.wait(520);
+      await c.tap('[data-k=rm3]');
+      c.cls('[data-row="3"]', 'leave'); await c.wait(320); c.q('[data-row="3"]').remove();
+      await c.cam('[data-k=com]', 90);
+      await c.tap('[data-k=com]'); await c.type('[data-k=com]', 'Καλή αίσθηση, RPE 8');
+      await c.wait(300);
+    },
+    async c => {
+      await c.cam('[data-k=save]', 170);
+      await c.tap('[data-k=save]');
+      const t = c.toast('Η προπόνηση καταγράφηκε');
+      await c.wait(1400);
+      if (!c.fast) { t.classList.remove('show'); await c.wait(200); } t.remove();
+      c.overlay(`<div class="hist"><div class="hist-h">Ιστορικό</div>
+        <div class="hist-card"><div><small>ΠΑΡ 16 ΟΚΤ 2026</small><b>PUSH · Ημέρα 1</b><span>3 ασκήσεις · 9 σετ</span></div><i class="logged">LOGGED</i></div>
+        <div class="hist-acts"><b class="ms-mini" data-k="hSel">ΕΠΙΛΟΓΗ</b><b class="ms-mini off" data-k="hEdit">Επεξεργασία</b><b class="ms-mini off" data-k="hCopy">Αντιγραφή</b></div></div>`, 'full');
+      await c.wait(700);
+      await c.tap('[data-k=hSel]');
+      c.cls('[data-k=hEdit]', 'off', false); c.cls('[data-k=hCopy]', 'off', false); await c.wait(260);
+      await c.point('[data-k=hEdit]'); await c.point('[data-k=hCopy]');
+      await c.wait(300);
+    }
+  ]
+};
+
+/* ======================= SCENE: ΠΡΟΓΡΑΜΜΑ ======================= */
+const exCard = (e, name, note, demo) => `<div class="mp-ex${demo ? ' enter demo' : ''}" data-e="${e}"><b><span class="v">${name}</span></b><small><span class="v">${note}</span></small><span class="mp-ic"><i data-k="pen">✎</i><i data-k="del">×</i></span></div>`;
+const rtCard = (r, name, days, active, demo) => `<div class="mp-rt${active ? ' active' : ''}${demo ? ' enter demo' : ''}" data-r="${r}"><b>${name}</b><small>ΔΙΑΡΚΕΙΑ: ${days} ΗΜΕΡΕΣ</small><span class="live">ΣΕ ΙΣΧΥ</span><i class="star">★</i>
+  <div class="mp-days">${[1, 2, 3].map(d => `<div class="mp-day" data-d="${d - 1}"><span>ΗΜΕΡΑ ${d}</span><b class="mp-add">＋</b></div>`).join('')}</div></div>`;
+const exTo = (c, pos, drag = false) => { const t = c.q('[data-t=ex]'); t.classList.toggle('drag', drag); t.style.transform = `translateX(calc(${-pos * 46}% - ${pos * 8}px))`; };
+
+const PLAN = {
+  width: 300, name: 'Πρόγραμμα', hero: ['ΤΟ ΠΛΑΝΟ', 'ΟΔΗΓΕΙ.'],
+  titles: ['Πρώτα η βιβλιοθήκη', 'Μολύβι, × και σημείωση', 'Νέο πρόγραμμα', 'Ημέρες και αστέρι', 'Το ιστορικό μένει'],
+  captions: [
+    'Πρώτα η βιβλιοθήκη: γράψτε μια άσκηση μία φορά και χρησιμοποιήστε την σε όσες ημέρες θέλετε.',
+    'Χρησιμοποιήστε το μολύβι για επεξεργασία και το × για διαγραφή· η σημείωση ξεχωρίζει τις ομώνυμες ασκήσεις.',
+    'Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.',
+    'Ανοίξτε ένα πρόγραμμα για να ορίσετε τις ημέρες του και δηλώστε με το αστέρι ποιο είναι σε ισχύ.',
+    'Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.'
+  ],
+  dur: [6400, 10500, 9800, 6800, 6200],
+  html: () => `<div class="ms ms-plan">
+    <div class="mp-sec" data-s="lib">
+      <div class="mp-head" data-k="libT"><i>01</i><span>Οι ασκήσεις μου</span><small><span class="v">03</span></small><em>▾</em></div>
+      <div class="mp-body">
+        <div class="mp-car"><div class="mp-track" data-t="ex">${exCard(0, 'Πιέσεις πάγκου', 'μπάρα')}${exCard(1, 'Έλξεις', 'πρηνής λαβή')}${exCard(2, 'Έλξεις', 'υπτία λαβή')}</div></div>
+        <div class="mp-arrows"><b data-k="exPrev">←</b><b data-k="exNext">→</b></div>
+        <div class="mp-new" data-k="newEx">Νέα άσκηση</div>
+        <div class="mp-form" data-f="ex">
+          <div class="ms-lab">Όνομα άσκησης</div><div class="ms-f" data-k="exName"><span class="v"></span><i class="ph"></i></div>
+          <div class="ms-lab">Cues</div><div class="ms-f" data-k="exCue"><span class="v"></span><i class="ph">π.χ. ώμοι πίσω</i></div>
+          <div class="ms-btn" data-k="exSave">Αποθήκευση άσκησης</div>
+        </div>
+      </div>
+    </div>
+    <div class="mp-sec" data-s="rt">
+      <div class="mp-head" data-k="rtT"><i>02</i><span>Τα προγράμματά μου</span><small><span class="v">02</span></small><em>▾</em></div>
+      <div class="mp-body">
+        <div class="mp-car"><div class="mp-track" data-t="rt">${rtCard(0, 'Full Body', 7, true)}${rtCard(1, 'Upper Lower', 7)}</div></div>
+        <div class="mp-new" data-k="newRt">Νέο πρόγραμμα</div>
+        <div class="mp-form" data-f="rt">
+          <div class="ms-lab">Όνομα προγράμματος</div><div class="ms-f" data-k="rtName"><span class="v"></span><i class="ph">π.χ. Push Pull Legs</i></div>
+          <div class="ms-lab">Διάρκεια (σε ημέρες)</div><div class="mp-dur"><b data-k="dec">−</b><span data-k="dur">7</span><b data-k="inc">＋</b></div>
+          <div class="ms-lab">Δήλωση ημερών</div><div class="ms-toggle" style="margin-top:0;width:60%"><b data-k="no" class="on">Όχι</b><b data-k="yes">Ναι</b></div>
+          <div class="mp-wk">${['Δ', 'Τ', 'Τ', 'Π', 'Π', 'Σ', 'Κ'].map((d, i) => `<i data-w="${i}">${d}</i>`).join('')}</div>
+          <div class="ms-btn alt" data-k="rtCreate">＋ Δημιουργία</div>
+        </div>
+      </div>
+    </div>
+  </div>`,
+  prep: null,
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=libT]'); c.cls('[data-s=lib]', 'open'); await c.wait(450);
+      await c.tap('[data-k=newEx]'); c.cls('[data-f=ex]', 'open'); await c.wait(250);
+      await c.cam('[data-k=newEx]', 40);
+      await c.tap('[data-k=exName]'); await c.type('[data-k=exName]', 'Βυθίσεις');
+      await c.tap('[data-k=exCue]'); await c.type('[data-k=exCue]', 'κορμός μπροστά');
+      await c.tap('[data-k=exSave]');
+      c.q('[data-t=ex]').insertAdjacentHTML('afterbegin', exCard(3, 'Βυθίσεις', 'κορμός μπροστά', true));
+      c.text('[data-k=libT] small .v', '04'); c.cls('[data-f=ex]', 'open', false);
+      await c.cam(null); await c.point('[data-e="3"]'); await c.wait(300);
+    },
+    async c => {
+      await c.cam(null);
+      await c.drag('[data-s=lib] .mp-car', -110, 0, t => exTo(c, t * .6, true), { ax: .8, ay: .45, dur: 600 });
+      exTo(c, 1); await c.wait(460);
+      await c.tap('[data-k=exNext]'); exTo(c, 2); await c.wait(500);
+      await c.point('[data-e="1"] small'); await c.point('[data-e="2"] small');
+      await c.tap('[data-e="1"] [data-k=pen]'); c.cls('[data-e="1"]', 'editing');
+      await c.type('[data-e="1"] small', 'πρηνής, φαρδιά λαβή');
+      await c.tap('[data-e="1"] [data-k=pen]'); c.cls('[data-e="1"]', 'editing', false); c.flash('[data-e="1"]'); await c.wait(300);
+      await c.tap('[data-k=exPrev]'); exTo(c, 1); await c.wait(500);
+      await c.tap('[data-e="0"] [data-k=del]');
+      const o = c.overlay(`<div class="mp-confirm"><b>Διαγραφή άσκησης;</b><p>«Πιέσεις πάγκου · μπάρα» χρησιμοποιείται σε: <strong>Full Body · Ημέρα 1</strong></p><div><span class="ms-mini" data-k="cNo">Ακύρωση</span><span class="ms-mini danger">Διαγραφή</span></div></div>`, 'center');
+      await c.wait(1100);
+      await c.tap('[data-k=cNo]'); await c.close(o);
+    },
+    async c => {
+      await c.cam('[data-s=rt]', 6);
+      await c.tap('[data-k=rtT]'); c.cls('[data-s=rt]', 'open'); await c.wait(400);
+      await c.tap('[data-k=newRt]'); c.cls('[data-f=rt]', 'open');
+      await c.cam('[data-k=newRt]', 10);
+      await c.tap('[data-k=rtName]'); await c.type('[data-k=rtName]', 'Push Pull Legs');
+      await c.tap('[data-k=dec]'); c.text('[data-k=dur]', '6'); c.flash('[data-k=dur]'); await c.wait(250);
+      await c.tap('[data-k=yes]'); c.cls('[data-k=yes]', 'on'); c.cls('[data-k=no]', 'on', false); c.cls('.mp-wk', 'on'); await c.wait(300);
+      for (const w of [0, 2, 4]) { await c.tap(`[data-w="${w}"]`); c.cls(`[data-w="${w}"]`, 'on'); }
+      await c.tap('[data-k=rtCreate]');
+      c.q('[data-t=rt]').insertAdjacentHTML('afterbegin', rtCard(2, 'Push Pull Legs', 6, false, true));
+      c.text('[data-k=rtT] small .v', '03'); c.cls('[data-f=rt]', 'open', false);
+      await c.cam('[data-s=rt]', 6); await c.wait(500);
+    },
+    async c => {
+      await c.cam('[data-s=rt]', 6);
+      await c.tap('[data-r="2"] b'); c.cls('[data-r="2"]', 'open'); await c.wait(400);
+      await c.pick('[data-r="2"] [data-d="0"] .mp-add', ['Βυθίσεις · κορμός μπροστά', 'Πιέσεις πάγκου · μπάρα', 'Έλξεις · πρηνής, φαρδιά λαβή'], 1, { set: false });
+      c.q('[data-r="2"] [data-d="0"] .mp-add').insertAdjacentHTML('beforebegin', '<span class="mp-chip gv">Πιέσεις πάγκου</span>');
+      await c.wait(400);
+      await c.tap('[data-r="2"] b'); c.cls('[data-r="2"]', 'open', false); await c.wait(300);
+      await c.tap('[data-r="2"] .star');
+      c.cls('[data-r="0"]', 'active', false); c.cls('[data-r="2"]', 'active'); await c.wait(700);
+    },
+    async c => {
+      await c.cam(null);
+      const o = c.overlay(`<div class="mp-hist"><small>ΙΣΤΟΡΙΚΟ · 12/10 · FULL BODY</small><b>Πιέσεις πάγκου · μπάρα</b><span>3 σετ · 10 × 60 kg</span><i>LOGGED</i></div>`, 'bottom');
+      await c.wait(700);
+      await c.tap('[data-e="0"] [data-k=pen]'); c.cls('[data-e="0"]', 'editing');
+      await c.type('[data-e="0"] b', 'Πιέσεις Smith');
+      await c.tap('[data-e="0"] [data-k=pen]'); c.cls('[data-e="0"]', 'editing', false); c.flash('[data-e="0"]');
+      await c.wait(300);
+      await c.point(o.querySelector('.mp-hist')); o.querySelector('.mp-hist').classList.add('stamped');
+      await c.wait(900);
+    }
+  ]
+};
+
+/* ======================= SCENE: ΕΠΙΒΛΕΨΗ ======================= */
+const PG = (() => {
+  const kg = [50, 50, 50, 55, 55, 55, 57.5, 57.5, 60, 60, 60, 62.5], rp = [8, 9, 10, 8, 9, 10, 8, 10, 8, 9, 10, 8];
+  const dates = ['03/07', '10/07', '17/07', '24/07', '31/07', '07/08', '21/08', '04/09', '18/09', '25/09', '09/10', '16/10'];
+  const S = 46, X0 = 16, W = X0 + S * (kg.length - 1) + 20, H = 158;
+  const yk = v => 74 - (v - 48) / (64 - 48) * 58, yr = v => 134 - (v - 7) / (11 - 7) * 30;
+  const xs = kg.map((_, i) => X0 + i * S);
+  let kp = `M${xs[0]} ${yk(kg[0])}`; for (let i = 1; i < kg.length; i++) kp += ` H${xs[i]} V${yk(kg[i])}`;
+  const rpp = 'M' + xs.map((x, i) => `${x} ${yr(rp[i])}`).join(' L');
+  const runs = []; let s0 = 0;
+  for (let i = 1; i <= kg.length; i++) if (i === kg.length || kg[i] !== kg[s0]) { runs.push([s0, i - 1]); s0 = i; }
+  const svg = `<svg class="mg-plot" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <g class="grid">${[50, 55, 60].map(v => `<line x1="0" x2="${W}" y1="${yk(v)}" y2="${yk(v)}"/>`).join('')}</g>
+    ${runs.map(([a, b]) => `<rect class="br" x="${xs[a] - 11}" y="96" width="${xs[b] - xs[a] + 22}" height="44" rx="5"/>`).join('')}
+    <path class="ln kg" d="${kp}"/><path class="ln rp" d="${rpp}"/>
+    <g class="dots">${xs.map((x, i) => `<circle class="kg" cx="${x}" cy="${yk(kg[i])}" r="3.2"/><circle class="rp" cx="${x}" cy="${yr(rp[i])}" r="2.6"/><text class="rv" x="${x}" y="${yr(rp[i]) - 6}" text-anchor="middle">${rp[i]}</text>`).join('')}</g>
+    ${xs.map((x, i) => `<text x="${x}" y="${H - 3}" text-anchor="middle">${dates[i]}</text>`).join('')}
+  </svg>`;
+  const rail = `<svg class="mg-rail" viewBox="0 0 24 ${H}">${[50, 55, 60].map(v => `<text x="2" y="${yk(v) + 3}">${v}</text>`).join('')}<text x="2" y="${yk(64) + 4}" style="font-size:6.5px">kg</text></svg>`;
+  return { svg, rail, W };
+})();
+const chartX = (root, x, drag = false) => { const p = root.querySelector('.mg-plot'); p.classList.toggle('drag', drag); p.style.transform = `translateX(${-x}px)`; };
+const chartMax = root => Math.max(0, PG.W - root.querySelector('[data-k=chart]').offsetWidth);
+const trophy = '<svg viewBox="0 0 24 24"><path d="M7 3h10v4a5 5 0 0 1-10 0V3Zm-4 1h3v3a3 3 0 0 1-3-3Zm15 0h3a3 3 0 0 1-3 3V4ZM10.5 13h3v3H16v3H8v-3h2.5v-3Z"/></svg>';
+
+const PROG = {
+  width: 300, name: 'Επίβλεψη', hero: ['Η ΠΟΡΕΙΑ', 'ΦΑΙΝΕΤΑΙ.'], dark: true,
+  titles: ['Άσκηση και σετ', 'Κιλά και επαναλήψεις', 'Σύρετε το γράφημα', 'Ο έλεγχος', 'Personal Records'],
+  captions: [
+    'Επιλέξτε άσκηση και σετ για να δείτε την πορεία τους σε όλες τις καταγραφές σας.',
+    'Το γράφημα συγκρίνει βάρος ή πλάκες και δείχνει την πορεία των επαναλήψεων στο ίδιο φορτίο.',
+    'Κάθε προπόνηση πιάνει σταθερό πλάτος· σύρετε το γράφημα οριζόντια για τις παλαιότερες.',
+    'Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.',
+    'Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.'
+  ],
+  dur: [5600, 5200, 5200, 3400, 3800],
+  html: () => `<div class="ms ms-prog">
+    <div class="mg-ctrl">
+      <div><div class="ms-lab" style="margin-top:0">Άσκηση</div><div class="ms-f ms-sel" data-k="ex"><span class="v"></span><i class="ph">Επιλογή</i><em>▾</em></div></div>
+      <div><div class="ms-lab" style="margin-top:0">Σετ</div><div class="ms-f ms-sel" data-k="set"><span class="v"></span><i class="ph">—</i><em>▾</em></div></div>
+    </div>
+    <div class="mg-panel">
+      <div class="mg-top"><b>ΠΟΡΕΙΑ</b><span class="mg-leg"><span class="kgl"><i></i>Κιλά</span><span class="rpl"><i></i>Επαναλήψεις</span></span></div>
+      <div class="mg-chart">${PG.rail}<div class="mg-scroll" data-k="chart">${PG.svg}<div class="mg-empty">Επιλέξτε άσκηση και σετ</div></div></div>
+      <div class="mg-hint">← σύρετε για παλαιότερες</div>
+    </div>
+    <div class="mg-audit" data-k="audit"><div class="mg-ah" data-k="auditH"><span>Έλεγχος · 2 εκτός σύγκρισης</span><em>▾</em></div>
+      <div class="mg-ab"><div>14/08 · Bodyweight: άλλη μέτρηση</div><div>02/10 · Πλάκες: άλλη μέτρηση</div></div></div>
+    <div class="mg-pr" data-k="pr">${trophy}<span>Personal Records</span></div>
+    <div class="mg-sheet"><div class="mg-sh"><b>ΚΑΛΥΤΕΡΑ ΣΕΤ</b><i>PR</i></div>
+      <div class="mg-r"><span>Πιέσεις πάγκου · Κιλά</span><b>62,5 × 8</b></div>
+      <div class="mg-r"><span>Έλξεις · Bodyweight</span><b>BW × 12</b></div>
+      <div class="mg-r"><span>Βυθίσεις · Συνδυασμός</span><b>BW + 10 × 9</b></div></div>
+  </div>`,
+  prep: s => { s.querySelector('[data-k=ex] .v').textContent = 'Πιέσεις πάγκου'; s.querySelector('[data-k=set] .v').textContent = 'Σετ 1'; s.classList.add('drawn'); chartX(s, chartMax(s)); },
+  steps: [
+    async c => {
+      c.cls(c.root, 'drawn', false);
+      await c.cam(null);
+      await c.pick('[data-k=ex]', ['Πιέσεις πάγκου', 'Έλξεις', 'Βυθίσεις'], 0);
+      await c.pick('[data-k=set]', ['Σετ 1', 'Σετ 2', 'Σετ 3'], 0);
+      chartX(c.root, chartMax(c.root)); c.cls(c.root, 'drawn'); await c.wait(1500);
+    },
+    async c => {
+      await c.point('.mg-leg .kgl'); c.cls(c.root, 'hi-kg'); await c.wait(900); c.cls(c.root, 'hi-kg', false);
+      await c.point('.mg-leg .rpl'); c.cls(c.root, 'hi-rp'); await c.wait(500);
+      c.cls(c.root, 'show-br');
+      await c.point('[data-k=chart]', .62, .8); await c.wait(1100);
+      if (!c.fast) { c.cls(c.root, 'hi-rp', false); c.cls(c.root, 'show-br', false); }
+    },
+    async c => {
+      const m = chartMax(c.root);
+      await c.drag('[data-k=chart]', 150, 0, t => chartX(c.root, m - 150 * t, true), { ax: .25, ay: .45, dur: 900 });
+      await c.wait(250);
+      await c.drag('[data-k=chart]', 150, 0, t => chartX(c.root, Math.max(0, m - 150 - 150 * t), true), { ax: .25, ay: .45, dur: 900 });
+      await c.wait(650);
+      await c.drag('[data-k=chart]', -170, 0, t => chartX(c.root, Math.min(m, Math.max(0, m - 300) + 170 * t), true), { ax: .8, ay: .45, dur: 800 });
+      chartX(c.root, Math.min(m, Math.max(0, m - 300) + 170)); await c.wait(300);
+    },
+    async c => {
+      await c.cam('[data-k=audit]', 70);
+      await c.tap('[data-k=auditH]'); c.cls('[data-k=audit]', 'open'); await c.wait(1100);
+    },
+    async c => {
+      await c.cam('[data-k=pr]', 40);
+      await c.tap('[data-k=pr]'); c.cls('.mg-sheet', 'open'); await c.wait(250);
+      await c.cam('.mg-sheet', 60); await c.point('.mg-sheet .mg-r'); await c.wait(900);
+    }
+  ]
+};
+
+/* ======================= SCENE: ΠΡΟΦΙΛ ======================= */
+const sil = '<svg viewBox="0 0 100 100"><circle cx="50" cy="38" r="17"/><path d="M14 100c2-22 17-34 36-34s34 12 36 34Z"/></svg>';
+const PROF = {
+  width: 300, name: 'Προφίλ', hero: ['ΤΟ ΑΠΟΤΥΠΩΜΑ', 'ΜΕΝΕΙ.'], dark: true,
+  titles: ['Πατήστε την κάρτα', 'Φωτογραφίες', 'Ηλικία', 'Μονάδα μέτρησης', 'Εξαγωγή και αποθήκευση'],
+  captions: [
+    'Πατήστε τη φωτογραφία, το όνομα ή την ηλικία πάνω στην κάρτα.',
+    'Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται· οι υπόλοιπες μένουν σε αυτή τη συσκευή.',
+    'Δηλώστε ημερομηνία γέννησης και επιλέξτε αν η ηλικία θα φαίνεται στην κάρτα.',
+    'Η μονάδα μέτρησης ορίζει πώς καταχωρίζετε και βλέπετε τα βάρη· οι τιμές αποθηκεύονται πάντα σε κιλά.',
+    'Η «Εξαγωγή ιστορικού» κατεβάζει τις προπονήσεις σε αρχείο CSV. Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.'
+  ],
+  dur: [6200, 6200, 5600, 4600, 4600],
+  html: () => `<div class="ms ms-prof">
+    <div class="mf-card">
+      <div class="mf-top"><span class="mf-brand"><i></i><i></i><i></i><i></i><i></i></span><small>ΝΕΟ ΠΡΟΦΙΛ</small></div>
+      <div class="mf-pol"><span class="mf-tape"></span>
+        <div class="mf-photo" data-k="photo">${sil}<span class="mf-img"></span><em>ΑΛΛΑΓΗ ΦΩΤΟΓΡΑΦΙΑΣ</em></div>
+        <div class="mf-name" data-k="name"><span class="v">ΟΝΟΜΑ</span></div>
+        <div class="mf-age" data-k="age"><span>ΗΛΙΚΙΑ</span><b class="v">—</b></div>
+      </div>
+      <div class="mf-foot">TRAIN . LOG . REPEAT</div>
+    </div>
+    <div class="mf-slip" data-slip="name"><div class="ms-lab">Όνομα</div><div class="ms-f" data-k="nameF"><span class="v"></span><i class="ph">Το όνομά σας</i></div></div>
+    <div class="mf-slip" data-slip="photo"><div class="ms-lab">Φωτογραφίες · έως 6</div><div class="mf-grid"><i class="up" data-k="up">＋</i>${[1, 2, 3, 4, 5].map(i => `<i data-ph="${i}"></i>`).join('')}</div></div>
+    <div class="mf-slip" data-slip="date"><div class="ms-lab">Ημερομηνία γέννησης</div><div class="ms-f" data-k="dob"><span class="v"></span><i class="ph">ηη/μμ/εεεε</i>${cal}</div><div class="mf-sw" data-k="showAge"><i></i>Εμφάνιση ηλικίας στην κάρτα</div></div>
+    <div class="mf-unit"><div class="ms-lab">Μονάδα μέτρησης</div><div class="ms-toggle" style="margin-top:0"><b data-k="kg" class="on">Κιλά (kg)</b><b data-k="lb">Λίβρες (lb)</b></div>
+      <div class="mf-ex" data-k="ex"><span class="v">60 kg</span><small data-k="store">αποθηκεύεται ως 60 kg</small></div></div>
+    <div class="mf-exp" data-k="exp">⬇ ΕΞΑΓΩΓΗ ΙΣΤΟΡΙΚΟΥ</div>
+    <div class="mf-file demo"><b>logbook-2026-10-16.csv</b><small>48 προπονήσεις</small></div>
+    <div class="ms-save" data-k="psave">ΑΠΟΘΗΚΕΥΣΗ</div>
+  </div>`,
+  prep: null,
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.point('[data-k=photo]'); await c.point('[data-k=age]');
+      await c.tap('[data-k=name]'); c.cls('[data-slip=name]', 'open'); await c.wait(250);
+      await c.cam('[data-k=name]', 60);
+      await c.tap('[data-k=nameF]'); await c.type('[data-k=nameF]', 'ΑΛΕΞ', '[data-k=name]');
+      c.flash('[data-k=name]'); await c.wait(300); c.cls('[data-slip=name]', 'open', false);
+    },
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=photo]'); c.cls('[data-slip=photo]', 'open');
+      await c.cam('[data-k=name]', 30);
+      await c.tap('[data-k=up]'); c.cls('[data-ph="1"]', 'ph-a'); await c.wait(300);
+      await c.tap('[data-k=up]'); c.cls('[data-ph="2"]', 'ph-b'); await c.wait(300);
+      await c.tap('[data-ph="2"]'); c.cls('[data-ph="2"]', 'sel'); c.cls('[data-k=photo]', 'img-b');
+      await c.cam(null); await c.point('[data-k=photo]'); c.cls('[data-slip=photo]', 'open', false);
+    },
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=age]'); c.cls('[data-slip=date]', 'open');
+      await c.cam('[data-k=name]', 30);
+      await c.tap('[data-k=dob]'); await c.type('[data-k=dob]', '12/03/1994');
+      await c.tap('[data-k=showAge]'); c.cls('[data-k=showAge]', 'on'); c.val('[data-k=age]', '32'); c.flash('[data-k=age]');
+      await c.point('[data-k=age]'); c.cls('[data-slip=date]', 'open', false);
+    },
+    async c => {
+      await c.cam('.mf-unit', 30);
+      await c.tap('[data-k=lb]'); c.cls('[data-k=lb]', 'on'); c.cls('[data-k=kg]', 'on', false); c.val('[data-k=ex]', '132 lb'); c.flash('[data-k=ex]');
+      await c.wait(400); await c.point('[data-k=store]'); await c.wait(300);
+      await c.tap('[data-k=kg]'); c.cls('[data-k=kg]', 'on'); c.cls('[data-k=lb]', 'on', false); c.val('[data-k=ex]', '60 kg'); c.flash('[data-k=ex]');
+      await c.wait(300);
+    },
+    async c => {
+      await c.cam('[data-k=exp]', 60);
+      await c.tap('[data-k=exp]'); c.cls('.mf-file', 'show'); await c.wait(800);
+      await c.tap('[data-k=psave]');
+      const t = c.toast('Το προφίλ αποθηκεύτηκε'); await c.wait(1400);
+      if (!c.fast) { t.classList.remove('show'); await c.wait(200); } t.remove();
+    }
+  ]
+};
+
+/* ======================= TOUR CONTROLLER ======================= */
+const tours = [];
+let active = null;
+function tour(host, def, hero) {
+  const n = def.steps.length;
+  host.innerHTML = `<div class="phone"><div class="screen">
+      <div class="ph-hero${def.dark ? ' dark' : ''}"><span class="ph-ribbon"></span><h1>${hero[0]}<br><em>${hero[1]}</em></h1><button class="istamp nudge" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button></div>
+      <div class="stage"><div class="view"></div></div>
+      <div class="coach" role="dialog" aria-label="Οδηγίες ${def.name}">
+        <button class="coach-x" type="button" aria-label="Κλείσιμο">✕</button>
+        <h4 class="coach-t"></h4><p class="coach-p" aria-live="polite"></p>
+        <div class="coach-seg">${def.steps.map(() => '<i><s></s></i>').join('')}</div>
+        <div class="coach-f"><button class="prev" type="button" aria-label="Προηγούμενο βήμα">‹</button><button class="again" type="button" aria-label="Ξανά">↻</button><button class="next" type="button" aria-label="Επόμενο βήμα">›</button></div>
+      </div>
+    </div></div>
+    <div class="steps"><h3>${def.name}</h3><p class="sub">${n} βήματα · πατήστε ( i ) ή ένα βήμα</p>
+      <ol>${def.titles.map((t, i) => `<li data-i="${i}"><b>${pad(i + 1)}</b><div><strong>${t}</strong><span>${def.captions[i]}</span></div></li>`).join('')}</ol>
+      <button class="start" type="button">▶ Ξενάγηση · ${def.name}</button></div>`;
+  const sc = $('.screen', host), coach = $('.coach', host), btn = $('.istamp', host);
+  const t = $('.coach-t', host), p = $('.coach-p', host);
+  const segs = $$('.coach-seg i', host), lis = $$('.steps li', host);
+  const prev = $('.prev', coach), next = $('.next', coach);
+  const fill = (j, v) => { segs[j].querySelector('s').style.width = (v * 100) + '%'; };
+  const P = new Player({
+    stage: $('.stage', host), def, prep: def.prep,
+    /* Η κάρτα πηγαίνει στην πλευρά που χωράει χωρίς να σκεπάσει τον στόχο. Μεγάλος
+       στόχος (π.χ. ολόκληρη η κάρτα άσκησης): μένει κάτω, ώστε να φαίνεται η κορυφή του. */
+    onSpot: r => {
+      const s = sc.getBoundingClientRect(), need = coach.offsetHeight + 18;
+      const below = s.bottom - r.bottom, above = r.top - s.top;
+      const big = r.height > s.height * .4;
+      coach.classList.toggle('top', !big && below < need && (above >= need || above > below));
+    },
+    onStep: i => {
+      t.textContent = def.titles[i]; p.textContent = def.captions[i];
+      segs.forEach((s, j) => { s.classList.toggle('done', j < i); fill(j, j < i ? 1 : 0); });
+      lis.forEach((l, j) => l.classList.toggle('on', j === i));
+      prev.disabled = i === 0; next.classList.remove('ready');
+      next.textContent = i === n - 1 ? '✓' : '›';
+      next.setAttribute('aria-label', i === n - 1 ? 'Τέλος' : 'Επόμενο βήμα');
+    },
+    onProgress: (i, v) => fill(i, v),
+    onDone: () => next.classList.add('ready')
+  });
+  P.build();
+  const api = {
+    get on() { return sc.classList.contains('touring'); },
+    start(i = 0) {
+      if (active && active !== api) active.end();
+      active = api;
+      if (!api.on) { sc.classList.add('touring'); btn.setAttribute('aria-expanded', 'true'); coach.classList.remove('top'); }
+      P.run(i);
+    },
+    end() {
+      if (!api.on) return;
+      sc.classList.remove('touring'); btn.setAttribute('aria-expanded', 'false');
+      lis.forEach(l => l.classList.remove('on'));
+      P.idle(); if (active === api) active = null;
+    },
+    go(d) { if (!api.on) return api.start(0); const j = P.cur + d; if (j >= n) return api.end(); api.start(Math.max(0, j)); },
+    again() { api.start(P.cur); },
+    rerun() { if (api.on) P.run(P.cur); }
+  };
+  btn.addEventListener('click', () => api.on ? api.end() : api.start(0));
+  $('.coach-x', coach).addEventListener('click', api.end);
+  next.addEventListener('click', () => api.go(1));
+  prev.addEventListener('click', () => api.go(-1));
+  $('.again', coach).addEventListener('click', api.again);
+  lis.forEach((l, j) => l.addEventListener('click', () => api.start(j)));
+  $('.start', host).addEventListener('click', () => { host.scrollIntoView({ behavior: 'smooth', block: 'center' }); api.start(0); });
+  swipe(coach, d => api.go(d));
+  tours.push(api);
+  return api;
+}
+
+tour($('#t-log'), LOG, ['ΤΟ ΣΗΜΕΡΑ.', 'ΜΕΤΡΑΕΙ.']);
+tour($('#t-plan'), PLAN, PLAN.hero);
+tour($('#t-prog'), PROG, PROG.hero);
+tour($('#t-prof'), PROF, PROF.hero);
+
+document.addEventListener('keydown', e => {
+  if (!active) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); active.go(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); active.go(-1); }
+  else if (e.key === 'Escape') active.end();
+});
+
+const tb = $('#theme-btn');
+tb.addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  if (dark) document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme;
+  tb.setAttribute('aria-pressed', dark);
+});
+const mb = $('#motion-btn');
+const syncMotion = () => { mb.textContent = RM ? 'ΚΙΝΗΣΗ: OFF' : 'ΚΙΝΗΣΗ: ON'; mb.setAttribute('aria-pressed', RM); };
+syncMotion();
+mb.addEventListener('click', () => { RM = !RM; syncMotion(); tours.forEach(t => t.rerun()); });
+})();
+</script>
+</body>
+</html>

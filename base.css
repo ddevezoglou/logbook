@@ -148,7 +148,10 @@ input:focus,textarea:focus,select:focus { background:var(--paper-field-focus); b
 .primary-button:hover { transform:translateY(-2px); }.primary-button span { font-size:1.3rem; }.panel-title { display:flex; justify-content:space-between; align-items:center; }.panel-title>div { margin:0; }.panel-title strong { color:var(--muted); font-size:.78rem; }
 .empty { padding:50px 20px; text-align:center; color:var(--muted); border:1px dashed var(--line); }
 
-.toast { position:fixed; right:25px; bottom:25px; color:white; z-index:40; transform:translateY(100px); opacity:0; transition:.3s; font-weight:700; }.toast.show { transform:none; opacity:1; }
+.toast { position:fixed; left:25px; right:25px; bottom:25px; z-index:40; opacity:0; visibility:hidden; pointer-events:none; transform:scale(1.18) rotate(-4deg); transition:opacity .16s ease,transform .22s cubic-bezier(.3,1.6,.5,1),visibility 0s .22s; }
+.toast.show { opacity:1; visibility:visible; transform:rotate(-1.4deg); transition:opacity .16s ease,transform .22s cubic-bezier(.3,1.6,.5,1); }
+.toast.toast-error.show { transform:rotate(1.2deg); }
+@media(prefers-reduced-motion:reduce){.toast,.toast.show,.toast.toast-error.show{transform:none;transition:opacity .16s ease,visibility 0s}}
 .hidden { display:none !important; }
 .session-shell { max-width:1180px; margin:0 auto; padding:55px 5vw 80px; }
 .session-toolbar { display:grid; grid-template-columns:190px auto minmax(230px,1fr) auto; align-items:end; gap:22px; padding-bottom:28px; border-bottom:1px solid var(--line); }

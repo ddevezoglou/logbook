@@ -1,0 +1,1419 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Οδηγίες που δείχνουν</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Roboto+Slab:wght@500;700&family=Playpen+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme:light;
+    --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --field:#f7f1e3;
+    --line:#b6ad97; --line-card:#c7bca3; --line-soft:rgba(21,19,13,.12);
+    --orange:#7d601a; --orange-rgb:125,96,26; --gold:#c9a227; --pen-blue:#1f6493; --danger:#7a3325;
+    --muted:#6d6551; --muted-soft:#8a8168; --ink-hand:#1f1c14; --ink-meta:#948b73;
+    --ink-surface:#15130d; --on-ink:#efe8d8; --tape:rgba(213,194,145,.72);
+    --portrait-bg:#d9c8d4; --portrait-sil:#5c5c5e;
+    --kg:#8a6a1c; --rp:#1f6493;
+    --shadow-rgb:21,19,13; --rule:rgba(21,19,13,.055); --page:#d8cfba;
+    --finger:rgba(21,19,13,.2); --finger-ring:rgba(255,255,255,.95);
+  }
+  :root[data-theme="dark"] {
+    color-scheme:dark;
+    --ink:#ece2c9; --paper:#17140e; --paper-soft:#1f1b14; --paper-dark:#100e09; --field:#100e09;
+    --line:#3a3428; --line-card:#383226; --line-soft:rgba(236,226,201,.1);
+    --orange:#e0a94a; --orange-rgb:224,169,74; --gold:#d4ae33; --pen-blue:#74aed6; --danger:#cf7a63;
+    --muted:#9a917a; --muted-soft:#8a8474; --ink-hand:#e6dcc3; --ink-meta:#a89f86;
+    --ink-surface:#2e2a1f; --on-ink:#f2ead4; --tape:rgba(151,136,101,.36);
+    --kg:#e0a94a; --rp:#74aed6;
+    --shadow-rgb:0,0,0; --rule:rgba(236,226,201,.045); --page:#0d0b08;
+    --finger:rgba(236,226,201,.26); --finger-ring:rgba(23,20,14,.9);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink); font-family:"Source Sans 3",sans-serif; padding:40px 4vw 120px; transition:background .3s,color .3s; }
+  h1.page { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; letter-spacing:-.02em; }
+  .intro { color:var(--muted); max-width:880px; line-height:1.55; margin:0 0 14px; }
+  .intro b, .sec-note b { color:var(--orange); }
+  h2.sec { font-family:"Roboto Slab",serif; font-size:1.35rem; margin:64px 0 6px; }
+  h2.sec small { font:800 .62rem "Source Sans 3"; letter-spacing:.18em; color:var(--orange); display:block; margin-bottom:4px; }
+  .sec-note { color:var(--muted); max-width:860px; line-height:1.55; margin:0 0 20px; }
+  code { font-size:.85em; background:var(--paper-dark); padding:1px 5px; }
+  .topbar { position:fixed; top:14px; right:14px; z-index:80; display:flex; gap:6px; }
+  .topbar button { border:1px solid var(--line); background:var(--paper-soft); color:var(--ink); font:800 .64rem "Source Sans 3"; letter-spacing:.14em; padding:9px 12px; cursor:pointer; }
+  .topbar button[aria-pressed="true"] { background:var(--ink-surface); color:var(--on-ink); }
+  .box { background:var(--paper); border:1px solid var(--line); padding:20px 22px; }
+  .grid2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+  @media (max-width:900px) { .grid2 { grid-template-columns:1fr; } }
+  ul.tight { margin:0; padding-left:20px; line-height:1.55; }
+  ul.tight li { margin:5px 0; }
+
+  /* ---------- tables ---------- */
+  table.cmp { width:100%; border-collapse:collapse; background:var(--paper); border:1px solid var(--line); font-size:.88rem; }
+  table.cmp th, table.cmp td { text-align:left; vertical-align:top; padding:9px 11px; border-bottom:1px solid var(--line-soft); line-height:1.4; }
+  table.cmp thead th { font:800 .62rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); background:var(--paper-dark); }
+  table.cmp tbody th { font:700 .78rem "Roboto Slab"; white-space:nowrap; }
+  table.cmp td.win, table.cmp th.win { background:rgba(var(--orange-rgb),.09); }
+  .ok { color:var(--orange); font-weight:800; } .no { color:var(--danger); font-weight:800; } .mid { color:var(--muted); font-weight:800; }
+  .scroll-x { overflow-x:auto; }
+
+  /* ---------- engine diagram ---------- */
+  .flow { display:flex; align-items:stretch; gap:0; flex-wrap:wrap; margin-top:6px; }
+  .flow > div { flex:1 1 180px; background:var(--paper-soft); border:1px solid var(--line); padding:12px 14px; }
+  .flow > div b { display:block; font:700 .8rem "Roboto Slab"; margin-bottom:4px; }
+  .flow > div small { color:var(--muted); font-size:.8rem; line-height:1.4; display:block; }
+  .flow > i { align-self:center; padding:0 8px; font-style:normal; color:var(--orange); font-weight:800; }
+  pre.code { background:var(--ink-surface); color:var(--on-ink); padding:14px 16px; font-size:.78rem; line-height:1.55; overflow-x:auto; margin:14px 0 0; border-radius:4px; }
+  pre.code em { color:var(--gold); font-style:normal; }
+  pre.code s { color:var(--ink-meta); text-decoration:none; }
+
+  /* ---------- variant shell ---------- */
+  .variant { margin-top:40px; background:var(--paper); border:1px solid var(--line); padding:24px clamp(16px,3vw,32px) 28px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .variant-title b { font-family:"Roboto Slab",serif; color:var(--orange); font-size:1.1rem; }
+  .variant-title h3 { font-family:"Roboto Slab",serif; font-size:1.2rem; margin:0; }
+  .variant-title .tag { font:800 .6rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; border:1.5px solid var(--orange); color:var(--orange); padding:3px 7px; transform:rotate(-2deg); }
+  .variant-body { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:32px; align-items:start; margin-top:14px; }
+  @media (max-width:880px) { .variant-body { grid-template-columns:1fr; } .phone { margin:0 auto; } }
+  .variant-text p { margin:0 0 12px; line-height:1.55; max-width:640px; }
+  .pros { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  @media (max-width:560px) { .pros { grid-template-columns:1fr; } }
+  .pros div { background:var(--paper-soft); border:1px solid var(--line); padding:10px 12px; font-size:.86rem; line-height:1.45; }
+  .pros div > b:first-child { display:block; font:800 .6rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; margin-bottom:4px; }
+  .pros .plus > b:first-child { color:var(--orange); } .pros .minus > b:first-child { color:var(--danger); }
+  .hint { font-size:.8rem; color:var(--muted); margin-top:12px; }
+  .hint kbd { font:800 .62rem "Roboto Slab"; border:1.5px solid var(--orange); color:var(--orange); border-radius:50%; width:20px; height:20px; display:inline-grid; place-items:center; transform:rotate(-8deg); }
+
+  /* ---------- phone ---------- */
+  .phone { width:320px; height:640px; border:10px solid #1b1914; border-radius:36px; position:relative; overflow:hidden; background:var(--paper); box-shadow:0 18px 40px rgba(0,0,0,.25); }
+  .screen { position:absolute; inset:0; overflow:hidden; background:var(--paper); }
+  .ph-hero { position:relative; height:118px; padding:30px 18px 0; background:var(--paper); border-bottom:1px solid var(--line-soft); }
+  .ph-hero h1 { margin:0; font:700 1.5rem/1.02 "Roboto Slab"; letter-spacing:-.02em; }
+  .ph-hero h1 em { font-style:normal; color:var(--orange); }
+  .ph-ribbon { position:absolute; top:0; right:16px; width:26px; height:60px; background:linear-gradient(#6b5518,#2e2710); clip-path:polygon(0 0,100% 0,100% 100%,50% 84%,0 100%); }
+  .istamp { position:absolute; right:56px; top:26px; width:40px; height:40px; padding:0; background:transparent; border:2.5px solid currentColor; border-radius:50%; color:rgba(var(--orange-rgb),.65); font:700 1.1rem "Roboto Slab"; display:grid; place-items:center; cursor:pointer; transform:rotate(-8deg); transition:color .25s, transform .25s; z-index:6; }
+  .istamp::before { content:""; position:absolute; inset:3px; border:1px solid currentColor; border-radius:50%; opacity:.65; }
+  .istamp:hover, .istamp[aria-expanded="true"] { color:var(--orange); transform:rotate(-4deg); }
+  .istamp.nudge { animation:nudge 1.6s ease-in-out 2; }
+  @keyframes nudge { 0%,100% { transform:rotate(-8deg) scale(1); } 50% { transform:rotate(-2deg) scale(1.12); } }
+  .pgview { position:absolute; left:0; right:0; top:118px; bottom:0; overflow:hidden; }
+  .pgview > .ms { transform-origin:0 0; }
+
+  /* ---------- player stage ---------- */
+  .stage { position:relative; overflow:hidden; }
+  .stage .view { position:absolute; inset:0; overflow:hidden; background:var(--paper); }
+  .stage .view > .ms { transform-origin:0 0; transition:transform .45s cubic-bezier(.4,.1,.2,1); }
+  .finger { position:absolute; left:0; top:0; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%; background:var(--finger); border:2px solid var(--finger-ring); box-shadow:0 3px 10px rgba(0,0,0,.28); opacity:0; pointer-events:none; z-index:40;
+    transition:transform .5s cubic-bezier(.45,.05,.25,1), opacity .25s, width .14s, height .14s, margin .14s, background .14s; }
+  .finger.on { opacity:1; }
+  .finger.jump { transition:none; }
+  .finger.press { width:24px; height:24px; margin:-12px 0 0 -12px; background:rgba(var(--orange-rgb),.5); }
+  .finger.drag { transition:opacity .25s, width .14s, height .14s, margin .14s, background .14s; }
+  .ripple { position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; border:2px solid var(--orange); animation:rip .55s ease-out forwards; pointer-events:none; z-index:39; }
+  @keyframes rip { to { transform:scale(4); opacity:0; } }
+  .spot { position:absolute; left:0; top:0; width:0; height:0; border-radius:8px; box-shadow:0 0 0 2px var(--orange), 0 0 0 1600px rgba(12,10,6,.58); opacity:0; pointer-events:none; z-index:30;
+    transition:left .5s cubic-bezier(.45,.05,.25,1), top .5s cubic-bezier(.45,.05,.25,1), width .5s cubic-bezier(.45,.05,.25,1), height .5s cubic-bezier(.45,.05,.25,1), opacity .3s; }
+  .spot.on { opacity:1; }
+
+  /* overlays drawn above the miniature */
+  .ov { position:absolute; z-index:25; opacity:0; transform:translateY(10px); transition:opacity .3s, transform .3s; }
+  .ov.in { opacity:1; transform:none; }
+  .ov.bottom { left:8px; right:8px; bottom:8px; }
+  .ov.center { inset:0; display:grid; place-items:center; background:rgba(12,10,6,.32); transform:none; }
+  .ov.full { inset:0; background:var(--paper); transform:translateX(30px); }
+  .ov.full.in { transform:none; }
+  .ms-stamp { position:absolute; left:50%; bottom:14px; z-index:45; display:flex; align-items:center; gap:7px; white-space:nowrap; background:var(--paper); color:var(--ink); border:2px solid var(--orange); outline:1px solid var(--orange); outline-offset:3px; padding:8px 12px; font-size:.74rem; font-weight:600; box-shadow:0 12px 22px rgba(var(--shadow-rgb),.2); opacity:0; transform:translateX(-50%) scale(1.18) rotate(-4deg); transition:opacity .16s, transform .22s cubic-bezier(.3,1.6,.5,1); }
+  .ms-stamp.show { opacity:1; transform:translateX(-50%) rotate(-1.4deg); }
+  .ms-stamp i { font-style:normal; width:15px; height:15px; border-radius:50%; background:var(--orange); color:var(--paper); display:grid; place-items:center; font-size:.6rem; font-weight:800; }
+
+  /* ========== miniature scene: shared ========== */
+  .ms { position:relative; width:300px; font-family:"Source Sans 3",sans-serif; color:var(--ink); background:var(--paper); background-image:linear-gradient(var(--rule) 1px,transparent 1px); background-size:100% 22px; padding:14px 14px 18px; }
+  .ms.nofx, .ms.nofx * { transition:none !important; animation:none !important; }
+  .ms.nofx .mg-plot .ln { stroke-dashoffset:0; }
+  .ms-lab { font:800 .5rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:9px 0 3px; }
+  .ms-f { position:relative; display:flex; align-items:center; gap:6px; min-height:30px; padding:0 9px; background:var(--field); border:1px solid var(--line); border-radius:6px; font-size:.76rem; font-weight:600; transition:border-color .2s, box-shadow .2s, background .3s; }
+  .ms-f .ph { display:none; color:var(--muted-soft); font-weight:400; font-style:normal; }
+  .ms-f .v:empty + .ph { display:inline; }
+  .ms-f em { margin-left:auto; font-style:normal; font-size:.6rem; color:var(--muted); }
+  .ms-f svg { margin-left:auto; width:13px; height:13px; fill:none; stroke:var(--muted); stroke-width:2; }
+  .ms-f.is-focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(var(--orange-rgb),.18); }
+  .is-focus .v::after { content:""; display:inline-block; width:1.5px; height:1em; margin-left:1px; vertical-align:-2px; background:var(--orange); animation:blink .8s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .ms-area { min-height:34px; align-items:flex-start; padding-top:7px; font-weight:500; }
+  .ms-toggle { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--ink); border-radius:6px; overflow:hidden; margin-top:10px; }
+  .ms-toggle b { padding:8px 4px; text-align:center; font:700 .6rem/1.1 "Source Sans 3"; letter-spacing:.05em; text-transform:uppercase; transition:background .25s, color .25s; }
+  .ms-toggle b.on { background:var(--ink-surface); color:var(--on-ink); }
+  .ms-btn { margin-top:9px; background:var(--ink-surface); color:var(--on-ink); text-align:center; padding:9px; border-radius:6px; font:800 .56rem "Source Sans 3"; letter-spacing:.12em; text-transform:uppercase; }
+  .ms-mini { font:800 .5rem "Source Sans 3"; letter-spacing:.1em; text-transform:uppercase; border:1px solid var(--ink); border-radius:5px; padding:6px 8px; }
+  .ms-mini.off { display:none; }
+  .ms-save { margin-top:14px; background:var(--ink-surface); color:var(--on-ink); text-align:center; padding:13px; border-radius:7px; font:800 .6rem "Source Sans 3"; letter-spacing:.14em; }
+  .ms-pop { position:absolute; z-index:12; background:var(--paper-soft); border:1px solid var(--line); border-radius:6px; box-shadow:0 10px 22px rgba(var(--shadow-rgb),.22); padding:3px; animation:popIn .18s ease-out; }
+  .ms-pop div { padding:7px 9px; font-size:.72rem; font-weight:600; border-radius:4px; white-space:nowrap; }
+  .ms-pop div.hl { background:rgba(var(--orange-rgb),.12); }
+  .ms-pop div.sel { background:var(--orange); color:var(--paper); }
+  @keyframes popIn { from { opacity:0; transform:translateY(-4px); } }
+  .is-pressed { scale:.95; }
+  .pulse { animation:pulse .7s ease-out 1; border-radius:5px; }
+  @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(var(--orange-rgb),.6); } 100% { box-shadow:0 0 0 12px rgba(var(--orange-rgb),0); } }
+  .flash { animation:flash .7s ease-out; }
+  @keyframes flash { 0% { background-color:rgba(var(--orange-rgb),.3); } }
+  .rm-mark { outline:2px dashed var(--orange); outline-offset:2px; border-radius:6px; }
+  /* Γ: τιμές-φαντάσματα με μολύβι, ώστε να μη μοιάζουν ποτέ με αληθινή καταγραφή */
+  .ghost .ms-f .v { font-family:"Playpen Sans",cursive; color:var(--pen-blue); font-weight:500; }
+
+  /* ========== miniature: ΚΑΤΑΓΡΑΦΗ ========== */
+  .ms-log:not(.has-day) .ms-deck { opacity:.32; }
+  .ms-log.is-free [data-k="day"] { opacity:.35; }
+  .ms-deck { margin-top:14px; transition:opacity .35s; }
+  .ms-deckhead { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .ms-arr { width:28px; height:28px; border-radius:50%; border:1.5px solid var(--ink); display:grid; place-items:center; font:700 1rem/1 "Roboto Slab"; }
+  .ms-dstamp { font:800 .54rem "Source Sans 3"; letter-spacing:.18em; color:var(--orange); border:1.5px solid var(--orange); padding:4px 8px; transform:rotate(-2deg); }
+  .ms-dview { overflow:hidden; margin:0 -3px; padding:9px 3px 4px; }
+  .ms-track { display:flex; gap:10px; transition:transform .42s cubic-bezier(.3,.8,.2,1); }
+  .ms-track.drag { transition:none; }
+  .ms-card { flex:0 0 100%; position:relative; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:14px 10px 10px; box-shadow:0 3px 0 rgba(var(--shadow-rgb),.05); }
+  .ms-tape { position:absolute; top:-7px; left:50%; width:54px; height:14px; margin-left:-27px; background:var(--tape); transform:rotate(-2deg); }
+  .ms-ctitle { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .ms-ctitle small { font:800 .48rem "Source Sans 3"; letter-spacing:.16em; color:var(--orange); }
+  .ms-ctitle h4 { margin:2px 0 0; font:700 .9rem "Roboto Slab"; }
+  .ms-tag { font:700 .5rem "Source Sans 3"; letter-spacing:.1em; border:1px solid var(--line); padding:3px 6px; border-radius:3px; text-transform:uppercase; }
+  .ms-shead, .ms-row { display:grid; grid-template-columns:16px 1fr 7px 1.3fr 1fr 16px; gap:5px; align-items:center; }
+  .ms-shead span { font:800 .42rem "Source Sans 3"; letter-spacing:.08em; color:var(--muted); }
+  .ms-row { margin-top:5px; transition:opacity .3s, transform .3s; }
+  .ms-row .n { font:700 .58rem "Roboto Slab"; color:var(--orange); }
+  .ms-row.extra .n { color:var(--pen-blue); }
+  .ms-f.sm { min-height:26px; padding:0 6px; font-size:.7rem; }
+  .ms-row .x { font-size:.6rem; color:var(--muted); text-align:center; }
+  .ms-row .rm { width:16px; height:16px; border-radius:50%; border:1px solid var(--line); display:grid; place-items:center; font-size:.7rem; color:var(--muted); }
+  .ms-row.enter { animation:rowIn .35s ease-out; }
+  .ms-row.leave { opacity:0; transform:translateX(24px); }
+  @keyframes rowIn { from { opacity:0; transform:translateY(-6px); } }
+  .ms-acts { display:flex; gap:6px; margin-top:8px; }
+  .ms-dprog { height:3px; background:var(--line-soft); margin-top:8px; border-radius:2px; overflow:hidden; }
+  .ms-dprog i { display:block; height:100%; width:33.3%; background:var(--orange); transition:width .4s; }
+  .hist { padding:14px; }
+  .hist-h { font:700 1rem "Roboto Slab"; margin-bottom:10px; }
+  .hist-card { display:flex; justify-content:space-between; align-items:center; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px 11px; }
+  .hist-card small { font:800 .48rem "Source Sans 3"; letter-spacing:.14em; color:var(--muted); }
+  .hist-card b { display:block; font:700 .82rem "Roboto Slab"; margin:2px 0; }
+  .hist-card span { font-size:.62rem; color:var(--muted); }
+  .hist-card .logged { font:800 .5rem "Source Sans 3"; letter-spacing:.16em; color:var(--orange); border:1.5px solid var(--orange); padding:4px 6px; transform:rotate(-6deg); font-style:normal; }
+  .hist-acts { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .hist-acts .ms-mini.off { display:none; }
+
+  /* ========== miniature: ΠΡΟΓΡΑΜΜΑ ========== */
+  .mp-sec { border-top:2px solid var(--ink); margin-top:4px; }
+  .mp-sec + .mp-sec { margin-top:14px; }
+  .mp-head { display:flex; align-items:center; gap:8px; padding:10px 2px; font:700 .84rem "Roboto Slab"; border-bottom:3px double var(--ink); }
+  .mp-sec.open .mp-head { border-bottom-color:transparent; }
+  .mp-head i { font:800 .48rem "Source Sans 3"; color:var(--orange); font-style:normal; border:1px solid var(--orange); border-radius:50%; width:20px; height:20px; display:grid; place-items:center; }
+  .mp-head small { margin-left:auto; font:700 .62rem "Roboto Slab"; color:var(--muted); }
+  .mp-head em { font-style:normal; font-size:.6rem; transition:transform .3s; }
+  .mp-sec.open .mp-head em { transform:rotate(180deg); }
+  .mp-body { display:none; }
+  .mp-sec.open .mp-body { display:block; animation:popIn .3s ease-out; }
+  .mp-car { overflow:hidden; padding:4px 0 2px; }
+  .mp-track { display:flex; gap:8px; transition:transform .42s cubic-bezier(.3,.8,.2,1); align-items:stretch; }
+  .mp-track.drag { transition:none; }
+  .mp-ex { flex:0 0 46%; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:9px 9px 30px; position:relative; transition:border-color .25s, box-shadow .25s; }
+  .mp-ex.enter { animation:rowIn .4s ease-out; }
+  .mp-ex.editing { border-color:var(--orange); box-shadow:0 0 0 2px rgba(var(--orange-rgb),.18); }
+  .mp-ex b { display:block; font:700 .72rem/1.2 "Roboto Slab"; }
+  .mp-ex small { display:block; font-size:.62rem; color:var(--muted); margin-top:3px; min-height:1em; }
+  .mp-ic { position:absolute; right:6px; bottom:6px; display:flex; gap:4px; }
+  .mp-ic i { width:20px; height:20px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; font-size:.62rem; font-style:normal; background:var(--paper); }
+  .mp-arrows { display:flex; justify-content:flex-end; gap:6px; margin-top:6px; }
+  .mp-arrows b { width:24px; height:24px; border:1.5px solid var(--ink); border-radius:50%; display:grid; place-items:center; font-size:.72rem; }
+  .mp-new { margin-top:8px; font:700 .68rem "Source Sans 3"; padding:8px 10px; border:1px dashed var(--line); border-radius:6px; }
+  .mp-new::before { content:"＋ "; color:var(--orange); }
+  .mp-form { display:none; padding:2px 0 6px; }
+  .mp-form.open { display:block; animation:popIn .3s ease-out; }
+  .mp-rt { flex:0 0 80%; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px 10px 10px; position:relative; transition:background .3s, color .3s; }
+  .mp-rt.enter { animation:rowIn .4s ease-out; }
+  .mp-rt b { font:700 .84rem "Roboto Slab"; display:block; padding-right:24px; }
+  .mp-rt small { font:800 .48rem "Source Sans 3"; letter-spacing:.12em; color:var(--muted); }
+  .mp-rt .star { position:absolute; top:7px; right:8px; font-size:1.05rem; line-height:1; color:var(--line); font-style:normal; }
+  .mp-rt .live { display:none; margin-left:6px; font:800 .44rem "Source Sans 3"; letter-spacing:.14em; color:var(--gold); border:1px solid var(--gold); padding:2px 4px; vertical-align:1px; }
+  .mp-rt.active { background:var(--ink-surface); color:var(--on-ink); }
+  .mp-rt.active small { color:var(--ink-meta); }
+  .mp-rt.active .star { color:var(--gold); }
+  .mp-rt.active .live { display:inline-block; }
+  .mp-days { display:none; margin-top:8px; border-top:1px dashed var(--line); padding-top:4px; }
+  .mp-rt.open .mp-days { display:block; animation:popIn .25s ease-out; }
+  .mp-day { display:flex; gap:5px; align-items:center; padding:4px 0; flex-wrap:wrap; font-size:.6rem; }
+  .mp-day > span { font:800 .46rem "Source Sans 3"; letter-spacing:.1em; color:var(--orange); width:44px; }
+  .mp-chip { border:1px solid var(--line); border-radius:10px; padding:2px 7px; font-size:.58rem; font-weight:600; animation:popIn .25s; }
+  .mp-add { border:1px dashed var(--orange); color:var(--orange); border-radius:10px; padding:1px 7px; font-weight:800; }
+  .mp-dur { display:flex; align-items:center; gap:0; width:max-content; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--field); }
+  .mp-dur b { width:30px; height:28px; display:grid; place-items:center; font-weight:800; }
+  .mp-dur span { min-width:30px; text-align:center; font:700 .8rem "Roboto Slab"; border-left:1px solid var(--line); border-right:1px solid var(--line); line-height:28px; }
+  .mp-wk { display:none; gap:4px; margin-top:6px; }
+  .mp-wk.on { display:flex; animation:popIn .25s; }
+  .mp-wk i { width:24px; height:24px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; font:700 .54rem "Source Sans 3"; font-style:normal; transition:background .2s, color .2s; }
+  .mp-wk i.on { background:var(--orange); color:var(--paper); border-color:var(--orange); }
+  .mp-confirm { width:84%; background:var(--paper-soft); border:1px solid var(--line); border-radius:6px; padding:14px; box-shadow:0 16px 30px rgba(0,0,0,.3); }
+  .mp-confirm b { font:700 .86rem "Roboto Slab"; display:block; }
+  .mp-confirm p { font-size:.7rem; line-height:1.4; margin:6px 0 10px; color:var(--muted); }
+  .mp-confirm div { display:flex; gap:6px; justify-content:flex-end; }
+  .mp-confirm .danger { background:var(--danger); color:var(--paper); border-color:var(--danger); }
+  .mp-hist { background:var(--paper-soft); border:1px solid var(--line); border-radius:5px; padding:10px 12px; box-shadow:0 10px 24px rgba(var(--shadow-rgb),.22); position:relative; }
+  .mp-hist small { font:800 .46rem "Source Sans 3"; letter-spacing:.14em; color:var(--muted); }
+  .mp-hist b { display:block; font:700 .78rem "Roboto Slab"; margin:2px 0; }
+  .mp-hist span { font-size:.64rem; color:var(--muted); }
+  .mp-hist i { position:absolute; right:10px; top:12px; font:800 .5rem "Source Sans 3"; letter-spacing:.14em; color:var(--orange); border:1.5px solid var(--orange); padding:4px 6px; transform:rotate(-6deg); font-style:normal; transition:transform .25s; }
+  .mp-hist.stamped i { transform:rotate(-6deg) scale(1.15); background:rgba(var(--orange-rgb),.12); }
+
+  /* ========== miniature: ΕΠΙΒΛΕΨΗ ========== */
+  .mg-ctrl { display:grid; grid-template-columns:1.4fr 1fr; gap:8px; }
+  .mg-panel { margin-top:12px; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px; }
+  .mg-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .mg-top b { font:800 .5rem "Source Sans 3"; letter-spacing:.16em; color:var(--muted); }
+  .mg-leg { display:flex; gap:9px; font-size:.58rem; font-weight:700; }
+  .mg-leg span { display:flex; align-items:center; gap:4px; padding:1px 3px; }
+  .mg-leg i { width:8px; height:8px; border-radius:50%; }
+  .mg-leg .kgl i { background:var(--kg); } .mg-leg .rpl i { background:var(--rp); }
+  .mg-chart { display:flex; height:158px; position:relative; }
+  .mg-rail { width:24px; flex:0 0 24px; height:158px; }
+  .mg-rail text { font:700 8px "Source Sans 3"; fill:var(--muted); }
+  .mg-scroll { flex:1; overflow:hidden; position:relative; }
+  .mg-plot { display:block; transition:transform .4s cubic-bezier(.3,.8,.2,1); }
+  .mg-plot.drag { transition:none; }
+  .mg-empty { position:absolute; inset:0; display:grid; place-items:center; font-size:.7rem; color:var(--muted); }
+  .ms-prog:not(.drawn) .mg-plot { visibility:hidden; }
+  .ms-prog.drawn .mg-empty { display:none; }
+  .mg-plot .grid line { stroke:var(--line-soft); }
+  .mg-plot .ln { fill:none; stroke-width:2; stroke-dasharray:900; stroke-dashoffset:900; transition:opacity .3s; }
+  .ms-prog.drawn .mg-plot .ln { animation:draw 1.3s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  .mg-plot .kg { stroke:var(--kg); } .mg-plot .rp { stroke:var(--rp); stroke-width:1.5; }
+  .mg-plot circle.kg { fill:var(--paper-soft); stroke-width:2; }
+  .mg-plot circle.rp { fill:var(--rp); stroke:none; }
+  .mg-plot text { font:700 7.5px "Source Sans 3"; fill:var(--muted); }
+  .mg-plot text.rv { fill:var(--rp); font-size:8px; }
+  .mg-plot .dots { opacity:0; transition:opacity .4s .9s; }
+  .ms-prog.drawn .mg-plot .dots { opacity:1; }
+  .mg-plot .br { fill:rgba(var(--orange-rgb),.1); stroke:var(--orange); stroke-dasharray:3 2; opacity:0; transition:opacity .35s; }
+  .ms-prog.show-br .mg-plot .br { opacity:1; }
+  .ms-prog.hi-kg .rp, .ms-prog.hi-kg .rv { opacity:.15; }
+  .ms-prog.hi-rp .kg { opacity:.15; }
+  .mg-hint { font-size:.56rem; color:var(--muted); margin-top:4px; text-align:right; }
+  .mg-audit { margin-top:12px; border:1px solid var(--line); border-radius:4px; background:var(--paper); }
+  .mg-ah { display:flex; justify-content:space-between; padding:9px 10px; font-size:.66rem; font-weight:700; }
+  .mg-ah em { font-style:normal; transition:transform .3s; }
+  .mg-audit.open .mg-ah em { transform:rotate(180deg); }
+  .mg-ab { display:none; padding:0 10px 8px; }
+  .mg-audit.open .mg-ab { display:block; animation:popIn .25s; }
+  .mg-ab div { font-size:.62rem; color:var(--muted); padding:4px 0; border-top:1px dashed var(--line); }
+  .mg-pr { margin:16px auto 0; width:max-content; display:flex; align-items:center; gap:7px; border:2px solid var(--gold); outline:1px solid var(--gold); outline-offset:3px; padding:7px 12px; font:800 .56rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; color:var(--orange); transform:rotate(-2deg); }
+  .mg-pr svg { width:14px; height:14px; fill:var(--gold); }
+  .mg-sheet { display:none; margin-top:14px; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:10px; }
+  .mg-sheet.open { display:block; animation:popIn .3s; }
+  .mg-sh { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .mg-sh b { font:800 .54rem "Source Sans 3"; letter-spacing:.16em; }
+  .mg-sh i { font:800 .5rem "Source Sans 3"; color:var(--paper); background:var(--orange); border-radius:50%; width:22px; height:22px; display:grid; place-items:center; font-style:normal; }
+  .mg-r { display:flex; justify-content:space-between; padding:5px 0; border-top:1px dashed var(--line); font-size:.64rem; }
+  .mg-r b { font:700 .7rem "Roboto Slab"; }
+
+  /* ========== miniature: ΠΡΟΦΙΛ ========== */
+  .mf-card { background:var(--ink-surface); color:var(--on-ink); border-radius:10px; padding:12px 14px 10px; position:relative; }
+  .mf-top { display:flex; justify-content:space-between; align-items:center; font:800 .48rem "Source Sans 3"; letter-spacing:.16em; color:var(--gold); }
+  .mf-brand { display:flex; gap:2px; } .mf-brand i { width:3px; height:12px; background:var(--gold); }
+  .mf-pol { background:var(--paper-soft); color:var(--ink); margin:14px auto 10px; width:168px; padding:9px 9px 10px; transform:rotate(-2deg); position:relative; box-shadow:0 6px 14px rgba(0,0,0,.35); }
+  .mf-tape { position:absolute; top:-8px; left:50%; margin-left:-28px; width:56px; height:15px; background:var(--tape); transform:rotate(3deg); }
+  .mf-photo { height:118px; background:var(--portrait-bg); position:relative; overflow:hidden; display:grid; place-items:end center; }
+  .mf-photo svg { width:96px; height:96px; fill:var(--portrait-sil); }
+  .mf-photo .mf-img { position:absolute; inset:0; opacity:0; transition:opacity .4s; }
+  .mf-photo.img-b .mf-img { opacity:1; }
+  .ph-a { background:radial-gradient(circle at 50% 40%, #e3b08e 0 15%, transparent 16%), radial-gradient(ellipse at 50% 108%, #3f5a6b 0 40%, transparent 41%), linear-gradient(160deg,#c9b68f,#8c7a55); }
+  .ph-b, .mf-photo .mf-img { background:radial-gradient(circle at 50% 40%, #d79a76 0 15%, transparent 16%), radial-gradient(circle at 50% 30%, #2c2118 0 18%, transparent 19%), radial-gradient(ellipse at 50% 108%, #7a3325 0 40%, transparent 41%), linear-gradient(200deg,#9fb2a6,#5b6e66); }
+  .mf-photo em { position:absolute; top:6px; left:6px; font:800 .4rem "Source Sans 3"; letter-spacing:.12em; background:rgba(0,0,0,.55); color:#fff; padding:2px 4px; font-style:normal; }
+  .mf-name { font:700 1rem "Roboto Slab"; text-align:center; margin-top:8px; letter-spacing:.04em; }
+  .mf-age { display:flex; justify-content:center; gap:6px; align-items:baseline; font:800 .48rem "Source Sans 3"; letter-spacing:.14em; color:var(--muted); margin-top:3px; }
+  .mf-age b { font:700 .9rem "Roboto Slab"; color:var(--ink); letter-spacing:0; }
+  .mf-foot { text-align:center; font:800 .46rem "Source Sans 3"; letter-spacing:.3em; color:var(--ink-meta); }
+  .mf-slip { display:none; margin-top:10px; background:var(--paper-soft); border:1px solid var(--line-card); padding:2px 10px 10px; border-radius:4px; box-shadow:0 6px 14px rgba(var(--shadow-rgb),.12); }
+  .mf-slip.open { display:block; animation:popIn .3s ease-out; }
+  .mf-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  .mf-grid i { aspect-ratio:1; border:1px dashed var(--line); border-radius:4px; display:grid; place-items:center; font-style:normal; color:var(--muted); font-size:.8rem; position:relative; }
+  .mf-grid i.up { border-style:solid; border-color:var(--orange); color:var(--orange); }
+  .mf-grid i.ph-a, .mf-grid i.ph-b { border-style:solid; animation:popIn .3s; }
+  .mf-grid i.sel { outline:2px solid var(--orange); outline-offset:1px; }
+  .mf-grid i.sel::after { content:"✓"; position:absolute; right:-5px; top:-6px; background:var(--orange); color:var(--paper); width:13px; height:13px; border-radius:50%; font-size:.48rem; display:grid; place-items:center; }
+  .mf-sw { display:flex; align-items:center; gap:8px; margin-top:8px; font-size:.64rem; font-weight:600; }
+  .mf-sw i { width:30px; height:17px; border-radius:9px; background:var(--line); position:relative; transition:background .25s; }
+  .mf-sw i::after { content:""; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:var(--paper-soft); transition:left .25s; }
+  .mf-sw.on i { background:var(--orange); } .mf-sw.on i::after { left:15px; }
+  .mf-unit { margin-top:12px; }
+  .mf-ex { display:flex; justify-content:space-between; align-items:baseline; margin-top:7px; font:700 .9rem "Roboto Slab"; padding:2px 4px; border-radius:4px; }
+  .mf-ex small { font:600 .56rem "Source Sans 3"; color:var(--muted); padding:1px 3px; }
+  .mf-exp { margin-top:14px; border:1.5px dashed var(--ink); padding:10px; text-align:center; font:800 .56rem "Source Sans 3"; letter-spacing:.14em; border-radius:6px; }
+  .mf-file { display:none; align-items:center; justify-content:space-between; margin-top:6px; background:var(--paper-soft); border:1px solid var(--line-card); border-radius:4px; padding:7px 10px; }
+  .mf-file.show { display:flex; animation:popIn .35s; }
+  .mf-file b { font-size:.64rem; } .mf-file small { font-size:.56rem; color:var(--muted); }
+
+  /* ========== Α: σημείωμα με οθονάκι ========== */
+  .note { position:absolute; left:12px; right:12px; top:96px; z-index:20; background:var(--paper-soft); color:var(--ink); padding:14px 13px 12px; transform:rotate(-.8deg); box-shadow:5px 7px 0 rgba(var(--orange-rgb),.3), 5px 7px 12px rgba(40,32,18,.18); border:1px solid rgba(var(--orange-rgb),.3); border-radius:3px; transition:opacity .25s, transform .25s; }
+  .note.hidden { opacity:0; pointer-events:none; transform:rotate(-.8deg) translateY(-8px); }
+  .note::before { content:""; position:absolute; top:-11px; left:20px; width:16px; height:36px; border:3px solid rgba(120,120,125,.85); border-radius:8px/11px; border-bottom-color:transparent; transform:rotate(4deg); }
+  .note h3 { margin:0 0 8px; font:700 .66rem "Roboto Slab"; letter-spacing:.18em; color:var(--orange); display:flex; align-items:center; justify-content:space-between; }
+  .note h3 span { font:800 .58rem "Source Sans 3"; letter-spacing:.12em; color:var(--muted); }
+  .note .stage { border:1px solid var(--line); border-radius:4px; }
+  .na-stage { height:146px; }
+  .note ol { margin:10px 0 0; padding:0; list-style:none; }
+  .note li { display:grid; grid-template-columns:20px 1fr; gap:6px; font-family:"Playpen Sans",cursive; font-size:.66rem; font-weight:500; color:var(--ink-hand); line-height:1.45; padding:3px 4px; border-radius:3px; cursor:pointer; transition:color .25s; background:linear-gradient(90deg, rgba(var(--orange-rgb),.2), rgba(var(--orange-rgb),.2)) no-repeat 0 0 / 0% 100%; }
+  .note li b { font:700 .62rem "Roboto Slab"; color:var(--orange); line-height:1.6; }
+  .note li.on { background-size:100% 100%; transition:background-size .6s ease-out; }
+  .note li:not(.on) { color:var(--muted); }
+  .note.static li { color:var(--ink-hand); cursor:default; }
+  .note.static { position:relative; left:auto; right:auto; top:auto; max-width:300px; }
+  .re { border:1px solid var(--line); background:none; color:var(--ink); font:800 .62rem "Source Sans 3"; border-radius:50%; width:22px; height:22px; cursor:pointer; padding:0; }
+
+  /* ========== Β: κινούμενες καρτέλες ========== */
+  .nb-stage { height:216px; }
+  .nb-cap { font-family:"Playpen Sans",cursive; font-size:.72rem; line-height:1.5; font-weight:500; color:var(--ink-hand); margin:10px 2px 8px; min-height:4.5em; }
+  .nb-foot { display:flex; align-items:center; gap:6px; }
+  .nb-foot > button { flex:0 0 auto; width:28px; height:28px; border-radius:50%; border:1.5px solid var(--ink); background:none; color:var(--ink); font:700 .9rem/1 "Roboto Slab"; cursor:pointer; padding:0; }
+  .nb-steps { flex:1; display:flex; gap:4px; }
+  .nb-steps button { flex:1; border:0; background:none; padding:0; cursor:pointer; color:var(--muted); font:700 .56rem "Roboto Slab"; }
+  .nb-steps button i { display:block; height:3px; background:var(--line-soft); border-radius:2px; overflow:hidden; margin-bottom:4px; }
+  .nb-steps button i s { display:block; height:100%; width:0; background:var(--orange); }
+  .nb-steps button.on { color:var(--orange); }
+  .nb-steps button.done i s { width:100%; }
+  .flipbox { background:var(--paper-soft); padding:14px 13px 12px; border:1px solid rgba(var(--orange-rgb),.3); box-shadow:5px 7px 0 rgba(var(--orange-rgb),.3), 5px 7px 12px rgba(40,32,18,.18); border-radius:3px; position:relative; max-width:320px; }
+  .flipbox::before { content:""; position:absolute; top:-11px; left:20px; width:16px; height:36px; border:3px solid rgba(120,120,125,.85); border-radius:8px/11px; border-bottom-color:transparent; transform:rotate(4deg); }
+  .flipbox h3 { margin:0 0 8px; font:700 .66rem "Roboto Slab"; letter-spacing:.18em; color:var(--orange); display:flex; justify-content:space-between; }
+  .flipbox h3 span { font:800 .58rem "Source Sans 3"; color:var(--muted); letter-spacing:.12em; }
+  .flipbox .stage { border:1px solid var(--line); border-radius:4px; }
+
+  /* ========== Γ: χέρι πάνω στη σελίδα ========== */
+  .g-stage { position:absolute; left:0; right:0; top:118px; bottom:0; overflow:visible; }
+  .g-bar { position:absolute; left:10px; right:10px; bottom:10px; z-index:50; background:var(--paper-soft); border:1px solid var(--line); border-radius:8px; padding:10px 12px; box-shadow:0 12px 26px rgba(0,0,0,.35); display:none; }
+  .touring .g-bar { display:block; animation:popIn .3s; }
+  .g-bar p { margin:0 0 8px; font-family:"Playpen Sans",cursive; font-size:.68rem; line-height:1.45; font-weight:500; color:var(--ink-hand); }
+  .g-bar div { display:flex; align-items:center; gap:6px; }
+  .g-bar span { font:700 .6rem "Roboto Slab"; color:var(--orange); margin-right:auto; }
+  .g-bar button { border:1px solid var(--ink); background:none; color:var(--ink); font:800 .54rem "Source Sans 3"; letter-spacing:.1em; padding:6px 9px; border-radius:5px; cursor:pointer; }
+  .g-bar button.primary { background:var(--ink-surface); color:var(--on-ink); }
+
+  /* ========== Δ: ταινία με κεφάλαια ========== */
+  .scrim { position:absolute; inset:0; background:rgba(12,10,6,.45); opacity:0; pointer-events:none; transition:opacity .3s; z-index:29; }
+  .scrim.on { opacity:1; pointer-events:auto; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; height:86%; background:var(--paper-soft); border-radius:18px 18px 0 0; box-shadow:0 -10px 30px rgba(0,0,0,.25); transform:translateY(105%); transition:transform .4s cubic-bezier(.3,.8,.2,1); z-index:30; padding:8px 14px 16px; display:flex; flex-direction:column; }
+  .sheet.open { transform:none; }
+  .sh-grab { width:40px; height:4px; border-radius:2px; background:var(--line); margin:0 auto 10px; }
+  .sh-head { display:flex; justify-content:space-between; align-items:center; }
+  .sh-head h3 { margin:0; font:700 .66rem "Roboto Slab"; letter-spacing:.18em; color:var(--orange); }
+  .sh-head button { border:0; background:none; color:var(--ink); font-size:1rem; cursor:pointer; }
+  .sh-stage { height:290px; margin-top:10px; border:1px solid var(--line); border-radius:8px; }
+  .sh-cap { font-family:"Playpen Sans",cursive; font-size:.72rem; line-height:1.5; font-weight:500; color:var(--ink-hand); min-height:4.6em; margin:10px 2px 8px; }
+  .sh-chap { display:flex; gap:3px; }
+  .sh-chap button { border:0; background:none; padding:0; cursor:pointer; text-align:left; color:var(--muted); font:700 .54rem "Roboto Slab"; min-width:0; }
+  .sh-chap button i { display:block; height:5px; background:var(--line-soft); border-radius:3px; overflow:hidden; margin-bottom:4px; }
+  .sh-chap button i s { display:block; height:100%; width:0; background:var(--orange); }
+  .sh-chap button.on { color:var(--orange); }
+  .sh-chap button.done i s { width:100%; }
+  .sh-ctl { display:flex; gap:10px; justify-content:center; margin-top:auto; }
+  .sh-ctl button { width:40px; height:40px; border-radius:50%; border:1.5px solid var(--ink); background:none; color:var(--ink); font:700 .9rem "Roboto Slab"; cursor:pointer; }
+  .sh-ctl button.primary { background:var(--ink-surface); color:var(--on-ink); border-color:var(--ink-surface); }
+
+  /* ---------- storyboard / other pages ---------- */
+  .board { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; }
+  @media (max-width:1100px) { .board { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  @media (max-width:640px) { .board { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  .frame { background:var(--paper-soft); border:1px solid var(--line); padding:8px; }
+  .frame .stage { height:220px; border:1px solid var(--line-soft); }
+  .frame p { font-family:"Playpen Sans",cursive; font-size:.68rem; line-height:1.45; margin:8px 2px 0; color:var(--ink-hand); }
+  .frame p b { font:700 .64rem "Roboto Slab"; color:var(--orange); margin-right:4px; }
+  .pages { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; align-items:start; }
+  @media (max-width:1100px) { .pages { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:720px) { .pages { grid-template-columns:1fr; } }
+  .pages > div > h4 { font:700 .95rem "Roboto Slab"; margin:0 0 4px; }
+  .pages > div > p { color:var(--muted); font-size:.84rem; line-height:1.45; margin:0 0 18px; }
+  .rules { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
+  .rules div { background:var(--paper); border:1px solid var(--line); padding:14px 16px; font-size:.88rem; line-height:1.5; }
+  .rules div b { display:block; font:700 .82rem "Roboto Slab"; margin-bottom:4px; }
+  .rules div em { font-style:normal; color:var(--orange); font-weight:700; }
+  .verdict { margin-top:22px; background:var(--ink-surface); color:var(--on-ink); padding:20px 22px; border-radius:4px; line-height:1.55; }
+  .verdict b { color:var(--gold); }
+  ol.qs { line-height:1.55; padding-left:22px; max-width:900px; }
+  ol.qs li { margin:8px 0; }
+  @media print { .topbar { display:none; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button id="motion-btn" type="button" aria-pressed="false">ΚΙΝΗΣΗ: ON</button>
+  <button id="theme-btn" type="button" aria-pressed="false">DARK MODE</button>
+</div>
+
+<h1 class="page">Οδηγίες που δείχνουν</h1>
+<p class="intro">Σήμερα το <b>( i )</b> ανοίγει ένα σημείωμα με πέντε γραμμές κείμενο. Εδώ η ίδια οδηγία <b>γίνεται κίνηση</b>: ένα δάχτυλο πατά, τα πεδία γράφονται μόνα τους, η κάρτα σύρεται αριστερά-δεξιά, η προπόνηση ολοκληρώνεται. Ό,τι βλέπετε σε αυτή τη σελίδα <b>παίζει ζωντανά</b>, δεν είναι βίντεο. Αυτός είναι και ο τρόπος που προτείνω αντί για GIF.</p>
+<p class="intro">Ο γύρος έχει δύο αποφάσεις, και η μία δεν εξαρτάται από την άλλη: <b>με τι τεχνική κινείται</b> η οδηγία (§1) και <b>πού εμφανίζεται</b> όταν πατηθεί το ( i ) (§2, τέσσερις εκδοχές σε λειτουργικά κινητά). Ακολουθούν η εκδοχή χωρίς κίνηση (§3), οι άλλες τρεις σελίδες στην ίδια γλώσσα (§4), οι κανόνες της κίνησης (§5) και η σύγκριση με τα ανοιχτά ερωτήματα (§6). Πάνω δεξιά υπάρχουν διακόπτες για dark mode και για <code>prefers-reduced-motion</code>. <b>Δεν έχει αλλάξει τίποτα στην εφαρμογή.</b></p>
+
+<!-- ================= §0 ================= -->
+<h2 class="sec"><small>§0 · ΑΝΑΦΟΡΑ</small>Σήμερα: πέντε γραμμές σε σημείωμα</h2>
+<div class="grid2">
+  <div>
+    <aside class="note static" aria-label="Σημερινό πάνελ οδηγιών Καταγραφής">
+      <h3>ΟΔΗΓΙΕΣ</h3>
+      <ol id="today-list"></ol>
+    </aside>
+  </div>
+  <div class="box">
+    <ul class="tight">
+      <li><b>Οι χειρονομίες περιγράφονται με λέξεις.</b> «Μετακινηθείτε με τα βέλη ή με σύρσιμο» και «σύρετε το γράφημα οριζόντια»: αυτά είναι τα δύο σημεία που ο χρήστης δεν ανακαλύπτει μόνος του, και είναι ακριβώς αυτά που μια εικόνα δείχνει σε ένα δευτερόλεπτο.</li>
+      <li><b>Το κείμενο λέει «τι», όχι «πού».</b> Το «αντιγράψτε το πρώτο στα υπόλοιπα» δεν λέει ότι το κουμπί ΑΝΤΙΓΡΑΦΗ <i>εμφανίζεται μόνο όταν γεμίσει το πρώτο σετ</i>. Η κίνηση το δείχνει χωρίς να το εξηγήσει.</li>
+      <li><b>Περίπου 90 λέξεις ανά σελίδα, που διαβάζονται όρθιοι στο γυμναστήριο.</b> Το σημείωμα είναι καλογραμμένο, αλλά σε αυτό το περιβάλλον κανείς δεν διαβάζει παράγραφο.</li>
+      <li><b>Τα κείμενα είναι ήδη μεταφρασμένα σε τέσσερις γλώσσες.</b> Αυτό είναι πλεονέκτημα και πρέπει να μείνει: καμία από τις εκδοχές παρακάτω δεν πετάει το κείμενο. Το κείμενο γίνεται <i>λεζάντα</i> της κίνησης.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================= §1 ================= -->
+<h2 class="sec"><small>§1 · ΤΕΧΝΙΚΗ</small>Με τι κινείται: γιατί όχι GIF</h2>
+<p class="sec-note">Το GIF είναι η πρώτη ιδέα που έρχεται, αλλά πάνω σε αυτή την εφαρμογή πολλαπλασιάζεται: <b>5 σελίδες × 4 γλώσσες × 2 θέματα = 40 αρχεία</b>, και πρέπει να ξαναγυριστούν όλα σε κάθε αλλαγή του UI. Η εναλλακτική είναι μια <b>ζωντανή μινιατούρα</b>, δηλαδή ένα μικρό αντίγραφο της σελίδας σε HTML/CSS που το «παίζει» ένα σενάριο λίγων γραμμών JavaScript. Είναι η τεχνική όλων των demo αυτής της σελίδας.</p>
+<div class="scroll-x">
+<table class="cmp">
+  <thead><tr><th></th><th>GIF</th><th>Βίντεο MP4 / WebM</th><th>Lottie</th><th class="win">Ζωντανή μινιατούρα</th><th>Χέρι στην αληθινή σελίδα</th></tr></thead>
+  <tbody>
+    <tr><th>Βάρος</th><td>0,4–2 MB ανά οδηγία, ×40</td><td>80–300 KB, ×40</td><td>~60 KB runtime + JSON ανά σελίδα</td><td class="win"><span class="ok">~8 KB κοινός κινητήρας + ~3 KB ανά σελίδα</span></td><td>Ο ίδιος κινητήρας, χωρίς markup</td></tr>
+    <tr><th>Dark mode</th><td><span class="no">✗</span> διπλά αρχεία</td><td><span class="no">✗</span> διπλά αρχεία</td><td><span class="mid">~</span> επαναχρωματισμός με κόπο</td><td class="win"><span class="ok">✓</span> διαβάζει τα ίδια tokens</td><td><span class="ok">✓</span></td></tr>
+    <tr><th>4 γλώσσες</th><td><span class="no">✗</span> ×4 εγγραφές</td><td><span class="no">✗</span> ×4 εγγραφές</td><td><span class="mid">~</span> κείμενα μέσα στο JSON</td><td class="win"><span class="ok">✓</span> ετικέτες και λεζάντες από το υπάρχον catalog</td><td><span class="ok">✓</span></td></tr>
+    <tr><th>Ευκρίνεια</th><td><span class="no">✗</span> 256 χρώματα, θολό σε retina</td><td>καλή, αλλά pixels</td><td>διανυσματική</td><td class="win"><span class="ok">✓</span> αληθινό κείμενο, σε κάθε zoom</td><td><span class="ok">✓</span> η ίδια η σελίδα</td></tr>
+    <tr><th>Όταν αλλάζει το UI</th><td><span class="no">✗</span> ξαναγύρισμα ×40</td><td><span class="no">✗</span> ξαναγύρισμα ×40</td><td><span class="no">✗</span> ξανασχέδιο σε After Effects</td><td class="win"><span class="mid">~</span> αλλάζει ο κώδικας, φαίνεται στο git diff και μπορεί να το πιάσει test</td><td><span class="mid">~</span> πάντα ακριβές, αλλά σπάει όταν αλλάξει selector ή κατάσταση</td></tr>
+    <tr><th>Reduced motion</th><td><span class="no">✗</span> δεν σταματά, θέλει δεύτερη εικόνα</td><td><span class="mid">~</span> παύση</td><td><span class="ok">✓</span></td><td class="win"><span class="ok">✓</span> στατικά καρέ από τον ίδιο κώδικα (§3)</td><td><span class="ok">✓</span></td></tr>
+    <tr><th>CSP (<code>style-src 'self'</code>)</th><td><span class="ok">✓</span> <code>img-src 'self'</code></td><td><span class="ok">✓</span> <code>default-src 'self'</code></td><td><span class="mid">~</span> νέα εξάρτηση τρίτου</td><td class="win"><span class="ok">✓</span> μόνο κλάσεις + <code>element.style</code> (CSSOM, επιτρέπεται)</td><td><span class="ok">✓</span></td></tr>
+    <tr><th>Κίνδυνος για δεδομένα</th><td>κανένας</td><td>κανένας</td><td>κανένας</td><td class="win"><span class="ok">κανένας</span>: δεν αγγίζει πεδία, πρόχειρο ή αποθήκευση</td><td><span class="no">υπαρκτός</span>: πατά πάνω στην αληθινή φόρμα</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="grid2" style="margin-top:20px">
+  <div class="box">
+    <b style="font-family:'Roboto Slab'">Πώς δουλεύει</b>
+    <div class="flow">
+      <div><b>Μινιατούρα</b><small>Μικρό HTML αντίγραφο της σελίδας (300px), με τα ίδια tokens. Τα πεδία είναι <code>&lt;span&gt;</code>, όχι <code>&lt;input&gt;</code>, οπότε δεν πιάνουν focus και δεν τα βλέπουν οι screen readers.</small></div>
+      <i>→</i>
+      <div><b>Σενάριο</b><small>Πέντε μικρές async συναρτήσεις, μία ανά βήμα του σημερινού κειμένου.</small></div>
+      <i>→</i>
+      <div><b>Κινητήρας</b><small><code>tap · type · drag · pick · cam</code>. Υπολογίζει θέσεις στην ώρα του, οπότε δουλεύει σε κάθε πλάτος και σε κάθε γλώσσα.</small></div>
+    </div>
+  </div>
+  <div>
+<pre class="code"><s>// Βήμα 02 της Καταγραφής: όλο κι όλο</s>
+<em>async</em> c =&gt; {
+  <em>await</em> c.cam('.deck');                 <s>// η «κάμερα» κατεβαίνει</s>
+  <em>await</em> c.drag('.deck-view', -150, 0, t =&gt; deck(t * .55));
+  deck(1);                                <s>// κουμπώνει στη 2η κάρτα</s>
+  <em>await</em> c.tap('[data-k=next]'); deck(2);
+  <em>await</em> c.tap('[data-k=prev]'); deck(1);
+}</pre>
+  </div>
+</div>
+
+<!-- ================= §2 ================= -->
+<h2 class="sec"><small>§2 · ΠΑΡΟΥΣΙΑΣΗ</small>Πού παίζει όταν πατηθεί το ( i ): τέσσερις εκδοχές</h2>
+<p class="sec-note">Και οι τέσσερις χρησιμοποιούν την ίδια μινιατούρα και το ίδιο σενάριο της <b>Καταγραφής</b>. Αλλάζει μόνο το πλαίσιο. Πατήστε το <b>( i )</b> σε κάθε κινητό.</p>
+
+<!-- Α -->
+<section class="variant">
+  <div class="variant-title"><b>Α</b><h3>Το σημείωμα αποκτά οθονάκι</h3></div>
+  <div class="variant-body">
+    <div class="variant-text">
+      <p>Το σημείωμα με τον συνδετήρα μένει όπως είναι. Πάνω από τις πέντε γραμμές μπαίνει ένα μικρό παράθυρο που παίζει τη σελίδα σε μινιατούρα. Η γραμμή που αντιστοιχεί στο βήμα που παίζει περνιέται με μαρκαδόρο, σαν καραόκε. Πάτημα σε μια γραμμή πηγαίνει σε εκείνο το βήμα.</p>
+      <div class="pros">
+        <div class="plus"><b>Υπέρ</b>Η μικρότερη αλλαγή. Όλο το κείμενο μένει ορατό με μια ματιά, και όποιος δεν θέλει κίνηση απλώς διαβάζει.</div>
+        <div class="minus"><b>Κατά</b>Το οθονάκι βγαίνει χαμηλό (248 × 146 px), γιατί τις πέντε γραμμές πρέπει να τις χωρέσει από κάτω, και το μάτι μοιράζεται ανάμεσα σε κίνηση και κείμενο. Το σημείωμα ψηλώνει πολύ στο κινητό.</div>
+      </div>
+      <p class="hint">Πατήστε το <kbd>i</kbd> στο κινητό, ή μια γραμμή για να πάτε σε εκείνο το βήμα.</p>
+    </div>
+    <div class="phone" id="phone-a"></div>
+  </div>
+</section>
+
+<!-- Β -->
+<section class="variant">
+  <div class="variant-title"><b>Β</b><h3>Κινούμενες καρτέλες</h3><span class="tag">Πρόταση</span></div>
+  <div class="variant-body">
+    <div class="variant-text">
+      <p>Ένα βήμα τη φορά. Το σημείωμα γίνεται μικρό flipbook: σχεδόν όλη η επιφάνεια είναι η κίνηση, και από κάτω υπάρχει μία λεζάντα, <b>η ίδια ακριβώς γραμμή που υπάρχει σήμερα</b>. Οι αριθμοί 01–05 γεμίζουν σαν μπάρες προόδου. Τα βήματα παίζουν μία φορά και μετά σταματά. Με ‹ ›, με πάτημα σε αριθμό ή με σύρσιμο πάνω στην οθόνη αλλάζει το βήμα.</p>
+      <p>Το σημείωμα κρατά το ίδιο πλάτος και τον ίδιο συνδετήρα, οπότε το ( i ) εξακολουθεί να ανοίγει «το ίδιο πράγμα», που απλώς τώρα κινείται.</p>
+      <div class="pros">
+        <div class="plus"><b>Υπέρ</b>Μεγαλύτερη κίνηση στο ίδιο ύψος σημειώματος (248 × 216 px αντί για 146), ένα πράγμα τη φορά, <b>μηδέν νέα κείμενα για μετάφραση</b>. Η λεζάντα είναι ήδη το προσβάσιμο κείμενο.</div>
+        <div class="minus"><b>Κατά</b>Δεν βλέπεις και τα πέντε βήματα με μια ματιά. Οι αριθμοί δείχνουν πόσα είναι και πηγαίνουν απευθείας σε όποιο θέλεις.</div>
+      </div>
+      <p class="hint">Πατήστε το <kbd>i</kbd>. Σύρετε αριστερά-δεξιά πάνω στο οθονάκι για να αλλάξετε βήμα.</p>
+    </div>
+    <div class="phone" id="phone-b"></div>
+  </div>
+</section>
+
+<!-- Γ -->
+<section class="variant">
+  <div class="variant-title"><b>Γ</b><h3>Το χέρι πάνω στη σελίδα</h3></div>
+  <div class="variant-body">
+    <div class="variant-text">
+      <p>Εδώ δεν υπάρχει μινιατούρα: σκουραίνει η ίδια η σελίδα, ένας προβολέας φωτίζει το πεδίο και ένα δάχτυλο-φάντασμα πατά. Οι τιμές γράφονται <span style="font-family:'Playpen Sans';color:var(--pen-blue)">με μολύβι</span> (pen-blue, χειρόγραφα), για να μη μοιάζουν ποτέ με αληθινή καταγραφή. Κάθε βήμα περιμένει «Επόμενο».</p>
+      <div class="pros">
+        <div class="plus"><b>Υπέρ</b>Η πιο πιστή εκδοχή: δείχνει το πραγματικό κουμπί, στην πραγματική του θέση, στη σελίδα που έχει ήδη μπροστά του ο χρήστης.</div>
+        <div class="minus"><b>Κατά</b>Η πιο ακριβή και εύθραυστη. Πρέπει να δουλεύει πάνω σε <i>όποια</i> κατάσταση έχει η σελίδα (μισογραμμένη προπόνηση, ελεύθερη λειτουργία, άδειο πρόγραμμα), να μην γράψει ποτέ σε πεδίο, πρόχειρο ή <code>sessions</code>, και να αφήσει τη σελίδα ακριβώς όπως ήταν. Στο demo τρέχει πάνω σε αντίγραφο.</div>
+      </div>
+      <p class="hint">Πατήστε το <kbd>i</kbd> για να ξεκινήσει η περιήγηση.</p>
+    </div>
+    <div class="phone" id="phone-c"></div>
+  </div>
+</section>
+
+<!-- Δ -->
+<section class="variant">
+  <div class="variant-title"><b>Δ</b><h3>Η ταινία με κεφάλαια</h3></div>
+  <div class="variant-body">
+    <div class="variant-text">
+      <p>Ένα φύλλο ανεβαίνει από κάτω, με μεγαλύτερη μινιατούρα και μια μπάρα χρόνου χωρισμένη σε πέντε κεφάλαια, όπου κάθε κεφάλαιο έχει πλάτος ανάλογο της διάρκειάς του. Έχει παύση, επανάληψη και πάτημα σε κεφάλαιο, δηλαδή τον έλεγχο ενός βίντεο χωρίς να είναι βίντεο.</p>
+      <div class="pros">
+        <div class="plus"><b>Υπέρ</b>Η πιο ευανάγνωστη κίνηση (270 × 290 px) και οικείος έλεγχος. Καλή για ένα πρώτο «ξενάγησέ με».</div>
+        <div class="minus"><b>Κατά</b>Κρύβει τη σελίδα, και το bottom sheet είναι νέο μοτίβο που η εφαρμογή δεν χρησιμοποιεί για οδηγίες. Βαρύ για το συνηθισμένο «θύμισέ μου πού είναι το κουμπί».</div>
+      </div>
+      <p class="hint">Πατήστε το <kbd>i</kbd>. Πατήστε ένα κεφάλαιο για να πάτε σε αυτό.</p>
+    </div>
+    <div class="phone" id="phone-d"></div>
+  </div>
+</section>
+
+<!-- ================= §3 ================= -->
+<h2 class="sec"><small>§3 · ΧΩΡΙΣ ΚΙΝΗΣΗ</small>Το ίδιο σενάριο, ως πέντε καρέ</h2>
+<p class="sec-note">Με <code>prefers-reduced-motion: reduce</code> ο κινητήρας δεν παίζει τίποτα. Τρέχει το σενάριο ακαριαία μέχρι το τέλος κάθε βήματος και σημειώνει με διακεκομμένο περίγραμμα ό,τι <i>θα</i> πατούσε. Τα καρέ βγαίνουν από τον ίδιο κώδικα, όχι από δεύτερο σετ εικόνων, και χρησιμεύουν και για την εκτύπωση. Ο διακόπτης <b>ΚΙΝΗΣΗ</b> πάνω δεξιά γυρίζει όλα τα παραπάνω demo σε αυτή τη μορφή.</p>
+<div class="board" id="board"></div>
+
+<!-- ================= §4 ================= -->
+<h2 class="sec"><small>§4 · ΟΙ ΑΛΛΕΣ ΣΕΛΙΔΕΣ</small>Πρόγραμμα, Επίβλεψη, Προφίλ, στη μορφή Β</h2>
+<p class="sec-note">Οι λεζάντες είναι αυτούσιες οι σημερινές γραμμές κάθε πάνελ. Οι οριζόντιες κινήσεις εμφανίζονται εκεί που τις περιγράφει σήμερα το κείμενο: το καρουζέλ ασκήσεων (σύρσιμο και βελάκι) και το γράφημα της Επίβλεψης που σύρεται προς τις παλαιότερες προπονήσεις ενώ ο άξονας μένει καρφωμένος. Ξεκινούν μόνα τους όταν έρθουν στην οθόνη.</p>
+<div class="pages">
+  <div><h4>Πρόγραμμα</h4><p>Βιβλιοθήκη, μολύβι και ×, ομώνυμες με σημείωση, νέο πρόγραμμα, άνοιγμα και αστέρι, αναλλοίωτο ιστορικό.</p><div class="flipbox" id="flip-plan"></div></div>
+  <div><h4>Επίβλεψη</h4><p>Άσκηση και σετ, κιλά και επαναλήψεις, σύρσιμο γραφήματος, έλεγχος, Personal Records.</p><div class="flipbox" id="flip-prog"></div></div>
+  <div><h4>Προφίλ</h4><p>Κάρτα που πατιέται, φωτογραφίες, ηλικία, μονάδα μέτρησης, εξαγωγή.</p><div class="flipbox" id="flip-prof"></div></div>
+</div>
+
+<!-- ================= §5 ================= -->
+<h2 class="sec"><small>§5 · ΚΑΝΟΝΕΣ</small>Πώς κινείται η κίνηση</h2>
+<div class="rules">
+  <div><b>Ρυθμός</b>Δάχτυλο <em>520 ms</em> ανά μετακίνηση, πάτημα <em>170 ms</em>, γράψιμο <em>95 ms</em> ανά χαρακτήρα, παύση <em>1,2″</em> ανάμεσα στα βήματα. Αρκετά αργό για να το ακολουθήσει το μάτι και αρκετά γρήγορο ώστε ένα βήμα να μην ξεπερνά τα ~7″.</div>
+  <div><b>Μία φορά, μετά σιωπή</b>Παίζει όλα τα βήματα μία φορά και σταματά. Δεν υπάρχει ατέρμονος βρόχος που τραβά το μάτι ενώ ο χρήστης προσπαθεί να διαβάσει. Το ↻ το ξαναπαίζει.</div>
+  <div><b>Παύση όταν δεν φαίνεται</b>Σταματά όταν το πάνελ βγει από την οθόνη, όταν κρυφτεί η καρτέλα ή όταν κλείσει το ( i ). Δεν καίει μπαταρία στο παρασκήνιο.</div>
+  <div><b>Τίποτα αληθινό</b>Η μινιατούρα δεν έχει κανένα <code>&lt;input&gt;</code>, κανένα κλειδί αποθήκευσης και καμία κλήση. Τα «δεδομένα» της (PUSH, 10 × 60) είναι σταθερές του σεναρίου και δεν διαβάζονται από τον χρήστη.</div>
+  <div><b>Προσβασιμότητα</b>Η μινιατούρα είναι <code>aria-hidden="true"</code>. Το περιεχόμενο για screen reader είναι η λεζάντα, δηλαδή το σημερινό <code>&lt;ol&gt;</code>. Με reduced motion: στατικά καρέ (§3).</div>
+  <div><b>Ο αισθητήρας είναι δάχτυλο, όχι κέρσορας</b>Ημιδιάφανος δίσκος με λευκό περίγραμμα και κύμα στο πάτημα (το «show touches» του κινητού). Στο σύρσιμο ο δίσκος μένει πατημένος σε όλη τη διαδρομή.</div>
+  <div><b>Η «κάμερα»</b>Η μινιατούρα είναι ψηλότερη από το παράθυρο. Πριν από κάθε κίνηση η κάμερα κατεβαίνει ομαλά στο σημείο (<code>c.cam()</code>) και μετά κινείται το δάχτυλο, ποτέ και τα δύο μαζί.</div>
+  <div><b>Γλώσσα</b>Οι ετικέτες της μινιατούρας (Ημερομηνία, Ελεύθερη, ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ…) υπάρχουν ήδη στο catalog. Οι θέσεις υπολογίζονται τη στιγμή που παίζει, οπότε ένα μακρύτερο γερμανικό κουμπί δεν σπάει το σενάριο.</div>
+</div>
+
+<!-- ================= §6 ================= -->
+<h2 class="sec"><small>§6 · ΣΥΓΚΡΙΣΗ</small>Τα τέσσερα δίπλα-δίπλα</h2>
+<div class="scroll-x">
+<table class="cmp">
+  <thead><tr><th></th><th>Α · Οθονάκι</th><th class="win">Β · Καρτέλες</th><th>Γ · Χέρι στη σελίδα</th><th>Δ · Ταινία</th></tr></thead>
+  <tbody>
+    <tr><th>Επιφάνεια κίνησης (κινητό)</th><td>248 × 146</td><td class="win">248 × 216</td><td>όλη η σελίδα, 1:1</td><td>270 × 290</td></tr>
+    <tr><th>Κείμενο ορατό</th><td>και τα 5</td><td class="win">1 τη φορά + αριθμοί</td><td>1 τη φορά</td><td>1 τη φορά + κεφάλαια</td></tr>
+    <tr><th>Νέα κείμενα</th><td>κανένα</td><td class="win">κανένα</td><td>«Επόμενο», «Παράλειψη»</td><td>κανένα (εικονίδια)</td></tr>
+    <tr><th>Νέο μοτίβο UI</th><td>όχι</td><td class="win">όχι (το ίδιο σημείωμα)</td><td>προβολέας + μπάρα</td><td>bottom sheet</td></tr>
+    <tr><th>Κόστος κώδικα</th><td>κινητήρας + σενάρια</td><td class="win">κινητήρας + σενάρια</td><td>κινητήρας + σενάρια ανά κατάσταση + επαναφορά σελίδας</td><td>κινητήρας + σενάρια + φύλλο</td></tr>
+    <tr><th>Ρίσκο</th><td>χαμηλό</td><td class="win">χαμηλό</td><td><span class="no">υψηλό</span></td><td>χαμηλό</td></tr>
+    <tr><th>Κρύβει τη σελίδα</th><td>μερικώς</td><td class="win">μερικώς (όσο σήμερα)</td><td>σκουραίνει</td><td>σχεδόν όλη</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="verdict">
+  <b>Πρόταση: τεχνική «ζωντανή μινιατούρα» και εκδοχή Β (κινούμενες καρτέλες).</b> Το ( i ) ανοίγει το ίδιο σημείωμα στην ίδια θέση. Μέσα του, η κίνηση πιάνει την επιφάνεια και το σημερινό κείμενο γίνεται λεζάντα, οπότε δεν χρειάζεται ούτε μία νέα μετάφραση. Το Γ είναι η πιο εντυπωσιακή εκδοχή αλλά και η μόνη που μπορεί να χαλάσει κάτι αληθινό. Αν χρειαστεί ποτέ μια ξενάγηση πρώτης χρήσης, μπορεί να χτιστεί αργότερα πάνω στον ίδιο κινητήρα.
+</div>
+
+<h3 style="font-family:'Roboto Slab';margin:34px 0 4px">Τι αλλάζει και τι όχι (αν υλοποιηθεί το Β)</h3>
+<div class="grid2">
+  <div class="box"><ul class="tight">
+    <li><b>Νέο:</b> <code>modules/guide-player.js</code> (κινητήρας, ~200 γραμμές), ένα αρχείο σεναρίου ανά σελίδα με μινιατούρα και 5 βήματα, και ένα <code>guide.css</code> με κλάσεις που διαβάζουν τα υπάρχοντα tokens.</li>
+    <li><b>Αλλάζει:</b> το εσωτερικό των τεσσάρων <code>.info-panel</code>. Το <code>&lt;ol&gt;</code> μένει στο DOM ως πηγή της λεζάντας και ως κείμενο για screen readers.</li>
+  </ul></div>
+  <div class="box"><ul class="tight">
+    <li><b>Δεν αλλάζει:</b> το ( i ), η θέση του, τα κείμενα και τα i18n IDs τους, το schema, η αποθήκευση, ο συγχρονισμός και το CSV.</li>
+    <li><b>Δεν προστίθεται:</b> καμία εξάρτηση, κανένα αρχείο εικόνας ή βίντεο και κανένα ερώτημα CSP. Αρχική, Ιστορικό και λογαριασμός μένουν χωρίς ( i ), σύμφωνα με τον κανόνα της 0.3.4.</li>
+  </ul></div>
+</div>
+
+<h3 style="font-family:'Roboto Slab';margin:34px 0 4px">Ανοιχτά ερωτήματα</h3>
+<ol class="qs">
+  <li><b>Πιστότητα ή απλότητα;</b> Η μινιατούρα εδώ είναι χειροποίητο, απλοποιημένο αντίγραφο. Θα μπορούσε να χτίζεται από τα ίδια templates (<code>session-templates.js</code>) με <code>inert</code>, ώστε να μην αποκλίνει ποτέ, αλλά τότε θα κουβαλούσε και όλη την πολυπλοκότητα της κάρτας στα 300px.</li>
+  <li><b>Αυτόματη πρώτη προβολή;</b> Να παίζει μόνη της την πρώτη φορά που ανοίγει κάθε σελίδα (με ένα τοπικό κλειδί «το είδε»), ή μόνο όταν πατηθεί το ( i ); Ενδιάμεση λύση: το ( i ) «ανασαίνει» δύο φορές στην πρώτη επίσκεψη.</li>
+  <li><b>Λεζάντα αυτούσια ή σύντομος τίτλος;</b> Οι σημερινές γραμμές έχουν 12–25 λέξεις. Ένας τίτλος 2–3 λέξεων ανά βήμα («Σύρετε για ασκήσεις») θα διαβαζόταν πιο γρήγορα, αλλά σημαίνει 20 νέες συμβολοσειρές × 4 γλώσσες.</li>
+  <li><b>Test που πιάνει την απόκλιση.</b> Ένα e2e που τρέχει κάθε σενάριο σε fast mode και αποτυγχάνει αν λείπει κάποιος selector. Είναι φτηνό και κρατά τη μινιατούρα ειλικρινή.</li>
+  <li><b>High contrast.</b> Το δάχτυλο είναι ημιδιάφανο. Σε <code>prefers-contrast: more</code> ίσως χρειάζεται συμπαγές περίγραμμα <code>--ink</code>.</li>
+  <li><b>Desktop.</b> Το σημείωμα έχει πλάτος 300px και η μινιατούρα μένει στην ίδια κλίμακα. Αξίζει μεγαλύτερο σημείωμα στα &gt;850px ή όχι;</li>
+</ol>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+const pad = n => String(n).padStart(2, '0');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const CANCEL = Symbol('cancel');
+let RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const players = [];
+
+function within(e, root, prop) { let v = 0; while (e && e !== root) { v += e[prop]; e = e.offsetParent; } return v; }
+
+/* ======================= ENGINE ======================= */
+class Ctx {
+  constructor(p, rid) { this.p = p; this.rid = rid; this.fast = true; this.mark = false; }
+  get root() { return this.p.scene; }
+  alive() { if (this.rid !== this.p.rid) throw CANCEL; }
+  q(s) {
+    if (typeof s !== 'string') return s;
+    const n = this.p.scene.querySelector(s) || this.p.stage.querySelector(s);
+    if (!n) throw new Error('missing ' + s);
+    return n;
+  }
+  async wait(ms) {
+    this.alive(); if (this.fast) return;
+    let left = ms;
+    while (left > 0) {
+      const d = Math.min(left, 30);
+      await sleep(d); this.alive();
+      if (!this.p.paused) { left -= d; this.p.tick(d); }
+    }
+  }
+  async cam(s, off = 14) {
+    this.alive();
+    const p = this.p; let y = 0;
+    if (s != null) y = within(this.q(s), p.scene, 'offsetTop') - off;
+    const max = p.scene.offsetHeight - p.view.clientHeight / p.k;
+    const ny = Math.round(Math.max(0, Math.min(y, Math.max(0, max))));
+    const moved = ny !== p.y;
+    p.y = ny; p.applyCam();
+    if (moved) await this.wait(480);
+  }
+  pos(e, ax = .5, ay = .5) {
+    const r = e.getBoundingClientRect(), s = this.p.stage.getBoundingClientRect();
+    return [r.left - s.left + r.width * ax, r.top - s.top + r.height * ay];
+  }
+  async move(s, ax, ay) {
+    this.alive(); if (this.fast) return;
+    const e = this.q(s), f = this.p.finger;
+    const [x, y] = this.pos(e, ax, ay);
+    const first = !f.classList.contains('on');
+    if (first) { f.classList.add('jump'); f.style.transform = `translate(${x}px,${y + 46}px)`; void f.offsetWidth; f.classList.remove('jump'); f.classList.add('on'); }
+    f.style.transform = `translate(${x}px,${y}px)`;
+    this.p.spotOn(e);
+    await this.wait(first ? 430 : 520);
+  }
+  async tap(s, ax, ay) {
+    const e = this.q(s);
+    if (this.fast) { if (this.mark) e.classList.add('rm-mark'); return; }
+    await this.move(e, ax, ay);
+    const f = this.p.finger;
+    f.classList.add('press'); e.classList.add('is-pressed'); this.ripple(e, ax, ay);
+    await this.wait(170);
+    f.classList.remove('press'); e.classList.remove('is-pressed');
+    await this.wait(150);
+  }
+  async point(s, ax, ay) {
+    const e = this.q(s);
+    if (this.fast) { if (this.mark) e.classList.add('rm-mark'); return; }
+    await this.move(e, ax, ay);
+    e.classList.remove('pulse'); void e.offsetWidth; e.classList.add('pulse');
+    await this.wait(720); e.classList.remove('pulse');
+  }
+  ripple(e, ax, ay) {
+    const [x, y] = this.pos(e, ax, ay);
+    const r = el('span', 'ripple'); r.style.left = x + 'px'; r.style.top = y + 'px';
+    this.p.stage.append(r); setTimeout(() => r.remove(), 600);
+  }
+  val(s, t) { const e = this.q(s); (e.querySelector('.v') || e).textContent = t; }
+  getv(s) { const e = this.q(s); return (e.querySelector('.v') || e).textContent; }
+  text(s, t) { this.q(s).textContent = t; }
+  cls(s, c, on = true) { this.q(s).classList.toggle(c, on); }
+  flash(s) { if (this.fast) return; const e = this.q(s); e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); }
+  async type(s, t, mirror) {
+    this.alive();
+    const e = this.q(s);
+    if (this.fast) { this.val(e, t); if (mirror) this.val(mirror, t); return; }
+    e.classList.add('is-focus'); this.val(e, '');
+    let acc = '';
+    for (const ch of t) { acc += ch; this.val(e, acc); if (mirror) this.val(mirror, acc); await this.wait(t.length > 14 ? 62 : 95); }
+    await this.wait(260); e.classList.remove('is-focus');
+  }
+  async pick(s, opts, idx, { browse = false, set = true } = {}) {
+    const e = this.q(s);
+    if (this.fast) { if (set) this.val(e, opts[idx]); if (this.mark) e.classList.add('rm-mark'); return; }
+    await this.tap(e);
+    const p = this.p, pop = el('div', 'ms-pop', opts.map(o => `<div>${o}</div>`).join(''));
+    pop.style.top = (within(e, p.scene, 'offsetTop') + e.offsetHeight + 3) + 'px';
+    pop.style.left = within(e, p.scene, 'offsetLeft') + 'px';
+    pop.style.minWidth = e.offsetWidth + 'px';
+    p.scene.append(pop);
+    await this.wait(260);
+    const items = [...pop.children];
+    if (browse) for (const it of items) { await this.move(it, .35, .5); it.classList.add('hl'); await this.wait(120); it.classList.remove('hl'); }
+    await this.tap(items[idx], .35, .5);
+    items[idx].classList.add('sel');
+    if (set) this.val(e, opts[idx]);
+    await this.wait(200); pop.remove();
+  }
+  async drag(s, dx, dy, frame, { ax = .5, ay = .5, dur = 700 } = {}) {
+    const e = this.q(s);
+    if (this.fast) { if (this.mark) e.classList.add('rm-mark'); frame && frame(1); return; }
+    await this.move(e, ax, ay);
+    const [x, y] = this.pos(e, ax, ay), f = this.p.finger, k = this.p.k;
+    f.classList.add('press', 'drag');
+    const N = Math.max(10, Math.round(dur / 16));
+    for (let i = 1; i <= N; i++) {
+      const t = ease(i / N);
+      f.style.transform = `translate(${x + dx * k * t}px,${y + dy * k * t}px)`;
+      frame && frame(t);
+      await this.wait(16);
+    }
+    f.classList.remove('press', 'drag');
+    await this.wait(180);
+  }
+  toast(t) {
+    const n = el('div', 'ms-stamp', `<i>✓</i>${t}`);
+    this.p.stage.append(n);
+    if (this.fast) n.classList.add('show'); else requestAnimationFrame(() => requestAnimationFrame(() => n.classList.add('show')));
+    return n;
+  }
+  overlay(html, cls = 'bottom') {
+    const n = el('div', 'ov ' + cls, html);
+    this.p.stage.append(n);
+    if (!this.fast) void n.offsetWidth;
+    n.classList.add('in');
+    return n;
+  }
+  async close(n) { if (this.fast) { n.remove(); return; } n.classList.remove('in'); await this.wait(300); n.remove(); }
+  fingerOff() { this.p.finger.classList.remove('on'); }
+}
+
+class Player {
+  constructor(o) {
+    Object.assign(this, { pause: 1200, ghost: false, spot: false, prep: null, canRun: () => true, onStep() {}, onProgress() {}, onDone() {}, onEnd() {} }, o);
+    this.view = this.stage.querySelector('.view');
+    this.finger = el('div', 'finger'); this.stage.append(this.finger);
+    if (this.spot) { this.spotEl = el('div', 'spot'); this.stage.append(this.spotEl); }
+    this.rid = 0; this.manual = false; this.hidden = false; this.cur = 0; this.started = false; this.y = 0;
+    players.push(this);
+    new IntersectionObserver(([e]) => { this.hidden = !e.isIntersecting; }).observe(this.stage);
+  }
+  get paused() { return this.manual || this.hidden || document.hidden; }
+  build() {
+    this.stage.querySelectorAll('.ov,.ms-stamp,.ripple').forEach(n => n.remove());
+    this.view.innerHTML = this.def.html();
+    this.scene = this.view.firstElementChild;
+    this.scene.setAttribute('aria-hidden', 'true');
+    if (this.ghost) this.scene.classList.add('ghost');
+    this.scene.classList.add('nofx');
+    this.measure(); this.y = 0; this.applyCam();
+    this.finger.className = 'finger';
+    if (this.spotEl) this.spotEl.classList.remove('on');
+  }
+  idle() { this.stop(); this.build(); this.scene.classList.remove('ghost'); if (this.prep) this.prep(this.scene); }
+  measure() { this.k = (this.view.clientWidth || this.def.width) / this.def.width; }
+  applyCam() { this.scene.style.transform = `translate3d(0,${(-this.y * this.k).toFixed(1)}px,0) scale(${this.k})`; }
+  spotOn(e) {
+    if (!this.spotEl) return;
+    const r = e.getBoundingClientRect(), s = this.stage.getBoundingClientRect(), p = 5;
+    Object.assign(this.spotEl.style, { left: (r.left - s.left - p) + 'px', top: (r.top - s.top - p) + 'px', width: (r.width + 2 * p) + 'px', height: (r.height + 2 * p) + 'px' });
+    this.spotEl.classList.add('on');
+  }
+  tick(ms) { this.elapsed += ms; const d = (this.def.dur && this.def.dur[this.cur]) || 5000; this.onProgress(this.cur, Math.min(this.elapsed / d, .96)); }
+  stop() { this.rid++; this.finger.classList.remove('on'); if (this.spotEl) this.spotEl.classList.remove('on'); }
+  async run(from = 0, { single = false, still = RM } = {}) {
+    this.started = true;
+    const rid = ++this.rid, c = new Ctx(this, rid), n = this.def.steps.length;
+    from = Math.max(0, Math.min(from, n - 1));
+    this.build();
+    try {
+      for (let i = 0; i < from; i++) await this.def.steps[i](c);
+      if (still) {
+        /* Στατικό καρέ: το nofx μένει, ώστε να μην παίξει καμία μετάβαση */
+        c.mark = true; await this.def.steps[from](c); c.mark = false;
+        this.cur = from; this.lastSingle = single; this.onStep(from); this.onProgress(from, 1); this.onDone(from, true);
+        return;
+      }
+      void this.scene.offsetWidth; this.scene.classList.remove('nofx');
+      c.fast = false; this.lastSingle = single;
+      for (let i = from; i < n; i++) {
+        this.cur = i; this.elapsed = 0; this.onStep(i);
+        await this.def.steps[i](c);
+        this.onProgress(i, 1); this.onDone(i, false);
+        if (single || i === n - 1) break;
+        await c.wait(this.pause);
+      }
+      await c.wait(300); c.fingerOff();
+      if (rid === this.rid) this.onEnd(this.cur);
+    } catch (e) { if (e !== CANCEL) console.error(e); }
+  }
+}
+
+/* swipe on a stage → callback(dir) */
+function swipe(node, cb) {
+  let x0 = null;
+  node.addEventListener('pointerdown', e => { x0 = e.clientX; });
+  node.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 36) cb(dx < 0 ? 1 : -1); });
+  node.addEventListener('pointercancel', () => { x0 = null; });
+}
+
+/* ======================= SCENE: ΚΑΤΑΓΡΑΦΗ ======================= */
+const cal = '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
+const setRow = (i, extra) => `<div class="ms-row${extra ? ' extra enter' : ''}" data-row="${i}"><span class="n">${pad(i + 1)}</span><span class="ms-f sm" data-k="r${i}"><span class="v"></span><i class="ph">0</i></span><span class="x">×</span><span class="ms-f sm ms-sel" data-k="m${i}"><span class="v">Κιλά</span><em>▾</em></span><span class="ms-f sm" data-k="w${i}"><span class="v"></span><i class="ph">kg</i></span><b class="rm" data-k="rm${i}">−</b></div>`;
+const logCard = (i, name, live) => `<article class="ms-card" data-c="${i}"><span class="ms-tape"></span>
+  <div class="ms-ctitle"><div><small>ΑΣΚΗΣΗ ${i + 1}</small><h4>${name}</h4></div><span class="ms-tag">3 σετ</span></div>
+  <div class="ms-shead"><span>ΣΕΤ</span><span>ΕΠΑΝ.</span><span></span><span>ΜΕΤΡΗΣΗ</span><span>ΒΑΡΟΣ</span><span></span></div>
+  <div class="ms-sets">${live ? [0, 1, 2].map(n => setRow(n)).join('') : [0, 1, 2].map(n => setRow(n).replace(/ data-k="[^"]+"/g, '')).join('')}</div>
+  <div class="ms-acts"><b class="ms-mini off"${live ? ' data-k="copy"' : ''}>ΑΝΤΙΓΡΑΦΗ</b><b class="ms-mini"${live ? ' data-k="extra"' : ''}>＋ Extra σετ</b></div>
+  <div class="ms-lab">Σχόλια άσκησης</div>
+  <div class="ms-f ms-area"${live ? ' data-k="com"' : ''}><span class="v"></span><i class="ph">Τεχνική, αίσθηση, RPE...</i></div>
+</article>`;
+
+const deckTo = (c, pos, drag = false) => {
+  const tr = c.q('.ms-track');
+  tr.classList.toggle('drag', drag);
+  tr.style.transform = `translateX(calc(${-pos * 100}% - ${pos * 10}px))`;
+  const i = Math.round(pos);
+  c.val('.ms-dstamp', `ΑΣΚΗΣΗ ${i + 1} / 3`);
+  c.q('.ms-dprog i').style.width = ((i + 1) / 3 * 100) + '%';
+};
+const logMode = (c, m) => { c.cls('[data-k=sch]', 'on', m === 'sch'); c.cls('[data-k=free]', 'on', m === 'free'); c.cls(c.root, 'is-free', m === 'free'); };
+
+const LOG = {
+  width: 300,
+  captions: [
+    'Διαλέξτε ημερομηνία και «Από το πρόγραμμα» ή «Ελεύθερη» προπόνηση.',
+    'Οι ασκήσεις έρχονται από την ημέρα του προγράμματος· στην «Ελεύθερη» τις προσθέτετε από τη βιβλιοθήκη. Μετακινηθείτε με τα βέλη ή με σύρσιμο.',
+    'Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.',
+    'Προσθέστε ή αφαιρέστε σετ, αντιγράψτε το πρώτο στα υπόλοιπα και γράψτε σχόλια όπου χρειάζεται.',
+    'Με «Ολοκλήρωση προπόνησης» η καταγραφή αποθηκεύεται στο Ιστορικό. Από εκεί μπορείτε να τη διορθώσετε ή να την αντιγράψετε.'
+  ],
+  dur: [6200, 6400, 7400, 9600, 6200],
+  html: () => `<div class="ms ms-log">
+    <div class="ms-tool">
+      <div class="ms-lab" style="margin-top:0">Ημερομηνία</div>
+      <div class="ms-f" data-k="date"><span class="v"></span><i class="ph">ηη/μμ/εεεε</i>${cal}</div>
+      <div class="ms-toggle"><b data-k="sch" class="on">Από το πρόγραμμα</b><b data-k="free">Ελεύθερη</b></div>
+      <div class="ms-lab">Προπόνηση ημέρας</div>
+      <div class="ms-f ms-sel" data-k="day"><span class="v"></span><i class="ph">Επιλογή</i><em>▾</em></div>
+    </div>
+    <div class="ms-deck">
+      <div class="ms-deckhead"><b class="ms-arr" data-k="prev">‹</b><span class="ms-dstamp"><span class="v">ΑΣΚΗΣΗ 1 / 3</span></span><b class="ms-arr" data-k="next">›</b></div>
+      <div class="ms-dview"><div class="ms-track">${logCard(0, 'Πιέσεις πάγκου', true)}${logCard(1, 'Στρατιωτικές πιέσεις')}${logCard(2, 'Βυθίσεις')}</div></div>
+      <div class="ms-dprog"><i></i></div>
+    </div>
+    <div class="ms-save" data-k="save">ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ</div>
+  </div>`,
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=date]'); c.val('[data-k=date]', '16/10/2026'); c.flash('[data-k=date]'); await c.wait(380);
+      await c.tap('[data-k=free]'); logMode(c, 'free'); await c.wait(600);
+      await c.tap('[data-k=sch]'); logMode(c, 'sch'); await c.wait(300);
+      await c.pick('[data-k=day]', ['PUSH · Ημέρα 1', 'PULL · Ημέρα 2', 'LEGS · Ημέρα 3'], 0);
+      c.cls(c.root, 'has-day'); await c.wait(420);
+    },
+    async c => {
+      await c.cam('.ms-deck', 8);
+      await c.drag('.ms-dview', -150, 0, t => deckTo(c, t * .55, true), { ax: .78, ay: .4, dur: 620 });
+      deckTo(c, 1); await c.wait(520);
+      await c.tap('[data-k=next]'); deckTo(c, 2); await c.wait(520);
+      await c.tap('[data-k=prev]'); deckTo(c, 1); await c.wait(380);
+      await c.drag('.ms-dview', 150, 0, t => deckTo(c, 1 - t * .55, true), { ax: .22, ay: .4, dur: 620 });
+      deckTo(c, 0); await c.wait(420);
+    },
+    async c => {
+      await c.cam('.ms-card[data-c="0"] .ms-shead', 46);
+      await c.tap('[data-k=r0]'); await c.type('[data-k=r0]', '10');
+      await c.pick('[data-k=m0]', ['Κιλά', 'Πλάκες', 'Συνδυασμός', 'Bodyweight'], 0, { browse: true });
+      await c.tap('[data-k=w0]'); await c.type('[data-k=w0]', '60');
+      c.cls('[data-k=copy]', 'off', false); c.flash('[data-k=copy]'); await c.wait(500);
+    },
+    async c => {
+      await c.cam('.ms-card[data-c="0"] .ms-shead', 30);
+      await c.tap('[data-k=copy]');
+      for (const i of [1, 2]) { c.val(`[data-k=r${i}]`, '10'); c.val(`[data-k=w${i}]`, '60'); c.flash(`[data-row="${i}"]`); }
+      await c.wait(560);
+      await c.tap('[data-k=extra]');
+      c.q('.ms-card[data-c="0"] .ms-sets').insertAdjacentHTML('beforeend', setRow(3, true));
+      await c.wait(520);
+      await c.tap('[data-k=rm3]');
+      c.cls('[data-row="3"]', 'leave'); await c.wait(320); c.q('[data-row="3"]').remove();
+      await c.cam('[data-k=com]', 90);
+      await c.tap('[data-k=com]'); await c.type('[data-k=com]', 'Καλή αίσθηση, RPE 8');
+      await c.wait(300);
+    },
+    async c => {
+      await c.cam('[data-k=save]', 170);
+      await c.tap('[data-k=save]');
+      const t = c.toast('Η προπόνηση καταγράφηκε');
+      await c.wait(1500);
+      if (!c.fast) { t.classList.remove('show'); await c.wait(200); t.remove(); }
+      else t.remove();
+      c.overlay(`<div class="hist"><div class="hist-h">Ιστορικό</div>
+        <div class="hist-card"><div><small>ΠΑΡ 16 ΟΚΤ 2026</small><b>PUSH · Ημέρα 1</b><span>3 ασκήσεις · 9 σετ</span></div><i class="logged">LOGGED</i></div>
+        <div class="hist-acts"><b class="ms-mini" data-k="hSel">ΕΠΙΛΟΓΗ</b><b class="ms-mini off" data-k="hEdit">Επεξεργασία</b><b class="ms-mini off" data-k="hCopy">Αντιγραφή</b></div></div>`, 'full');
+      await c.wait(700);
+      await c.tap('[data-k=hSel]');
+      c.cls('[data-k=hEdit]', 'off', false); c.cls('[data-k=hCopy]', 'off', false); await c.wait(260);
+      await c.point('[data-k=hEdit]'); await c.point('[data-k=hCopy]');
+      await c.wait(400);
+    }
+  ]
+};
+const logPrep = s => { s.classList.add('has-day'); s.querySelector('[data-k=date] .v').textContent = '16/10/2026'; s.querySelector('[data-k=day] .v').textContent = 'PUSH · Ημέρα 1'; };
+
+/* ======================= SCENE: ΠΡΟΓΡΑΜΜΑ ======================= */
+const exCard = (e, name, note) => `<div class="mp-ex" data-e="${e}"><b><span class="v">${name}</span></b><small><span class="v">${note}</span></small><span class="mp-ic"><i data-k="pen">✎</i><i data-k="del">×</i></span></div>`;
+const rtCard = (r, name, days, active) => `<div class="mp-rt${active ? ' active' : ''}" data-r="${r}"><b>${name}</b><small>ΔΙΑΡΚΕΙΑ: ${days} ΗΜΕΡΕΣ</small><span class="live">ΣΕ ΙΣΧΥ</span><i class="star">★</i>
+  <div class="mp-days">${[1, 2, 3].map(d => `<div class="mp-day" data-d="${d - 1}"><span>ΗΜΕΡΑ ${d}</span><b class="mp-add">＋</b></div>`).join('')}</div></div>`;
+const exTo = (c, pos, drag = false) => { const t = c.q('[data-t=ex]'); t.classList.toggle('drag', drag); t.style.transform = `translateX(calc(${-pos * 46}% - ${pos * 8}px))`; };
+
+const PLAN = {
+  width: 300,
+  captions: [
+    'Πρώτα η βιβλιοθήκη: γράψτε μια άσκηση μία φορά και χρησιμοποιήστε την σε όσες ημέρες θέλετε.',
+    'Χρησιμοποιήστε το μολύβι για επεξεργασία και το × για διαγραφή· η σημείωση ξεχωρίζει τις ομώνυμες ασκήσεις.',
+    'Δημιουργήστε όσα προγράμματα θέλετε, με διάρκεια 3–10 ημερών και προαιρετική δήλωση ημερών εβδομάδας.',
+    'Ανοίξτε ένα πρόγραμμα για να ορίσετε τις ημέρες του και δηλώστε με το αστέρι ποιο είναι σε ισχύ.',
+    'Οι αλλαγές στο πρόγραμμα και στη βιβλιοθήκη διατηρούν αναλλοίωτες τις παλιές καταγραφές.'
+  ],
+  dur: [6400, 10500, 9800, 6800, 6200],
+  html: () => `<div class="ms ms-plan">
+    <div class="mp-sec" data-s="lib">
+      <div class="mp-head" data-k="libT"><i>01</i><span>Οι ασκήσεις μου</span><small><span class="v">03</span></small><em>▾</em></div>
+      <div class="mp-body">
+        <div class="mp-car"><div class="mp-track" data-t="ex">${exCard(0, 'Πιέσεις πάγκου', 'μπάρα')}${exCard(1, 'Έλξεις', 'πρηνής λαβή')}${exCard(2, 'Έλξεις', 'υπτία λαβή')}</div></div>
+        <div class="mp-arrows"><b data-k="exPrev">←</b><b data-k="exNext">→</b></div>
+        <div class="mp-new" data-k="newEx">Νέα άσκηση</div>
+        <div class="mp-form" data-f="ex">
+          <div class="ms-lab">Όνομα άσκησης</div><div class="ms-f" data-k="exName"><span class="v"></span><i class="ph"></i></div>
+          <div class="ms-lab">Cues</div><div class="ms-f" data-k="exCue"><span class="v"></span><i class="ph">π.χ. ώμοι πίσω</i></div>
+          <div class="ms-btn" data-k="exSave">Αποθήκευση άσκησης</div>
+        </div>
+      </div>
+    </div>
+    <div class="mp-sec" data-s="rt">
+      <div class="mp-head" data-k="rtT"><i>02</i><span>Τα προγράμματά μου</span><small><span class="v">02</span></small><em>▾</em></div>
+      <div class="mp-body">
+        <div class="mp-car"><div class="mp-track" data-t="rt">${rtCard(0, 'Full Body', 7, true)}${rtCard(1, 'Upper Lower', 7)}</div></div>
+        <div class="mp-new" data-k="newRt">Νέο πρόγραμμα</div>
+        <div class="mp-form" data-f="rt">
+          <div class="ms-lab">Όνομα προγράμματος</div><div class="ms-f" data-k="rtName"><span class="v"></span><i class="ph">π.χ. Push Pull Legs</i></div>
+          <div class="ms-lab">Διάρκεια (σε ημέρες)</div><div class="mp-dur"><b data-k="dec">−</b><span data-k="dur">7</span><b data-k="inc">＋</b></div>
+          <div class="ms-lab">Δήλωση ημερών</div><div class="ms-toggle" style="margin-top:0;width:60%"><b data-k="no" class="on">Όχι</b><b data-k="yes">Ναι</b></div>
+          <div class="mp-wk">${['Δ', 'Τ', 'Τ', 'Π', 'Π', 'Σ', 'Κ'].map((d, i) => `<i data-w="${i}">${d}</i>`).join('')}</div>
+          <div class="ms-btn alt" data-k="rtCreate">＋ Δημιουργία</div>
+        </div>
+      </div>
+    </div>
+  </div>`,
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=libT]'); c.cls('[data-s=lib]', 'open'); await c.wait(450);
+      await c.tap('[data-k=newEx]'); c.cls('[data-f=ex]', 'open'); await c.wait(250);
+      await c.cam('[data-k=newEx]', 40);
+      await c.tap('[data-k=exName]'); await c.type('[data-k=exName]', 'Βυθίσεις');
+      await c.tap('[data-k=exCue]'); await c.type('[data-k=exCue]', 'κορμός μπροστά');
+      await c.tap('[data-k=exSave]');
+      c.q('[data-t=ex]').insertAdjacentHTML('afterbegin', exCard(3, 'Βυθίσεις', 'κορμός μπροστά').replace('mp-ex"', 'mp-ex enter"'));
+      c.val('[data-k=libT] small', '04'); c.cls('[data-f=ex]', 'open', false);
+      await c.cam(null); await c.wait(500);
+    },
+    async c => {
+      await c.drag('[data-s=lib] .mp-car', -110, 0, t => exTo(c, t * .6, true), { ax: .8, ay: .45, dur: 600 });
+      exTo(c, 1); await c.wait(460);
+      await c.tap('[data-k=exNext]'); exTo(c, 2); await c.wait(500);
+      await c.point('[data-e="1"] small'); await c.point('[data-e="2"] small');
+      await c.tap('[data-e="1"] [data-k=pen]'); c.cls('[data-e="1"]', 'editing');
+      await c.type('[data-e="1"] small', 'πρηνής, φαρδιά λαβή');
+      await c.tap('[data-e="1"] [data-k=pen]'); c.cls('[data-e="1"]', 'editing', false); c.flash('[data-e="1"]'); await c.wait(300);
+      await c.tap('[data-k=exPrev]'); exTo(c, 1); await c.wait(500);
+      await c.tap('[data-e="0"] [data-k=del]');
+      const o = c.overlay(`<div class="mp-confirm"><b>Διαγραφή άσκησης;</b><p>«Πιέσεις πάγκου · μπάρα» χρησιμοποιείται σε: <b style="display:inline;font:700 .7rem 'Source Sans 3'">Full Body · Ημέρα 1</b></p><div><span class="ms-mini" data-k="cNo">Ακύρωση</span><span class="ms-mini danger">Διαγραφή</span></div></div>`, 'center');
+      await c.wait(1100);
+      await c.tap('[data-k=cNo]'); await c.close(o);
+    },
+    async c => {
+      await c.cam('[data-s=rt]', 6);
+      await c.tap('[data-k=rtT]'); c.cls('[data-s=rt]', 'open'); await c.wait(400);
+      await c.tap('[data-k=newRt]'); c.cls('[data-f=rt]', 'open');
+      await c.cam('[data-k=newRt]', 10);
+      await c.tap('[data-k=rtName]'); await c.type('[data-k=rtName]', 'Push Pull Legs');
+      await c.tap('[data-k=dec]'); c.text('[data-k=dur]', '6'); c.flash('[data-k=dur]'); await c.wait(250);
+      await c.tap('[data-k=yes]'); c.cls('[data-k=yes]', 'on'); c.cls('[data-k=no]', 'on', false); c.cls('.mp-wk', 'on'); await c.wait(300);
+      for (const w of [0, 2, 4]) { await c.tap(`[data-w="${w}"]`); c.cls(`[data-w="${w}"]`, 'on'); }
+      await c.tap('[data-k=rtCreate]');
+      c.q('[data-t=rt]').insertAdjacentHTML('afterbegin', rtCard(2, 'Push Pull Legs', 6).replace('mp-rt"', 'mp-rt enter"'));
+      c.val('[data-k=rtT] small', '03'); c.cls('[data-f=rt]', 'open', false);
+      await c.cam('[data-s=rt]', 6); await c.wait(500);
+    },
+    async c => {
+      await c.tap('[data-r="2"] b'); c.cls('[data-r="2"]', 'open'); await c.wait(400);
+      await c.pick('[data-r="2"] [data-d="0"] .mp-add', ['Βυθίσεις · κορμός μπροστά', 'Πιέσεις πάγκου · μπάρα', 'Έλξεις · πρηνής, φαρδιά λαβή'], 1, { set: false });
+      c.q('[data-r="2"] [data-d="0"] .mp-add').insertAdjacentHTML('beforebegin', '<span class="mp-chip">Πιέσεις πάγκου</span>');
+      await c.wait(400);
+      await c.tap('[data-r="2"] b'); c.cls('[data-r="2"]', 'open', false); await c.wait(300);
+      await c.tap('[data-r="2"] .star');
+      c.cls('[data-r="0"]', 'active', false); c.cls('[data-r="2"]', 'active'); await c.wait(700);
+    },
+    async c => {
+      await c.cam(null);
+      const o = c.overlay(`<div class="mp-hist"><small>ΙΣΤΟΡΙΚΟ · 12/10 · FULL BODY</small><b>Πιέσεις πάγκου · μπάρα</b><span>3 σετ · 10 × 60 kg</span><i>LOGGED</i></div>`, 'bottom');
+      await c.wait(700);
+      await c.tap('[data-e="0"] [data-k=pen]'); c.cls('[data-e="0"]', 'editing');
+      await c.type('[data-e="0"] b', 'Πιέσεις Smith');
+      await c.tap('[data-e="0"] [data-k=pen]'); c.cls('[data-e="0"]', 'editing', false); c.flash('[data-e="0"]');
+      await c.wait(300);
+      await c.point(o.querySelector('.mp-hist'), .5, .5); o.querySelector('.mp-hist').classList.add('stamped');
+      await c.wait(900);
+    }
+  ]
+};
+const planPrep = s => {};
+
+/* ======================= SCENE: ΕΠΙΒΛΕΨΗ ======================= */
+const PG = (() => {
+  const kg = [50, 50, 50, 55, 55, 55, 57.5, 57.5, 60, 60, 60, 62.5], rp = [8, 9, 10, 8, 9, 10, 8, 10, 8, 9, 10, 8];
+  const dates = ['03/07', '10/07', '17/07', '24/07', '31/07', '07/08', '21/08', '04/09', '18/09', '25/09', '09/10', '16/10'];
+  const S = 46, X0 = 16, W = X0 + S * (kg.length - 1) + 20, H = 158;
+  const yk = v => 74 - (v - 48) / (64 - 48) * 58, yr = v => 134 - (v - 7) / (11 - 7) * 30;
+  const xs = kg.map((_, i) => X0 + i * S);
+  let kp = `M${xs[0]} ${yk(kg[0])}`; for (let i = 1; i < kg.length; i++) kp += ` H${xs[i]} V${yk(kg[i])}`;
+  const rpp = 'M' + xs.map((x, i) => `${x} ${yr(rp[i])}`).join(' L');
+  const runs = []; let s0 = 0;
+  for (let i = 1; i <= kg.length; i++) if (i === kg.length || kg[i] !== kg[s0]) { runs.push([s0, i - 1]); s0 = i; }
+  const svg = `<svg class="mg-plot" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <g class="grid">${[50, 55, 60].map(v => `<line x1="0" x2="${W}" y1="${yk(v)}" y2="${yk(v)}"/>`).join('')}</g>
+    ${runs.map(([a, b]) => `<rect class="br" x="${xs[a] - 11}" y="96" width="${xs[b] - xs[a] + 22}" height="44" rx="5"/>`).join('')}
+    <path class="ln kg" d="${kp}"/><path class="ln rp" d="${rpp}"/>
+    <g class="dots">${xs.map((x, i) => `<circle class="kg" cx="${x}" cy="${yk(kg[i])}" r="3.2"/><circle class="rp" cx="${x}" cy="${yr(rp[i])}" r="2.6"/><text class="rv" x="${x}" y="${yr(rp[i]) - 6}" text-anchor="middle">${rp[i]}</text>`).join('')}</g>
+    ${xs.map((x, i) => `<text x="${x}" y="${H - 3}" text-anchor="middle">${dates[i]}</text>`).join('')}
+  </svg>`;
+  const rail = `<svg class="mg-rail" viewBox="0 0 24 ${H}">${[50, 55, 60].map(v => `<text x="2" y="${yk(v) + 3}">${v}</text>`).join('')}<text x="2" y="${yk(64) + 4}" style="font-size:6.5px">kg</text></svg>`;
+  return { svg, rail, W };
+})();
+const chartX = (c, x, drag = false) => { const p = c.q('.mg-plot'); p.classList.toggle('drag', drag); p.style.transform = `translateX(${-x}px)`; c.p.cx = x; };
+const chartMax = c => Math.max(0, PG.W - c.q('[data-k=chart]').offsetWidth);
+const trophy = '<svg viewBox="0 0 24 24"><path d="M7 3h10v4a5 5 0 0 1-10 0V3Zm-4 1h3v3a3 3 0 0 1-3-3Zm15 0h3a3 3 0 0 1-3 3V4ZM10.5 13h3v3H16v3H8v-3h2.5v-3Z"/></svg>';
+
+const PROG = {
+  width: 300,
+  captions: [
+    'Επιλέξτε άσκηση και σετ για να δείτε την πορεία τους σε όλες τις καταγραφές σας.',
+    'Το γράφημα συγκρίνει βάρος ή πλάκες και δείχνει την πορεία των επαναλήψεων στο ίδιο φορτίο.',
+    'Κάθε προπόνηση πιάνει σταθερό πλάτος· σύρετε το γράφημα οριζόντια για τις παλαιότερες.',
+    'Καταγραφές με ασύμβατη μέτρηση εξαιρούνται και εμφανίζονται στον έλεγχο κάτω από το γράφημα.',
+    'Ανοίξτε το «Personal Records» για τα καλύτερα σετ κάθε άσκησης και τρόπου μέτρησης.'
+  ],
+  dur: [5600, 5200, 5200, 3400, 3800],
+  html: () => `<div class="ms ms-prog">
+    <div class="mg-ctrl">
+      <div><div class="ms-lab" style="margin-top:0">Άσκηση</div><div class="ms-f ms-sel" data-k="ex"><span class="v"></span><i class="ph">Επιλογή</i><em>▾</em></div></div>
+      <div><div class="ms-lab" style="margin-top:0">Σετ</div><div class="ms-f ms-sel" data-k="set"><span class="v"></span><i class="ph">—</i><em>▾</em></div></div>
+    </div>
+    <div class="mg-panel">
+      <div class="mg-top"><b>ΠΟΡΕΙΑ</b><span class="mg-leg"><span class="kgl"><i></i>Κιλά</span><span class="rpl"><i></i>Επαναλήψεις</span></span></div>
+      <div class="mg-chart">${PG.rail}<div class="mg-scroll" data-k="chart">${PG.svg}<div class="mg-empty">Επιλέξτε άσκηση και σετ</div></div></div>
+      <div class="mg-hint">← σύρετε για παλαιότερες</div>
+    </div>
+    <div class="mg-audit" data-k="audit"><div class="mg-ah" data-k="auditH"><span>Έλεγχος · 2 εκτός σύγκρισης</span><em>▾</em></div>
+      <div class="mg-ab"><div>14/08 · Bodyweight: άλλη μέτρηση</div><div>02/10 · Πλάκες: άλλη μέτρηση</div></div></div>
+    <div class="mg-pr" data-k="pr">${trophy}<span>Personal Records</span></div>
+    <div class="mg-sheet"><div class="mg-sh"><b>ΚΑΛΥΤΕΡΑ ΣΕΤ</b><i>PR</i></div>
+      <div class="mg-r"><span>Πιέσεις πάγκου · Κιλά</span><b>62,5 × 8</b></div>
+      <div class="mg-r"><span>Έλξεις · Bodyweight</span><b>BW × 12</b></div>
+      <div class="mg-r"><span>Βυθίσεις · Συνδυασμός</span><b>BW + 10 × 9</b></div></div>
+  </div>`,
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.pick('[data-k=ex]', ['Πιέσεις πάγκου', 'Έλξεις', 'Βυθίσεις'], 0);
+      await c.pick('[data-k=set]', ['Σετ 1', 'Σετ 2', 'Σετ 3'], 0);
+      chartX(c, chartMax(c)); c.cls(c.root, 'drawn'); await c.wait(1500);
+    },
+    async c => {
+      await c.point('.mg-leg .kgl'); c.cls(c.root, 'hi-kg'); await c.wait(900); c.cls(c.root, 'hi-kg', false);
+      await c.point('.mg-leg .rpl'); c.cls(c.root, 'hi-rp'); await c.wait(500);
+      c.cls(c.root, 'show-br');
+      await c.move('[data-k=chart]', .62, .8); await c.wait(1300);
+      if (!c.fast) { c.cls(c.root, 'hi-rp', false); c.cls(c.root, 'show-br', false); }
+    },
+    async c => {
+      const m = chartMax(c);
+      await c.drag('[data-k=chart]', 150, 0, t => chartX(c, m - 150 * t, true), { ax: .25, ay: .45, dur: 900 });
+      await c.wait(250);
+      await c.drag('[data-k=chart]', 150, 0, t => chartX(c, Math.max(0, m - 150 - 150 * t), true), { ax: .25, ay: .45, dur: 900 });
+      await c.wait(650);
+      await c.drag('[data-k=chart]', -170, 0, t => chartX(c, Math.min(m, Math.max(0, m - 300) + 170 * t), true), { ax: .8, ay: .45, dur: 800 });
+      chartX(c, Math.min(m, Math.max(0, m - 300) + 170)); await c.wait(300);
+    },
+    async c => {
+      await c.cam('[data-k=audit]', 70);
+      await c.tap('[data-k=auditH]'); c.cls('[data-k=audit]', 'open'); await c.wait(1100);
+    },
+    async c => {
+      await c.cam('[data-k=pr]', 40);
+      await c.tap('[data-k=pr]'); c.cls('.mg-sheet', 'open'); await c.wait(250);
+      await c.cam('.mg-sheet', 60); await c.wait(1200);
+    }
+  ]
+};
+
+/* ======================= SCENE: ΠΡΟΦΙΛ ======================= */
+const sil = '<svg viewBox="0 0 100 100"><circle cx="50" cy="38" r="17"/><path d="M14 100c2-22 17-34 36-34s34 12 36 34Z"/></svg>';
+const PROF = {
+  width: 300,
+  captions: [
+    'Πατήστε τη φωτογραφία, το όνομα ή την ηλικία πάνω στην κάρτα.',
+    'Ανεβάστε έως έξι εικόνες και επιλέξτε ποια θα χρησιμοποιείται· οι υπόλοιπες μένουν σε αυτή τη συσκευή.',
+    'Δηλώστε ημερομηνία γέννησης και επιλέξτε αν η ηλικία θα φαίνεται στην κάρτα.',
+    'Η μονάδα μέτρησης ορίζει πώς καταχωρίζετε και βλέπετε τα βάρη· οι τιμές αποθηκεύονται πάντα σε κιλά.',
+    'Η «Εξαγωγή ιστορικού» κατεβάζει τις προπονήσεις σε αρχείο CSV. Αποθηκεύστε τις αλλαγές για να ενημερωθούν η Αρχική και το μενού.'
+  ],
+  dur: [6200, 6200, 5600, 4600, 4600],
+  html: () => `<div class="ms ms-prof">
+    <div class="mf-card">
+      <div class="mf-top"><span class="mf-brand"><i></i><i></i><i></i><i></i><i></i></span><small>ΝΕΟ ΠΡΟΦΙΛ</small></div>
+      <div class="mf-pol"><span class="mf-tape"></span>
+        <div class="mf-photo" data-k="photo">${sil}<span class="mf-img"></span><em>ΑΛΛΑΓΗ ΦΩΤΟΓΡΑΦΙΑΣ</em></div>
+        <div class="mf-name" data-k="name"><span class="v">ΟΝΟΜΑ</span></div>
+        <div class="mf-age" data-k="age"><span>ΗΛΙΚΙΑ</span><b class="v">—</b></div>
+      </div>
+      <div class="mf-foot">TRAIN . LOG . REPEAT</div>
+    </div>
+    <div class="mf-slip" data-slip="name"><div class="ms-lab">Όνομα</div><div class="ms-f" data-k="nameF"><span class="v"></span><i class="ph">Το όνομά σας</i></div></div>
+    <div class="mf-slip" data-slip="photo"><div class="ms-lab">Φωτογραφίες · έως 6</div><div class="mf-grid"><i class="up" data-k="up">＋</i>${[1, 2, 3, 4, 5].map(i => `<i data-ph="${i}"></i>`).join('')}</div></div>
+    <div class="mf-slip" data-slip="date"><div class="ms-lab">Ημερομηνία γέννησης</div><div class="ms-f" data-k="dob"><span class="v"></span><i class="ph">ηη/μμ/εεεε</i>${cal}</div><div class="mf-sw" data-k="showAge"><i></i>Εμφάνιση ηλικίας στην κάρτα</div></div>
+    <div class="mf-unit"><div class="ms-lab">Μονάδα μέτρησης</div><div class="ms-toggle" style="margin-top:0"><b data-k="kg" class="on">Κιλά (kg)</b><b data-k="lb">Λίβρες (lb)</b></div>
+      <div class="mf-ex" data-k="ex"><span class="v">60 kg</span><small data-k="store">αποθηκεύεται ως 60 kg</small></div></div>
+    <div class="mf-exp" data-k="exp">⬇ ΕΞΑΓΩΓΗ ΙΣΤΟΡΙΚΟΥ</div>
+    <div class="mf-file"><b>logbook-2026-10-16.csv</b><small>48 προπονήσεις</small></div>
+    <div class="ms-save" data-k="psave">ΑΠΟΘΗΚΕΥΣΗ</div>
+  </div>`,
+  steps: [
+    async c => {
+      await c.cam(null);
+      await c.point('[data-k=photo]'); await c.point('[data-k=age]');
+      await c.tap('[data-k=name]'); c.cls('[data-slip=name]', 'open'); await c.wait(250);
+      await c.cam('[data-k=name]', 60);
+      await c.tap('[data-k=nameF]'); await c.type('[data-k=nameF]', 'ΑΛΕΞ', '[data-k=name]');
+      c.flash('[data-k=name]'); await c.wait(300); c.cls('[data-slip=name]', 'open', false);
+    },
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=photo]'); c.cls('[data-slip=photo]', 'open');
+      await c.cam('[data-k=name]', 30);
+      await c.tap('[data-k=up]'); c.cls('[data-ph="1"]', 'ph-a'); await c.wait(300);
+      await c.tap('[data-k=up]'); c.cls('[data-ph="2"]', 'ph-b'); await c.wait(300);
+      await c.tap('[data-ph="2"]'); c.cls('[data-ph="2"]', 'sel'); c.cls('[data-k=photo]', 'img-b');
+      await c.cam(null); await c.wait(700); c.cls('[data-slip=photo]', 'open', false);
+    },
+    async c => {
+      await c.cam(null);
+      await c.tap('[data-k=age]'); c.cls('[data-slip=date]', 'open');
+      await c.cam('[data-k=name]', 30);
+      await c.tap('[data-k=dob]'); await c.type('[data-k=dob]', '12/03/1994');
+      await c.tap('[data-k=showAge]'); c.cls('[data-k=showAge]', 'on'); c.val('[data-k=age]', '32'); c.flash('[data-k=age]');
+      await c.wait(700); c.cls('[data-slip=date]', 'open', false);
+    },
+    async c => {
+      await c.cam('.mf-unit', 30);
+      await c.tap('[data-k=lb]'); c.cls('[data-k=lb]', 'on'); c.cls('[data-k=kg]', 'on', false); c.val('[data-k=ex]', '132 lb'); c.flash('[data-k=ex]');
+      await c.wait(400); await c.point('[data-k=store]'); await c.wait(300);
+      await c.tap('[data-k=kg]'); c.cls('[data-k=kg]', 'on'); c.cls('[data-k=lb]', 'on', false); c.val('[data-k=ex]', '60 kg'); c.flash('[data-k=ex]');
+      await c.wait(300);
+    },
+    async c => {
+      await c.cam('[data-k=exp]', 60);
+      await c.tap('[data-k=exp]'); c.cls('.mf-file', 'show'); await c.wait(800);
+      await c.tap('[data-k=psave]');
+      const t = c.toast('Το προφίλ αποθηκεύτηκε'); await c.wait(1500);
+      if (!c.fast) { t.classList.remove('show'); await c.wait(200); } t.remove();
+    }
+  ]
+};
+
+/* ======================= BUILDERS ======================= */
+const heroHTML = `<div class="ph-hero"><span class="ph-ribbon"></span><h1>ΤΟ ΣΗΜΕΡΑ.<br><em>ΜΕΤΡΑΕΙ.</em></h1><button class="istamp" type="button" aria-expanded="false" aria-label="Οδηγίες σελίδας">i</button></div>`;
+function backdrop(screen, def, prep) {
+  const pg = el('div', 'pgview'); screen.append(pg);
+  pg.innerHTML = def.html();
+  const s = pg.firstElementChild; s.classList.add('nofx'); s.setAttribute('aria-hidden', 'true');
+  if (prep) prep(s);
+  const fit = () => { s.style.transform = `scale(${pg.clientWidth / def.width})`; };
+  fit(); window.addEventListener('resize', fit);
+  return pg;
+}
+function mkStage(cls) { const s = el('div', 'stage ' + (cls || '')); s.append(el('div', 'view')); return s; }
+
+/* --- Α --- */
+(() => {
+  const ph = $('#phone-a'); const sc = el('div', 'screen'); ph.append(sc);
+  sc.insertAdjacentHTML('beforeend', heroHTML); backdrop(sc, LOG, logPrep);
+  const note = el('aside', 'note hidden');
+  note.innerHTML = `<h3>ΟΔΗΓΙΕΣ <button class="re" type="button" aria-label="Ξανά">↻</button></h3>`;
+  const st = mkStage('na-stage'); note.append(st);
+  const ol = el('ol', '', LOG.captions.map((t, i) => `<li data-i="${i}"><b>${pad(i + 1)}</b><span>${t}</span></li>`).join(''));
+  note.append(ol); sc.append(note);
+  const lis = $$('li', ol);
+  const P = new Player({ stage: st, def: LOG, canRun: () => !note.classList.contains('hidden'), onStep: i => lis.forEach((l, j) => l.classList.toggle('on', j === i)) });
+  const btn = $('.istamp', sc);
+  btn.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', open); note.classList.toggle('hidden', !open);
+    if (open) requestAnimationFrame(() => P.run(0)); else P.stop();
+  });
+  lis.forEach((l, j) => l.addEventListener('click', () => P.run(j)));
+  $('.re', note).addEventListener('click', () => P.run(0));
+  btn.classList.add('nudge');
+})();
+
+/* --- Β (also used for §4) --- */
+function flip(host, def, { auto = false } = {}) {
+  host.innerHTML = `<h3>ΟΔΗΓΙΕΣ <span class="nb-count">01 / ${pad(def.steps.length)}</span></h3>`;
+  const st = mkStage('nb-stage'); host.append(st);
+  host.insertAdjacentHTML('beforeend', `<p class="nb-cap"></p><div class="nb-foot"><button class="nb-prev" type="button" aria-label="Προηγούμενο βήμα">‹</button><div class="nb-steps">${def.captions.map((_, i) => `<button type="button" aria-label="Βήμα ${i + 1}"><i><s></s></i>${pad(i + 1)}</button>`).join('')}</div><button class="nb-next" type="button" aria-label="Επόμενο βήμα">›</button></div>`);
+  const cap = $('.nb-cap', host), count = $('.nb-count', host), tabs = $$('.nb-steps button', host), next = $('.nb-next', host), prev = $('.nb-prev', host);
+  const fill = (j, v) => { tabs[j].querySelector('s').style.width = (v * 100) + '%'; };
+  let ended = false;
+  const P = new Player({
+    stage: st, def,
+    onStep: i => {
+      ended = false; next.textContent = '›';
+      cap.textContent = def.captions[i]; count.textContent = `${pad(i + 1)} / ${pad(def.steps.length)}`;
+      tabs.forEach((t, j) => { t.classList.toggle('on', j === i); t.classList.toggle('done', j < i); fill(j, j < i ? 1 : 0); });
+    },
+    onProgress: (i, v) => fill(i, v),
+    onDone: (i, still) => { if (still) tabs[i].classList.add('done'); },
+    onEnd: () => { ended = true; next.textContent = '↻'; }
+  });
+  const go = d => { if (ended && d > 0) return P.run(0); P.run(Math.max(0, Math.min(def.steps.length - 1, P.cur + d))); };
+  next.addEventListener('click', () => go(1)); prev.addEventListener('click', () => go(-1));
+  tabs.forEach((t, j) => t.addEventListener('click', () => P.run(j)));
+  swipe(st, go);
+  if (auto) {
+    let first = true;
+    new IntersectionObserver(([e]) => { if (e.isIntersecting && first) { first = false; P.run(0); } }, { threshold: .4 }).observe(host);
+  } else { cap.textContent = def.captions[0]; }
+  return P;
+}
+(() => {
+  const ph = $('#phone-b'); const sc = el('div', 'screen'); ph.append(sc);
+  sc.insertAdjacentHTML('beforeend', heroHTML); backdrop(sc, LOG, logPrep);
+  const note = el('aside', 'note hidden'); sc.append(note);
+  const P = flip(note, LOG);
+  P.canRun = () => !note.classList.contains('hidden');
+  const btn = $('.istamp', sc);
+  btn.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', open); note.classList.toggle('hidden', !open);
+    if (open) requestAnimationFrame(() => P.run(0)); else P.stop();
+  });
+  btn.classList.add('nudge');
+})();
+
+/* --- Γ --- */
+(() => {
+  const ph = $('#phone-c'); const sc = el('div', 'screen'); ph.append(sc);
+  sc.insertAdjacentHTML('beforeend', heroHTML);
+  const st = mkStage('g-stage'); sc.append(st);
+  const bar = el('div', 'g-bar', `<p></p><div><span>01 / 05</span><button type="button" data-a="skip">ΠΑΡΑΛΕΙΨΗ</button><button type="button" class="primary" data-a="next">ΕΠΟΜΕΝΟ ›</button></div>`);
+  sc.append(bar);
+  const cap = $('p', bar), cnt = $('span', bar), nb = $('[data-a=next]', bar);
+  let waiting = false;
+  const P = new Player({
+    stage: st, def: LOG, ghost: true, spot: true, pause: 0, prep: logPrep, canRun: () => sc.classList.contains('touring'),
+    onStep: i => { waiting = false; cap.textContent = LOG.captions[i]; cnt.textContent = `${pad(i + 1)} / 05`; nb.textContent = i === 4 ? 'ΤΕΛΟΣ ✓' : 'ΕΠΟΜΕΝΟ ›'; },
+    onEnd: () => { waiting = true; }
+  });
+  P.idle();
+  const btn = $('.istamp', sc);
+  const end = () => { sc.classList.remove('touring'); btn.setAttribute('aria-expanded', 'false'); P.idle(); };
+  btn.addEventListener('click', () => {
+    if (sc.classList.contains('touring')) return end();
+    sc.classList.add('touring'); btn.setAttribute('aria-expanded', 'true'); P.run(0, { single: true });
+  });
+  nb.addEventListener('click', () => { if (P.cur >= 4) return end(); P.run(P.cur + 1, { single: true }); });
+  $('[data-a=skip]', bar).addEventListener('click', end);
+  btn.classList.add('nudge');
+})();
+
+/* --- Δ --- */
+(() => {
+  const ph = $('#phone-d'); const sc = el('div', 'screen'); ph.append(sc);
+  sc.insertAdjacentHTML('beforeend', heroHTML); backdrop(sc, LOG, logPrep);
+  const scrim = el('div', 'scrim'); sc.append(scrim);
+  const sheet = el('div', 'sheet', `<div class="sh-grab"></div><div class="sh-head"><h3>ΟΔΗΓΙΕΣ · ΚΑΤΑΓΡΑΦΗ</h3><button type="button" aria-label="Κλείσιμο">✕</button></div>`);
+  const st = mkStage('sh-stage'); sheet.append(st);
+  sheet.insertAdjacentHTML('beforeend', `<p class="sh-cap"></p><div class="sh-chap">${LOG.captions.map((_, i) => `<button type="button" aria-label="Κεφάλαιο ${i + 1}"><i><s></s></i>${pad(i + 1)}</button>`).join('')}</div><div class="sh-ctl"><button type="button" data-a="re" aria-label="Από την αρχή">↻</button><button type="button" class="primary" data-a="pp" aria-label="Παύση">❚❚</button></div>`);
+  sc.append(sheet);
+  const cap = $('.sh-cap', sheet), chaps = $$('.sh-chap button', sheet), pp = $('[data-a=pp]', sheet);
+  chaps.forEach((b, i) => { b.style.flex = String(LOG.dur[i]); });
+  const fill = (j, v) => { chaps[j].querySelector('s').style.width = (v * 100) + '%'; };
+  const P = new Player({
+    stage: st, def: LOG, canRun: () => sheet.classList.contains('open'),
+    onStep: i => { cap.textContent = LOG.captions[i]; chaps.forEach((b, j) => { b.classList.toggle('on', j === i); b.classList.toggle('done', j < i); fill(j, j < i ? 1 : 0); }); },
+    onProgress: (i, v) => fill(i, v),
+    onEnd: () => { pp.textContent = '▶'; P.manual = false; }
+  });
+  const btn = $('.istamp', sc);
+  const open = () => { sheet.classList.add('open'); scrim.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); P.manual = false; pp.textContent = '❚❚'; setTimeout(() => P.run(0), 380); };
+  const close = () => { sheet.classList.remove('open'); scrim.classList.remove('on'); btn.setAttribute('aria-expanded', 'false'); P.stop(); };
+  btn.addEventListener('click', open);
+  $('.sh-head button', sheet).addEventListener('click', close); scrim.addEventListener('click', close);
+  chaps.forEach((b, j) => b.addEventListener('click', () => { P.manual = false; pp.textContent = '❚❚'; P.run(j); }));
+  $('[data-a=re]', sheet).addEventListener('click', () => { P.manual = false; pp.textContent = '❚❚'; P.run(0); });
+  pp.addEventListener('click', () => {
+    if (pp.textContent === '▶' && !P.manual) { pp.textContent = '❚❚'; return P.run(0); }
+    P.manual = !P.manual; pp.textContent = P.manual ? '▶' : '❚❚';
+  });
+  btn.classList.add('nudge');
+})();
+
+/* --- §0 today --- */
+$('#today-list').innerHTML = LOG.captions.map((t, i) => `<li><b>${pad(i + 1)}</b><span>${t}</span></li>`).join('');
+
+/* --- §3 storyboard --- */
+const board = $('#board');
+LOG.captions.forEach((t, i) => {
+  const f = el('div', 'frame'); const st = mkStage(); f.append(st);
+  f.insertAdjacentHTML('beforeend', `<p><b>${pad(i + 1)}</b>${t}</p>`); board.append(f);
+  const P = new Player({ stage: st, def: LOG });
+  P.board = true;
+  requestAnimationFrame(() => P.run(i, { still: true }));
+});
+
+/* --- §4 other pages --- */
+flip($('#flip-plan'), PLAN, { auto: true });
+flip($('#flip-prog'), PROG, { auto: true });
+flip($('#flip-prof'), PROF, { auto: true });
+
+/* --- toggles --- */
+const tb = $('#theme-btn');
+tb.addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  if (dark) document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme;
+  tb.setAttribute('aria-pressed', dark);
+});
+const mb = $('#motion-btn');
+const syncMotion = () => { mb.textContent = RM ? 'ΚΙΝΗΣΗ: OFF' : 'ΚΙΝΗΣΗ: ON'; mb.setAttribute('aria-pressed', RM); };
+syncMotion();
+mb.addEventListener('click', () => {
+  RM = !RM; syncMotion();
+  players.forEach(p => { if (p.started && !p.board && p.scene && p.canRun()) p.run(p.cur || 0, { single: !!p.lastSingle }); });
+});
+let rz;
+window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => players.forEach(p => { if (p.scene) { p.measure(); p.applyCam(); } }), 120); });
+document.fonts && document.fonts.ready.then(() => players.forEach(p => { if (p.board && p.scene) p.run(p.cur, { still: true }); }));
+})();
+</script>
+</body>
+</html>

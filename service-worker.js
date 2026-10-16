@@ -40,6 +40,7 @@ const APP_SHELL = [
   './modules/session-templates.js',
   './modules/progress-rewards.js',
   './modules/ui.js',
+  './modules/guide-tour.js',
   './pwa.js',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

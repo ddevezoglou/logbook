@@ -90,6 +90,37 @@ test('the guest entry and primary navigation work keyboard-only with a polite re
   await expect(reminder).toBeHidden();
 });
 
+test('the ( i ) guided tour is an accessible dialog that closes with Escape and leaves the page untouched', async ({ page }) => {
+  await enterAsGuest(page);
+  await page.locator('#guest-reminder-dismiss').click();
+  await page.locator('#open-menu').click();
+  await page.locator('#side-menu [data-view="log"]').click();
+  await expect(page.locator('#log-view')).toHaveClass(/active/);
+  const before = await page.evaluate(() => JSON.stringify({ ...localStorage }));
+
+  const trigger = page.locator('.info-stamp[data-guide="log"]');
+  await trigger.click();
+  const tour = page.locator('#guide-tour');
+  await expect(tour).toBeVisible();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  const coach = page.getByRole('dialog', { name:'Ημερομηνία και τύπος' });
+  await expect(coach).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('.gt-coach-next')).toBeFocused();
+  await expect(page.locator('#log-guide')).toBeHidden();
+
+  const axe = await new AxeBuilder({ page }).include('#guide-tour').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  const serious = axe.violations.filter(violation => ['serious', 'critical'].includes(violation.impact));
+  expect(serious, serious.map(item => item.id + ': ' + item.help).join('\n')).toEqual([]);
+
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.gt-coach-title')).toHaveText('Σύρετε τις ασκήσεις');
+  await page.keyboard.press('Escape');
+  await expect(tour).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage }))).toBe(before);
+});
+
 test('a guest keeps the workout locally and returns to it after a reload', async ({ page }) => {
   await enterAsGuest(page);
   await page.locator('#guest-reminder-dismiss').click();

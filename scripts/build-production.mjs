@@ -44,6 +44,7 @@ const MODULE_FILES = [
   'modules/history.js',
   'modules/session-templates.js',
   'modules/ui.js',
+  'modules/guide-tour.js',
 ];
 
 function safeOutputPath(value) {

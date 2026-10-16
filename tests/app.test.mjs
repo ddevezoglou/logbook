@@ -224,12 +224,12 @@ test('the plan exercise heading has no explanatory description', () => {
   assert.equal(heading.querySelector('small'), null);
 });
 
-test('stamp copy uses the shortened notification labels and Personal Records wording', () => {
+test('stamp copy uses the Personal Records wording and an unlabelled notification stamp', () => {
   const { document } = loadApp();
   assert.equal(document.querySelector('.personal-records-stamp').textContent.trim(), 'Personal Records');
   assert.equal(document.querySelector('#history-counter').textContent.trim().replace(/\s+/g, ' '), '0 Logged Workouts');
-  assert.match(styles, /\.toast::before\s*\{\s*content:"RECORDED"/);
-  assert.match(styles, /\.toast\.toast-error::before\s*\{\s*content:"ATTENTION"/);
+  assert.doesNotMatch(styles, /RECORDED|ATTENTION/);
+  assert.match(styles, /\.toast\.toast-error\s*\{\s*--toast-accent:var\(--danger\)/);
 });
 
 test('internal section heroes share one compact light visual system', () => {
@@ -264,7 +264,8 @@ test('program ticket carousel keeps the active routine first', () => {
   assert.deepEqual(cards.map(card => card.dataset.carouselPosition), ['0', '1', '-1']);
   assert.equal(document.querySelector('#routine-carousel-count').textContent, '01 / 03');
   assert.equal(document.querySelector('#routine-total').textContent, '03');
-  assert.equal(document.querySelector('#plan-active-name').textContent, 'Active Routine');
+  assert.equal(document.querySelector('#plan-active-name'), null);
+  assert.equal(cards[0].querySelector('.routine-select strong').textContent, 'Active Routine');
   assert.doesNotMatch(document.querySelector('.routine-carousel').textContent, /TRAINING TICKETS/);
   assert.ok(document.querySelector('.routine-carousel-controls').closest('.routine-carousel-stage'));
 });

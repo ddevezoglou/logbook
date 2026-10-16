@@ -149,6 +149,7 @@ Supabase ── authentication και versioned snapshot ανά χρήστη
 | `modules/history.js` | DOM-free παραγωγή του Ιστορικού και των καρτών προπόνησης |
 | `modules/session-templates.js` | DOM-free παραγωγή καρτών άσκησης, γραμμών σετ και εκτυπώσιμης σελίδας προπόνησης |
 | `modules/ui.js` | Κοινά UI primitives για escaping, navigation και menu state |
+| `modules/guide-tour.js` | Η ξενάγηση του ( i ): μινιατούρα κάθε σελίδας που τη «παίζει» ένα σενάριο πέντε βημάτων, με κάρτα-οδηγό, τετράγλωσσα κείμενα και στατικά καρέ για reduced motion. Δεν αγγίζει πεδία ή αποθήκευση· οι λεζάντες διαβάζονται από τα κρυφά `.info-panel` |
 | `i18n.js` | Μεταφράσεις και αλλαγή γλώσσας |
 | `theme.js` | Ημέρα ή νύχτα: ανάγνωση της επιλογής πριν το πρώτο paint, διακόπτης και `theme-color` |
 | `auth.js` | Authentication gate, λειτουργία επισκέπτη και φόρτωση της εφαρμογής |

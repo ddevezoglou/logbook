@@ -143,6 +143,7 @@ button,input,select,textarea { -webkit-tap-highlight-color:transparent; }
 .toast {
   right:calc(25px + env(safe-area-inset-right));
   bottom:calc(25px + env(safe-area-inset-bottom));
+  left:calc(25px + env(safe-area-inset-left));
 }
 .account-dialog,.session-detail-dialog {
   max-height:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));

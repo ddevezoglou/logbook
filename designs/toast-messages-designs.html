@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Μηνύματα ειδοποίησης</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Roboto+Slab:wght@500;700&family=Playpen+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#15130d; --paper:#efe8d8; --paper-soft:#f8f3e4; --paper-dark:#e0d7c2; --line:#b6ad97;
+    --orange:#7d601a; --danger:#7a3325; --danger-soft:#c58a78; --gold:#c9a227; --muted:#6f695a;
+    --surface:#15130d; --on-surface:#efe8d8; --shadow:21,19,13; --rule:rgba(21,19,13,.06);
+    --page:#d8cfba;
+    --ok:var(--orange); --err:var(--danger);
+  }
+  :root[data-theme="dark"] {
+    --ink:#ece2c9; --paper:#17140e; --paper-soft:#1f1b14; --paper-dark:#100e09; --line:#3a3428;
+    --orange:#e0a94a; --danger:#cf7a63; --danger-soft:#d9a08d; --gold:#e0a94a; --muted:#8a8474;
+    --surface:#2e2a1f; --on-surface:#ece2c9; --shadow:0,0,0; --rule:rgba(236,226,201,.05);
+    --page:#0d0b08;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink); font-family:"Source Sans 3",sans-serif; padding:40px 4vw 100px; transition:background .3s,color .3s; }
+  h1.page { font-family:"Roboto Slab",serif; font-size:2rem; margin:0 0 6px; letter-spacing:-.02em; }
+  .intro { color:var(--muted); max-width:860px; line-height:1.55; margin:0 0 26px; }
+  .intro b { color:var(--orange); }
+  h2.sec { font-family:"Roboto Slab",serif; font-size:1.35rem; margin:56px 0 6px; }
+  .sec-note { color:var(--muted); max-width:820px; line-height:1.5; margin:0 0 20px; }
+  .theme-btn { position:fixed; top:16px; right:16px; z-index:50; border:1px solid var(--line); background:var(--paper-soft); color:var(--ink); font:800 .7rem "Source Sans 3"; letter-spacing:.14em; padding:10px 14px; cursor:pointer; }
+
+  /* ---------- inventory ---------- */
+  .inv { display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:20px; }
+  .inv section { background:var(--paper); border:1px solid var(--line); padding:18px 20px; }
+  .inv h3 { margin:0 0 10px; font:700 .72rem "Roboto Slab"; letter-spacing:.16em; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+  .inv h3 i { width:10px; height:10px; display:inline-block; }
+  .inv ol { margin:0; padding-left:22px; line-height:1.5; font-size:.92rem; }
+  .inv li { padding:3px 0; border-bottom:1px solid var(--rule); }
+  .inv li small { color:var(--muted); font-size:.74rem; margin-left:6px; white-space:nowrap; }
+  .findings { margin-top:20px; background:var(--paper); border:1px solid var(--line); padding:18px 22px; }
+  .findings ul { margin:0; padding-left:20px; line-height:1.55; }
+  .findings li { margin:4px 0; }
+  code { font-size:.85em; background:var(--paper-dark); padding:1px 5px; }
+
+  /* ---------- variant shell ---------- */
+  .variant { margin-top:44px; background:var(--paper); border:1px solid var(--line); padding:24px clamp(16px,3vw,32px) 28px; }
+  .variant-title { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .variant-title b { font-family:"Roboto Slab",serif; color:var(--orange); font-size:1.05rem; }
+  .variant-title h3 { font-family:"Roboto Slab",serif; font-size:1.2rem; margin:0; }
+  .variant-title .tag { font:800 .6rem "Source Sans 3"; letter-spacing:.16em; text-transform:uppercase; border:1.5px solid var(--orange); color:var(--orange); padding:3px 7px; transform:rotate(-2deg); }
+  .variant-note { color:var(--muted); margin:6px 0 18px; max-width:800px; line-height:1.5; }
+  .variant-body { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:28px; align-items:start; }
+  @media (max-width:860px) { .variant-body { grid-template-columns:1fr; } .phone { margin:0 auto; } }
+  .static { display:grid; gap:16px; padding:26px 22px; background:var(--paper-dark); background-image:linear-gradient(var(--rule) 1px,transparent 1px); background-size:100% 30px; border:1px solid var(--line); }
+  .static .cap { font:800 .6rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:-8px; }
+  .spec { margin:14px 0 0; padding-left:18px; color:var(--muted); font-size:.86rem; line-height:1.5; }
+
+  /* ---------- phone demo ---------- */
+  .phone { width:300px; height:540px; border:10px solid #1b1914; border-radius:34px; position:relative; overflow:hidden; background:var(--paper); box-shadow:0 18px 40px rgba(0,0,0,.25); }
+  .phone .screen { position:absolute; inset:0; padding:56px 16px 16px; background:var(--paper); background-image:linear-gradient(var(--rule) 1px,transparent 1px); background-size:100% 28px; }
+  .phone .ribbon { position:absolute; top:0; right:18px; width:30px; height:66px; background:#22406b; clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%); }
+  .phone .h { font:700 1.05rem "Roboto Slab"; margin:0 0 12px; }
+  .phone .card { border:1px solid var(--line); background:var(--paper-soft); padding:12px; margin-bottom:10px; }
+  .phone .card b { display:block; font:700 .8rem "Roboto Slab"; margin-bottom:8px; }
+  .phone .row { display:flex; gap:6px; margin-bottom:6px; }
+  .phone .row span { flex:1; height:22px; border-bottom:1px solid var(--line); font-size:.72rem; color:var(--muted); display:flex; align-items:flex-end; }
+  .phone .save { margin-top:14px; background:var(--ink); color:var(--paper); text-align:center; padding:11px; font:800 .66rem "Source Sans 3"; letter-spacing:.16em; }
+  .phone .toast-slot { position:absolute; left:12px; right:12px; bottom:16px; display:flex; justify-content:center; pointer-events:none; }
+  .phone .toast-slot.top { bottom:auto; top:58px; }
+  .controls { display:flex; gap:8px; margin-top:12px; justify-content:center; flex-wrap:wrap; }
+  .controls button { border:1px solid var(--ink); background:transparent; color:var(--ink); font:800 .62rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; padding:9px 12px; cursor:pointer; }
+  .controls button.err { border-color:var(--danger); color:var(--danger); }
+
+  /* toast enter/leave shared */
+  .t { pointer-events:auto; }
+  .toast-slot .t { opacity:0; transform:translateY(16px); transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .toast-slot.top .t { transform:translateY(-12px); }
+  .toast-slot .t.show { opacity:1; transform:none; }
+
+  /* ========== 0. CURRENT (reference) ========== */
+  .t0 { width:100%; max-width:360px; background:var(--orange); color:#fff; padding:16px 18px 16px 20px; box-shadow:8px 8px 0 var(--ink); text-transform:uppercase; letter-spacing:.06em; font-weight:700; font-size:.82rem; line-height:1.35; }
+  .t0::before { content:"RECORDED"; display:block; margin-bottom:4px; color:#e8d9a8; font-size:.58rem; letter-spacing:.18em; }
+  .t0.error { background:var(--danger); }
+  .t0.error::before { content:"ATTENTION"; color:#eecfc0; }
+  :root[data-theme="dark"] .t0 { color:#15130d; }
+
+  /* ========== A. Η ΣΕΛΙΔΑ ΜΕ ΤΟ ΠΕΡΙΘΩΡΙΟ ========== */
+  .tA { --a:var(--ok); width:100%; max-width:360px; display:grid; grid-template-columns:22px 1fr; gap:2px 11px; align-items:start; background:var(--paper-soft); color:var(--ink); border:1px solid var(--line); border-left:3px solid var(--a); padding:13px 16px 13px 13px; box-shadow:0 12px 28px rgba(var(--shadow),.16), 0 2px 4px rgba(var(--shadow),.08); }
+  .tA.error { --a:var(--err); }
+  .tA .ic { grid-row:span 2; width:22px; height:22px; border-radius:50%; border:1.5px solid var(--a); color:var(--a); display:grid; place-items:center; margin-top:1px; }
+  .tA .ic svg { width:12px; height:12px; }
+  .tA .lb { font:700 .58rem "Roboto Slab"; letter-spacing:.18em; text-transform:uppercase; color:var(--a); }
+  .tA .msg { font-size:.92rem; line-height:1.38; font-weight:500; }
+
+  /* ========== B. Η ΣΦΡΑΓΙΔΑ ========== */
+  .tB { --a:var(--ok); width:fit-content; max-width:330px; background:var(--paper); color:var(--ink); border:2px solid var(--a); outline:1px solid var(--a); outline-offset:3px; padding:11px 16px 12px; transform:rotate(-1.4deg); box-shadow:0 14px 26px rgba(var(--shadow),.18); text-align:center; }
+  .tB.error { --a:var(--err); transform:rotate(1.2deg); }
+  .tB .lb { display:flex; align-items:center; justify-content:center; gap:7px; font:800 .66rem "Source Sans 3"; letter-spacing:.22em; text-transform:uppercase; color:var(--a); }
+  .tB .lb svg { width:13px; height:13px; }
+  .tB .msg { margin-top:5px; padding-top:6px; border-top:1px dashed color-mix(in srgb,var(--a) 55%,transparent); font-size:.9rem; line-height:1.35; }
+  .toast-slot .tB { transform:scale(1.18) rotate(-4deg); }
+  .toast-slot .tB.show { transform:rotate(-1.4deg); transition:opacity .16s ease, transform .22s cubic-bezier(.3,1.6,.5,1); }
+  .toast-slot .tB.error.show { transform:rotate(1.2deg); }
+
+  /* ========== C. Η ΜΕΛΑΝΙ ΛΩΡΙΔΑ ========== */
+  .tC { --a:var(--gold); width:fit-content; max-width:340px; display:flex; align-items:center; gap:11px; background:var(--surface); color:var(--on-surface); padding:12px 18px 12px 14px; border-radius:3px; box-shadow:0 14px 30px rgba(var(--shadow),.28); font-size:.9rem; line-height:1.35; font-weight:500; }
+  .tC.error { --a:var(--danger-soft); }
+  .tC .dot { flex:0 0 auto; width:20px; height:20px; border-radius:50%; background:var(--a); color:var(--surface); display:grid; place-items:center; }
+  .tC .dot svg { width:11px; height:11px; }
+  .tC .x { margin-left:6px; flex:0 0 auto; border:0; background:none; color:var(--a); font:800 .6rem "Source Sans 3"; letter-spacing:.16em; cursor:pointer; padding:4px 0 4px 10px; border-left:1px solid rgba(239,232,216,.2); }
+  .tC:not(.error) .x { display:none; }
+
+  /* ========== D. ΤΟ ΑΠΟΚΟΜΜΑ ========== */
+  .tD { --a:var(--ok); width:100%; max-width:360px; display:grid; grid-template-columns:auto 1fr; background:var(--paper-soft); color:var(--ink); border:1px solid var(--line); box-shadow:0 12px 26px rgba(var(--shadow),.16); position:relative; }
+  .tD.error { --a:var(--err); }
+  .tD .stub { writing-mode:vertical-rl; transform:rotate(180deg); padding:12px 8px; font:800 .56rem "Source Sans 3"; letter-spacing:.24em; text-transform:uppercase; color:var(--a); border-left:1.5px dashed var(--line); display:flex; align-items:center; justify-content:center; background:color-mix(in srgb,var(--a) 7%,transparent); }
+  .tD .body { padding:12px 16px 13px; }
+  .tD .meta { display:flex; justify-content:space-between; font:700 .58rem "Roboto Slab"; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+  .tD .msg { font-size:.92rem; line-height:1.36; font-weight:500; }
+  .tD::before, .tD::after { content:""; position:absolute; left:calc(var(--stub,30px) - 6px); width:12px; height:12px; border-radius:50%; background:var(--page); border:1px solid var(--line); }
+  .tD::before { top:-7px; } .tD::after { bottom:-7px; }
+  .static .tD::before, .static .tD::after { background:var(--paper-dark); }
+  .phone .tD::before, .phone .tD::after { background:var(--paper); }
+
+  /* ========== E. Η ΓΡΑΜΜΗ ΧΡΟΝΟΥ ========== */
+  .tE { --a:var(--ok); --dur:2.8s; width:100%; max-width:360px; position:relative; overflow:hidden; display:flex; align-items:flex-start; gap:12px; background:var(--paper-soft); color:var(--ink); border:1px solid var(--line); padding:13px 14px 15px 16px; box-shadow:0 10px 24px rgba(var(--shadow),.14); }
+  .tE.error { --a:var(--err); --dur:5.5s; }
+  .tE .txt { flex:1; }
+  .tE .lb { font:800 .58rem "Source Sans 3"; letter-spacing:.2em; text-transform:uppercase; color:var(--a); display:block; margin-bottom:2px; }
+  .tE .msg { font-size:.92rem; line-height:1.36; }
+  .tE .x { flex:0 0 auto; width:26px; height:26px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; font-size:.9rem; line-height:1; display:grid; place-items:center; }
+  .tE:not(.error) .x { display:none; }
+  .tE .bar { position:absolute; left:0; right:0; bottom:0; height:3px; background:var(--a); transform-origin:left; transform:scaleX(.62); }
+  .tE.show .bar { animation:drain var(--dur) linear forwards; }
+  @keyframes drain { from { transform:scaleX(1); } to { transform:scaleX(0); } }
+
+  /* ========== F. ΤΟ ΚΑΡΤΕΛΑΚΙ ΤΗΣ ΚΟΡΔΕΛΑΣ ========== */
+  .tF { --a:var(--ok); width:fit-content; max-width:280px; margin-left:auto; position:relative; background:var(--paper-soft); color:var(--ink); border:1px solid var(--line); border-top:3px solid var(--a); padding:12px 15px 13px; box-shadow:0 12px 24px rgba(var(--shadow),.18); font-size:.88rem; line-height:1.35; transform-origin:top right; }
+  .tF.error { --a:var(--err); }
+  .tF::before { content:""; position:absolute; top:-14px; right:26px; width:1px; height:12px; background:var(--muted); }
+  .tF .lb { display:block; font:700 .56rem "Roboto Slab"; letter-spacing:.18em; text-transform:uppercase; color:var(--a); margin-bottom:3px; }
+  .tF .msg { font-family:"Playpen Sans",cursive; font-size:.84rem; }
+  .toast-slot.top .tF { transform:rotate(-3deg) translateY(-10px); }
+  .toast-slot.top .tF.show { transform:rotate(0); transition:opacity .25s, transform .5s cubic-bezier(.3,1.5,.5,1); }
+
+  /* ---------- comparison ---------- */
+  table.cmp { width:100%; border-collapse:collapse; background:var(--paper); border:1px solid var(--line); font-size:.88rem; }
+  table.cmp th, table.cmp td { padding:9px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  table.cmp th { font:800 .6rem "Source Sans 3"; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  table.cmp td:first-child { font-family:"Roboto Slab",serif; font-weight:700; color:var(--orange); white-space:nowrap; }
+  .tbl-wrap { overflow-x:auto; }
+  .rules { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
+  .rules div { background:var(--paper); border:1px solid var(--line); padding:14px 16px; font-size:.9rem; line-height:1.45; }
+  .rules b { display:block; font:700 .66rem "Roboto Slab"; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin-bottom:6px; }
+</style>
+</head>
+<body>
+<button class="theme-btn" id="theme">DARKMODE OFF</button>
+
+<h1 class="page">Μηνύματα ειδοποίησης</h1>
+<p class="intro">Σήμερα υπάρχει <b>ένα</b> στοιχείο, το <code>#toast</code> (<code>index.html:570</code>), με δύο καταστάσεις: <b>επιτυχία</b> σε μουσταρδί <code>--orange</code> με ετικέτα «RECORDED» και <b>σφάλμα</b> σε <code>--danger</code> με ετικέτα «ATTENTION» (ετικέτες σε <code>--toast-label</code> / <code>--toast-label-error</code>, τα μπεζ). Όλο το κείμενο είναι κεφαλαία, το σκληρό σκιάχτρο 8px μελανί, και και οι δύο φεύγουν στα 2,2 δευτερόλεπτα. Παρακάτω η πλήρης απογραφή, έξι εκδοχές (κάθε μία με ζωντανή δοκιμή σε κινητό, πάτα τα κουμπιά) και πρόταση. <i>Τίποτα δεν έχει περάσει στον κώδικα.</i></p>
+
+<!-- ================= INVENTORY ================= -->
+<h2 class="sec">1. Απογραφή: όλα τα μηνύματα</h2>
+<p class="sec-note">Όλα περνούν από τη <code>toast(message, kind)</code> στο <code>app.js:1542</code>, εκτός από δύο σημεία της <code>safeStoreWrite</code> (<code>app.js:127</code>, <code>app.js:150</code>) που γράφουν απευθείας στο στοιχείο. Οι αριθμοί δείχνουν τη γραμμή στο <code>app.js</code>.</p>
+
+<div class="inv">
+  <section>
+    <h3><i style="background:var(--orange)"></i>Επιτυχία · 19</h3>
+    <ol>
+      <li>Η προπόνηση καταγράφηκε. <small>2548</small></li>
+      <li>Η προπόνηση αντιγράφηκε και καταγράφηκε. <small>2548</small></li>
+      <li>Οι διορθώσεις αποθηκεύτηκαν. <small>2548</small></li>
+      <li>Το 1ο σετ αντιγράφηκε στα υπόλοιπα. <small>2582</small></li>
+      <li>Το εργάσιμο σετ αφαιρέθηκε <small>2617</small></li>
+      <li>Η άσκηση αφαιρέθηκε από τη δήλωση <small>2605</small></li>
+      <li>Η άσκηση αφαιρέθηκε από το Πρόγραμμα <small>2596</small></li>
+      <li>Η προπόνησή σας επανήλθε από το πρόχειρο. <small>2761</small></li>
+      <li>Το πρόγραμμα «…» δημιουργήθηκε <small>2266</small></li>
+      <li>Το «…» δημιουργήθηκε <small>789 · αντίγραφο</small></li>
+      <li>Το όνομα του προγράμματος αποθηκεύτηκε <small>2288</small></li>
+      <li>Το πρόγραμμα αποθηκεύτηκε. <small>2490</small></li>
+      <li>Ενημερώθηκε μόνο το Πρόγραμμα <small>2490</small></li>
+      <li>Το «…» είναι τώρα ενεργό <small>2662</small></li>
+      <li>Το «…» διαγράφηκε <small>2694</small></li>
+      <li>Η {ημέρα} διαγράφηκε <small>2708</small></li>
+      <li>Η προπόνηση διαγράφηκε <small>2719</small></li>
+      <li>Η εικόνα προστέθηκε στο προφίλ <small>2334</small></li>
+      <li>Το προφίλ αποθηκεύτηκε <small>2396</small></li>
+    </ol>
+  </section>
+  <section>
+    <h3><i style="background:var(--danger)"></i>Σφάλμα / προσοχή · 21</h3>
+    <ol>
+      <li>Η ημερομηνία προπόνησης δεν μπορεί να είναι μεταγενέστερη από τη σημερινή <small>2223 · 2497</small></li>
+      <li>Επιλογή ημερομηνίας προπόνησης <small>2499</small></li>
+      <li>Χρειάζεται τουλάχιστον μία άσκηση <small>2476 · 2502</small></li>
+      <li>Χρειάζεται να υπάρχει τουλάχιστον ένα εργάσιμο σετ <small>2613</small></li>
+      <li>Χρειάζεται να υπάρχει τουλάχιστον ένα πρόγραμμα <small>2683</small></li>
+      <li>Υπάρχει ήδη καταγεγραμμένη προπόνηση για αυτή την ημέρα. <small>2526</small></li>
+      <li>Η αρχική προπόνηση έχει διαγραφεί και δεν μπορεί να αντιγραφεί. <small>2519</small></li>
+      <li>Η εγγραφή έχει διαγραφεί σε άλλη συσκευή. Κλείστε τη φόρμα για να ενημερωθούν τα δεδομένα. <small>140 · 2514</small></li>
+      <li>Η {ημέρα} έχει ήδη δηλωθεί μία φορά / δύο φορές <small>2470</small></li>
+      <li>Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά. <small>125 · default</small></li>
+      <li>Δεν υπάρχει αρκετός χώρος για την εικόνα. Χρειάζεται μικρότερο αρχείο. <small>2390</small></li>
+      <li>Δεν υπάρχουν καταγεγραμμένες προπονήσεις για εξαγωγή. <small>2354</small></li>
+      <li>Δεν ήταν δυνατή η εξαγωγή του ιστορικού. <small>2360</small></li>
+      <li>Συμπληρώστε όνομα για την κάρτα. <small>2373</small></li>
+      <li>Συμπληρώστε έγκυρη ημερομηνία γέννησης. <small>2379</small></li>
+      <li>Επιλογή εικόνας JPG, PNG ή WEBP. <small>1844</small></li>
+      <li>Η εικόνα πρέπει να είναι μικρότερη από 10 MB. <small>1845</small></li>
+      <li>Δεν ήταν δυνατή η ανάγνωση της εικόνας. <small>1847</small></li>
+      <li>Το αρχείο εικόνας δεν είναι έγκυρο. <small>1850</small></li>
+      <li>Δεν ήταν δυνατή η επεξεργασία της εικόνας. <small>1856</small></li>
+      <li>Η εικόνα δεν μπόρεσε να συμπιεστεί με ασφάλεια. Δοκιμάστε άλλη εικόνα. <small>1874</small></li>
+    </ol>
+  </section>
+</div>
+
+<div class="findings">
+  <ul>
+    <li><b>Κεφαλαία σε μακριές προτάσεις.</b> Το <code>text-transform:uppercase</code> κάνει τα μηνύματα των 80–95 χαρακτήρων (π.χ. «Η εγγραφή έχει διαγραφεί σε άλλη συσκευή…») δύσκολα στην ανάγνωση και σβήνει τους τόνους. Όλες οι εκδοχές κρατούν κεφαλαία <i>μόνο</i> στην ετικέτα.</li>
+    <li><b>2,2 δευτερόλεπτα για όλα.</b> Αρκεί για «Το προφίλ αποθηκεύτηκε», όχι για ένα σφάλμα δύο προτάσεων που ζητά ενέργεια. Οι εκδοχές προτείνουν ~2,8″ για επιτυχία και ~5,5″ + κουμπί κλεισίματος για σφάλμα.</li>
+    <li><b>Ετικέτες στα αγγλικά</b> («RECORDED», «ATTENTION») μέσα σε CSS <code>content</code>, άρα δεν περνούν από το i18n. Επίσης όλα τα «επιτυχία» λένε RECORDED ακόμα κι όταν κάτι <i>διαγράφηκε</i>.</li>
+    <li><b>Ένα <code>role="status"</code> και για τα σφάλματα.</b> Τα σφάλματα θα ήθελαν <code>role="alert"</code> (ή <code>aria-live="assertive"</code>). Δεν αφορά την εμφάνιση, αλλά θα μπει μαζί.</li>
+    <li><b>Ασυνέπειες κειμένου</b> (για ενημέρωση, όχι για αλλαγή τώρα): μισά μηνύματα κλείνουν με τελεία, μισά όχι· «Ελευθέρωσε… δοκίμασε» (ενικός) δίπλα σε «Κλείστε… Συμπληρώστε» (πληθυντικός)· «Επιλογή ημερομηνίας προπόνησης» είναι ουσιαστικό, όχι οδηγία.</li>
+    <li><b>Δύο αντίγραφα της λογικής</b> στη <code>safeStoreWrite</code> παρακάμπτουν τη <code>toast()</code>· το ένα (<code>:128</code>) δεν κρύβεται ποτέ. Όποια εκδοχή επιλεγεί, αυτά τα δύο πρέπει να περάσουν από την ίδια συνάρτηση.</li>
+  </ul>
+</div>
+
+<!-- ================= VARIANTS ================= -->
+<h2 class="sec">2. Έξι εκδοχές</h2>
+<p class="sec-note">Κοινός κανόνας: η κατάσταση δεν δηλώνεται πια με γέμισμα χρώματος σε όλη την επιφάνεια, αλλά με <b>ετικέτα + εικονίδιο + μία γραμμή χρώματος</b>, ώστε να διαβάζεται και χωρίς χρώμα. Ετικέτες στα ελληνικά: <b>ΕΓΙΝΕ</b> για επιτυχία, <b>ΠΡΟΣΟΧΗ</b> για σφάλμα (εναλλακτικά ΚΑΤΑΓΡΑΦΗΚΕ / ΔΕΝ ΕΓΙΝΕ). Κάθε κινητό χρησιμοποιεί τυχαίο πραγματικό μήνυμα από την απογραφή.</p>
+
+<div id="variants"></div>
+
+<!-- ================= COMPARISON ================= -->
+<h2 class="sec">3. Σύγκριση</h2>
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>Εκδοχή</th><th>Χαρακτήρας</th><th>Αναγνωσιμότητα μακριού σφάλματος</th><th>Ταιριάζει με το τετράδιο</th><th>Θέση</th><th>Κόστος κώδικα</th></tr></thead>
+  <tbody>
+    <tr><td>Α · Περιθώριο</td><td>Ήσυχο, χάρτινο</td><td>Πολύ καλή</td><td>Ναι — γραμμή περιθωρίου</td><td>Κάτω δεξιά (ίδια)</td><td>Μόνο CSS + 2 span</td></tr>
+    <tr><td>Β · Σφραγίδα</td><td>Παιχνιδιάρικο, έντονο</td><td>Μέτρια (στενό, κεντραρισμένο)</td><td>Πολύ — ίδια γλώσσα με motto-stamp</td><td>Κάτω κέντρο</td><td>CSS + animation</td></tr>
+    <tr><td>Γ · Μελανί λωρίδα</td><td>Κλασικό, κομψό</td><td>Καλή</td><td>Μέτρια — πιο «εφαρμογή»</td><td>Κάτω κέντρο</td><td>CSS + κουμπί κλεισίματος</td></tr>
+    <tr><td>Δ · Απόκομμα</td><td>Εισιτήριο / απόδειξη</td><td>Καλή</td><td>Ναι — συγγενές με καρμπόν εξαγωγής</td><td>Κάτω δεξιά</td><td>CSS + ώρα</td></tr>
+    <tr><td>Ε · Γραμμή χρόνου</td><td>Λειτουργικό</td><td>Πολύ καλή (μένει 5,5″, κλείνει)</td><td>Ναι</td><td>Κάτω δεξιά</td><td>CSS + κουμπί + διάρκεια ανά είδος</td></tr>
+    <tr><td>ΣΤ · Καρτελάκι</td><td>Ιδιαίτερο, χειρόγραφο</td><td>Μέτρια (Playpen, στενό)</td><td>Πολύ — κρέμεται από την κορδέλα</td><td>Πάνω δεξιά (αλλάζει)</td><td>CSS + νέα θέση/print</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 class="sec">4. Πρόταση</h2>
+<div class="rules">
+  <div><b>Εμφάνιση: Α</b>Το «Περιθώριο» είναι το πιο κομψό χωρίς να φωνάζει: χαρτί πάνω σε χαρτί, η κατάσταση στη γραμμή του περιθωρίου και στο εικονίδιο. Διαβάζεται άνετα στα μακριά σφάλματα και δουλεύει ίδια στο dark mode.</div>
+  <div><b>Συμπεριφορά από το Ε</b>Πάρε από το Ε τη <i>διάρκεια ανά είδος</i> (2,8″ / 5,5″), το «×» στα σφάλματα και — προαιρετικά — τη λεπτή γραμμή χρόνου στο κάτω άκρο του Α.</div>
+  <div><b>Αν θέλεις πιο έντονο: Β</b>Η σφραγίδα είναι η πιο «δική» μας, αλλά μόνο για επιτυχία· για σφάλματα δύο προτάσεων το κεντραρισμένο στενό κουτί κουράζει.</div>
+  <div><b>Ό,τι αλλάζει μαζί</b>Ετικέτες στο i18n αντί για CSS <code>content</code>· <code>role="alert"</code> για σφάλματα· οι δύο απευθείας εγγραφές της <code>safeStoreWrite</code> περνούν από τη <code>toast()</code>.</div>
+</div>
+
+<script>
+const OK = [
+  'Το 1ο σετ αντιγράφηκε στα υπόλοιπα.','Η προπόνηση καταγράφηκε.','Η προπόνηση αντιγράφηκε και καταγράφηκε.','Οι διορθώσεις αποθηκεύτηκαν.',
+  'Το εργάσιμο σετ αφαιρέθηκε','Το πρόγραμμα «Push Pull Legs» δημιουργήθηκε','Το «Upper / Lower» είναι τώρα ενεργό','Το προφίλ αποθηκεύτηκε',
+  'Η προπόνησή σας επανήλθε από το πρόχειρο.','Η Τρίτη διαγράφηκε','Η εικόνα προστέθηκε στο προφίλ'
+];
+const ERR = [
+  'Χρειάζεται τουλάχιστον μία άσκηση','Υπάρχει ήδη καταγεγραμμένη προπόνηση για αυτή την ημέρα.',
+  'Η εγγραφή έχει διαγραφεί σε άλλη συσκευή. Κλείστε τη φόρμα για να ενημερωθούν τα δεδομένα.',
+  'Η ημερομηνία προπόνησης δεν μπορεί να είναι μεταγενέστερη από τη σημερινή','Δεν ήταν δυνατή η αποθήκευση. Ελευθέρωσε χώρο και δοκίμασε ξανά.',
+  'Η εικόνα πρέπει να είναι μικρότερη από 10 MB.','Χρειάζεται να υπάρχει τουλάχιστον ένα εργάσιμο σετ'
+];
+const I_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const I_ERR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v9"/><path d="M12 19h.01"/></svg>';
+const now = () => new Date().toTimeString().slice(0,5);
+
+const V = [
+  { id:'0', name:'Σημερινό', title:'Αναφορά: ό,τι υπάρχει τώρα',
+    note:'Πιστή απόδοση των <code>components.css:39-42</code> + <code>base.css:151</code>. Γέμισμα σε όλη την επιφάνεια, κεφαλαία παντού, σκληρή σκιά 8px. Στο dark mode το <code>--orange</code> ανοίγει σε <code>#e0a94a</code> και το κείμενο γίνεται σκούρο.',
+    spec:['background: --orange / --danger · κείμενο λευκό, uppercase','::before RECORDED / ATTENTION σε --toast-label','2,2″ για όλα'],
+    dur:[2200,2200],
+    html:(k,m)=>`<div class="t t0 ${k}">${m}</div>` },
+  { id:'A', name:'Α', title:'Το Περιθώριο', tag:'πρόταση',
+    note:'Κάρτα σε <code>--paper-soft</code> με λεπτό περίγραμμα <code>--line</code> και μία γραμμή περιθωρίου 3px στα αριστερά, όπως η κόκκινη γραμμή του τετραδίου. Μικρό κυκλικό εικονίδιο, ετικέτα σε Roboto Slab, μήνυμα σε πεζά. Μαλακή σκιά αντί για τη σκληρή.',
+    spec:['border-left: 3px --orange / --danger','ετικέτα .58rem Roboto Slab, κεφαλαία μόνο εκεί','μήνυμα .92rem Source Sans 3 / 500'],
+    dur:[2800,5500],
+    html:(k,m)=>`<div class="t tA ${k}"><span class="ic">${k?I_ERR:I_OK}</span><span class="lb">${k?'Προσοχή':'Έγινε'}</span><span class="msg">${m}</span></div>` },
+  { id:'B', name:'Β', title:'Η Σφραγίδα',
+    note:'Συνέχεια της <code>.motto-stamp</code> / <code>.reward-stamp</code>: διπλό περίγραμμα (border + outline), ελαφριά κλίση, και «πάτημα» στην είσοδο (μεγαλώνει και κάθεται). Η ετικέτα είναι η σφραγίδα, το μήνυμα γράφεται από κάτω σαν σημείωση.',
+    spec:['border 2px + outline 1px offset 3px','rotate −1,4° (επιτυχία) / +1,2° (σφάλμα)','είσοδος scale 1.18 → 1 με overshoot'],
+    dur:[2800,5500],
+    html:(k,m)=>`<div class="t tB ${k}"><span class="lb">${k?I_ERR:I_OK}${k?'Προσοχή':'Έγινε'}</span><div class="msg">${m}</div></div>` },
+  { id:'C', name:'Γ', title:'Η Μελανί Λωρίδα',
+    note:'Σκούρη λωρίδα σε <code>--ink</code> (στο dark mode <code>--ink-raised</code>), με κουκκίδα χρώματος που κρατά το εικονίδιο. Χωρίς ετικέτα: το εικονίδιο αρκεί. Κεντραρισμένη στο κάτω μέρος. Στα σφάλματα, «ΟΚ» για κλείσιμο.',
+    spec:['background --ink · κείμενο --paper','κουκκίδα --gold / --danger-soft','κάτω κέντρο, ως 340px'],
+    dur:[2800,5500],
+    html:(k,m)=>`<div class="t tC ${k}"><span class="dot">${k?I_ERR:I_OK}</span><span>${m}</span><button class="x" type="button">ΟΚ</button></div>` },
+  { id:'D', name:'Δ', title:'Το Απόκομμα',
+    note:'Εισιτήριο με διάτρητο στέλεχος στα αριστερά: η ετικέτα γράφεται κάθετα στο στέλεχος, η ώρα και το είδος πάνω δεξιά. Συγγενεύει με το «Αντίγραφο Καρμπόν» της εξαγωγής ιστορικού.',
+    spec:['στέλεχος writing-mode: vertical, dashed διαχωριστικό','δύο ημικύκλια «διάτρησης»','μετα-γραμμή: ώρα · είδος'],
+    dur:[2800,5500],
+    html:(k,m)=>`<div class="t tD ${k}"><span class="stub">${k?'Προσοχή':'Έγινε'}</span><div class="body"><div class="meta"><span>${k?'Δεν ολοκληρώθηκε':'Καταχωρίστηκε'}</span><span>${now()}</span></div><div class="msg">${m}</div></div></div>` },
+  { id:'E', name:'Ε', title:'Η Γραμμή Χρόνου',
+    note:'Λιτή χάρτινη κάρτα· το χρώμα υπάρχει μόνο στην ετικέτα και σε μια γραμμή 3px που αδειάζει όσο μένει ορατό το μήνυμα. Η γραμμή κάνει τη διάρκεια ορατή: 2,8″ η επιτυχία, 5,5″ το σφάλμα, που έχει και «×».',
+    spec:['--dur 2.8s / 5.5s','γραμμή χρόνου scaleX 1 → 0','× 26px μόνο στα σφάλματα (44px στόχος αφής με padding)'],
+    dur:[2800,5500],
+    html:(k,m)=>`<div class="t tE ${k}"><div class="txt"><span class="lb">${k?'Προσοχή':'Έγινε'}</span><span class="msg">${m}</span></div><button class="x" type="button" aria-label="Κλείσιμο">×</button><span class="bar"></span></div>` },
+  { id:'F', name:'ΣΤ', title:'Το Καρτελάκι της Κορδέλας',
+    note:'Το πιο τολμηρό: το μήνυμα κρέμεται με κλωστή κάτω από την κορδέλα του μενού (πάνω δεξιά), σαν ετικέτα. Μήνυμα σε Playpen Sans, το χειρόγραφο της εφαρμογής. Αλλάζει θέση, άρα δεν καλύπτει ποτέ το «Αποθήκευση» στο κάτω μέρος του κινητού.',
+    spec:['θέση: top, κάτω από .menu-ribbon','border-top 3px χρώματος + κλωστή 1px','αιώρηση στην είσοδο (rotate −3° → 0)'],
+    dur:[2800,5500], top:true,
+    html:(k,m)=>`<div class="t tF ${k}"><span class="lb">${k?'Προσοχή':'Έγινε'}</span><span class="msg">${m}</span></div>` }
+];
+
+const host = document.getElementById('variants');
+V.forEach(v => {
+  const el = document.createElement('div');
+  el.className = 'variant';
+  el.innerHTML = `
+    <div class="variant-title"><b>${v.name}</b><h3>${v.title}</h3>${v.tag?`<span class="tag">${v.tag}</span>`:''}</div>
+    <p class="variant-note">${v.note}</p>
+    <div class="variant-body">
+      <div>
+        <div class="static">
+          <span class="cap">Επιτυχία</span>${v.html('', OK[0])}
+          <span class="cap">Επιτυχία · με όνομα</span>${v.html('', OK[6])}
+          <span class="cap">Σφάλμα · σύντομο</span>${v.html('error', ERR[0])}
+          <span class="cap">Σφάλμα · το μακρύτερο</span>${v.html('error', ERR[2])}
+        </div>
+        <ul class="spec">${v.spec.map(s=>`<li>${s}</li>`).join('')}</ul>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="screen">
+            <span class="ribbon"></span>
+            <p class="h">Καταγραφή</p>
+            <div class="card"><b>Πιέσεις πάγκου</b>
+              <div class="row"><span>Σετ 1</span><span>80 kg</span><span>8</span></div>
+              <div class="row"><span>Σετ 2</span><span>80 kg</span><span>8</span></div>
+              <div class="row"><span>Σετ 3</span><span>80 kg</span><span>8</span></div>
+            </div>
+            <div class="card"><b>Κωπηλατική</b>
+              <div class="row"><span>Σετ 1</span><span>60 kg</span><span>10</span></div>
+            </div>
+            <div class="save">ΑΠΟΘΗΚΕΥΣΗ</div>
+          </div>
+          <div class="toast-slot${v.top?' top':''}"></div>
+        </div>
+        <div class="controls">
+          <button data-k="">Επιτυχία</button>
+          <button class="err" data-k="error">Σφάλμα</button>
+        </div>
+      </div>
+    </div>`;
+  host.appendChild(el);
+  const slot = el.querySelector('.toast-slot');
+  let timer, i = { '':0, error:0 };
+  el.querySelectorAll('.controls button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.k, list = k ? ERR : OK;
+    const msg = list[i[k]++ % list.length];
+    clearTimeout(timer);
+    slot.innerHTML = v.html(k, msg);
+    const t = slot.firstElementChild;
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+    const hide = () => t.classList.remove('show');
+    t.querySelector('.x')?.addEventListener('click', hide);
+    timer = setTimeout(hide, v.dur[k ? 1 : 0]);
+  }));
+});
+
+const tb = document.getElementById('theme');
+tb.addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  tb.textContent = dark ? 'DARKMODE ON' : 'DARKMODE OFF';
+});
+</script>
+</body>
+</html>

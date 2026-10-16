@@ -86,6 +86,7 @@ test('service worker precaches the complete local shell without development seed
     './modules/history.js',
     './modules/session-templates.js',
     './modules/ui.js',
+    './modules/guide-tour.js',
     './auth.js?v=0.3.1',
     './session-state.js',
     './cloud-sync.js',

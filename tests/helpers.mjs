@@ -11,6 +11,7 @@ import * as ProgressChart from '../modules/progress-chart.js';
 import * as HistoryView from '../modules/history.js';
 import * as SessionTemplates from '../modules/session-templates.js';
 import * as UI from '../modules/ui.js';
+import * as GuideTour from '../modules/guide-tour.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
@@ -43,7 +44,7 @@ export function loadApp(seed = {}, options = {}) {
   window.eval(quotesSource);
   window.eval(readFileSync(join(root, 'data-reconciliation.js'), 'utf8'));
   window.eval(i18nSource);
-  window.__LogbookModules = { ExerciseModel, StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, HistoryView, SessionTemplates, UI };
+  window.__LogbookModules = { ExerciseModel, StorageMigrations, RoutineModel, SessionModel, ProgressRewards, ProgressChart, HistoryView, SessionTemplates, UI, GuideTour };
   window.eval(executableAppSource);
   return { window, document: window.document, localStorage: window.localStorage };
 }
