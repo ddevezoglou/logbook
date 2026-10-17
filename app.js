@@ -269,8 +269,8 @@ function refreshWeightUnitUI(previousUnit = weightUnit()) {
   const guide = $('#log-weight-guide');
   if (guide) {
     guide.textContent = unit === 'lbs'
-      ? 'Καταγράψτε επαναλήψεις και επιλέξτε λίβρες, πλάκες, συνδυασμό ή Bodyweight.'
-      : 'Καταγράψτε επαναλήψεις και επιλέξτε κιλά, πλάκες, συνδυασμό ή Bodyweight.';
+      ? 'Καταγράψτε επαναλήψεις και επιλέξτε μέτρηση: λίβρες, πλάκες, πλάκες + λίβρες, Bodyweight ή Bodyweight + λίβρες.'
+      : 'Καταγράψτε επαναλήψεις και επιλέξτε μέτρηση: κιλά, πλάκες, πλάκες + κιλά, Bodyweight ή Bodyweight + κιλά.';
     window.LogbookI18n?.translate(guide);
   }
 }

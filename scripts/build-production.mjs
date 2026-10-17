@@ -76,9 +76,12 @@ async function writeAsset(path, output) {
     source = source.replace(/@font-face\s*\{[^}]*\}/g, face =>
       [...DESIGN_ONLY_FONTS].some(font => face.includes(font)) ? '' : face);
   }
+  // charset:'utf8': χωρίς αυτό το esbuild γράφει κάθε ελληνικό χαρακτήρα ως \u03XX,
+  // 6 bytes αντί για 2. Οι σελίδες δηλώνουν ήδη UTF-8, όπως και το dev.
   const result = await transform(source, {
     loader:extension === '.css' ? 'css' : 'js',
     minify:true,
+    charset:'utf8',
     target:extension === '.css' ? undefined : 'es2020',
     legalComments:'inline',
   });

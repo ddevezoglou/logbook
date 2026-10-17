@@ -14,7 +14,9 @@ const LANGUAGES = ['el', 'en', 'fr', 'de'];
 const SCENE_WIDTH = 300;
 
 // [el, en, fr, de]. Τα δεδομένα-δείγματα μεταφράζονται κι αυτά, αλλιώς ένας
-// Γερμανός χρήστης θα έβλεπε ελληνικές ασκήσεις μέσα στην ξενάγηση.
+// Γερμανός χρήστης θα έβλεπε ελληνικές ασκήσεις μέσα στην ξενάγηση. Οι ετικέτες
+// του UI ακολουθούν τον κατάλογο του i18n.js, ώστε η μινιατούρα να γράφει ό,τι
+// γράφει και η αληθινή σελίδα σε κάθε γλώσσα.
 const TEXT = {
   'ui.prev':['Προηγούμενο βήμα', 'Previous step', 'Étape précédente', 'Vorheriger Schritt'],
   'ui.again':['Ξανά', 'Replay', 'Rejouer', 'Wiederholen'],
@@ -23,16 +25,16 @@ const TEXT = {
   'ui.close':['Κλείσιμο', 'Close', 'Fermer', 'Schließen'],
   'log.t1':['Ημερομηνία και τύπος', 'Date and type', 'Date et type', 'Datum und Art'],
   'log.t2':['Σύρετε τις ασκήσεις', 'Swipe through exercises', 'Faites défiler les exercices', 'Übungen wischen'],
-  'log.t3':['Επαναλήψεις και βάρος', 'Reps and weight', 'Répétitions et charge', 'Wiederholungen und Gewicht'],
-  'log.t4':['Σετ και σχόλια', 'Sets and notes', 'Séries et commentaires', 'Sätze und Notizen'],
+  'log.t3':['Επαναλήψεις και μέτρηση', 'Reps and measure', 'Répétitions et mesure', 'Wiederholungen und Messart'],
+  'log.t4':['Σετ και σχόλια', 'Sets and notes', 'Séries et notes', 'Sätze und Notizen'],
   'log.t5':['Ολοκλήρωση', 'Finish', 'Terminer', 'Abschließen'],
   'plan.t1':['Πρώτα η βιβλιοθήκη', 'Library first', 'La bibliothèque d’abord', 'Zuerst die Bibliothek'],
-  'plan.t2':['Μολύβι, × και σημείωση', 'Pencil, × and note', 'Crayon, × et note', 'Stift, × und Notiz'],
+  'plan.t2':['Μολύβι, × και Cues', 'Pencil, × and Cues', 'Crayon, × et Cues', 'Stift, × und Cues'],
   'plan.t3':['Νέο πρόγραμμα', 'New routine', 'Nouveau programme', 'Neuer Plan'],
-  'plan.t4':['Ημέρες και αστέρι', 'Days and star', 'Jours et étoile', 'Tage und Stern'],
+  'plan.t4':['Προπονήσεις και αστέρι', 'Workouts and star', 'Séances et étoile', 'Trainings und Stern'],
   'plan.t5':['Το ιστορικό μένει', 'History stays', 'L’historique reste', 'Der Verlauf bleibt'],
   'progress.t1':['Άσκηση και σετ', 'Exercise and set', 'Exercice et série', 'Übung und Satz'],
-  'progress.t2':['Κιλά και επαναλήψεις', 'Weight and reps', 'Charge et répétitions', 'Gewicht und Wiederholungen'],
+  'progress.t2':['Φορτίο και επαναλήψεις', 'Load and reps', 'Charge et répétitions', 'Last und Wiederholungen'],
   'progress.t3':['Σύρετε το γράφημα', 'Drag the chart', 'Faites glisser le graphique', 'Diagramm ziehen'],
   'progress.t4':['Ο έλεγχος', 'The check', 'Le contrôle', 'Die Prüfung'],
   'progress.t5':['Personal Records', 'Personal Records', 'Personal Records', 'Personal Records'],
@@ -42,101 +44,142 @@ const TEXT = {
   'profile.t4':['Μονάδα μέτρησης', 'Measurement unit', 'Unité de mesure', 'Maßeinheit'],
   'profile.t5':['Εξαγωγή και αποθήκευση', 'Export and save', 'Exporter et enregistrer', 'Exportieren und speichern'],
 
-  'date':['Ημερομηνία', 'Date', 'Date', 'Datum'],
-  'scheduled':['Από το πρόγραμμα', 'From routine', 'Depuis le programme', 'Aus dem Plan'],
-  'free':['Ελεύθερη', 'Free', 'Libre', 'Frei'],
-  'day-workout':['Προπόνηση ημέρας', 'Day’s workout', 'Séance du jour', 'Training des Tages'],
+  /* Κοινά */
   'choose':['Επιλογή', 'Select', 'Choisir', 'Auswählen'],
-  'day':['Ημέρα {n}', 'Day {n}', 'Jour {n}', 'Tag {n}'],
-  'exercise-n':['ΑΣΚΗΣΗ {n}', 'EXERCISE {n}', 'EXERCICE {n}', 'ÜBUNG {n}'],
-  'exercise-of':['ΑΣΚΗΣΗ {n} / 3', 'EXERCISE {n} / 3', 'EXERCICE {n} / 3', 'ÜBUNG {n} / 3'],
+  'cancel':['Ακύρωση', 'Cancel', 'Annuler', 'Abbrechen'],
+  'delete':['Διαγραφή', 'Delete', 'Supprimer', 'Löschen'],
+  'confirm':['ΕΠΙΒΕΒΑΙΩΣΗ', 'CONFIRMATION', 'CONFIRMATION', 'BESTÄTIGUNG'],
+  'close-slip':['ΚΛΕΙΣΙΜΟ', 'CLOSE', 'FERMER', 'SCHLIESSEN'],
+  'cues':['Cues', 'Cues', 'Cues', 'Cues'],
+  'exercise':['Άσκηση', 'Exercise', 'Exercice', 'Übung'],
+  'exercise-name':['Όνομα άσκησης', 'Exercise name', 'Nom de l’exercice', 'Übungsname'],
+  'choose-exercise':['Επιλογή άσκησης', 'Select exercise', 'Choisir un exercice', 'Übung auswählen'],
+  'reps-word':['επαναλήψεις', 'reps', 'répétitions', 'Wiederholungen'],
+  'reps-short':['επαν.', 'reps', 'rép.', 'Wdh.'],
+
+  /* Ασκήσεις-δείγματα */
   'bench':['Πιέσεις πάγκου', 'Bench press', 'Développé couché', 'Bankdrücken'],
   'ohp':['Στρατιωτικές πιέσεις', 'Overhead press', 'Développé militaire', 'Schulterdrücken'],
   'dips':['Βυθίσεις', 'Dips', 'Dips', 'Dips'],
   'pullups':['Έλξεις', 'Pull-ups', 'Tractions', 'Klimmzüge'],
-  'sets-3':['3 σετ', '3 sets', '3 séries', '3 Sätze'],
+  'smith':['Πιέσεις Smith', 'Smith press', 'Développé Smith', 'Smith-Drücken'],
+  'barbell':['μπάρα', 'barbell', 'barre', 'Langhantel'],
+  'standing':['όρθιος, σφιχτός κορμός', 'standing, tight core', 'debout, gainage serré', 'stehend, Rumpf fest'],
+  'lean':['κορμός μπροστά', 'lean forward', 'buste penché', 'Oberkörper vor'],
+  'overhand':['πρηνής λαβή', 'overhand grip', 'prise pronation', 'Obergriff'],
+  'underhand':['υπτία λαβή', 'underhand grip', 'prise supination', 'Untergriff'],
+
+  /* Καταγραφή */
+  'date':['Ημερομηνία', 'Date', 'Date', 'Datum'],
+  'scheduled':['Από το πρόγραμμα', 'From plan', 'Depuis le programme', 'Aus dem Plan'],
+  'free':['Ελεύθερη', 'Free', 'Libre', 'Frei'],
+  'day-workout':['Προπόνηση ημέρας', 'Day’s workout', 'Séance du jour', 'Tagestraining'],
+  'exercise-of':['ΑΣΚΗΣΗ {n} / {total}', 'EXERCISE {n} / {total}', 'EXERCICE {n} / {total}', 'ÜBUNG {n} / {total}'],
+  'exercise-n':['ΑΣΚΗΣΗ {n}', 'EXERCISE {n}', 'EXERCICE {n}', 'ÜBUNG {n}'],
+  'sets-n':['{n} σετ', '{n} sets', '{n} séries', '{n} Sätze'],
   'h-set':['ΣΕΤ', 'SET', 'SÉRIE', 'SATZ'],
-  'h-reps':['ΕΠΑΝ.', 'REPS', 'RÉP.', 'WDH.'],
-  'h-mode':['ΜΕΤΡΗΣΗ', 'MODE', 'MESURE', 'ART'],
-  'h-weight':['ΒΑΡΟΣ', 'WEIGHT', 'CHARGE', 'GEWICHT'],
-  'kg':['Κιλά', 'Kilos', 'Kilos', 'Kilo'],
-  'plates':['Πλάκες', 'Plates', 'Disques', 'Scheiben'],
-  'mixed':['Συνδυασμός', 'Combined', 'Combiné', 'Kombiniert'],
+  'h-reps':['ΕΠΑΝΑΛΗΨΕΙΣ', 'REPS', 'RÉPÉTITIONS', 'WIEDERHOLUNGEN'],
+  'h-load':['ΒΑΡΟΣ / ΜΕΤΡΗΣΗ', 'WEIGHT / MEASURE', 'CHARGE / MESURE', 'GEWICHT / MESSART'],
+  'kg':['Κιλά', 'kg', 'kg', 'kg'],
+  'plates':['Πλάκες', 'Plates', 'Plaques', 'Scheiben'],
+  'plates-kg':['Πλάκες+Κιλά', 'Plates+kg', 'Plaques+kg', 'Scheiben+kg'],
   'bodyweight':['Bodyweight', 'Bodyweight', 'Poids du corps', 'Körpergewicht'],
+  'bodyweight-kg':['Bodyweight+Κιλά', 'Bodyweight + kg', 'Poids du corps + kg', 'Körpergewicht + kg'],
   'copy-first':['ΑΝΤΙΓΡΑΦΗ', 'COPY', 'COPIER', 'KOPIEREN'],
-  'extra':['＋ Extra σετ', '＋ Extra set', '＋ Série extra', '＋ Extrasatz'],
-  'exercise-notes':['Σχόλια άσκησης', 'Exercise notes', 'Commentaires de l’exercice', 'Übungsnotizen'],
+  'extra':['＋ Extra σετ', '＋ Extra set', '＋ Série supplémentaire', '＋ Extrasatz'],
+  'exercise-notes':['Σχόλια άσκησης', 'Exercise notes', 'Notes de l’exercice', 'Übungsnotizen'],
   'notes-hint':['Τεχνική, αίσθηση, RPE...', 'Technique, feel, RPE...', 'Technique, sensations, RPE...', 'Technik, Gefühl, RPE...'],
   'note-demo':['Καλή αίσθηση, RPE 8', 'Felt good, RPE 8', 'Bonnes sensations, RPE 8', 'Gutes Gefühl, RPE 8'],
-  'finish':['ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ', 'FINISH WORKOUT', 'TERMINER LA SÉANCE', 'TRAINING ABSCHLIESSEN'],
-  'logged':['Η προπόνηση καταγράφηκε', 'Workout logged', 'Séance enregistrée', 'Training erfasst'],
-  'history':['Ιστορικό', 'History', 'Historique', 'Verlauf'],
-  'history-meta':['3 ασκήσεις · 9 σετ', '3 exercises · 9 sets', '3 exercices · 9 séries', '3 Übungen · 9 Sätze'],
-  'select':['ΕΠΙΛΟΓΗ', 'SELECT', 'SÉLECTION', 'AUSWAHL'],
-  'edit':['Επεξεργασία', 'Edit', 'Modifier', 'Bearbeiten'],
-  'copy':['Αντιγραφή', 'Copy', 'Copier', 'Kopieren'],
+  'add-exercise':['＋ Προσθήκη άσκησης', '＋ Add exercise', '＋ Ajouter un exercice', '＋ Übung hinzufügen'],
+  'from-library':['Από τη βιβλιοθήκη', 'From the library', 'Depuis la bibliothèque', 'Aus der Bibliothek'],
+  'set-count':['Αριθμός σετ', 'Number of sets', 'Nombre de séries', 'Anzahl Sätze'],
+  'session-notes':['Σχόλια προπόνησης', 'Workout notes', 'Notes de séance', 'Trainingsnotizen'],
+  'session-hint':['Πώς πήγε συνολικά η σημερινή προπόνηση;', 'How did today’s workout go overall?', 'Comment s’est passée la séance aujourd’hui ?', 'Wie lief das heutige Training insgesamt?'],
+  'finish':['ΟΛΟΚΛΗΡΩΣΗ ΠΡΟΠΟΝΗΣΗΣ', 'COMPLETE WORKOUT', 'TERMINER LA SÉANCE', 'TRAINING ABSCHLIESSEN'],
+  'logged':['Η προπόνηση καταγράφηκε.', 'Workout logged.', 'Séance enregistrée.', 'Training erfasst.'],
+  'remove-set':['Αφαίρεση σετ', 'Remove set', 'Retirer la série', 'Satz entfernen'],
+  'remove-set-message':['Είστε σίγουροι ότι θέλετε να πραγματοποιηθεί αφαίρεση του εργάσιμου σετ ;', 'Are you sure you want to remove the working set?', 'Êtes-vous sûr de vouloir retirer la série de travail ?', 'Möchten Sie den Arbeitssatz wirklich entfernen?'],
+  'remove':['Αφαίρεση', 'Remove', 'Retirer', 'Entfernen'],
+  'history':['Ιστορικό προπονήσεων', 'Workout history', 'Historique des séances', 'Trainingsverlauf'],
+  'n-exercises':['{n} ΑΣΚΗΣΕΙΣ', '{n} EXERCISES', '{n} EXERCICES', '{n} ÜBUNGEN'],
+  'planned-workout':['ΠΡΟΠΟΝΗΣΗ ΠΡΟΓΡΑΜΜΑΤΟΣ', 'PLANNED WORKOUT', 'SÉANCE PLANIFIÉE', 'GEPLANTES TRAINING'],
+  'select':['ΕΠΙΛΟΓΗ', 'SELECT', 'SÉLECTIONNER', 'AUSWÄHLEN'],
+  'edit':['ΕΠΕΞΕΡΓΑΣΙΑ', 'EDIT', 'MODIFIER', 'BEARBEITEN'],
+  'copy':['ΑΝΤΙΓΡΑΦΗ', 'COPY', 'COPIER', 'KOPIEREN'],
+  'delete-caps':['ΔΙΑΓΡΑΦΗ', 'DELETE', 'SUPPRIMER', 'LÖSCHEN'],
 
+  /* Πρόγραμμα */
   'my-exercises':['Οι ασκήσεις μου', 'My exercises', 'Mes exercices', 'Meine Übungen'],
   'my-routines':['Τα προγράμματά μου', 'My routines', 'Mes programmes', 'Meine Pläne'],
   'new-exercise':['Νέα άσκηση', 'New exercise', 'Nouvel exercice', 'Neue Übung'],
-  'new-routine':['Νέο πρόγραμμα', 'New routine', 'Nouveau programme', 'Neuer Plan'],
-  'exercise-name':['Όνομα άσκησης', 'Exercise name', 'Nom de l’exercice', 'Übungsname'],
-  'cues':['Cues', 'Cues', 'Consignes', 'Hinweise'],
-  'cues-hint':['π.χ. ώμοι πίσω', 'e.g. shoulders back', 'ex. épaules en arrière', 'z. B. Schultern zurück'],
+  'cues-hint':['π.χ. ώμοι πίσω, σταθερά πόδια', 'e.g. shoulders back, feet planted', 'p. ex. épaules en arrière, pieds stables', 'z. B. Schultern zurück, Füße stabil'],
   'save-exercise':['Αποθήκευση άσκησης', 'Save exercise', 'Enregistrer l’exercice', 'Übung speichern'],
+  'exercise-saved':['Η άσκηση αποθηκεύτηκε.', 'Exercise saved.', 'Exercice enregistré.', 'Übung gespeichert.'],
+  'delete-exercise':['Διαγραφή άσκησης', 'Delete exercise', 'Supprimer l’exercice', 'Übung löschen'],
+  'delete-warning':['Η άσκηση «{name}» θα διαγραφεί από τη βιβλιοθήκη, από όλα τα προγράμματα που τη χρησιμοποιούν και από την επίβλεψη. Οι παλιές καταγραφές στο ιστορικό θα διατηρηθούν. Θέλετε να συνεχίσετε;', 'The exercise “{name}” will be deleted from the library, all programs that use it, and progress tracking. Past entries in history will be preserved. Continue?', 'L’exercice « {name} » sera supprimé de la bibliothèque, de tous les programmes qui l’utilisent et du suivi. Les anciennes entrées de l’historique seront conservées. Continuer ?', 'Die Übung „{name}“ wird aus der Bibliothek, allen zugehörigen Programmen und der Fortschrittsübersicht gelöscht. Frühere Einträge im Verlauf bleiben erhalten. Fortfahren?'],
+  'new-routine':['Νέο πρόγραμμα', 'New routine', 'Nouveau programme', 'Neuer Plan'],
   'routine-name':['Όνομα προγράμματος', 'Routine name', 'Nom du programme', 'Planname'],
   'routine-hint':['π.χ. Push Pull Legs', 'e.g. Push Pull Legs', 'ex. Push Pull Legs', 'z. B. Push Pull Legs'],
-  'length':['Διάρκεια (σε ημέρες)', 'Length (days)', 'Durée (jours)', 'Dauer (Tage)'],
-  'weekdays':['Δήλωση ημερών', 'Set weekdays', 'Jours de la semaine', 'Wochentage festlegen'],
+  'length':['Διάρκεια (σε ημέρες)', 'Duration (days)', 'Durée (jours)', 'Dauer (Tage)'],
+  'weekdays':['Δήλωση ημερών', 'Use weekdays', 'Utiliser les jours de la semaine', 'Wochentage verwenden'],
   'no':['Όχι', 'No', 'Non', 'Nein'],
   'yes':['Ναι', 'Yes', 'Oui', 'Ja'],
-  'weekday-letters':['Δ,Τ,Τ,Π,Π,Σ,Κ', 'M,T,W,T,F,S,S', 'L,M,M,J,V,S,D', 'M,D,M,D,F,S,S'],
   'create':['＋ Δημιουργία', '＋ Create', '＋ Créer', '＋ Erstellen'],
-  'length-n':['ΔΙΑΡΚΕΙΑ: {n} ΗΜΕΡΕΣ', 'LENGTH: {n} DAYS', 'DURÉE : {n} JOURS', 'DAUER: {n} TAGE'],
-  'in-use':['ΣΕ ΙΣΧΥ', 'IN USE', 'EN COURS', 'AKTIV'],
-  'day-n':['ΗΜΕΡΑ {n}', 'DAY {n}', 'JOUR {n}', 'TAG {n}'],
-  'barbell':['μπάρα', 'barbell', 'barre', 'Langhantel'],
-  'overhand':['πρηνής λαβή', 'overhand grip', 'prise pronation', 'Obergriff'],
-  'underhand':['υπτία λαβή', 'underhand grip', 'prise supination', 'Untergriff'],
-  'lean':['κορμός μπροστά', 'lean forward', 'buste penché', 'Oberkörper vor'],
-  'overhand-wide':['πρηνής, φαρδιά λαβή', 'overhand, wide grip', 'pronation, prise large', 'Obergriff, breit'],
-  'smith':['Πιέσεις Smith', 'Smith press', 'Développé Smith', 'Smith-Drücken'],
-  'delete-exercise':['Διαγραφή άσκησης;', 'Delete exercise?', 'Supprimer l’exercice ?', 'Übung löschen?'],
-  'used-in':['χρησιμοποιείται σε:', 'is used in:', 'est utilisé dans :', 'wird verwendet in:'],
-  'cancel':['Ακύρωση', 'Cancel', 'Annuler', 'Abbrechen'],
-  'delete':['Διαγραφή', 'Delete', 'Supprimer', 'Löschen'],
+  'routine-created':['Το πρόγραμμα «{name}» δημιουργήθηκε', 'Routine “{name}” created', 'Programme « {name} » créé', 'Plan „{name}“ erstellt'],
+  'in-use':['Σε ισχύ', 'In use', 'En cours', 'Aktiv'],
+  'routine':['Πρόγραμμα', 'Plan', 'Programme', 'Plan'],
+  'no-workout':['Δεν έχει οριστεί προπόνηση', 'No workout has been set', 'Aucune séance définie', 'Kein Training festgelegt'],
+  'length-n':['ΔΙΑΡΚΕΙΑ: {n} ΗΜΕΡΕΣ', 'DURATION: {n} DAYS', 'DURÉE : {n} JOURS', 'DAUER: {n} TAGE'],
+  'view-plan':['Προβολή πλάνου', 'View plan', 'Voir le programme', 'Plan anzeigen'],
+  'add-workout':['Προσθήκη προπόνησης', 'Add workout', 'Ajouter une séance', 'Training hinzufügen'],
+  'new-day-workout':['Νέα προπόνηση ημέρας', 'New day workout', 'Nouvelle séance du jour', 'Neues Tagestraining'],
+  'day':['Ημέρα', 'Day', 'Jour', 'Tag'],
+  'workout-name':['Όνομα προπόνησης', 'Workout name', 'Nom de la séance', 'Trainingsname'],
+  'workout-hint':['π.χ. Push, Upper A', 'e.g. Push, Upper A', 'ex. Push, Upper A', 'z. B. Push, Upper A'],
+  'exercise-count':['Αριθμός ασκήσεων', 'Number of exercises', 'Nombre d’exercices', 'Anzahl Übungen'],
+  'workout-exercises':['ΑΣΚΗΣΕΙΣ ΠΡΟΠΟΝΗΣΗΣ', 'WORKOUT EXERCISES', 'EXERCICES DE LA SÉANCE', 'TRAININGSÜBUNGEN'],
+  'work-sets':['Εργάσιμα σετ', 'Working sets', 'Séries de travail', 'Arbeitssätze'],
+  'cues-set':['Ορίζονται στις ασκήσεις μου.', 'Set in My exercises.', 'À définir dans Mes exercices.', 'Unter Meine Übungen festlegen.'],
+  'save-day':['Αποθήκευση ημέρας', 'Save day', 'Enregistrer le jour', 'Tag speichern'],
+  'weekday-names':['Δευτέρα,Τρίτη,Τετάρτη', 'Monday,Tuesday,Wednesday', 'Lundi,Mardi,Mercredi', 'Montag,Dienstag,Mittwoch'],
   'history-tag':['ΙΣΤΟΡΙΚΟ', 'HISTORY', 'HISTORIQUE', 'VERLAUF'],
   'sets-line':['3 σετ · 10 × 60 kg', '3 sets · 10 × 60 kg', '3 séries · 10 × 60 kg', '3 Sätze · 10 × 60 kg'],
 
-  'exercise':['Άσκηση', 'Exercise', 'Exercice', 'Übung'],
+  /* Επίβλεψη */
   'set':['Σετ', 'Set', 'Série', 'Satz'],
   'set-n':['Σετ {n}', 'Set {n}', 'Série {n}', 'Satz {n}'],
-  'course':['ΠΟΡΕΙΑ', 'PROGRESS', 'ÉVOLUTION', 'VERLAUF'],
-  'weight':['Κιλά', 'Weight', 'Charge', 'Gewicht'],
-  'reps':['Επαναλήψεις', 'Reps', 'Répétitions', 'Wiederholungen'],
-  'chart-empty':['Επιλέξτε άσκηση και σετ', 'Choose an exercise and set', 'Choisissez un exercice et une série', 'Übung und Satz wählen'],
-  'older':['← σύρετε για παλαιότερες', '← drag for older', '← glissez pour les plus anciennes', '← ziehen für ältere'],
-  'audit':['Έλεγχος · 2 εκτός σύγκρισης', 'Check · 2 not compared', 'Contrôle · 2 hors comparaison', 'Prüfung · 2 nicht verglichen'],
-  'other-mode':['άλλη μέτρηση', 'different mode', 'autre mesure', 'andere Messart'],
+  'records-n':['{n} καταγραφές', '{n} logs', '{n} saisies', '{n} Einträge'],
+  'latest':['ΤΕΛΕΥΤΑΙΑ ΕΠΙΔΟΣΗ', 'LATEST PERFORMANCE', 'DERNIÈRE PERFORMANCE', 'LETZTE LEISTUNG'],
+  'audit-title':['Έλεγχος καταγραφής: {n} προπονήσεις εξαιρέθηκαν.', 'Log check: {n} workouts excluded.', 'Contrôle des saisies : {n} séances exclues.', 'Eintragsprüfung: {n} Trainings ausgeschlossen.'],
+  'audit-uses':['Το γράφημα χρησιμοποιεί μόνο «κιλά».', 'The chart only uses “kg”.', 'Le graphique utilise uniquement « kg ».', 'Das Diagramm verwendet nur „kg“.'],
+  'audit-bodyweight':['καταγράφηκε σε σωματικό βάρος', 'logged as bodyweight', 'saisie au poids du corps', 'als Körpergewicht erfasst'],
+  'audit-plates':['καταγράφηκε σε πλάκες', 'logged as plates', 'saisie en plaques', 'als Scheiben erfasst'],
   'best-sets':['ΚΑΛΥΤΕΡΑ ΣΕΤ', 'BEST SETS', 'MEILLEURES SÉRIES', 'BESTE SÄTZE'],
 
+  /* Προφίλ */
   'new-profile':['ΝΕΟ ΠΡΟΦΙΛ', 'NEW PROFILE', 'NOUVEAU PROFIL', 'NEUES PROFIL'],
+  'unsaved':['ΜΗ ΑΠΟΘΗΚΕΥΜΕΝΕΣ ΑΛΛΑΓΕΣ', 'UNSAVED CHANGES', 'MODIFICATIONS NON ENREGISTRÉES', 'NICHT GESPEICHERTE ÄNDERUNGEN'],
   'change-photo':['ΑΛΛΑΓΗ ΦΩΤΟΓΡΑΦΙΑΣ', 'CHANGE PHOTO', 'CHANGER LA PHOTO', 'FOTO ÄNDERN'],
   'name-placeholder':['ΟΝΟΜΑ', 'NAME', 'NOM', 'NAME'],
   'age':['ΗΛΙΚΙΑ', 'AGE', 'ÂGE', 'ALTER'],
+  'years':['έτη', 'years', 'ans', 'Jahre'],
+  'no-date':['Χωρίς ημερομηνία', 'No date', 'Sans date', 'Kein Datum'],
   'name':['Όνομα', 'Name', 'Nom', 'Name'],
-  'your-name':['Το όνομά σας', 'Your name', 'Votre nom', 'Ihr Name'],
+  'name-hint':['π.χ. Δημήτρης', 'e.g. Alex', 'ex. Alex', 'z. B. Alex'],
   'demo-name':['ΑΛΕΞ', 'ALEX', 'ALEX', 'ALEX'],
-  'photos':['Φωτογραφίες · έως 6', 'Photos · up to 6', 'Photos · 6 max', 'Fotos · bis zu 6'],
-  'birth':['Ημερομηνία γέννησης', 'Date of birth', 'Date de naissance', 'Geburtsdatum'],
-  'show-age':['Εμφάνιση ηλικίας στην κάρτα', 'Show age on the card', 'Afficher l’âge sur la carte', 'Alter auf der Karte zeigen'],
+  'name-slip':['ΟΝΟΜΑ', 'NAME', 'NOM', 'NAME'],
+  'photo-slip':['ΦΩΤΟΓΡΑΦΙΕΣ ΠΡΟΦΙΛ', 'PROFILE PHOTOS', 'PHOTOS DE PROFIL', 'PROFILFOTOS'],
+  'upload':['ΑΝΕΒΑΣΜΑ ΝΕΑΣ', 'UPLOAD NEW', 'IMPORTER UNE NOUVELLE', 'NEUES HOCHLADEN'],
+  'formats':['JPG, PNG ή WEBP', 'JPG, PNG or WEBP', 'JPG, PNG ou WEBP', 'JPG, PNG oder WEBP'],
+  'in-use-photo':['ΣΕ ΧΡΗΣΗ', 'IN USE', 'UTILISÉE', 'IN VERWENDUNG'],
+  'use-photo':['ΕΠΙΛΟΓΗ', 'SELECT', 'SÉLECTIONNER', 'AUSWÄHLEN'],
+  'birth-slip':['ΗΜΕΡΟΜΗΝΙΑ ΓΕΝΝΗΣΗΣ', 'DATE OF BIRTH', 'DATE DE NAISSANCE', 'GEBURTSDATUM'],
+  'hide-age':['Απόκρυψη ηλικίας από την κάρτα', 'Hide age from the card', 'Masquer l’âge sur la carte', 'Alter auf der Karte ausblenden'],
   'unit':['Μονάδα μέτρησης', 'Measurement unit', 'Unité de mesure', 'Maßeinheit'],
-  'kilograms':['Κιλά (kg)', 'Kilograms (kg)', 'Kilogrammes (kg)', 'Kilogramm (kg)'],
-  'pounds':['Λίβρες (lb)', 'Pounds (lb)', 'Livres (lb)', 'Pfund (lb)'],
-  'stored':['αποθηκεύεται ως 60 kg', 'stored as 60 kg', 'enregistré en 60 kg', 'gespeichert als 60 kg'],
-  'export':['⬇ ΕΞΑΓΩΓΗ ΙΣΤΟΡΙΚΟΥ', '⬇ EXPORT HISTORY', '⬇ EXPORTER L’HISTORIQUE', '⬇ VERLAUF EXPORTIEREN'],
-  'workouts-48':['48 προπονήσεις', '48 workouts', '48 séances', '48 Trainings'],
-  'save':['ΑΠΟΘΗΚΕΥΣΗ', 'SAVE', 'ENREGISTRER', 'SPEICHERN'],
+  'export':['Εξαγωγή ιστορικού', 'Export history', 'Exporter l’historique', 'Verlauf exportieren'],
+  'logged-workouts':['ΚΑΤΑΓΕΓΡΑΜΜΕΝΕΣ ΠΡΟΠΟΝΗΣΕΙΣ', 'LOGGED WORKOUTS', 'SÉANCES ENREGISTRÉES', 'ERFASSTE TRAININGS'],
+  'file':['ΑΡΧΕΙΟ', 'FILE', 'FICHIER', 'DATEI'],
+  'save-profile':['ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΦΙΛ', 'SAVE PROFILE', 'ENREGISTRER LE PROFIL', 'PROFIL SPEICHERN'],
   'profile-saved':['Το προφίλ αποθηκεύτηκε', 'Profile saved', 'Profil enregistré', 'Profil gespeichert'],
 };
 
@@ -322,11 +365,16 @@ class Ctx {
     else this.p.win.requestAnimationFrame(() => this.p.win.requestAnimationFrame(() => stamp.classList.add('is-shown')));
     return stamp;
   }
-  overlay(html, place = 'bottom') {
-    const layer = this.p.doc.createElement('div');
-    layer.className = `gt-layer gt-layer-${place}`;
+  // Διάλογος ή σελίδα πάνω από τη μινιατούρα. Μπαίνει μέσα στη σκηνή, στο ύψος
+  // της κάμερας, ώστε να έχει την ίδια κλίμακα με τη σελίδα από κάτω.
+  sheet(html, place = 'full') {
+    const p = this.p, layer = p.doc.createElement('div');
+    layer.className = `gt-sheet gt-sheet-${place}`;
     layer.innerHTML = html;
-    this.p.stage.append(layer);
+    layer.style.top = `${p.y}px`;
+    layer.style.height = `${Math.ceil(p.view.clientHeight / p.k)}px`;
+    p.scene.append(layer);
+    p.spot.classList.remove('is-on'); p.spotTarget = null;
     if (!this.fast) void layer.offsetWidth;
     layer.classList.add('is-in');
     return layer;
@@ -353,7 +401,7 @@ class Player {
   get paused() { return Boolean(this.doc.hidden); }
   build(def) {
     this.def = def;
-    this.stage.querySelectorAll('.gt-layer, .gt-stamp, .gt-ripple').forEach(node => node.remove());
+    this.stage.querySelectorAll('.gt-stamp, .gt-ripple').forEach(node => node.remove());
     this.view.innerHTML = def.html();
     this.scene = this.view.firstElementChild;
     this.scene.classList.add('gt-still');
@@ -409,93 +457,165 @@ class Player {
 
 /* ============================ Μινιατούρες ============================ */
 
+// Κάθε μινιατούρα αντιγράφει τη διάταξη της αληθινής σελίδας στο κινητό: ίδια
+// σειρά πεδίων, ίδιες ετικέτες, ίδια κουμπιά. Όταν αλλάζει το UI, αλλάζει κι εδώ.
 const calendar = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
 const silhouette = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="38" r="17"/><path d="M14 100c2-22 17-34 36-34s34 12 36 34Z"/></svg>';
 const trophy = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v4a5 5 0 0 1-10 0V3Zm-4 1h3v3a3 3 0 0 1-3-3Zm15 0h3a3 3 0 0 1-3 3V4ZM10.5 13h3v3H16v3H8v-3h2.5v-3Z"/></svg>';
+const eye = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>';
+const duplicate = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/></svg>';
+const flex = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17c3-1 5-3 6-6l2-5 3 1-1 4c2 0 4 1 4 4s-3 5-7 5H6Z"/></svg>';
+
+// Καρουζέλ με μία κάρτα στο κέντρο και τις γειτονικές πίσω της, όπως τα
+// «Οι ασκήσεις μου» / «Τα προγράμματά μου». Κυκλικό, όπως και το αληθινό.
+function carTo(root, name, index) {
+  const car = root.querySelector(`[data-car="${name}"]`);
+  const cards = [...car.querySelectorAll(':scope > .gt-cc')];
+  const count = cards.length;
+  const current = count ? ((index % count) + count) % count : 0;
+  cards.forEach((card, position) => {
+    let offset = position - current;
+    if (offset > count / 2) offset -= count;
+    if (offset < -count / 2) offset += count;
+    card.dataset.pos = Math.abs(offset) <= 1 ? String(offset) : 'hidden';
+  });
+  car.dataset.index = String(current);
+  root.querySelector(`[data-k="${name}-count"]`).textContent = `${pad(count ? current + 1 : 0)} / ${pad(count)}`;
+}
+const carIndex = (root, name) => Number(root.querySelector(`[data-car="${name}"]`).dataset.index) || 0;
 
 function scenes(t, locale) {
   const today = new Date();
-  const dateText = date => new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(date);
+  const daysAgo = days => { const date = new Date(today); date.setDate(date.getDate() - days); return date; };
+  const format = (date, options) => new Intl.DateTimeFormat(locale, options).format(date);
+  const dateText = date => format(date, { day:'2-digit', month:'2-digit', year:'numeric' });
+  const shortDate = date => format(date, { day:'numeric', month:'short', year:'numeric' });
+  const isoDate = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   const birth = new Date(1994, 2, 12);
   const age = today.getFullYear() - birth.getFullYear() - (today < new Date(today.getFullYear(), 2, 12) ? 1 : 0);
-  const historyDate = new Intl.DateTimeFormat(locale, { weekday:'short', day:'numeric', month:'short', year:'numeric' }).format(today).toLocaleUpperCase(locale);
-  const pushDay = `PUSH · ${t('day', { n:1 })}`;
-  const modes = [t('kg'), t('plates'), t('mixed'), t('bodyweight')];
+  const confirmBox = (title, message, cancelKey, acceptLabel) => `<div class="gt-confirm"><span class="gt-confirm-mark">!</span><small>${t('confirm')}</small><b>${title}</b><p>${message}</p><div><span class="gt-mini" data-k="${cancelKey}">${t('cancel')}</span><span class="gt-mini is-danger" data-k="${cancelKey}-ok">${acceptLabel}</span></div></div>`;
+  const pullupsA = `${t('pullups')} (1) · ${t('overhand')}`, pullupsB = `${t('pullups')} (2) · ${t('underhand')}`;
+  const libraryLabels = [t('dips'), pullupsA, pullupsB, t('bench')];
 
   /* ---------- Καταγραφή ---------- */
+  const modes = [t('kg'), t('plates'), t('plates-kg'), t('bodyweight'), t('bodyweight-kg')];
   const setRow = (index, live, extra) => {
     const key = name => live ? ` data-k="${name}${index}"` : '';
-    return `<div class="gt-row${extra ? ' is-extra is-entering gt-demo' : ''}" data-row="${index}"><span class="gt-row-n">${pad(index + 1)}</span><span class="gt-f gt-f-sm"${key('r')}><span class="gt-v"></span><i class="gt-ph">0</i></span><span class="gt-row-x">×</span><span class="gt-f gt-f-sm gt-select"${key('m')}><span class="gt-v">${t('kg')}</span><em>▾</em></span><span class="gt-f gt-f-sm"${key('w')}><span class="gt-v"></span><i class="gt-ph">kg</i></span><b class="gt-row-remove"${key('rm')}>−</b></div>`;
+    return `<div class="gt-row${extra ? ' is-extra is-entering gt-demo' : ''}" data-row="${index}"><span class="gt-row-n">${pad(index + 1)}</span><span class="gt-f gt-f-sm"${key('r')}><span class="gt-v"></span><i class="gt-ph">0</i></span><span class="gt-row-x">×</span><span class="gt-f gt-f-sm gt-select gt-mode"${key('m')}><span class="gt-v">${t('kg')}</span><em>▾</em></span><span class="gt-f gt-f-sm"${key('w')}><span class="gt-v"></span><i class="gt-ph">kg</i></span><b class="gt-row-remove"${key('rm')}>−</b></div>`;
   };
-  const logCard = (index, name, live) => `<article class="gt-card" data-c="${index}"><span class="gt-tape"></span>
-    <div class="gt-card-title"><div><small>${t('exercise-n', { n:index + 1 })}</small><h4>${name}</h4></div><span class="gt-tag">${t('sets-3')}</span></div>
-    <div class="gt-set-head"><span>${t('h-set')}</span><span>${t('h-reps')}</span><span></span><span>${t('h-mode')}</span><span>${t('h-weight')}</span><span></span></div>
+  const setHead = `<div class="gt-set-head"><span>${t('h-set')}</span><span>${t('h-reps')}</span><span></span><span class="gt-set-head-load">${t('h-load')}</span><span></span></div>`;
+  const logCard = (index, name, cue, live) => `<article class="gt-card" data-c="${index}"><span class="gt-tape"></span>
+    <div class="gt-card-title"><div><small>${t('exercise-n', { n:index + 1 })}</small><h4>${name}</h4></div><div class="gt-card-tools"><span class="gt-tag">${t('sets-n', { n:3 })}</span><b class="gt-x">×</b></div></div>
+    <div class="gt-cue"><small>CUES</small><span>${cue}</span></div>
+    ${setHead}
     <div class="gt-sets">${[0, 1, 2].map(n => setRow(n, live)).join('')}</div>
-    <div class="gt-acts"><b class="gt-mini is-off"${live ? ' data-k="copy"' : ''}>${t('copy-first')}</b><b class="gt-mini"${live ? ' data-k="extra"' : ''}>${t('extra')}</b></div>
+    <div class="gt-acts"><b class="gt-mini is-off"${live ? ' data-k="copy"' : ''}>${t('copy-first')}</b><b class="gt-link"${live ? ' data-k="extra"' : ''}>${t('extra')}</b></div>
     <div class="gt-lab">${t('exercise-notes')}</div>
     <div class="gt-f gt-area"${live ? ' data-k="com"' : ''}><span class="gt-v"></span><i class="gt-ph">${t('notes-hint')}</i></div>
   </article>`;
+  // Η κάρτα της «Ελεύθερης» και της «＋ Προσθήκη άσκησης»: όνομα ή βιβλιοθήκη.
+  const freeCard = (live, demo) => `<article class="gt-card gt-card-free${demo ? ' gt-demo' : ''}"><span class="gt-tape"></span>
+    <div class="gt-card-title"><div class="gt-f gt-line gt-free-name"${live ? ' data-k="fname"' : ''}><span class="gt-v"></span><i class="gt-ph">${t('exercise-name')}</i></div><b class="gt-x">×</b></div>
+    <div class="gt-lab">${t('from-library')}</div>
+    <div class="gt-f gt-line gt-select"${live ? ' data-k="flib"' : ''}><span class="gt-v"></span><i class="gt-ph">${t('choose-exercise')}</i><em>▾</em></div>
+    <div class="gt-lab">${t('set-count')}</div>
+    <div class="gt-f gt-line gt-f-short"><span class="gt-v">3</span></div>
+    ${setHead}
+    <div class="gt-sets">${[0, 1, 2].map(n => setRow(n, false)).join('')}</div>
+  </article>`;
   const deckTo = (c, position, dragging = false) => {
     const track = c.q('.gt-track');
+    const total = track.children.length;
     track.classList.toggle('is-dragging', dragging);
     track.style.transform = `translateX(calc(${-position * 100}% - ${position * 10}px))`;
     const index = Math.round(position);
-    c.text('.gt-deck-stamp', t('exercise-of', { n:index + 1 }));
-    c.q('.gt-deck-progress i').style.width = `${(index + 1) / 3 * 100}%`;
+    c.text('.gt-sch .gt-deck-stamp', t('exercise-of', { n:pad(index + 1), total:pad(total) }));
+    c.q('.gt-sch .gt-deck-progress i').style.width = `${(index + 1) / total * 100}%`;
   };
   const mode = (c, value) => {
     c.cls('[data-k=sch]', 'is-on', value === 'sch'); c.cls('[data-k=free]', 'is-on', value === 'free');
     c.cls(c.root, 'is-free', value === 'free');
   };
+  const workouts = ['Push', 'Pull', 'Legs'];
+  const historyCard = `<div class="gt-hcard">
+      <div class="gt-hcard-date"><small>${format(today, { weekday:'long' })}</small><b>${shortDate(today)}</b><i>SESSION No 48</i></div>
+      <div class="gt-hcard-body">
+        <div class="gt-chips"><span>${t('n-exercises', { n:3 })}</span><span>9 WORKING SETS</span><i class="gt-logged">LOGGED</i><span>${t('planned-workout')}</span></div>
+        <b class="gt-hcard-title">Push</b>
+        <p>${[t('bench'), t('ohp'), t('dips')].join(', ')}</p>
+        <div class="gt-hcard-acts"><b class="gt-check" data-k="h-select"><i></i>${t('select')}</b>
+          <div class="gt-hcard-more"><b data-k="h-edit">${t('edit')}</b><b data-k="h-copy">${t('copy')}</b><b class="is-danger" data-k="h-delete">${t('delete-caps')}</b></div></div>
+      </div></div>`;
 
   const log = {
     titles:['log.t1', 'log.t2', 'log.t3', 'log.t4', 'log.t5'],
-    durations:[6200, 6400, 7400, 9600, 6200],
+    durations:[6200, 9800, 7800, 10200, 7600],
     html:() => `<div class="gt-scene gt-log">
       <div class="gt-lab gt-lab-first">${t('date')}</div>
-      <div class="gt-f" data-k="date"><span class="gt-v"></span><i class="gt-ph">${dateText(today)}</i>${calendar}</div>
-      <div class="gt-toggle"><b data-k="sch" class="is-on">${t('scheduled')}</b><b data-k="free">${t('free')}</b></div>
-      <div class="gt-lab">${t('day-workout')}</div>
-      <div class="gt-f gt-select" data-k="day"><span class="gt-v"></span><i class="gt-ph">${t('choose')}</i><em>▾</em></div>
-      <div class="gt-deck">
-        <div class="gt-deck-head"><b class="gt-arrow" data-k="prev">‹</b><span class="gt-deck-stamp">${t('exercise-of', { n:1 })}</span><b class="gt-arrow" data-k="next">›</b></div>
-        <div class="gt-deck-view"><div class="gt-track">${logCard(0, t('bench'), true)}${logCard(1, t('ohp'))}${logCard(2, t('dips'))}</div></div>
-        <div class="gt-deck-progress"><i></i></div>
+      <div class="gt-f gt-line" data-k="date"><span class="gt-v"></span><i class="gt-ph">${dateText(today)}</i>${calendar}</div>
+      <div class="gt-toggle gt-toggle-ink"><b data-k="sch" class="is-on">${t('scheduled')}</b><b data-k="free">${t('free')}</b></div>
+      <div class="gt-dayfield"><div class="gt-lab">${t('day-workout')}</div>
+        <div class="gt-f gt-line gt-select" data-k="day"><span class="gt-v"></span><i class="gt-ph">${t('choose')}</i><em>▾</em></div></div>
+      <div class="gt-badge"><b>${format(today, { weekday:'long' })}</b><small>${shortDate(today)}</small></div>
+      <div class="gt-sch">
+        <div class="gt-intro"><span class="gt-intro-tag">FULL BODY</span><b data-k="workout">Push</b></div>
+        <div class="gt-deck">
+          <span class="gt-deck-stamp">${t('exercise-of', { n:'01', total:'03' })}</span>
+          <div class="gt-deck-body"><b class="gt-arrow is-prev" data-k="prev">‹</b><div class="gt-deck-view"><div class="gt-track">${logCard(0, t('bench'), t('barbell'), true)}${logCard(1, t('ohp'), t('standing'))}${logCard(2, t('dips'), t('lean'))}</div></div><b class="gt-arrow is-next" data-k="next">›</b></div>
+          <div class="gt-deck-progress"><i></i></div>
+          <div class="gt-deck-add" data-k="add">${t('add-exercise')}</div>
+        </div>
       </div>
+      <div class="gt-free-deck">
+        <div class="gt-deck"><span class="gt-deck-stamp">${t('exercise-of', { n:'01', total:'01' })}</span>
+          <div class="gt-deck-view">${freeCard(false)}</div>
+          <div class="gt-deck-progress is-full"><i></i></div>
+          <div class="gt-deck-add">${t('add-exercise')}</div></div>
+      </div>
+      <div class="gt-lab">${t('session-notes')}</div>
+      <div class="gt-f gt-area gt-area-tall"><span class="gt-v"></span><i class="gt-ph">${t('session-hint')}</i></div>
+      <div class="gt-motto">${flex}EARN IT${flex}</div>
       <div class="gt-save" data-k="save">${t('finish')}</div>
     </div>`,
     prep:scene => {
-      scene.classList.add('has-day');
       scene.querySelector('[data-k=date] .gt-v').textContent = dateText(today);
-      scene.querySelector('[data-k=day] .gt-v').textContent = pushDay;
+      scene.querySelector('[data-k=day] .gt-v').textContent = workouts[0];
     },
     steps:[
       async c => {
         await c.cam(null);
         await c.tap('[data-k=date]'); c.val('[data-k=date]', dateText(today)); c.flash('[data-k=date]'); await c.wait(380);
-        await c.tap('[data-k=free]'); mode(c, 'free'); await c.wait(600);
+        await c.tap('[data-k=free]'); mode(c, 'free'); await c.wait(900);
         await c.tap('[data-k=sch]'); mode(c, 'sch'); await c.wait(300);
-        await c.pick('[data-k=day]', [pushDay, `PULL · ${t('day', { n:2 })}`, `LEGS · ${t('day', { n:3 })}`], 0);
-        c.cls(c.root, 'has-day'); await c.wait(420);
+        await c.pick('[data-k=day]', workouts, 0);
+        c.text('[data-k=workout]', workouts[0]); c.flash('[data-k=workout]'); await c.wait(420);
       },
       async c => {
-        await c.cam('.gt-deck', 8);
-        await c.drag('.gt-deck-view', -150, 0, v => deckTo(c, v * .55, true), { ax:.78, ay:.4, duration:620 });
-        deckTo(c, 1); await c.wait(520);
-        await c.tap('[data-k=next]'); deckTo(c, 2); await c.wait(520);
+        await c.cam('.gt-sch .gt-deck', 8);
+        await c.drag('.gt-sch .gt-deck-view', -150, 0, v => deckTo(c, v * .55, true), { ax:.78, ay:.4, duration:620 });
+        deckTo(c, 1); await c.wait(450);
+        await c.tap('[data-k=next]'); deckTo(c, 2); await c.wait(450);
+        await c.cam('[data-k=add]', 330);
+        await c.tap('[data-k=add]');
+        c.q('.gt-sch .gt-track').insertAdjacentHTML('beforeend', freeCard(true, true));
+        deckTo(c, 3); await c.wait(450);
+        await c.cam('.gt-sch .gt-deck', 8);
+        await c.pick('[data-k=flib]', [t('choose-exercise'), ...libraryLabels], 1);
+        c.val('[data-k=fname]', t('dips')); c.flash('[data-k=fname]'); await c.wait(450);
+        await c.drag('.gt-sch .gt-deck-view', 150, 0, v => deckTo(c, 3 - v * .55, true), { ax:.22, ay:.4, duration:620 });
+        deckTo(c, 2); await c.wait(380);
         await c.tap('[data-k=prev]'); deckTo(c, 1); await c.wait(380);
-        await c.drag('.gt-deck-view', 150, 0, v => deckTo(c, 1 - v * .55, true), { ax:.22, ay:.4, duration:620 });
-        deckTo(c, 0); await c.wait(420);
+        await c.tap('[data-k=prev]'); deckTo(c, 0); await c.wait(300);
       },
       async c => {
-        await c.cam('.gt-card[data-c="0"] .gt-set-head', 46);
+        await c.cam('.gt-card[data-c="0"] .gt-set-head', 60);
         await c.tap('[data-k=r0]'); await c.type('[data-k=r0]', '10');
         await c.pick('[data-k=m0]', modes, 0, { browse:true });
         await c.tap('[data-k=w0]'); await c.type('[data-k=w0]', '60');
         c.cls('[data-k=copy]', 'is-off', false); c.flash('[data-k=copy]'); await c.wait(500);
       },
       async c => {
-        await c.cam('.gt-card[data-c="0"] .gt-set-head', 30);
+        await c.cam('.gt-card[data-c="0"] .gt-set-head', 40);
         await c.tap('[data-k=copy]');
         for (const index of [1, 2]) { c.val(`[data-k=r${index}]`, '10'); c.val(`[data-k=w${index}]`, '60'); c.flash(`[data-row="${index}"]`); }
         await c.wait(560);
@@ -503,164 +623,218 @@ function scenes(t, locale) {
         c.q('.gt-card[data-c="0"] .gt-sets').insertAdjacentHTML('beforeend', setRow(3, true, true));
         await c.wait(520);
         await c.tap('[data-k=rm3]');
+        const sheet = c.sheet(confirmBox(t('remove-set'), t('remove-set-message'), 'rs', t('remove')), 'center');
+        await c.wait(900);
+        await c.tap('[data-k=rs-ok]'); await c.close(sheet);
         c.cls('[data-row="3"]', 'is-leaving'); await c.wait(320); c.q('[data-row="3"]').remove();
-        await c.cam('[data-k=com]', 90);
+        await c.cam('[data-k=com]', 110);
         await c.tap('[data-k=com]'); await c.type('[data-k=com]', t('note-demo'));
         await c.wait(300);
       },
       async c => {
-        await c.cam('[data-k=save]', 170);
+        await c.cam('[data-k=save]', 260);
         await c.tap('[data-k=save]');
         const stamp = c.toast(t('logged'));
         await c.wait(1400);
         if (!c.fast) { stamp.classList.remove('is-shown'); await c.wait(200); }
         stamp.remove();
-        c.overlay(`<div class="gt-history"><div class="gt-history-title">${t('history')}</div>
-          <div class="gt-history-card"><div><small>${historyDate}</small><b>${pushDay}</b><span>${t('history-meta')}</span></div><i class="gt-logged">LOGGED</i></div>
-          <div class="gt-acts"><b class="gt-mini" data-k="h-select">${t('select')}</b><b class="gt-mini is-off" data-k="h-edit">${t('edit')}</b><b class="gt-mini is-off" data-k="h-copy">${t('copy')}</b></div></div>`, 'full');
+        c.sheet(`<div class="gt-history"><div class="gt-history-title">${t('history')}</div>${historyCard}</div>`, 'full');
         await c.wait(700);
         await c.tap('[data-k=h-select]');
-        c.cls('[data-k=h-edit]', 'is-off', false); c.cls('[data-k=h-copy]', 'is-off', false); await c.wait(260);
-        await c.point('[data-k=h-edit]'); await c.point('[data-k=h-copy]');
+        c.cls('.gt-hcard', 'is-selected'); await c.wait(300);
+        await c.point('[data-k=h-edit]'); await c.point('[data-k=h-copy]'); await c.point('[data-k=h-delete]');
         await c.wait(300);
       },
     ],
   };
 
   /* ---------- Πρόγραμμα ---------- */
-  const exCard = (id, name, note, demo) => `<div class="gt-ex${demo ? ' is-entering gt-demo' : ''}" data-e="${id}"><b><span class="gt-v">${name}</span></b><small><span class="gt-v">${note}</span></small><span class="gt-ex-icons"><i data-k="pen">✎</i><i data-k="del">×</i></span></div>`;
-  const routineCard = (id, name, days, active, demo) => `<div class="gt-rt${active ? ' is-active' : ''}${demo ? ' is-entering gt-demo' : ''}" data-r="${id}"><b>${name}</b><small>${t('length-n', { n:days })}</small><span class="gt-live">${t('in-use')}</span><i class="gt-star">★</i>
-    <div class="gt-days">${[1, 2, 3].map(day => `<div class="gt-day" data-d="${day - 1}"><span>${t('day-n', { n:day })}</span><b class="gt-add">＋</b></div>`).join('')}</div></div>`;
-  const exTo = (c, position, dragging = false) => {
-    const track = c.q('[data-t=ex]');
-    track.classList.toggle('is-dragging', dragging);
-    track.style.transform = `translateX(calc(${-position * 46}% - ${position * 8}px))`;
-  };
-  const benchLabel = `${t('bench')} · ${t('barbell')}`;
+  const exCard = (id, name, cue, demo) => `<div class="gt-cc gt-ex${demo ? ' gt-demo' : ''}" data-e="${id}"><b><span class="gt-v">${name}</span></b><small><b>${t('cues')}:</b> <span class="gt-v">${cue}</span></small><span class="gt-ex-icons"><i data-k="pen">✎</i><i data-k="del">×</i></span></div>`;
+  const routineCard = (id, name, days, items, active, demo) => `<article class="gt-cc gt-rt${active ? ' is-active' : ''}${demo ? ' gt-demo' : ''}" data-r="${id}">
+      <div class="gt-rt-reg"><span></span><b class="gt-rt-live">${t('in-use')}</b><span class="gt-rt-kind">${t('routine')}</span></div>
+      <b class="gt-rt-name">${name}</b>
+      <ul class="gt-rt-list">${items.length ? items.map(item => `<li>${item}</li>`).join('') : `<li class="is-empty">${t('no-workout')}</li>`}</ul>
+      <small class="gt-rt-len">${t('length-n', { n:days })}</small>
+      <div class="gt-rt-btns"><span data-k="view">${eye}${t('view-plan')}</span><span class="is-gold" data-k="add"><em>＋</em>${t('add-workout')}</span></div>
+      <div class="gt-rt-icons"><i class="gt-star" data-k="star">${active ? '★' : '☆'}</i><i>${duplicate}</i><i>✎</i><i class="is-danger">×</i></div>
+    </article>`;
+  const numberRoutines = root => root.querySelectorAll('.gt-rt').forEach((card, index) => { card.querySelector('.gt-rt-reg span').textContent = pad(index + 1); });
+  const exerciseForm = `<div class="gt-sum" data-k="new-ex"><em></em>${t('new-exercise')}</div>
+    <div class="gt-form" data-f="ex">
+      <div class="gt-lab">${t('exercise-name')}</div><div class="gt-f gt-line" data-k="ex-name"><span class="gt-v"></span></div>
+      <div class="gt-lab">${t('cues')}</div><div class="gt-f gt-line gt-area" data-k="ex-cue"><span class="gt-v"></span><i class="gt-ph">${t('cues-hint')}</i></div>
+      <div class="gt-form-acts"><span class="gt-button" data-k="ex-save">${t('save-exercise')}</span><span class="gt-mini gt-cancel">${t('cancel')}</span></div>
+    </div>
+    <div class="gt-status" data-k="ex-status"></div>`;
+  const routineForm = `<div class="gt-sum" data-k="new-rt"><em></em>${t('new-routine')}</div>
+    <div class="gt-form" data-f="rt">
+      <div class="gt-lab">${t('routine-name')}</div><div class="gt-f gt-line" data-k="rt-name"><span class="gt-v"></span><i class="gt-ph">${t('routine-hint')}</i></div>
+      <div class="gt-form-row">
+        <div><div class="gt-lab">${t('length')}</div><div class="gt-f gt-line" data-k="len"><span class="gt-v">7</span></div></div>
+        <div><div class="gt-lab">${t('weekdays')}</div><div class="gt-toggle gt-toggle-gold gt-toggle-flush"><b data-k="no" class="is-on">${t('no')}</b><b data-k="yes">${t('yes')}</b></div></div>
+      </div>
+      <div class="gt-button" data-k="rt-create">${t('create')}</div>
+    </div>`;
+  const weekdays = t('weekday-names').split(',');
+  const dayDialog = `<div class="gt-dialog"><span class="gt-dialog-x">×</span>
+      <small class="gt-eyebrow">PUSH PULL LEGS</small><h4>${t('new-day-workout')}</h4>
+      <div class="gt-lab">${t('day')}</div><div class="gt-f gt-line gt-select" data-k="pd-day"><span class="gt-v">${weekdays[0]}</span><em>▾</em></div>
+      <div class="gt-lab">${t('workout-name')}</div><div class="gt-f gt-line" data-k="pd-name"><span class="gt-v"></span><i class="gt-ph">${t('workout-hint')}</i></div>
+      <div class="gt-lab">${t('exercise-count')}</div><div class="gt-f gt-line gt-f-short" data-k="pd-count"><span class="gt-v">3</span></div>
+      <div class="gt-dialog-sec">${t('workout-exercises')}</div>
+      <div class="gt-builder"><span class="gt-builder-n">01</span><div>
+        <div class="gt-lab gt-lab-first">${t('exercise')}</div><div class="gt-f gt-line gt-select" data-k="pd-ex"><span class="gt-v"></span><i class="gt-ph">${t('choose-exercise')}</i><em>▾</em></div>
+        <div class="gt-lab">${t('work-sets')}</div><div class="gt-f gt-line gt-f-short"><span class="gt-v">3</span></div>
+        <div class="gt-lab">${t('cues')}</div><div class="gt-f gt-line gt-area" data-k="pd-cue"><span class="gt-v"></span></div>
+        <small class="gt-builder-note">${t('cues-set')}</small>
+      </div><b class="gt-x">×</b></div>
+      <div class="gt-button" data-k="pd-save">${t('save-day')}</div>
+    </div>`;
 
   const plan = {
     titles:['plan.t1', 'plan.t2', 'plan.t3', 'plan.t4', 'plan.t5'],
-    durations:[6400, 10500, 9800, 6800, 6200],
+    durations:[7600, 8600, 9400, 11800, 7800],
     html:() => `<div class="gt-scene gt-plan">
       <div class="gt-sec" data-s="lib">
-        <div class="gt-sec-head" data-k="lib-toggle"><i>01</i><span>${t('my-exercises')}</span><small>03</small><em>▾</em></div>
+        <div class="gt-sec-head" data-k="lib-toggle"><span><i>01</i>${t('my-exercises')}</span><small>03</small><em>▾</em></div>
         <div class="gt-sec-body">
-          <div class="gt-car"><div class="gt-car-track" data-t="ex">${exCard(0, t('bench'), t('barbell'))}${exCard(1, t('pullups'), t('overhand'))}${exCard(2, t('pullups'), t('underhand'))}</div></div>
-          <div class="gt-car-arrows"><b data-k="ex-prev">←</b><b data-k="ex-next">→</b></div>
-          <div class="gt-new" data-k="new-ex">${t('new-exercise')}</div>
-          <div class="gt-form" data-f="ex">
-            <div class="gt-lab">${t('exercise-name')}</div><div class="gt-f" data-k="ex-name"><span class="gt-v"></span><i class="gt-ph"></i></div>
-            <div class="gt-lab">${t('cues')}</div><div class="gt-f" data-k="ex-cue"><span class="gt-v"></span><i class="gt-ph">${t('cues-hint')}</i></div>
-            <div class="gt-button" data-k="ex-save">${t('save-exercise')}</div>
-          </div>
+          <div class="gt-count" data-k="ex-count">01 / 03</div>
+          <div class="gt-car" data-car="ex">${exCard(1, t('pullups'), t('overhand'))}${exCard(2, t('pullups'), t('underhand'))}${exCard(0, t('bench'), t('barbell'))}<b class="gt-side is-prev" data-k="ex-prev">←</b><b class="gt-side is-next" data-k="ex-next">→</b></div>
+          ${exerciseForm}
         </div>
       </div>
       <div class="gt-sec" data-s="rt">
-        <div class="gt-sec-head" data-k="rt-toggle"><i>02</i><span>${t('my-routines')}</span><small>02</small><em>▾</em></div>
+        <div class="gt-sec-head" data-k="rt-toggle"><span><i>02</i>${t('my-routines')}</span><small>02</small><em>▾</em></div>
         <div class="gt-sec-body">
-          <div class="gt-car"><div class="gt-car-track" data-t="rt">${routineCard(0, 'Full Body', 7, true)}${routineCard(1, 'Upper Lower', 7)}</div></div>
-          <div class="gt-new" data-k="new-rt">${t('new-routine')}</div>
-          <div class="gt-form" data-f="rt">
-            <div class="gt-lab">${t('routine-name')}</div><div class="gt-f" data-k="rt-name"><span class="gt-v"></span><i class="gt-ph">${t('routine-hint')}</i></div>
-            <div class="gt-lab">${t('length')}</div><div class="gt-stepper"><b data-k="dec">−</b><span data-k="len">7</span><b>＋</b></div>
-            <div class="gt-lab">${t('weekdays')}</div><div class="gt-toggle gt-toggle-short"><b data-k="no" class="is-on">${t('no')}</b><b data-k="yes">${t('yes')}</b></div>
-            <div class="gt-week">${t('weekday-letters').split(',').map((letter, index) => `<i data-w="${index}">${letter}</i>`).join('')}</div>
-            <div class="gt-button is-outline" data-k="rt-create">${t('create')}</div>
-          </div>
+          <div class="gt-count" data-k="rt-count">01 / 02</div>
+          <div class="gt-car gt-car-rt" data-car="rt">${routineCard(0, 'Full Body', 7, ['Full A', 'Full B'], true)}${routineCard(1, 'Upper Lower', 7, ['Upper', 'Lower'])}<b class="gt-side is-prev">←</b><b class="gt-side is-next">→</b></div>
+          ${routineForm}
         </div>
       </div>
     </div>`,
+    prep:scene => { numberRoutines(scene); carTo(scene, 'ex', 0); carTo(scene, 'rt', 0); },
     steps:[
       async c => {
         await c.cam(null);
         await c.tap('[data-k=lib-toggle]'); c.cls('[data-s=lib]', 'is-open'); await c.wait(450);
-        await c.tap('[data-k=new-ex]'); c.cls('[data-f=ex]', 'is-open'); await c.wait(250);
+        await c.tap('[data-k=new-ex]'); c.cls('[data-k=new-ex]', 'is-open'); c.cls('[data-f=ex]', 'is-open'); await c.wait(250);
         await c.cam('[data-k=new-ex]', 40);
         await c.tap('[data-k=ex-name]'); await c.type('[data-k=ex-name]', t('dips'));
         await c.tap('[data-k=ex-cue]'); await c.type('[data-k=ex-cue]', t('lean'));
         await c.tap('[data-k=ex-save]');
-        c.q('[data-t=ex]').insertAdjacentHTML('afterbegin', exCard(3, t('dips'), t('lean'), true));
-        c.text('[data-k=lib-toggle] small', '04'); c.cls('[data-f=ex]', 'is-open', false);
+        c.q('[data-car=ex]').insertAdjacentHTML('afterbegin', exCard(3, t('dips'), t('lean'), true));
+        carTo(c.root, 'ex', 0);
+        c.text('[data-k=lib-toggle] small', '04'); c.val('[data-k=ex-name]', ''); c.val('[data-k=ex-cue]', '');
+        c.text('[data-k=ex-status]', t('exercise-saved'));
         await c.cam(null); await c.point('[data-e="3"]'); await c.wait(300);
       },
       async c => {
         await c.cam(null);
-        await c.drag('[data-s=lib] .gt-car', -110, 0, v => exTo(c, v * .6, true), { ax:.8, ay:.45, duration:600 });
-        exTo(c, 1); await c.wait(460);
-        await c.tap('[data-k=ex-next]'); exTo(c, 2); await c.wait(500);
-        await c.point('[data-e="1"] small'); await c.point('[data-e="2"] small');
-        await c.tap('[data-e="1"] [data-k=pen]'); c.cls('[data-e="1"]', 'is-editing');
-        await c.type('[data-e="1"] small', t('overhand-wide'));
-        await c.tap('[data-e="1"] [data-k=pen]'); c.cls('[data-e="1"]', 'is-editing', false); c.flash('[data-e="1"]'); await c.wait(300);
-        await c.tap('[data-k=ex-prev]'); exTo(c, 1); await c.wait(500);
-        await c.tap('[data-e="0"] [data-k=del]');
-        const layer = c.overlay(`<div class="gt-confirm"><b>${t('delete-exercise')}</b><p>«${benchLabel}» ${t('used-in')} <strong>Full Body · ${t('day', { n:1 })}</strong></p><div><span class="gt-mini" data-k="c-no">${t('cancel')}</span><span class="gt-mini is-danger">${t('delete')}</span></div></div>`, 'center');
-        await c.wait(1100);
-        await c.tap('[data-k=c-no]'); await c.close(layer);
+        await c.tap('[data-k=ex-next]'); carTo(c.root, 'ex', 1); await c.wait(450);
+        await c.point('[data-e="1"] small');
+        await c.tap('[data-k=ex-next]'); carTo(c.root, 'ex', 2); await c.wait(450);
+        await c.point('[data-e="2"] small');
+        await c.point('[data-e="2"] [data-k=pen]');
+        await c.tap('[data-e="2"] [data-k=del]');
+        const sheet = c.sheet(confirmBox(t('delete-exercise'), t('delete-warning', { name:t('pullups') }), 'dx', t('delete')), 'center');
+        await c.wait(1300);
+        await c.tap('[data-k=dx]'); await c.close(sheet);
       },
       async c => {
         await c.cam('[data-s=rt]', 6);
         await c.tap('[data-k=rt-toggle]'); c.cls('[data-s=rt]', 'is-open'); await c.wait(400);
-        await c.tap('[data-k=new-rt]'); c.cls('[data-f=rt]', 'is-open');
-        await c.cam('[data-k=new-rt]', 10);
+        await c.cam('[data-k=new-rt]', 60);
+        await c.tap('[data-k=new-rt]'); c.cls('[data-k=new-rt]', 'is-open'); c.cls('[data-f=rt]', 'is-open'); await c.wait(250);
         await c.tap('[data-k=rt-name]'); await c.type('[data-k=rt-name]', 'Push Pull Legs');
-        await c.tap('[data-k=dec]'); c.text('[data-k=len]', '6'); c.flash('[data-k=len]'); await c.wait(250);
-        await c.tap('[data-k=yes]'); c.cls('[data-k=yes]', 'is-on'); c.cls('[data-k=no]', 'is-on', false); c.cls('.gt-week', 'is-on'); await c.wait(300);
-        for (const day of [0, 2, 4]) { await c.tap(`[data-w="${day}"]`); c.cls(`[data-w="${day}"]`, 'is-on'); }
+        await c.tap('[data-k=len]'); await c.type('[data-k=len]', '6');
+        await c.tap('[data-k=yes]'); c.cls('[data-k=yes]', 'is-on'); c.cls('[data-k=no]', 'is-on', false); await c.wait(300);
         await c.tap('[data-k=rt-create]');
-        c.q('[data-t=rt]').insertAdjacentHTML('afterbegin', routineCard(2, 'Push Pull Legs', 6, false, true));
-        c.text('[data-k=rt-toggle] small', '03'); c.cls('[data-f=rt]', 'is-open', false);
-        await c.cam('[data-s=rt]', 6); await c.wait(500);
+        c.q('[data-car=rt] .gt-side').insertAdjacentHTML('beforebegin', routineCard(2, 'Push Pull Legs', 6, [], false, true));
+        numberRoutines(c.root); carTo(c.root, 'rt', 2);
+        c.text('[data-k=rt-toggle] small', '03');
+        c.val('[data-k=rt-name]', ''); c.val('[data-k=len]', '7'); c.cls('[data-k=no]', 'is-on'); c.cls('[data-k=yes]', 'is-on', false);
+        const stamp = c.toast(t('routine-created', { name:'Push Pull Legs' }));
+        await c.cam('[data-s=rt]', 6); await c.wait(1100);
+        if (!c.fast) { stamp.classList.remove('is-shown'); await c.wait(200); }
+        stamp.remove();
       },
       async c => {
-        await c.cam('[data-s=rt]', 6);
-        await c.tap('[data-r="2"] b'); c.cls('[data-r="2"]', 'is-open'); await c.wait(400);
-        await c.pick('[data-r="2"] [data-d="0"] .gt-add', [`${t('dips')} · ${t('lean')}`, benchLabel, `${t('pullups')} · ${t('overhand-wide')}`], 1, { set:false });
-        const add = c.q('[data-r="2"] [data-d="0"] .gt-add');
-        const chip = c.p.doc.createElement('span');
-        chip.className = 'gt-chip gt-sample'; chip.textContent = t('bench');
-        add.before(chip);
+        await c.cam('[data-car=rt]', 40);
+        await c.tap('[data-r="2"] [data-k=add]');
+        const sheet = c.sheet(dayDialog, 'full');
         await c.wait(400);
-        await c.tap('[data-r="2"] b'); c.cls('[data-r="2"]', 'is-open', false); await c.wait(300);
-        await c.tap('[data-r="2"] .gt-star');
-        c.cls('[data-r="0"]', 'is-active', false); c.cls('[data-r="2"]', 'is-active'); await c.wait(700);
+        await c.pick('[data-k=pd-day]', weekdays, 0);
+        await c.tap('[data-k=pd-name]'); await c.type('[data-k=pd-name]', 'Push');
+        await c.tap('[data-k=pd-count]'); await c.type('[data-k=pd-count]', '1');
+        await c.pick('[data-k=pd-ex]', libraryLabels, 3);
+        c.val('[data-k=pd-cue]', t('barbell')); c.flash('[data-k=pd-cue]'); await c.wait(400);
+        await c.tap('[data-k=pd-save]'); await c.close(sheet);
+        const list = c.q('[data-r="2"] .gt-rt-list');
+        list.innerHTML = '<li class="gt-sample">Push</li>';
+        c.flash(list); await c.wait(400);
+        await c.tap('[data-r="2"] [data-k=star]');
+        c.cls('[data-r="0"]', 'is-active', false); c.text('[data-r="0"] [data-k=star]', '☆');
+        c.cls('[data-r="2"]', 'is-active'); c.text('[data-r="2"] [data-k=star]', '★');
+        // Όπως στην αληθινή λίστα, το πρόγραμμα σε ισχύ περνά πρώτο.
+        c.q('[data-car=rt]').prepend(c.q('[data-r="2"]'));
+        numberRoutines(c.root); carTo(c.root, 'rt', 0); await c.wait(600);
+        await c.point('[data-r="2"] [data-k=view]'); await c.wait(200);
       },
       async c => {
         await c.cam(null);
-        const layer = c.overlay(`<div class="gt-past"><small>${t('history-tag')} · FULL BODY</small><b>${benchLabel}</b><span>${t('sets-line')}</span><i>LOGGED</i></div>`, 'bottom');
-        await c.wait(700);
-        await c.tap('[data-e="0"] [data-k=pen]'); c.cls('[data-e="0"]', 'is-editing');
-        await c.type('[data-e="0"] b', t('smith'));
-        await c.tap('[data-e="0"] [data-k=pen]'); c.cls('[data-e="0"]', 'is-editing', false); c.flash('[data-e="0"]');
+        await c.tap('[data-k=ex-next]'); carTo(c.root, 'ex', carIndex(c.root, 'ex') + 1); await c.wait(450);
+        const past = c.sheet(`<div class="gt-past"><small>${t('history-tag')} · FULL BODY</small><b>${t('bench')}</b><span>${t('sets-line')}</span><i>LOGGED</i></div>`, 'bottom');
+        await c.wait(600);
+        await c.tap('[data-e="0"] [data-k=pen]');
+        c.cls('[data-e="0"]', 'is-editing'); c.cls('[data-f=ex]', 'is-editing');
+        c.val('[data-k=ex-name]', t('bench')); c.val('[data-k=ex-cue]', t('barbell')); c.text('[data-k=ex-status]', '');
+        await c.tap('[data-k=ex-name]'); await c.type('[data-k=ex-name]', t('smith'));
+        await c.tap('[data-k=ex-save]');
+        c.val('[data-e="0"] b', t('smith')); c.cls('[data-e="0"]', 'is-editing', false); c.cls('[data-f=ex]', 'is-editing', false); c.flash('[data-e="0"]');
+        c.val('[data-k=ex-name]', ''); c.val('[data-k=ex-cue]', ''); c.text('[data-k=ex-status]', t('exercise-saved'));
         await c.wait(300);
-        const past = layer.querySelector('.gt-past');
-        await c.point(past); past.classList.add('is-stamped');
+        const card = past.querySelector('.gt-past');
+        await c.point(card); card.classList.add('is-stamped');
         await c.wait(900);
       },
     ],
   };
 
   /* ---------- Επίβλεψη ---------- */
+  // Ίδιοι κανόνες με το modules/progress-chart.js: μία γραμμή φορτίου, σταθερό βήμα
+  // ανά προπόνηση και αγκύλες με τις επαναλήψεις όπου το φορτίο μένει ίδιο.
   const chart = (() => {
     const kg = [50, 50, 50, 55, 55, 55, 57.5, 57.5, 60, 60, 60, 62.5], reps = [8, 9, 10, 8, 9, 10, 8, 10, 8, 9, 10, 8];
-    const dates = ['03/07', '10/07', '17/07', '24/07', '31/07', '07/08', '21/08', '04/09', '18/09', '25/09', '09/10', '16/10'];
-    const step = 46, x0 = 16, width = x0 + step * (kg.length - 1) + 20, height = 158;
-    const yKg = v => 74 - (v - 48) / (64 - 48) * 58, yReps = v => 134 - (v - 7) / (11 - 7) * 30;
+    const dates = kg.map((_, index) => format(daysAgo((kg.length - 1 - index) * 7), { day:'numeric', month:'short' }));
+    const step = 52, x0 = 14, right = 16, width = x0 + step * (kg.length - 1) + right, height = 150, top = 12, axis = 112;
+    const range = Math.max(...kg) - Math.min(...kg), floor = Math.min(...kg) - range * .15, ceiling = Math.max(...kg) + range * .15;
+    const y = value => top + (ceiling - value) / (ceiling - floor) * (axis - top);
     const xs = kg.map((_, index) => x0 + index * step);
-    let kgPath = `M${xs[0]} ${yKg(kg[0])}`;
-    for (let index = 1; index < kg.length; index++) kgPath += ` H${xs[index]} V${yKg(kg[index])}`;
-    const repsPath = `M${xs.map((x, index) => `${x} ${yReps(reps[index])}`).join(' L')}`;
+    let line = `M${xs[0]} ${y(kg[0])}`;
+    for (let index = 1; index < kg.length; index++) {
+      const middle = (xs[index - 1] + xs[index]) / 2;
+      line += ` C${middle} ${y(kg[index - 1])} ${middle} ${y(kg[index])} ${xs[index]} ${y(kg[index])}`;
+    }
+    const ticks = Array.from({ length:5 }, (_, index) => floor + (ceiling - floor) * index / 4);
     const runs = [];
-    let start = 0;
-    for (let index = 1; index <= kg.length; index++) if (index === kg.length || kg[index] !== kg[start]) { runs.push([start, index - 1]); start = index; }
+    for (let start = 0, index = 1; index <= kg.length; index++) if (index === kg.length || kg[index] !== kg[start]) { if (index - start > 1) runs.push([start, index - 1]); start = index; }
+    const brackets = runs.map(([start, end], index) => {
+      const x1 = xs[start], x2 = xs[end], pointY = y(kg[start]), below = pointY <= axis - 30;
+      const bracketY = below ? pointY + 13 : pointY - 13, tick = below ? -4 : 4, labelY = below ? bracketY + 10 : bracketY - 5;
+      const text = `${reps[start]} → ${reps[end]}`;
+      const label = x2 - x1 >= 70
+        ? `<text class="gt-cycle" x="${(x1 + x2) / 2}" y="${labelY}" text-anchor="middle">${text} <tspan>${t('reps-word')}</tspan></text>`
+        : `<text class="gt-cycle" x="${(x1 + x2) / 2}" y="${labelY}" text-anchor="middle">${text.replace(/ /g, '')}</text>`;
+      return `<g class="gt-bracket"${index === runs.length - 1 ? ' data-k="bracket"' : ''}><path d="M${x1} ${bracketY + tick} V${bracketY} H${x2} V${bracketY + tick}"/>${label}</g>`;
+    }).join('');
     const svg = `<svg class="gt-plot" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true">
-      <g class="gt-grid">${[50, 55, 60].map(v => `<line x1="0" x2="${width}" y1="${yKg(v)}" y2="${yKg(v)}"/>`).join('')}</g>
-      ${runs.map(([a, b]) => `<rect class="gt-bracket" x="${xs[a] - 11}" y="96" width="${xs[b] - xs[a] + 22}" height="44" rx="5"/>`).join('')}
-      <path class="gt-line gt-kg" d="${kgPath}"/><path class="gt-line gt-rp" d="${repsPath}"/>
-      <g class="gt-dots">${xs.map((x, index) => `<circle class="gt-kg" cx="${x}" cy="${yKg(kg[index])}" r="3.2"/><circle class="gt-rp" cx="${x}" cy="${yReps(reps[index])}" r="2.6"/><text class="gt-rv" x="${x}" y="${yReps(reps[index]) - 6}" text-anchor="middle">${reps[index]}</text>`).join('')}</g>
-      ${xs.map((x, index) => `<text x="${x}" y="${height - 3}" text-anchor="middle">${dates[index]}</text>`).join('')}
+      <g class="gt-grid">${ticks.map(value => `<line x1="0" x2="${width - right}" y1="${y(value)}" y2="${y(value)}"/>`).join('')}</g>
+      <line class="gt-axis" x1="0" x2="${width - right}" y1="${axis}" y2="${axis}"/>
+      <path class="gt-line" d="${line}"/>${brackets}
+      <g class="gt-dots">${xs.map((x, index) => `<circle cx="${x}" cy="${y(kg[index])}" r="3.4"/>`).join('')}</g>
+      ${xs.map((x, index) => `<text class="gt-date" x="${x}" y="${axis + 10}" transform="rotate(-38 ${x} ${axis + 10})" text-anchor="end">${dates[index]}</text>`).join('')}
     </svg>`;
-    const rail = `<svg class="gt-rail" viewBox="0 0 24 ${height}" aria-hidden="true">${[50, 55, 60].map(v => `<text x="2" y="${yKg(v) + 3}">${v}</text>`).join('')}<text class="gt-rail-unit" x="2" y="${yKg(64) + 4}">kg</text></svg>`;
+    const rail = `<svg class="gt-rail" viewBox="0 0 28 ${height}" aria-hidden="true">${ticks.map(value => `<text x="25" y="${y(value) + 3}" text-anchor="end">${Number(value.toFixed(1))}</text>`).join('')}<line x1="27.5" x2="27.5" y1="${top}" y2="${axis}"/></svg>`;
     return { svg, rail, width };
   })();
   const chartX = (root, x, dragging = false) => {
@@ -669,28 +843,27 @@ function scenes(t, locale) {
     plot.style.transform = `translateX(${-x}px)`;
   };
   const chartMax = root => Math.max(0, chart.width - root.querySelector('[data-k=chart]').offsetWidth);
-  const exercises = [t('bench'), t('pullups'), t('dips')];
+  const exercises = [t('bench'), pullupsA, pullupsB, t('dips')];
+  const audit = `${shortDate(daysAgo(64))} — ${t('audit-bodyweight')} · ${shortDate(daysAgo(15))} — ${t('audit-plates')}`;
 
   const progress = {
     titles:['progress.t1', 'progress.t2', 'progress.t3', 'progress.t4', 'progress.t5'],
-    durations:[5600, 5200, 5200, 3400, 3800],
+    durations:[5600, 4400, 5200, 3000, 3800],
     html:() => `<div class="gt-scene gt-progress">
-      <div class="gt-controls">
-        <div><div class="gt-lab gt-lab-first">${t('exercise')}</div><div class="gt-f gt-select" data-k="ex"><span class="gt-v"></span><i class="gt-ph">${t('choose')}</i><em>▾</em></div></div>
-        <div><div class="gt-lab gt-lab-first">${t('set')}</div><div class="gt-f gt-select" data-k="set"><span class="gt-v"></span><i class="gt-ph">—</i><em>▾</em></div></div>
-      </div>
+      <div class="gt-lab gt-lab-first">${t('exercise')}</div><div class="gt-f gt-line gt-select" data-k="ex"><span class="gt-v"></span><em>▾</em></div>
+      <div class="gt-lab">${t('set')}</div><div class="gt-f gt-line gt-select" data-k="set"><span class="gt-v"></span><em>▾</em></div>
       <div class="gt-panel">
-        <div class="gt-panel-head"><b>${t('course')}</b><span class="gt-legend"><span class="gt-legend-kg"><i></i>${t('weight')}</span><span class="gt-legend-rp"><i></i>${t('reps')}</span></span></div>
-        <div class="gt-chart">${chart.rail}<div class="gt-chart-scroll" data-k="chart">${chart.svg}<div class="gt-chart-empty">${t('chart-empty')}</div></div></div>
-        <div class="gt-chart-hint">${t('older')}</div>
+        <div class="gt-summary"><b>${t('bench')}</b><small>${t('records-n', { n:12 })}</small></div>
+        <div class="gt-latest"><small>${t('latest')}</small><b>62.5 kg · 8 ${t('reps-word')}</b></div>
+        <div class="gt-legend"><span class="gt-legend-kg"><i></i>kg</span></div>
+        <div class="gt-chart">${chart.rail}<div class="gt-chart-scroll" data-k="chart">${chart.svg}</div></div>
+        <div class="gt-warn" data-k="audit"><b>${t('audit-title', { n:2 })}</b><p>${t('audit-uses')} ${audit}</p></div>
       </div>
-      <div class="gt-audit" data-k="audit"><div class="gt-audit-head" data-k="audit-toggle"><span>${t('audit')}</span><em>▾</em></div>
-        <div class="gt-audit-body"><div>14/08 · ${t('bodyweight')}: ${t('other-mode')}</div><div>02/10 · ${t('plates')}: ${t('other-mode')}</div></div></div>
       <div class="gt-pr" data-k="pr">${trophy}<span>Personal Records</span></div>
       <div class="gt-records"><div class="gt-records-head"><b>${t('best-sets')}</b><i>PR</i></div>
-        <div class="gt-record"><span>${t('bench')} · ${t('kg')}</span><b>62,5 × 8</b></div>
-        <div class="gt-record"><span>${t('pullups')} · ${t('bodyweight')}</span><b>BW × 12</b></div>
-        <div class="gt-record"><span>${t('dips')} · ${t('mixed')}</span><b>BW + 10 × 9</b></div></div>
+        <div class="gt-record"><div><b>${t('dips')}</b><small>9 ${t('reps-word')}</small></div><strong>10<em>extra kg</em></strong></div>
+        <div class="gt-record"><div><b>${t('pullups')}</b><small>12 ${t('reps-word')}</small></div><strong>12<em>${t('reps-short')}</em></strong></div>
+        <div class="gt-record"><div><b>${t('bench')}</b><small>8 ${t('reps-word')}</small></div><strong>62.5<em>kg</em></strong></div></div>
     </div>`,
     prep:scene => {
       scene.querySelector('[data-k=ex] .gt-v').textContent = exercises[0];
@@ -707,13 +880,12 @@ function scenes(t, locale) {
         chartX(c.root, chartMax(c.root)); c.cls(c.root, 'is-drawn'); await c.wait(1500);
       },
       async c => {
-        await c.point('.gt-legend-kg'); c.cls(c.root, 'is-kg'); await c.wait(900); c.cls(c.root, 'is-kg', false);
-        await c.point('.gt-legend-rp'); c.cls(c.root, 'is-reps'); await c.wait(500);
-        c.cls(c.root, 'has-brackets');
-        await c.point('[data-k=chart]', .62, .8); await c.wait(1100);
-        if (!c.fast) { c.cls(c.root, 'is-reps', false); c.cls(c.root, 'has-brackets', false); }
+        await c.cam('.gt-panel', 6);
+        await c.point('.gt-legend-kg'); await c.wait(300);
+        await c.point('[data-k=bracket]'); await c.wait(900);
       },
       async c => {
+        await c.cam('.gt-panel', 6);
         const max = chartMax(c.root);
         await c.drag('[data-k=chart]', 150, 0, v => chartX(c.root, max - 150 * v, true), { ax:.25, ay:.45, duration:900 });
         await c.wait(250);
@@ -723,8 +895,8 @@ function scenes(t, locale) {
         chartX(c.root, Math.min(max, Math.max(0, max - 300) + 170)); await c.wait(300);
       },
       async c => {
-        await c.cam('[data-k=audit]', 70);
-        await c.tap('[data-k=audit-toggle]'); c.cls('[data-k=audit]', 'is-open'); await c.wait(1100);
+        await c.cam('[data-k=audit]', 90);
+        await c.point('[data-k=audit]'); await c.wait(1100);
       },
       async c => {
         await c.cam('[data-k=pr]', 40);
@@ -735,66 +907,82 @@ function scenes(t, locale) {
   };
 
   /* ---------- Προφίλ ---------- */
+  const slipHead = (title, key) => `<div class="gt-slip-head"><b>${title}</b><span data-k="${key}">${t('close-slip')}</span></div>`;
+  const dirty = c => { c.text('[data-k=status]', t('unsaved')); c.cls('[data-k=profile-save]', 'is-shown'); };
   const profile = {
     titles:['profile.t1', 'profile.t2', 'profile.t3', 'profile.t4', 'profile.t5'],
-    durations:[6200, 6200, 5600, 4600, 4600],
+    durations:[6600, 6800, 7400, 3600, 5200],
     html:() => `<div class="gt-scene gt-profile">
-      <div class="gt-athlete">
-        <div class="gt-athlete-top"><span class="gt-brand"><i></i><i></i><i></i><i></i><i></i></span><small>${t('new-profile')}</small></div>
+      <div class="gt-athlete"><span class="gt-elastic"></span>
+        <div class="gt-athlete-top"><span class="gt-rings"><i></i><i></i></span><small data-k="status">${t('new-profile')}</small></div>
         <div class="gt-polaroid"><span class="gt-tape"></span>
-          <div class="gt-photo" data-k="photo">${silhouette}<span class="gt-photo-image"></span><em>${t('change-photo')}</em></div>
+          <div class="gt-photo" data-k="photo"><span class="gt-avatar">${silhouette}<span class="gt-photo-image"></span></span><em>${t('change-photo')}</em></div>
           <div class="gt-name" data-k="name"><span class="gt-v">${t('name-placeholder')}</span></div>
-          <div class="gt-age" data-k="age"><span>${t('age')}</span><b class="gt-v">—</b></div>
+          <div class="gt-age" data-k="age"><span>${t('age')}</span><b><span class="gt-v">—</span><small data-k="age-unit"></small></b></div>
         </div>
         <div class="gt-athlete-foot">TRAIN . LOG . REPEAT</div>
       </div>
-      <div class="gt-slip" data-slip="name"><div class="gt-lab">${t('name')}</div><div class="gt-f" data-k="name-field"><span class="gt-v"></span><i class="gt-ph">${t('your-name')}</i></div></div>
-      <div class="gt-slip" data-slip="photo"><div class="gt-lab">${t('photos')}</div><div class="gt-photos"><i class="gt-upload" data-k="upload">＋</i>${[1, 2, 3, 4, 5].map(n => `<i data-ph="${n}"></i>`).join('')}</div></div>
-      <div class="gt-slip" data-slip="birth"><div class="gt-lab">${t('birth')}</div><div class="gt-f" data-k="birth"><span class="gt-v"></span><i class="gt-ph">${dateText(birth)}</i>${calendar}</div><div class="gt-switch" data-k="show-age"><i></i>${t('show-age')}</div></div>
-      <div class="gt-unit"><div class="gt-lab">${t('unit')}</div><div class="gt-toggle gt-toggle-flush"><b data-k="kg" class="is-on">${t('kilograms')}</b><b data-k="lb">${t('pounds')}</b></div>
-        <div class="gt-unit-example" data-k="example"><span class="gt-v">60 kg</span><small data-k="stored">${t('stored')}</small></div></div>
-      <div class="gt-export" data-k="export">${t('export')}</div>
-      <div class="gt-file gt-demo"><b>logbook.csv</b><small>${t('workouts-48')}</small></div>
-      <div class="gt-save" data-k="profile-save">${t('save')}</div>
+      <div class="gt-unit"><div class="gt-lab">${t('unit')}</div><div class="gt-toggle gt-toggle-gold gt-toggle-flush"><b data-k="kg" class="is-on">KG</b><b data-k="lb">LBS</b></div></div>
+      <div class="gt-receipt" data-k="receipt"><div class="gt-receipt-button" data-k="export"><span>${t('export')}</span><i>↓</i></div>
+        <div class="gt-receipt-paper"><p>${t('logged-workouts')} .. 48</p><hr><p>${t('file')}: logbook-istoriko-${isoDate(today)}.csv</p><small>${format(today, { day:'2-digit', month:'2-digit', year:'numeric' })}</small></div></div>
+      <div class="gt-slip" data-slip="name">${slipHead(t('name-slip'), 'close-name')}<div class="gt-lab">${t('name')}</div><div class="gt-f gt-line" data-k="name-field"><span class="gt-v"></span><i class="gt-ph">${t('name-hint')}</i></div></div>
+      <div class="gt-slip" data-slip="photo">${slipHead(t('photo-slip'), 'close-photo')}<div class="gt-photos"><span class="gt-upload" data-k="upload"><em>+</em>${t('upload')}<small>${t('formats')}</small></span><span class="gt-cell gt-photo-a" data-ph="1"><small></small></span><span class="gt-cell gt-photo-b" data-ph="2"><small></small></span></div></div>
+      <div class="gt-slip" data-slip="birth">${slipHead(t('birth-slip'), 'close-birth')}
+        <div class="gt-lab">${t('date')}</div><div class="gt-f gt-line" data-k="birth"><span class="gt-v"></span><i class="gt-ph">${dateText(birth)}</i>${calendar}</div>
+        <div class="gt-readout"><div><small>${t('age')}</small><span data-k="readout-label">${t('no-date')}</span></div><b data-k="readout">—</b></div>
+        <div class="gt-checkbox" data-k="hide-age"><i></i>${t('hide-age')}</div></div>
+      <div class="gt-save gt-profile-save" data-k="profile-save">${t('save-profile')}</div>
     </div>`,
     steps:[
       async c => {
         await c.cam(null);
         await c.point('[data-k=photo]'); await c.point('[data-k=age]');
         await c.tap('[data-k=name]'); c.cls('[data-slip=name]', 'is-open'); await c.wait(250);
-        await c.cam('[data-k=name]', 60);
-        await c.tap('[data-k=name-field]'); await c.type('[data-k=name-field]', t('demo-name'), '[data-k=name]');
-        c.flash('[data-k=name]'); await c.wait(300); c.cls('[data-slip=name]', 'is-open', false);
+        await c.cam('[data-slip=name]', 40);
+        await c.tap('[data-k=name-field]'); await c.type('[data-k=name-field]', t('demo-name'));
+        c.val('[data-k=name]', t('demo-name')); dirty(c); await c.wait(250);
+        await c.tap('[data-k=close-name]'); c.cls('[data-slip=name]', 'is-open', false);
+        await c.cam(null); c.flash('[data-k=name]'); await c.point('[data-k=name]');
       },
       async c => {
         await c.cam(null);
         await c.tap('[data-k=photo]'); c.cls('[data-slip=photo]', 'is-open');
-        await c.cam('[data-k=name]', 30);
-        await c.tap('[data-k=upload]'); c.cls('[data-ph="1"]', 'gt-photo-a'); await c.wait(300);
-        await c.tap('[data-k=upload]'); c.cls('[data-ph="2"]', 'gt-photo-b'); await c.wait(300);
-        await c.tap('[data-ph="2"]'); c.cls('[data-ph="2"]', 'is-selected'); c.cls('[data-k=photo]', 'has-image');
-        await c.cam(null); await c.point('[data-k=photo]'); c.cls('[data-slip=photo]', 'is-open', false);
+        await c.cam('[data-slip=photo]', 40);
+        const use = selected => {
+          c.q('[data-ph="1"] small').textContent = t(selected === 1 ? 'in-use-photo' : 'use-photo');
+          c.q('[data-ph="2"] small').textContent = t(selected === 2 ? 'in-use-photo' : 'use-photo');
+          c.cls('[data-ph="1"]', 'is-selected', selected === 1); c.cls('[data-ph="2"]', 'is-selected', selected === 2);
+        };
+        await c.tap('[data-k=upload]'); c.cls('[data-ph="1"]', 'is-shown'); use(1); await c.wait(300);
+        await c.tap('[data-k=upload]'); c.cls('[data-ph="2"]', 'is-shown'); use(2); await c.wait(300);
+        await c.tap('[data-ph="1"]'); use(1); c.cls('[data-k=photo]', 'has-image'); dirty(c); await c.wait(300);
+        await c.tap('[data-k=close-photo]'); c.cls('[data-slip=photo]', 'is-open', false);
+        await c.cam(null); await c.point('[data-k=photo]');
       },
       async c => {
         await c.cam(null);
         await c.tap('[data-k=age]'); c.cls('[data-slip=birth]', 'is-open');
-        await c.cam('[data-k=name]', 30);
+        await c.cam('[data-slip=birth]', 40);
         await c.tap('[data-k=birth]'); await c.type('[data-k=birth]', dateText(birth));
-        await c.tap('[data-k=show-age]'); c.cls('[data-k=show-age]', 'is-on'); c.val('[data-k=age]', String(age)); c.flash('[data-k=age]');
-        await c.point('[data-k=age]'); c.cls('[data-slip=birth]', 'is-open', false);
+        c.text('[data-k=readout]', String(age)); c.text('[data-k=readout-label]', t('years')); c.flash('[data-k=readout]');
+        c.val('[data-k=age]', String(age)); c.text('[data-k=age-unit]', t('years')); dirty(c); await c.wait(300);
+        await c.tap('[data-k=hide-age]'); c.cls('[data-k=hide-age]', 'is-on'); c.cls('[data-k=age]', 'is-hidden'); await c.wait(500);
+        await c.tap('[data-k=hide-age]'); c.cls('[data-k=hide-age]', 'is-on', false); c.cls('[data-k=age]', 'is-hidden', false); await c.wait(200);
+        await c.tap('[data-k=close-birth]'); c.cls('[data-slip=birth]', 'is-open', false);
+        await c.cam(null); c.flash('[data-k=age]'); await c.point('[data-k=age]');
       },
       async c => {
-        await c.cam('.gt-unit', 30);
-        await c.tap('[data-k=lb]'); c.cls('[data-k=lb]', 'is-on'); c.cls('[data-k=kg]', 'is-on', false); c.val('[data-k=example]', '132 lb'); c.flash('[data-k=example]');
-        await c.wait(400); await c.point('[data-k=stored]'); await c.wait(300);
-        await c.tap('[data-k=kg]'); c.cls('[data-k=kg]', 'is-on'); c.cls('[data-k=lb]', 'is-on', false); c.val('[data-k=example]', '60 kg'); c.flash('[data-k=example]');
-        await c.wait(300);
+        await c.cam('.gt-unit', 60);
+        await c.tap('[data-k=lb]'); c.cls('[data-k=lb]', 'is-on'); c.cls('[data-k=kg]', 'is-on', false); await c.wait(500);
+        await c.tap('[data-k=kg]'); c.cls('[data-k=kg]', 'is-on'); c.cls('[data-k=lb]', 'is-on', false); await c.wait(300);
       },
       async c => {
-        await c.cam('[data-k=export]', 60);
-        await c.tap('[data-k=export]'); c.cls('.gt-file', 'is-shown'); await c.wait(800);
+        await c.cam('[data-k=receipt]', 60);
+        await c.tap('[data-k=export]'); c.cls('[data-k=receipt]', 'is-open'); await c.wait(900);
+        await c.cam('[data-k=profile-save]', 220);
         await c.tap('[data-k=profile-save]');
         const stamp = c.toast(t('profile-saved'));
+        c.cls('[data-k=profile-save]', 'is-shown', false); c.text('[data-k=status]', '');
         await c.wait(1400);
         if (!c.fast) { stamp.classList.remove('is-shown'); await c.wait(200); }
         stamp.remove();

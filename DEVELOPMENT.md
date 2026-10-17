@@ -286,7 +286,7 @@ npm.cmd run test:e2e
 
 ## GitHub Pages και PWA
 
-Το `.github/workflows/pages.yml` εκτελεί το πλήρες quality gate σε κάθε push στο `main` και δημιουργεί μέσω του `scripts/build-production.mjs` production artifact από ρητή λίστα runtime αρχείων. Τα JavaScript και CSS assets γίνονται minify με esbuild μόνο για το artifact· η ανάπτυξη συνεχίζει να σερβίρει απευθείας τα αναγνώσιμα source files. Tests, designs, scripts και seed εργαλεία δεν δημοσιεύονται.
+Το `.github/workflows/pages.yml` εκτελεί το πλήρες quality gate σε κάθε push στο `main` και δημιουργεί μέσω του `scripts/build-production.mjs` production artifact από ρητή λίστα runtime αρχείων. Τα JavaScript και CSS assets γίνονται minify με esbuild μόνο για το artifact, με `charset:'utf8'` ώστε τα ελληνικά να μένουν 2 bytes ανά χαρακτήρα αντί για `\u03XX` (6 bytes)· η ανάπτυξη συνεχίζει να σερβίρει απευθείας τα αναγνώσιμα source files. Tests, designs, scripts και seed εργαλεία δεν δημοσιεύονται.
 
 Στο baseline της 26ης Ιουλίου το ίδιο allowlisted shell είναι 1.265.953 bytes από τα source files και 1.205.623 bytes στο production artifact: 60.330 bytes ή 4,8% μικρότερο συνολικά, παρότι τα ήδη συμπιεσμένα fonts, icons και το vendored Supabase bundle αποτελούν 675.774 bytes και αντιγράφονται αυτούσια. Ενδεικτικά, μόνο το `app.js` πέφτει από 125.860 σε 98.379 bytes.
 
@@ -377,7 +377,7 @@ npm.cmd run version:bump -- <X.Y.Z> --dry-run
 - Μετά το sign-out το user-scoped recovery cache (`logbookCloudCache:<userId>`) παραμένει στο `localStorage` χωρίς λήξη. Δεν είναι προσβάσιμο από το UI και εξυπηρετεί την επαναφορά του ίδιου λογαριασμού, αλλά σε κοινόχρηστη συσκευή είναι αναγνώσιμο από τα devtools. Αποδεκτό local-first trade-off, καταγεγραμμένο ρητά — από την έκδοση 0.3.1 και στην ίδια την πολιτική απορρήτου (§4), μαζί με τη σύσταση εκκαθάρισης δεδομένων ιστοτόπου σε κοινόχρηστη συσκευή.
 - Η PWA έχει automated Chromium/WebKit κάλυψη, αλλά χρειάζεται τελική QA σε πραγματικές συσκευές Android και iOS.
 - Το performance gate χρησιμοποιεί επαναλήψιμη browser emulation και όχι εργαστηριακή συσκευή· τα όρια προστατεύουν από regressions, αλλά δεν αντικαθιστούν το physical-device QA.
-- Στις αλλαγές απορρήτου της 6ης Σεπτεμβρίου 2026 το όριο `appShellBytes` ανέβηκε από 1.300.000 σε 1.400.000 bytes. Η αρχική καταγραφή πριν από τις μεταφράσεις ήταν 1.293.548 bytes, δηλαδή 99,5% του παλιού ορίου. Οι τέσσερις γλωσσικές εκδόσεις διατίθενται και offline· το ενημερωμένο baseline βρίσκεται στο `performance-budget.json`. **Πριν από επόμενη αύξηση ορίου χρειάζεται εξέταση των γραμματοσειρών**, που αποτελούν σημαντικό μέρος του artifact.
+- Στις αλλαγές απορρήτου της 6ης Σεπτεμβρίου 2026 το όριο `appShellBytes` ανέβηκε από 1.300.000 σε 1.400.000 bytes. Η αρχική καταγραφή πριν από τις μεταφράσεις ήταν 1.293.548 bytes, δηλαδή 99,5% του παλιού ορίου. Οι τέσσερις γλωσσικές εκδόσεις διατίθενται και offline· το ενημερωμένο baseline βρίσκεται στο `performance-budget.json`. **Πριν από επόμενη αύξηση ορίου χρειάζεται εξέταση των γραμματοσειρών**, που αποτελούν σημαντικό μέρος του artifact. Στις 17 Οκτωβρίου 2026 το build άρχισε να γράφει UTF-8 αντί για escapes `\u03XX`. Με τις νέες μινιατούρες της ξενάγησης το artifact έπεσε από 1.411.507 σε 1.319.301 bytes.
 - Στο iOS Safari, μια μη εγκατεστημένη σελίδα υπόκειται σε eviction του `localStorage` μετά από επτά ημέρες χωρίς αλληλεπίδραση. Η λωρίδα του επισκέπτη λέει «τα δεδομένα μένουν σε αυτή τη συσκευή»· χωρίς `Προσθήκη στην αρχική οθόνη` αυτό δεν είναι εγγυημένο.
 
 ## Κλεισμένες αποφάσεις προϊόντος
