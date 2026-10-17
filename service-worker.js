@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'logbook-0.3.4';
+const CACHE_VERSION = 'logbook-0.3.5';
 // The production builder fingerprints every shipped file, including quotes.
 // A content change must install a new shell even if the version was not bumped.
 const BUILD_ID = 'development';
@@ -50,11 +50,9 @@ const APP_SHELL = [
   './assets/fonts/source-sans-3-greek-wght-normal.woff2',
   './assets/fonts/source-sans-3-latin-wght-normal.woff2',
   './assets/fonts/alegreya-sans-greek-400-normal.woff2',
-  './assets/fonts/alegreya-sans-greek-500-normal.woff2',
   './assets/fonts/alegreya-sans-greek-700-normal.woff2',
   './assets/fonts/alegreya-sans-greek-800-normal.woff2',
   './assets/fonts/alegreya-sans-latin-400-normal.woff2',
-  './assets/fonts/alegreya-sans-latin-500-normal.woff2',
   './assets/fonts/alegreya-sans-latin-700-normal.woff2',
   './assets/fonts/alegreya-sans-latin-800-normal.woff2',
   './assets/fonts/roboto-slab-greek-500-normal.woff2',

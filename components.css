@@ -824,7 +824,7 @@ html.guide-tour-open, html.guide-tour-open body { overflow:hidden; }
 .gt-lab { margin:9px 0 3px; font:800 .5rem var(--font-ui); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
 .gt-lab-first { margin-top:0; }
 .gt-f { position:relative; display:flex; align-items:center; gap:6px; min-height:30px; padding:0 9px; background:var(--paper-field); border:1px solid var(--line); border-radius:6px; font-size:.76rem; font-weight:600; transition:border-color .2s, box-shadow .2s, background-color .3s; }
-.gt-ph { display:none; font-style:normal; font-weight:400; color:var(--muted-soft); }
+.gt-ph { display:none; font-style:normal; font-weight:400; color:var(--muted); }
 .gt-v:empty + .gt-ph { display:inline; }
 .gt-f em { margin-left:auto; font-style:normal; font-size:.6rem; color:var(--muted); }
 .gt-f svg { width:13px; height:13px; margin-left:auto; fill:none; stroke:var(--muted); stroke-width:2; }

@@ -47,6 +47,13 @@ const MODULE_FILES = [
   'modules/guide-tour.js',
 ];
 
+// Weight 500 is used by archived designs only. Keep the local fonts and their
+// declarations for those previews, but omit both from the published artifact.
+const DESIGN_ONLY_FONTS = new Set([
+  'assets/fonts/alegreya-sans-greek-500-normal.woff2',
+  'assets/fonts/alegreya-sans-latin-500-normal.woff2',
+]);
+
 function safeOutputPath(value) {
   const output = resolve(projectRoot, value || '_site');
   if (output !== resolve(projectRoot, '_site') || output === projectRoot || !output.startsWith(`${projectRoot}${sep}`)) {
@@ -64,7 +71,11 @@ async function writeAsset(path, output) {
     await cp(sourcePath, outputPath);
     return;
   }
-  const source = await readFile(sourcePath, 'utf8');
+  let source = await readFile(sourcePath, 'utf8');
+  if (path === 'fonts.css') {
+    source = source.replace(/@font-face\s*\{[^}]*\}/g, face =>
+      [...DESIGN_ONLY_FONTS].some(font => face.includes(font)) ? '' : face);
+  }
   const result = await transform(source, {
     loader:extension === '.css' ? 'css' : 'js',
     minify:true,
@@ -98,7 +109,10 @@ export async function buildProduction(outputValue = '_site') {
   await rm(output, { recursive:true, force:true });
   await mkdir(output, { recursive:true });
   await Promise.all([...ROOT_FILES, ...MODULE_FILES].map(path => writeAsset(path, output)));
-  await cp(resolve(projectRoot, 'assets'), resolve(output, 'assets'), { recursive:true });
+  await cp(resolve(projectRoot, 'assets'), resolve(output, 'assets'), {
+    recursive:true,
+    filter:source => !DESIGN_ONLY_FONTS.has(relative(projectRoot, source).split(sep).join('/')),
+  });
   const buildId = await fingerprintDirectory(output);
   const workerSource = (await readFile(resolve(projectRoot, 'service-worker.js'), 'utf8'))
     .replace("const BUILD_ID = 'development';", `const BUILD_ID = '${buildId}';`);
