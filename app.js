@@ -266,13 +266,6 @@ function refreshWeightUnitUI(previousUnit = weightUnit()) {
     row.querySelectorAll('.weight-mode option').forEach(option => { option.textContent = weightModeSourceLabel(option.value, unit); });
     window.LogbookI18n?.translate(row);
   });
-  const guide = $('#log-weight-guide');
-  if (guide) {
-    guide.textContent = unit === 'lbs'
-      ? 'Καταγράψτε επαναλήψεις και επιλέξτε μέτρηση: λίβρες, πλάκες, πλάκες + λίβρες, Bodyweight ή Bodyweight + λίβρες.'
-      : 'Καταγράψτε επαναλήψεις και επιλέξτε μέτρηση: κιλά, πλάκες, πλάκες + κιλά, Bodyweight ή Bodyweight + κιλά.';
-    window.LogbookI18n?.translate(guide);
-  }
 }
 
 const dailyQuotes = Array.isArray(window.LogbookQuotes)

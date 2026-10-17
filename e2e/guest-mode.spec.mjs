@@ -113,7 +113,7 @@ test('the ( i ) guided tour is an accessible dialog that closes with Escape and 
   expect(serious, serious.map(item => item.id + ': ' + item.help).join('\n')).toEqual([]);
 
   await page.keyboard.press('ArrowRight');
-  await expect(page.locator('.gt-coach-title')).toHaveText('Σύρετε τις ασκήσεις');
+  await expect(page.locator('.gt-coach-title')).toHaveText('Ασκήσεις');
   await page.keyboard.press('Escape');
   await expect(tour).toBeHidden();
   await expect(trigger).toBeFocused();
